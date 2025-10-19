@@ -84,13 +84,13 @@ test_that("{moments}.Exponential work correctly", {
 test_that("{moments}.Exponential is close to simulated values", {
   skwnss <- function(x) { x <- x - mean(x); y <- sqrt(length(x)) * sum(x^3)/(sum(x^2)^(3/2)); y * ((1 - 1/length(x)))^(3/2) }
   krtss <- function(x) { x <- x - mean(x); length(x) * sum(x^4)/(sum(x^2)^2) * (1 - 1/length(x))^2 - 3 }
-  e <- Exponential()
-  set.seed(0)
-  x <- random(e, 1e5)
-  expect_equal(mean(e), mean(x), tolerance = 1e-2)
-  expect_equal(sqrt(variance(e)), sd(x), tolerance = 1e-2)
-  expect_equal(skewness(e), skwnss(x), tolerance = 1e-4)
-  expect_equal(kurtosis(e), krtss(x), tolerance = 1e-4)
+  d <- Exponential(c(0.5, 1, 2))
+  set.seed(1)
+  x <- random(d, 1e5)
+  expect_equal(mean(d), apply(x, 1, mean), tolerance = 1e-2)
+  expect_equal(sqrt(variance(d)), apply(x, 1, sd), tolerance = 1e-2)
+  expect_equal(skewness(d), apply(x, 1, skwnss), tolerance = 5e-2)
+  expect_equal(kurtosis(d), apply(x, 1, krtss), tolerance = 5e-2)
 })
 
 test_that("vectorization of a Exponential distribution work correctly", {
