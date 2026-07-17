@@ -20,9 +20,9 @@ A \code{Normal} object.
 Fit a Normal distribution to data
 }
 \seealso{
-Other Normal distribution: 
-\code{\link{cdf.Normal}()},
-\code{\link{pdf.Normal}()},
-\code{\link{quantile.Normal}()}
+Other Normal distribution:
+\code{\link[=cdf.Normal]{cdf.Normal()}},
+\code{\link[=pdf.Normal]{pdf.Normal()}},
+\code{\link[=quantile.Normal]{quantile.Normal()}}
 }
 \concept{Normal distribution}

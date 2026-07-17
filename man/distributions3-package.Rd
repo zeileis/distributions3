@@ -11,22 +11,23 @@ Tools to create and manipulate probability distributions using S3. Generics pdf(
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/alexpghayes/distributions3}
-  \item \url{https://alexpghayes.github.io/distributions3/}
-  \item Report bugs at \url{https://github.com/alexpghayes/distributions3/issues}
+  \item \url{https://github.com/zeileis/distributions3}
+  \item \url{https://zeileis.github.io/distributions3/}
+  \item Report bugs at \url{https://github.com/zeileis/distributions3/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Alex Hayes \email{alexpghayes@gmail.com} (\href{https://orcid.org/0000-0002-4985-5160}{ORCID})
+\strong{Maintainer}: Achim Zeileis \email{Achim.Zeileis@R-project.org} (\href{https://orcid.org/0000-0003-0918-3766}{ORCID})
 
 Authors:
 \itemize{
+  \item Achim Zeileis \email{Achim.Zeileis@R-project.org} (\href{https://orcid.org/0000-0003-0918-3766}{ORCID})
+  \item Alex Hayes \email{alexpghayes@gmail.com} (\href{https://orcid.org/0000-0002-4985-5160}{ORCID})
   \item Ralph Moller-Trane
   \item Daniel Jordan \email{dandermotj@gmail.com}
   \item Paul Northrop \email{p.northrop@ucl.ac.uk}
   \item Moritz N. Lang \email{moritz.n.lang@gmail.com} (\href{https://orcid.org/0000-0002-2533-9903}{ORCID})
-  \item Achim Zeileis \email{Achim.Zeileis@R-project.org} (\href{https://orcid.org/0000-0003-0918-3766}{ORCID})
 }
 
 Other contributors:

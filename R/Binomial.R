@@ -31,7 +31,7 @@
 #'   compute p-values.
 #'
 #'   We recommend reading this documentation on
-#'   <https://alexpghayes.github.io/distributions3/>, where the math
+#'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail.
 #'
 #'   In the following, let \eqn{X} be a Binomial random variable with parameter

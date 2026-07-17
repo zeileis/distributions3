@@ -20,10 +20,10 @@ A \code{LogNormal} object.
 Fit a Log Normal distribution to data
 }
 \seealso{
-Other LogNormal distribution: 
-\code{\link{cdf.LogNormal}()},
-\code{\link{pdf.LogNormal}()},
-\code{\link{quantile.LogNormal}()},
-\code{\link{random.LogNormal}()}
+Other LogNormal distribution:
+\code{\link[=cdf.LogNormal]{cdf.LogNormal()}},
+\code{\link[=pdf.LogNormal]{pdf.LogNormal()}},
+\code{\link[=quantile.LogNormal]{quantile.LogNormal()}},
+\code{\link[=random.LogNormal]{random.LogNormal()}}
 }
 \concept{LogNormal distribution}

@@ -50,10 +50,10 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other LogNormal distribution: 
-\code{\link{cdf.LogNormal}()},
-\code{\link{fit_mle.LogNormal}()},
-\code{\link{pdf.LogNormal}()},
-\code{\link{random.LogNormal}()}
+Other LogNormal distribution:
+\code{\link[=cdf.LogNormal]{cdf.LogNormal()}},
+\code{\link[=fit_mle.LogNormal]{fit_mle.LogNormal()}},
+\code{\link[=pdf.LogNormal]{pdf.LogNormal()}},
+\code{\link[=random.LogNormal]{random.LogNormal()}}
 }
 \concept{LogNormal distribution}

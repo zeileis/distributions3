@@ -45,7 +45,7 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other Tukey distribution: 
-\code{\link{quantile.Tukey}()}
+Other Tukey distribution:
+\code{\link[=quantile.Tukey]{quantile.Tukey()}}
 }
 \concept{Tukey distribution}

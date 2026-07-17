@@ -30,7 +30,7 @@ distribution will be added soon.
 }
 \details{
 We recommend reading this documentation on
-\url{https://alexpghayes.github.io/distributions3/}, where the math
+\url{https://zeileis.github.io/distributions3/}, where the math
 will render with additional detail.
 
 In the following, let \eqn{X} be a Gamma random variable
@@ -87,24 +87,24 @@ cdf(X, quantile(X, 0.7))
 quantile(X, cdf(X, 7))
 }
 \seealso{
-Other continuous distributions: 
-\code{\link{Beta}()},
-\code{\link{Cauchy}()},
-\code{\link{ChiSquare}()},
-\code{\link{Erlang}()},
-\code{\link{Exponential}()},
-\code{\link{FisherF}()},
-\code{\link{Frechet}()},
-\code{\link{GEV}()},
-\code{\link{GP}()},
-\code{\link{Gumbel}()},
-\code{\link{LogNormal}()},
-\code{\link{Logistic}()},
-\code{\link{Normal}()},
-\code{\link{RevWeibull}()},
-\code{\link{StudentsT}()},
-\code{\link{Tukey}()},
-\code{\link{Uniform}()},
-\code{\link{Weibull}()}
+Other continuous distributions:
+\code{\link[=Beta]{Beta()}},
+\code{\link[=Cauchy]{Cauchy()}},
+\code{\link[=ChiSquare]{ChiSquare()}},
+\code{\link[=Erlang]{Erlang()}},
+\code{\link[=Exponential]{Exponential()}},
+\code{\link[=FisherF]{FisherF()}},
+\code{\link[=Frechet]{Frechet()}},
+\code{\link[=GEV]{GEV()}},
+\code{\link[=GP]{GP()}},
+\code{\link[=Gumbel]{Gumbel()}},
+\code{\link[=LogNormal]{LogNormal()}},
+\code{\link[=Logistic]{Logistic()}},
+\code{\link[=Normal]{Normal()}},
+\code{\link[=RevWeibull]{RevWeibull()}},
+\code{\link[=StudentsT]{StudentsT()}},
+\code{\link[=Tukey]{Tukey()}},
+\code{\link[=Uniform]{Uniform()}},
+\code{\link[=Weibull]{Weibull()}}
 }
 \concept{continuous distributions}

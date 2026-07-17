@@ -40,9 +40,9 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other Logistic distribution: 
-\code{\link{cdf.Logistic}()},
-\code{\link{pdf.Logistic}()},
-\code{\link{quantile.Logistic}()}
+Other Logistic distribution:
+\code{\link[=cdf.Logistic]{cdf.Logistic()}},
+\code{\link[=pdf.Logistic]{pdf.Logistic()}},
+\code{\link[=quantile.Logistic]{quantile.Logistic()}}
 }
 \concept{Logistic distribution}
