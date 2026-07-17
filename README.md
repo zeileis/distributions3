@@ -55,7 +55,7 @@ library("distributions3")
 X <- Bernoulli(0.1)
 
 random(X, 10)
-#>  [1] 1 0 0 0 0 0 0 0 0 0
+#>  [1] 0 0 0 0 1 0 0 1 0 0
 pdf(X, 1)
 #> [1] 0.1
 
