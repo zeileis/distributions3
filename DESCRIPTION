@@ -1,8 +1,8 @@
 Package: distributions3
 Title: Probability Distributions as S3 Objects
-Version: 0.2.3.9000
+Version: 0.2.4
 Authors@R: c(
-    person("Alex", "Hayes", , "alexpghayes@gmail.com", role = c("aut", "cre"),
+    person("Alex", "Hayes", , "alexpghayes@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0002-4985-5160")),
     person("Ralph", "Moller-Trane", role = "aut"),
     person("Emil", "Hvitfeldt", , "emilhhvitfeldt@gmail.com", role = "ctb",
@@ -11,7 +11,7 @@ Authors@R: c(
     person("Paul", "Northrop", , "p.northrop@ucl.ac.uk", role = "aut"),
     person("Moritz N.", "Lang", , "moritz.n.lang@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0002-2533-9903")),
-    person("Achim", "Zeileis", , "Achim.Zeileis@R-project.org", role = "aut",
+    person("Achim", "Zeileis", , "Achim.Zeileis@R-project.org", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0918-3766")),
     person("Bruna", "Wundervald", , "brunadaviesw@gmail.com", role = "ctb"),
     person("Alessandro", "Gasparini", , "alessandro.gasparini@ki.se", role = "ctb")
@@ -23,9 +23,9 @@ Description: Tools to create and manipulate probability distributions
     in intro stats courses. The documentation for each distribution
     contains detailed mathematical notes.
 License: MIT + file LICENSE
-URL: https://github.com/alexpghayes/distributions3,
-    https://alexpghayes.github.io/distributions3/
-BugReports: https://github.com/alexpghayes/distributions3/issues
+URL: https://github.com/zeileis/distributions3,
+    https://zeileis.github.io/distributions3/
+BugReports: https://github.com/zeileis/distributions3/issues
 Imports: 
     ggplot2 (>= 3.4.0),
     glue,
