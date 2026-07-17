@@ -9,6 +9,7 @@ template:
     bootswatch: flatly
   opengraph:
     twitter:
+      creator: "@AchimZeileis"
       card: summary
   math-rendering: "mathjax"
 
