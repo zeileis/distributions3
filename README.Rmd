@@ -13,14 +13,15 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE
 )
+set.seed(0)
 ```
 
 # distributions3
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/distributions3)](https://cran.r-project.org/package=distributions3)
-[![Codecov test coverage](https://codecov.io/gh/alexpghayes/distributions3/branch/main/graph/badge.svg)](https://app.codecov.io/gh/alexpghayes/distributions3?branch=main)
-[![R-CMD-check](https://github.com/alexpghayes/distributions3/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/alexpghayes/distributions3/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/zeileis/distributions3/branch/main/graph/badge.svg)](https://app.codecov.io/gh/zeileis/distributions3?branch=main)
+[![R-CMD-check](https://github.com/zeileis/distributions3/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zeileis/distributions3/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 `distributions3`, inspired by the [eponymous Julia package](https://github.com/JuliaStats/Distributions.jl), provides a generic function interface to probability distributions. `distributions3` has two goals:
@@ -47,8 +48,7 @@ install.packages("distributions3")
 You can install the development version with:
 
 ``` r
-install.packages("devtools")
-devtools::install_github("alexpghayes/distributions3")
+install.packages("distributions3", repos = "https://zeileis.R-universe.dev")
 ```
 
 ## Basic Usage
@@ -74,7 +74,7 @@ Note that `quantile()` **always** returns lower tail probabilities. If you aren'
 If you are interested in contributing to `distributions3`, please reach out on Github! We are happy to review PRs contributing bug fixes.
 
 Please note that `distributions3` is released with a
-[Contributor Code of Conduct](https://alexpghayes.github.io/distributions3/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+[Contributor Code of Conduct](https://zeileis.github.io/distributions3/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
 
 ## Related work
 

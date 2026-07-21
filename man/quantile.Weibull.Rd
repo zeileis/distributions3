@@ -50,9 +50,9 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other Weibull distribution: 
-\code{\link{cdf.Weibull}()},
-\code{\link{pdf.Weibull}()},
-\code{\link{random.Weibull}()}
+Other Weibull distribution:
+\code{\link[=cdf.Weibull]{cdf.Weibull()}},
+\code{\link[=pdf.Weibull]{pdf.Weibull()}},
+\code{\link[=random.Weibull]{random.Weibull()}}
 }
 \concept{Weibull distribution}

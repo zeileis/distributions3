@@ -8,8 +8,8 @@
 [![CRAN
 status](https://www.r-pkg.org/badges/version/distributions3)](https://cran.r-project.org/package=distributions3)
 [![Codecov test
-coverage](https://codecov.io/gh/alexpghayes/distributions3/branch/main/graph/badge.svg)](https://app.codecov.io/gh/alexpghayes/distributions3?branch=main)
-[![R-CMD-check](https://github.com/alexpghayes/distributions3/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/alexpghayes/distributions3/actions/workflows/R-CMD-check.yaml)
+coverage](https://codecov.io/gh/zeileis/distributions3/branch/main/graph/badge.svg)](https://app.codecov.io/gh/zeileis/distributions3?branch=main)
+[![R-CMD-check](https://github.com/zeileis/distributions3/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zeileis/distributions3/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 `distributions3`, inspired by the [eponymous Julia
@@ -42,8 +42,7 @@ install.packages("distributions3")
 You can install the development version with:
 
 ``` r
-install.packages("devtools")
-devtools::install_github("alexpghayes/distributions3")
+install.packages("distributions3", repos = "https://zeileis.R-universe.dev")
 ```
 
 ## Basic Usage
@@ -56,7 +55,7 @@ library("distributions3")
 X <- Bernoulli(0.1)
 
 random(X, 10)
-#>  [1] 1 0 0 0 0 0 0 0 0 0
+#>  [1] 0 0 0 0 1 0 0 1 0 0
 pdf(X, 1)
 #> [1] 0.1
 
@@ -78,7 +77,7 @@ out on Github! We are happy to review PRs contributing bug fixes.
 
 Please note that `distributions3` is released with a [Contributor Code
 of
-Conduct](https://alexpghayes.github.io/distributions3/CODE_OF_CONDUCT.html).
+Conduct](https://zeileis.github.io/distributions3/CODE_OF_CONDUCT.html).
 By contributing to this project, you agree to abide by its terms.
 
 ## Related work

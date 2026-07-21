@@ -55,9 +55,9 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other Geometric distribution: 
-\code{\link{cdf.Geometric}()},
-\code{\link{quantile.Geometric}()},
-\code{\link{random.Geometric}()}
+Other Geometric distribution:
+\code{\link[=cdf.Geometric]{cdf.Geometric()}},
+\code{\link[=quantile.Geometric]{quantile.Geometric()}},
+\code{\link[=random.Geometric]{random.Geometric()}}
 }
 \concept{Geometric distribution}

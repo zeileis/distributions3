@@ -50,9 +50,9 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other HyperGeometric distribution: 
-\code{\link{cdf.HyperGeometric}()},
-\code{\link{pdf.HyperGeometric}()},
-\code{\link{random.HyperGeometric}()}
+Other HyperGeometric distribution:
+\code{\link[=cdf.HyperGeometric]{cdf.HyperGeometric()}},
+\code{\link[=pdf.HyperGeometric]{pdf.HyperGeometric()}},
+\code{\link[=random.HyperGeometric]{random.HyperGeometric()}}
 }
 \concept{HyperGeometric distribution}

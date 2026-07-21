@@ -47,20 +47,20 @@ quantile(X, 0.5)
 # quantile(Y, 0.7)
 }
 \seealso{
-Other discrete distributions: 
-\code{\link{Bernoulli}()},
-\code{\link{Binomial}()},
-\code{\link{Geometric}()},
-\code{\link{HurdleNegativeBinomial}()},
-\code{\link{HurdlePoisson}()},
-\code{\link{HyperGeometric}()},
-\code{\link{Multinomial}()},
-\code{\link{NegativeBinomial}()},
-\code{\link{Poisson}()},
-\code{\link{PoissonBinomial}()},
-\code{\link{ZINegativeBinomial}()},
-\code{\link{ZIPoisson}()},
-\code{\link{ZTNegativeBinomial}()},
-\code{\link{ZTPoisson}()}
+Other discrete distributions:
+\code{\link[=Bernoulli]{Bernoulli()}},
+\code{\link[=Binomial]{Binomial()}},
+\code{\link[=Geometric]{Geometric()}},
+\code{\link[=HurdleNegativeBinomial]{HurdleNegativeBinomial()}},
+\code{\link[=HurdlePoisson]{HurdlePoisson()}},
+\code{\link[=HyperGeometric]{HyperGeometric()}},
+\code{\link[=Multinomial]{Multinomial()}},
+\code{\link[=NegativeBinomial]{NegativeBinomial()}},
+\code{\link[=Poisson]{Poisson()}},
+\code{\link[=PoissonBinomial]{PoissonBinomial()}},
+\code{\link[=ZINegativeBinomial]{ZINegativeBinomial()}},
+\code{\link[=ZIPoisson]{ZIPoisson()}},
+\code{\link[=ZTNegativeBinomial]{ZTNegativeBinomial()}},
+\code{\link[=ZTPoisson]{ZTPoisson()}}
 }
 \concept{discrete distributions}

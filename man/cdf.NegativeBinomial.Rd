@@ -57,9 +57,9 @@ cdf(Y, 50)
 quantile(Y, 0.7)
 }
 \seealso{
-Other NegativeBinomial distribution: 
-\code{\link{pdf.NegativeBinomial}()},
-\code{\link{quantile.NegativeBinomial}()},
-\code{\link{random.NegativeBinomial}()}
+Other NegativeBinomial distribution:
+\code{\link[=pdf.NegativeBinomial]{pdf.NegativeBinomial()}},
+\code{\link[=quantile.NegativeBinomial]{quantile.NegativeBinomial()}},
+\code{\link[=random.NegativeBinomial]{random.NegativeBinomial()}}
 }
 \concept{NegativeBinomial distribution}

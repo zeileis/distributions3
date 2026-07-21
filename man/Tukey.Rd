@@ -22,7 +22,7 @@ honestly significant differences test in ANOVA.
 }
 \details{
 We recommend reading this documentation on
-\url{https://alexpghayes.github.io/distributions3/}, where the math
+\url{https://zeileis.github.io/distributions3/}, where the math
 will render with additional detail and much greater clarity.
 
 \strong{Support}: \eqn{R^+}, the set of positive real numbers.
@@ -42,24 +42,24 @@ cdf(X, 4)
 quantile(X, 0.7)
 }
 \seealso{
-Other continuous distributions: 
-\code{\link{Beta}()},
-\code{\link{Cauchy}()},
-\code{\link{ChiSquare}()},
-\code{\link{Erlang}()},
-\code{\link{Exponential}()},
-\code{\link{FisherF}()},
-\code{\link{Frechet}()},
-\code{\link{GEV}()},
-\code{\link{GP}()},
-\code{\link{Gamma}()},
-\code{\link{Gumbel}()},
-\code{\link{LogNormal}()},
-\code{\link{Logistic}()},
-\code{\link{Normal}()},
-\code{\link{RevWeibull}()},
-\code{\link{StudentsT}()},
-\code{\link{Uniform}()},
-\code{\link{Weibull}()}
+Other continuous distributions:
+\code{\link[=Beta]{Beta()}},
+\code{\link[=Cauchy]{Cauchy()}},
+\code{\link[=ChiSquare]{ChiSquare()}},
+\code{\link[=Erlang]{Erlang()}},
+\code{\link[=Exponential]{Exponential()}},
+\code{\link[=FisherF]{FisherF()}},
+\code{\link[=Frechet]{Frechet()}},
+\code{\link[=GEV]{GEV()}},
+\code{\link[=GP]{GP()}},
+\code{\link[=Gamma]{Gamma()}},
+\code{\link[=Gumbel]{Gumbel()}},
+\code{\link[=LogNormal]{LogNormal()}},
+\code{\link[=Logistic]{Logistic()}},
+\code{\link[=Normal]{Normal()}},
+\code{\link[=RevWeibull]{RevWeibull()}},
+\code{\link[=StudentsT]{StudentsT()}},
+\code{\link[=Uniform]{Uniform()}},
+\code{\link[=Weibull]{Weibull()}}
 }
 \concept{continuous distributions}

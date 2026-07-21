@@ -99,9 +99,9 @@ mean(x) + quantile(T, 0.12 / 2) * sd(x) / sqrt(nx)
 mean(x) + quantile(T, 1 - 0.12 / 2) * sd(x) / sqrt(nx)
 }
 \seealso{
-Other StudentsT distribution: 
-\code{\link{cdf.StudentsT}()},
-\code{\link{quantile.StudentsT}()},
-\code{\link{random.StudentsT}()}
+Other StudentsT distribution:
+\code{\link[=cdf.StudentsT]{cdf.StudentsT()}},
+\code{\link[=quantile.StudentsT]{quantile.StudentsT()}},
+\code{\link[=random.StudentsT]{random.StudentsT()}}
 }
 \concept{StudentsT distribution}

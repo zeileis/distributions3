@@ -121,9 +121,9 @@ cdf(X, quantile(X, 0.7))
 quantile(X, cdf(X, 7))
 }
 \seealso{
-Other Normal distribution: 
-\code{\link{fit_mle.Normal}()},
-\code{\link{pdf.Normal}()},
-\code{\link{quantile.Normal}()}
+Other Normal distribution:
+\code{\link[=fit_mle.Normal]{fit_mle.Normal()}},
+\code{\link[=pdf.Normal]{pdf.Normal()}},
+\code{\link[=quantile.Normal]{quantile.Normal()}}
 }
 \concept{Normal distribution}

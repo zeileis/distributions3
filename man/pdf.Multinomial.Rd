@@ -39,7 +39,7 @@ random(X, 10)
 # log_pdf(X, 2)
 }
 \seealso{
-Other Multinomial distribution: 
-\code{\link{random.Multinomial}()}
+Other Multinomial distribution:
+\code{\link[=random.Multinomial]{random.Multinomial()}}
 }
 \concept{Multinomial distribution}

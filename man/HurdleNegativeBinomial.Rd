@@ -24,7 +24,7 @@ with overdispersion and many zero observations.
 }
 \details{
 We recommend reading this documentation on
-\url{https://alexpghayes.github.io/distributions3/}, where the math
+\url{https://zeileis.github.io/distributions3/}, where the math
 will render with additional detail.
 
 In the following, let \eqn{X} be a hurdle negative binomial random variable with parameters
@@ -95,20 +95,20 @@ x <- random(X, 500)
 hist(x, breaks = -1:max(x) + 0.5)
 }
 \seealso{
-Other discrete distributions: 
-\code{\link{Bernoulli}()},
-\code{\link{Binomial}()},
-\code{\link{Categorical}()},
-\code{\link{Geometric}()},
-\code{\link{HurdlePoisson}()},
-\code{\link{HyperGeometric}()},
-\code{\link{Multinomial}()},
-\code{\link{NegativeBinomial}()},
-\code{\link{Poisson}()},
-\code{\link{PoissonBinomial}()},
-\code{\link{ZINegativeBinomial}()},
-\code{\link{ZIPoisson}()},
-\code{\link{ZTNegativeBinomial}()},
-\code{\link{ZTPoisson}()}
+Other discrete distributions:
+\code{\link[=Bernoulli]{Bernoulli()}},
+\code{\link[=Binomial]{Binomial()}},
+\code{\link[=Categorical]{Categorical()}},
+\code{\link[=Geometric]{Geometric()}},
+\code{\link[=HurdlePoisson]{HurdlePoisson()}},
+\code{\link[=HyperGeometric]{HyperGeometric()}},
+\code{\link[=Multinomial]{Multinomial()}},
+\code{\link[=NegativeBinomial]{NegativeBinomial()}},
+\code{\link[=Poisson]{Poisson()}},
+\code{\link[=PoissonBinomial]{PoissonBinomial()}},
+\code{\link[=ZINegativeBinomial]{ZINegativeBinomial()}},
+\code{\link[=ZIPoisson]{ZIPoisson()}},
+\code{\link[=ZTNegativeBinomial]{ZTNegativeBinomial()}},
+\code{\link[=ZTPoisson]{ZTPoisson()}}
 }
 \concept{discrete distributions}

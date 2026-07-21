@@ -99,7 +99,7 @@ rzipois <- function(n, lambda, pi) {
 #' @details
 #'
 #'   We recommend reading this documentation on
-#'   <https://alexpghayes.github.io/distributions3/>, where the math
+#'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail.
 #'
 #'   In the following, let \eqn{X} be a zero-inflated Poisson random variable with parameter

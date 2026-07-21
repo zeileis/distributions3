@@ -1,4 +1,4 @@
-url: https://alexpghayes.github.io/distributions3
+url: https://zeileis.github.io/distributions3
 
 development:
   mode: auto
@@ -9,7 +9,7 @@ template:
     bootswatch: flatly
   opengraph:
     twitter:
-      creator: "@alexpghayes"
+      creator: "@AchimZeileis"
       card: summary
   math-rendering: "mathjax"
 
