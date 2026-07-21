@@ -2,19 +2,15 @@ Package: distributions3
 Title: Probability Distributions as S3 Objects
 Version: 0.2.4
 Authors@R: c(
-    person("Alex", "Hayes", , "alexpghayes@gmail.com", role = "aut",
-           comment = c(ORCID = "0000-0002-4985-5160")),
-    person("Ralph", "Moller-Trane", role = "aut"),
-    person("Emil", "Hvitfeldt", , "emilhhvitfeldt@gmail.com", role = "ctb",
-           comment = c(ORCID = "0000-0002-0679-1945")),
-    person("Daniel", "Jordan", , "dandermotj@gmail.com", role = "aut"),
-    person("Paul", "Northrop", , "p.northrop@ucl.ac.uk", role = "aut"),
-    person("Moritz N.", "Lang", , "moritz.n.lang@gmail.com", role = "aut",
-           comment = c(ORCID = "0000-0002-2533-9903")),
-    person("Achim", "Zeileis", , "Achim.Zeileis@R-project.org", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-0918-3766")),
-    person("Bruna", "Wundervald", , "brunadaviesw@gmail.com", role = "ctb"),
-    person("Alessandro", "Gasparini", , "alessandro.gasparini@ki.se", role = "ctb")
+    person(given = "Alex", family = "Hayes", email = "alexpghayes@gmail.com", role = "aut", comment = c(ORCID = "0000-0002-4985-5160")),
+    person(given = "Ralph", family = "Moller-Trane", role = "aut", comment = c(ORCID = "0000-0001-7824-1785")),
+    person(given = "Daniel", family = "Jordan", email = "dandermotj@gmail.com", role = "aut"),
+    person(given = "Paul", family = "Northrop", email = "p.northrop@ucl.ac.uk", role = "aut", comment = c(ORCID = "0000-0002-1992-4882")),
+    person(given = c("Moritz", "N."), family = "Lang", email = "moritz.n.lang@gmail.com", role = "aut", comment = c(ORCID = "0000-0002-2533-9903")),
+    person(given = "Achim", family = "Zeileis", email = "Achim.Zeileis@R-project.org", role = c("aut", "cre"), comment = c(ORCID = "0000-0003-0918-3766")),
+    person(given = "Emil", family = "Hvitfeldt", email = "emilhhvitfeldt@gmail.com", role = "ctb", comment = c(ORCID = "0000-0002-0679-1945")),
+    person(given = "Bruna", family = "Wundervald", email = "brunadaviesw@gmail.com", role = "ctb", comment = c(ORCID = "0000-0001-8163-220X")),
+    person(given = "Alessandro", family = "Gasparini", email = "alessandro.gasparini@ki.se", role = "ctb", comment = c(ORCID = "0000-0002-8319-7624"))
   )
 Description: Tools to create and manipulate probability distributions
     using S3.  Generics pdf(), cdf(), quantile(), and random() provide
