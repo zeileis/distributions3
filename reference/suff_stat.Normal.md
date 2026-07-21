@@ -1,0 +1,35 @@
+# Compute the sufficient statistics for a Normal distribution from data
+
+Compute the sufficient statistics for a Normal distribution from data
+
+## Usage
+
+``` r
+# S3 method for class 'Normal'
+suff_stat(d, x, ...)
+```
+
+## Arguments
+
+- d:
+
+  A `Normal` object created by a call to
+  [`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md).
+
+- x:
+
+  A vector of data.
+
+- ...:
+
+  Unused.
+
+## Value
+
+A named list of the sufficient statistics of the normal distribution:
+
+- `mu`: The sample mean of the data.
+
+- `sigma`: The sample standard deviation of the data.
+
+- `samples`: The number of samples in the data.

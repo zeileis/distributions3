@@ -1,0 +1,166 @@
+# One sample Z-tests for a proportion
+
+In this vignette, we work through an example Z-test a proportion, and
+point out a number of points where you might get stuck along the way.
+
+## Problem setup
+
+Let’s suppose that a student is interesting in estimating what percent
+of professors in their department watches Game of Thrones. They go to
+office hours and ask each professor and it turns out 17 out of 62
+professors in their department watch Game of Thrones. Several of the
+faculty think Game of Thrones is a board game.
+
+We can imagine that the data is a bunch of zeros and ones, where the
+\\i^{th}\\ data point, \\x_i\\ is one if professor \\i\\ watches Game of
+Thrones, and zero otherwise. So the full dataset might look something
+like:
+
+\\ \begin{align} & 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+0, 1, \\ & 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1,
+0, \\ & 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+\end{align} \\
+
+But it is much easier to just remember that there are 17 ones and 45
+zeros.
+
+## Assumption checking
+
+Before we can do a Z-test, we need to make check if we can reasonably
+treat the mean of this sample as normally distributed. The data is
+definitely not from a normal distribution since it’s only zeros and
+ones, so we need to check if the central limit theorem kicks in.
+
+Most of the time we would check if there were 30 data points or more,
+but for a proportion, we do something slightly different. When data is
+binary, like we have here, the central limit theorem kicks in slower
+than usual. The standard thing to check is whether
+
+- \\n \cdot \pi \> 5\\
+- \\n \cdot (1 - \pi) \> 5\\
+
+Where \\n\\ is the sample size (62 in our case) and \\\pi\\ is the
+sample average. Note that some textbooks might use \\p\\ rather than
+\\\pi\\. In our case we have \\\pi = 17 / 62\\, and
+
+- \\62 \cdot 17 / 62 = 17\\
+- \\62 \cdot (1 - 17 / 62) = 45\\
+
+So we’re good to go.
+
+## Null hypothesis and test statistic
+
+Let’s test the null hypothesis that, on average, twenty percent of
+professors what Game of Thrones. The corresponding null hypothesis is
+
+\\ H_0: \pi = 0.2 \qquad H_A: \pi \neq 0.2 \\
+
+First we need to calculate our Z-statistic. Remember that the
+Z-statistic for proportion is
+
+\\ Z = \frac{\pi - \pi_0}{\sqrt{\frac{\pi_0 (1 - \pi_0)}{n}}} \sim
+\mathrm{Normal}(0, 1) \\
+
+## Calculating p-values
+
+In R this looks like:
+
+``` r
+
+n <- 62
+pi <- 17 / 62
+pi_0 <- 0.2
+
+# calculate the z-statistic
+z_stat <- (pi - pi_0) / sqrt(pi_0 * (1 - pi_0) / n)
+z_stat
+#> [1] 1.460501
+```
+
+To calculate a two-sided p-value, we need to find
+
+\\ \begin{align} P(\|Z\| \ge \|1.46\|) &= P(Z \ge 1.46) + P(Z \le -1.46)
+\\ &= 1 - P(Z \le 1.46) + P(Z \le -1.46) \\ &= 1 - \Phi(1.46) +
+\Phi(-1.46) \end{align} \\
+
+To do this we need to c.d.f. of a standard normal
+
+``` r
+
+library(distributions3)
+#> 
+#> Attaching package: 'distributions3'
+#> The following object is masked from 'package:stats':
+#> 
+#>     Gamma
+#> The following object is masked from 'package:grDevices':
+#> 
+#>     pdf
+
+Z <- Normal(0, 1)  # make a standard normal r.v.
+1 - cdf(Z, 1.46) + cdf(Z, -1.46)
+#> [1] 0.1442901
+```
+
+Note that we saved `z_stat` above so we could have also done
+
+``` r
+
+1 - cdf(Z, abs(z_stat)) + cdf(Z, -abs(z_stat))
+#> [1] 0.1441523
+```
+
+which is slightly more accurate since there is no rounding error.
+
+So our p-value is about 0.14. You should verify this with a Z-table.
+Note that you should get the *same* value from `cdf(Z, 1.46)` and
+looking up `1.46` on a Z-table.
+
+You may also have seen a different formula for the p-value of a
+two-sided Z-test, which makes use of the fact that the normal
+distribution is symmetric:
+
+\\ \begin{align} P(\|Z\| \ge \|1.46\|) &= 2 \cdot P(Z \le -\|1.46\|) &=
+2 \cdot \Phi(-1.46) \end{align} \\
+
+Using this formula we get the same result:
+
+``` r
+
+2 * cdf(Z, -1.46)
+#> [1] 0.1442901
+```
+
+## One-sided Z-tests
+
+Finally, sometimes we are interest in one sided Z-tests. For the test
+
+\\ \begin{align} H_0: \pi \le 0.2 \qquad H_A: \pi \> 0.2 \end{align} \\
+
+the p-value is given by
+
+\\ P(Z \> 1.46) \\
+
+which we calculate with
+
+``` r
+
+1 - cdf(Z, 1.46)
+#> [1] 0.07214504
+```
+
+For the test
+
+\\ H_0: \pi \ge 0.2 \qquad H_A: \pi \< 0.2 \\
+
+the p-value is given by
+
+\\ P(Z \< 1.46) \\
+
+which we calculate with
+
+``` r
+
+cdf(Z, 1.46)
+#> [1] 0.927855
+```

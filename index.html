@@ -13,15 +13,15 @@
     }
   };
 </script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Probability Distributions as S3 Objects">
 <meta name="description" content="Tools to create and manipulate probability distributions using S3. Generics pdf(), cdf(), quantile(), and random() provide replacements for base R's d/p/q/r style functions. Functions and arguments have been named carefully to minimize confusion for students in intro stats courses. The documentation for each distribution contains detailed mathematical notes.">
 <meta property="og:description" content="Tools to create and manipulate probability distributions using S3. Generics pdf(), cdf(), quantile(), and random() provide replacements for base R's d/p/q/r style functions. Functions and arguments have been named carefully to minimize confusion for students in intro stats courses. The documentation for each distribution contains detailed mathematical notes.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:creator" content="@alexpghayes">
-<meta name="twitter:site" content="@alexpghayes">
+<meta name="twitter:creator" content="@AchimZeileis">
+<meta name="twitter:site" content="@AchimZeileis">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">distributions3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/alexpghayes/distributions3/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/zeileis/distributions3/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -75,7 +75,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p><code>distributions3</code>, inspired by the <a href="https://github.com/JuliaStats/Distributions.jl" class="external-link">eponynmous Julia package</a>, provides a generic function interface to probability distributions. <code>distributions3</code> has two goals:</p>
+<p><code>distributions3</code>, inspired by the <a href="https://github.com/JuliaStats/Distributions.jl" class="external-link">eponymous Julia package</a>, provides a generic function interface to probability distributions. <code>distributions3</code> has two goals:</p>
 <ol style="list-style-type: decimal">
 <li><p>Replace the <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm()</a></code>, etc, family of functions with S3 methods for distribution objects</p></li>
 <li><p>Be extremely well documented and friendly for students in intro stat classes.</p></li>
@@ -99,20 +99,19 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"distributions3"</span><span class="op">)</span></span></code></pre></div>
 <p>You can install the development version with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"alexpghayes/distributions3"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"distributions3"</span>, repos <span class="op">=</span> <span class="st">"https://zeileis.R-universe.dev"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
 </h2>
 <p>The basic usage of <code>distributions3</code> looks like:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/alexpghayes/distributions3" class="external-link">"distributions3"</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/zeileis/distributions3" class="external-link">"distributions3"</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/Bernoulli.html">Bernoulli</a></span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/random.html">random</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  [1] 0 0 0 0 0 0 0 0 0 0</span></span>
+<span><span class="co">#&gt;  [1] 0 0 0 0 1 0 0 1 0 0</span></span>
 <span><span class="fu"><a href="reference/pdf.html">pdf</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.1</span></span>
 <span></span>
@@ -126,7 +125,7 @@
 <h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
 </h2>
 <p>If you are interested in contributing to <code>distributions3</code>, please reach out on Github! We are happy to review PRs contributing bug fixes.</p>
-<p>Please note that <code>distributions3</code> is released with a <a href="https://alexpghayes.github.io/distributions3/CODE_OF_CONDUCT.html">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
+<p>Please note that <code>distributions3</code> is released with a <a href="https://zeileis.github.io/distributions3/CODE_OF_CONDUCT.html">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
 </div>
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
@@ -148,8 +147,8 @@
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://cloud.r-project.org/package=distributions3" class="external-link">View on CRAN</a></li>
-<li><a href="https://github.com/alexpghayes/distributions3/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/alexpghayes/distributions3/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/zeileis/distributions3/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/zeileis/distributions3/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -179,12 +178,12 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Alex Hayes <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-4985-5160" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
-<li>Ralph Moller-Trane <br><small class="roles"> Author </small>   </li>
+<li>Alex Hayes <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-4985-5160" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Ralph Moller-Trane <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0001-7824-1785" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Daniel Jordan <br><small class="roles"> Author </small>   </li>
-<li>Paul Northrop <br><small class="roles"> Author </small>   </li>
+<li>Paul Northrop <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-1992-4882" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Moritz N. Lang <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-2533-9903" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
-<li>Achim Zeileis <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0003-0918-3766" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Achim Zeileis <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-0918-3766" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
@@ -200,7 +199,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
