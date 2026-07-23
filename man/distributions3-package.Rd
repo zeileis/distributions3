@@ -24,17 +24,17 @@ Authors:
 \itemize{
   \item Achim Zeileis \email{Achim.Zeileis@R-project.org} (\href{https://orcid.org/0000-0003-0918-3766}{ORCID})
   \item Alex Hayes \email{alexpghayes@gmail.com} (\href{https://orcid.org/0000-0002-4985-5160}{ORCID})
-  \item Ralph Moller-Trane
+  \item Ralph Moller-Trane (\href{https://orcid.org/0000-0001-7824-1785}{ORCID})
   \item Daniel Jordan \email{dandermotj@gmail.com}
-  \item Paul Northrop \email{p.northrop@ucl.ac.uk}
+  \item Paul Northrop \email{p.northrop@ucl.ac.uk} (\href{https://orcid.org/0000-0002-1992-4882}{ORCID})
   \item Moritz N. Lang \email{moritz.n.lang@gmail.com} (\href{https://orcid.org/0000-0002-2533-9903}{ORCID})
 }
 
 Other contributors:
 \itemize{
   \item Emil Hvitfeldt \email{emilhhvitfeldt@gmail.com} (\href{https://orcid.org/0000-0002-0679-1945}{ORCID}) [contributor]
-  \item Bruna Wundervald \email{brunadaviesw@gmail.com} [contributor]
-  \item Alessandro Gasparini \email{alessandro.gasparini@ki.se} [contributor]
+  \item Bruna Wundervald \email{brunadaviesw@gmail.com} (\href{https://orcid.org/0000-0001-8163-220X}{ORCID}) [contributor]
+  \item Alessandro Gasparini \email{alessandro.gasparini@ki.se} (\href{https://orcid.org/0000-0002-8319-7624}{ORCID}) [contributor]
 }
 
 }
