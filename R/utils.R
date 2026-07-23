@@ -416,3 +416,9 @@ make_positive_integer <- function(n) {
   }
   n
 }
+
+#' @export
+median.distribution <- function(x, na.rm = FALSE, ...) {
+    quantile(x, probs = 0.5, ...)
+}
+

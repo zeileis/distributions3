@@ -29,7 +29,7 @@ check: build
 
 .PHONY: test
 test: clean install
-	Rscript -e "library('distributions3'); tinytest::test_all()"
+	Rscript -e "options('distributions3_runtests', TRUE); library('distributions3'); tinytest::test_all()"
 
 .PHONY: coverage
 coverage: install

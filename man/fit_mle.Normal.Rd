@@ -21,6 +21,7 @@ Fit a Normal distribution to data
 }
 \seealso{
 Other Normal distribution:
+\code{\link[=Empirical]{Empirical()}},
 \code{\link[=cdf.Normal]{cdf.Normal()}},
 \code{\link[=pdf.Normal]{pdf.Normal()}},
 \code{\link[=quantile.Normal]{quantile.Normal()}}
