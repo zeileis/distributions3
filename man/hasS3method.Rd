@@ -2,12 +2,12 @@
 % Please edit documentation in R/utils.R
 \name{hasS3method}
 \alias{hasS3method}
-\title{Helper functions to check available support for some S3methods}
+\title{Check available support for S3 method}
 \usage{
 hasS3method(method, classes)
 }
 \arguments{
-\item{method}{character, name of the method (e.g., is_continuous, print, ...)}
+\item{method}{character, name of the method (e.g., \code{"is_continuous"}, \code{"print"}, ...)}
 
 \item{classes}{character vector of length > 0, classes to check.}
 }
@@ -15,5 +15,6 @@ hasS3method(method, classes)
 Returns \code{TRUE} if the method exists for one of the given classes, else \code{FALSE}.
 }
 \description{
-Helper functions to check available support for some S3methods
+Evaluates whether or not there is support for a given S3 method for specific
+objects.
 }

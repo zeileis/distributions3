@@ -52,23 +52,26 @@ except on Windows where \code{\link[parallel]{parLapply}} with
 \code{makeCluster(cores)} is used.}
 
 \item{method}{character. Should the grid be set up on the observation scale
-and \code{method = "cdf"} be used to compute the corresponding probabilities?
-Or should the grid be set up on the probability scale and \code{method = "quantile"}
-be used to compute the corresponding observations? By default, \code{"cdf"}
-is used for discrete observations whose range is smaller than the \code{gridsize}
-and \code{"quantile"} otherwise.}
+and \code{method = "cdf"} be used to compute the corresponding
+probabilities? Or should the grid be set up on the probability scale and
+\code{method = "quantile"} be used to compute the corresponding
+observations? By default, \code{"cdf"} is used for discrete observations
+whose range is smaller than the \code{gridsize} and \code{"quantile"}
+otherwise.}
 
-\item{...}{\code{\link{mean.distribution}}, \code{\link{variance.distribution}},
-\code{\link{skewness.distribution}} and
-\code{\link{kurtosis.distribution}} forward the additional arguments (\code{...}) to
-\code{\link{distribution_calculate_moments}}; all other functions/methods ignore additional arguments.}
+\item{...}{\code{\link{mean.distribution}},
+\code{\link{variance.distribution}}, \code{\link{skewness.distribution}} and
+\code{\link{kurtosis.distribution}} forward the additional arguments
+(\code{...}) to \code{\link{distribution_calculate_moments}}; all other
+functions/methods ignore additional arguments.}
 
-\item{n}{Integer. Number of observations to be drawn.}
+\item{n}{integer. Number of observations to be drawn.}
 
-\item{drop}{Logical. Should the result be simplified to a vector if possible?}
+\item{drop}{logical. Should the result be simplified to a vector if possible?}
 }
 \value{
-A (potentially named) numeric vector of length \code{length(x)} with the requested central moment.
+A (potentially named) numeric vector of length \code{length(x)} with
+the requested central moment.
 }
 \description{
 Method used to evaluate (approximate) the central moments (mean, variance, skewness, and kurtosis)

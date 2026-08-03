@@ -34,21 +34,23 @@
 \arguments{
 \item{d}{an object of class \code{"distribution"}.}
 
-\item{x}{Either a numeric vector of probabilities to be evaluated (if \code{pdf()} is called),
-or an object of class \code{"distributions"} (as \code{d}) when calling the \code{quantile()} function.}
+\item{x}{Either a numeric vector of probabilities to be evaluated (if
+\code{pdf()} is called), or an object of class \code{"distributions"} (as
+\code{d}) when calling the \code{quantile()} function.}
 
 \item{drop}{logical. Should the result be simplified to a vector if possible?}
 
-\item{elementwise}{Logical. Should each distribution (in \code{d}/\code{x}) be evaluated at all
-elements in \code{x} (when \code{pdf()} is called) or \code{probs} (if \code{quantile()} is called)?
-The default \code{NULL} means that \code{elementwise = TRUE} is used if the lengths match,
-else \code{elementwise} is set \code{FALSE}.}
+\item{elementwise}{Logical. Should each distribution (in \code{d}/\code{x})
+be evaluated at all elements in \code{x} (when \code{pdf()} is called) or
+\code{probs} (if \code{quantile()} is called)? The default \code{NULL} means
+that \code{elementwise = TRUE} is used if the lengths match, else
+\code{elementwise} is set \code{FALSE}.}
 
 \item{log}{logical. If \code{TRUE}, probabilities are given as \code{log(p)}.}
 
-\item{applyfun}{an optional \code{\link[base]{lapply}}-style function with arguments
-\code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
-of \code{y}. The default is to use the basic \code{lapply}
+\item{applyfun}{an optional \code{\link[base]{lapply}}-style function with
+arguments \code{function(X, FUN, \dots)}. It is used to compute the CRPS for
+each element of \code{y}. The default is to use the basic \code{lapply}
 function unless the \code{cores} argument is specified (see below).}
 
 \item{cores}{numeric. If set to an integer the \code{applyfun} is set to
@@ -73,9 +75,11 @@ before the quantile has been found, an error will be thrown.}
 \eqn{P[X \le x]}{P[X <= x]}, else \eqn{P[X \ge x]}{P[X >= x]}.}
 }
 \description{
-Methods to the generic \link[distributions3]{pdf} and \link[stats]{quantile} functions from the
-\pkg{distributions3} package for numerically approximating the probability density function (PDF)
-or the quantile function (inverse CDF) if only the cummulative distribution function (CDF) is given.
+Methods to the generic \link[distributions3]{pdf} and \link[stats]{quantile}
+functions from the \pkg{distributions3} package for numerically
+approximating the probability density function (PDF) or the quantile
+function (inverse CDF) if only the cummulative distribution function (CDF)
+is given.
 }
 \examples{
 library("distributions3")

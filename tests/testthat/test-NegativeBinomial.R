@@ -241,3 +241,10 @@ test_that("named return values for NegativeBinomial distribution work correctly"
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+suppressPackageStartupMessages(library("scoringRules"))
+test_that("crps method for NegativeBinomial returns correct object", {
+  d <- NegativeBinomial(mu = c(1, 5), size = c(3, 10))
+  expect_error(crps <- crps(d, 3),
+               regexp = "^Calculations require an implementation of the gaussian hypergeometric function")
+})

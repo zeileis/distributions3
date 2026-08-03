@@ -179,3 +179,12 @@ test_that("named return values for Bernoulli distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+suppressPackageStartupMessages(library("scoringRules"))
+test_that("crps method for Bernoulli returns correct object", {
+  d <- Bernoulli(c(0.2, 0.5))
+  expect_silent(crps <- crps(d, 0.8))
+  expect_type(crps, "double")
+  expect_true(is.vector(crps))
+  expect_true(!all(is.na(crps)) & all(crps >= 0))
+})

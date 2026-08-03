@@ -1,27 +1,31 @@
 
 #' Methods for Numerically Approximating PDF and Quantile Functions
 #'
-#' Methods to the generic \link[distributions3]{pdf} and \link[stats]{quantile} functions from the
-#' \pkg{distributions3} package for numerically approximating the probability density function (PDF)
-#' or the quantile function (inverse CDF) if only the cummulative distribution function (CDF) is given.
+#' Methods to the generic \link[distributions3]{pdf} and \link[stats]{quantile}
+#' functions from the \pkg{distributions3} package for numerically
+#' approximating the probability density function (PDF) or the quantile
+#' function (inverse CDF) if only the cummulative distribution function (CDF)
+#' is given.
 #'
 #' @param d an object of class \code{"distribution"}.
-#' @param x Either a numeric vector of probabilities to be evaluated (if \code{pdf()} is called),
-#'        or an object of class \code{"distributions"} (as \code{d}) when calling the \code{quantile()} function.
+#' @param x Either a numeric vector of probabilities to be evaluated (if
+#'        \code{pdf()} is called), or an object of class \code{"distributions"} (as
+#'        \code{d}) when calling the \code{quantile()} function.
 #' @param log logical. If \code{TRUE}, probabilities are given as \code{log(p)}.
 #' @param drop logical. Should the result be simplified to a vector if possible?
-#' @param elementwise Logical. Should each distribution (in \code{d}/\code{x}) be evaluated at all
-#'        elements in \code{x} (when \code{pdf()} is called) or \code{probs} (if \code{quantile()} is called)?
-#'        The default \code{NULL} means that \code{elementwise = TRUE} is used if the lengths match,
-#'        else \code{elementwise} is set \code{FALSE}.
-#' @param applyfun an optional \code{\link[base]{lapply}}-style function with arguments
-#'   \code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
-#'   of \code{y}. The default is to use the basic \code{lapply}
-#'   function unless the \code{cores} argument is specified (see below).
+#' @param elementwise Logical. Should each distribution (in \code{d}/\code{x})
+#'        be evaluated at all elements in \code{x} (when \code{pdf()} is called) or
+#'        \code{probs} (if \code{quantile()} is called)? The default \code{NULL} means
+#'        that \code{elementwise = TRUE} is used if the lengths match, else
+#'        \code{elementwise} is set \code{FALSE}.
+#' @param applyfun an optional \code{\link[base]{lapply}}-style function with
+#'        arguments \code{function(X, FUN, \dots)}. It is used to compute the CRPS for
+#'        each element of \code{y}. The default is to use the basic \code{lapply}
+#'        function unless the \code{cores} argument is specified (see below).
 #' @param cores numeric. If set to an integer the \code{applyfun} is set to
-#'   \code{\link[parallel]{mclapply}} with the desired number of \code{cores},
-#'   except on Windows where \code{\link[parallel]{parLapply}} with
-#'   \code{makeCluster(cores)} is used.
+#'        \code{\link[parallel]{mclapply}} with the desired number of \code{cores},
+#'        except on Windows where \code{\link[parallel]{parLapply}} with
+#'        \code{makeCluster(cores)} is used.
 #'
 #' @examples
 #' library("distributions3")
@@ -133,7 +137,7 @@
 #' probs <- c(0.0, 0.01, 0.25, 0.5, 0.75, 0.99, 1.0)
 #' quantile(p3, probs = probs) ## Numeric approximation
 #' quantile(P3, probs = probs) ## Analytic solution
-#' 
+#'
 #' probs2 <- seq(0.01, 0.99, by = 0.01)
 #' qp3 <- quantile(p3, probs = probs2) ## Numeric approximation
 #' qP3 <- quantile(P3, probs = probs2) ## Analytic solution
@@ -462,10 +466,10 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
                 # Used to stop if sum(cdf) ~ 1.0 to account for possible precision issues
                 quasi1 <- 1.0 - sqrt(.Machine$double.eps)
 
-                # @param p Numeric (length 1L), probabililty to be evaluated.
+                # @param p numeric (length 1L), probabililty to be evaluated.
                 # @param cdf Numeric (length 1L), cdf of previous iteration (or 0.0 when called first).
                 #        For follow-up iterations 'cdf' is the sum over the pdf up to 'x'.
-                # @param x Numeric (integer), current 'x' (or 'x' from previous iteration) matching 'cdf'.
+                # @param x numeric (integer), current 'x' (or 'x' from previous iteration) matching 'cdf'.
                 #
                 # @return Returns a list with two elements with current cdf (sum over pdf) as well
                 #         as the corresponding 'x' (position to which we've integrated already).
@@ -659,29 +663,32 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
 #' @param what single integer, controls what the C code returns. 1L (mean) 2L
 #'        (variance) 3L (skewness) 4L (kurtosis).
 #' @param gridsize positive size of the grid used to approximate the CDF for
-#'   the numerical calculation of the CRPS.
+#'        the numerical calculation of the CRPS.
 #' @param batchsize maximum batch size. Used to split the input into batches.
-#'   Lower values reduce required memory but may increase computation time.
+#'        Lower values reduce required memory but may increase computation time.
 #' @param applyfun an optional \code{\link[base]{lapply}}-style function with arguments
-#'   \code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
-#'   of \code{y}. The default is to use the basic \code{lapply}
-#'   function unless the \code{cores} argument is specified (see below).
+#'        \code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
+#'        of \code{y}. The default is to use the basic \code{lapply}
+#'        function unless the \code{cores} argument is specified (see below).
 #' @param cores numeric. If set to an integer the \code{applyfun} is set to
-#'   \code{\link[parallel]{mclapply}} with the desired number of \code{cores},
-#'   except on Windows where \code{\link[parallel]{parLapply}} with
-#'   \code{makeCluster(cores)} is used.
+#'        \code{\link[parallel]{mclapply}} with the desired number of \code{cores},
+#'        except on Windows where \code{\link[parallel]{parLapply}} with
+#'        \code{makeCluster(cores)} is used.
 #' @param method character. Should the grid be set up on the observation scale
-#'   and \code{method = "cdf"} be used to compute the corresponding probabilities?
-#'   Or should the grid be set up on the probability scale and \code{method = "quantile"}
-#'   be used to compute the corresponding observations? By default, \code{"cdf"}
-#'   is used for discrete observations whose range is smaller than the \code{gridsize}
-#'   and \code{"quantile"} otherwise.
-#' @param ... \code{\link{mean.distribution}}, \code{\link{variance.distribution}},
-#'            \code{\link{skewness.distribution}} and
-#'   \code{\link{kurtosis.distribution}} forward the additional arguments (\code{...}) to
-#'   \code{\link{distribution_calculate_moments}}; all other functions/methods ignore additional arguments.
+#'        and \code{method = "cdf"} be used to compute the corresponding
+#'        probabilities? Or should the grid be set up on the probability scale and
+#'        \code{method = "quantile"} be used to compute the corresponding
+#'        observations? By default, \code{"cdf"} is used for discrete observations
+#'        whose range is smaller than the \code{gridsize} and \code{"quantile"}
+#'        otherwise.
+#' @param ... \code{\link{mean.distribution}},
+#'        \code{\link{variance.distribution}}, \code{\link{skewness.distribution}} and
+#'        \code{\link{kurtosis.distribution}} forward the additional arguments
+#'        (\code{...}) to \code{\link{distribution_calculate_moments}}; all other
+#'        functions/methods ignore additional arguments.
 #'
-#' @return A (potentially named) numeric vector of length \code{length(x)} with the requested central moment.
+#' @return A (potentially named) numeric vector of length \code{length(x)} with
+#' the requested central moment.
 #'
 #' @examples
 #' library("distributions3")
@@ -848,8 +855,8 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
 }
 
 
-#' @param n Integer. Number of observations to be drawn.
-#' @param drop Logical. Should the result be simplified to a vector if possible?
+#' @param n integer. Number of observations to be drawn.
+#' @param drop logical. Should the result be simplified to a vector if possible?
 #'
 #' @rdname mean.distribution
 #' @exportS3Method

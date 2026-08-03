@@ -5,7 +5,6 @@
 docs/.DS_Store
 test/.DS_Store
 inst/doc
-docs
 revdep
 
 ## Compiled and compiled shared objects
@@ -14,3 +13,11 @@ src/*.o
 
 ## Residuals
 tests/testthat/Rplots.pdf
+
+## Coverage reports
+lib
+_*.html
+
+## Documentation
+docs
+lib
