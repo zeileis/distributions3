@@ -35,7 +35,8 @@ Suggests:
     testthat (>= 3.0.0),
     tibble,
     vctrs,
-    scoringRules
+    scoringRules,
+    numDeriv
 VignetteBuilder: 
     knitr
 Encoding: UTF-8

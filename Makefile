@@ -35,5 +35,5 @@ test: clean install
 
 .PHONY: coverage
 coverage: install
-	Rscript -e "covr::report(covr::package_coverage(line_exclusions = list('src/init.c'), function_exclusions = list('message\\\\s*\\\\(', 'plot.distributions3')), file = \"_coverage.html\")"
+	Rscript -e "covr::report(covr::package_coverage(line_exclusions = list('src/distributions3_init.c'), function_exclusions = list('message\\\\s*\\\\(', 'plot.distributions3')), file = \"_coverage.html\")"
 
