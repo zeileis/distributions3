@@ -7,3 +7,6 @@ test/.DS_Store
 inst/doc
 docs
 revdep
+
+## Residuals
+tests/testthat/Rplots.pdf

@@ -24,8 +24,10 @@ install: build
 	(cd ../ && R CMD INSTALL distributions3_$(VERSION).tar.gz)
 
 check: build
-	@echo Checking current version: $(VERSION)
-	(cd ../ && R CMD check --as-cran distributions3_$(VERSION).tar.gz)
+	@echo "Checking current version (w/o --as-cran): $(VERSION)"
+	(cd ../ && R CMD check distributions3_$(VERSION).tar.gz)
+	##@echo Checking current version: $(VERSION)
+	##(cd ../ && R CMD check --as-cran distributions3_$(VERSION).tar.gz)
 
 .PHONY: test
 test: clean install

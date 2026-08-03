@@ -91,7 +91,7 @@
 #' d1 <- Empirical(Y1)
 #' d1
 #' mean(d1)
-#' 
+#'
 #' ## Unnamed list of vectors
 #' Y2 <- list(as.character(rnorm(3, mean = -10)),
 #'            runif(6),
@@ -99,7 +99,7 @@
 #' d2 <- Empirical(Y2)
 #' d2
 #' mean(d2)
-#' 
+#'
 #' ## Named list of vectors
 #' Y3 <- list("Normal"  = as.character(rnorm(3, mean = -10)),
 #'            "Uniform" = runif(6),
@@ -107,7 +107,7 @@
 #' d3 <- Empirical(Y3)
 #' d3
 #' mean(d3)
-#' 
+#'
 #' ## Matrix or data.frame
 #' Y4 <- matrix(rnorm(20), ncol = 5, dimnames = list(sprintf("D_%d", 1:4), sprintf("obs_%d", 1:5)))
 #' d4 <- Empirical(Y4)
@@ -208,6 +208,7 @@ pempirical <- function(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE) {
   return(if (!log.p) rval else log(rval))
 }
 
+#' @importFrom graphics hist
 #' @export
 #' @rdname Empirical
 dempirical <- function(x, y, log = FALSE, method = "hist", ...) {
@@ -266,6 +267,7 @@ qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...
   return(rval)
 }
 
+#' @importFrom utils head
 #' @export
 #' @rdname Empirical
 rempirical <- function(n, y, na.rm = TRUE) {
