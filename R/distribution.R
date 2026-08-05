@@ -181,7 +181,7 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
     # a cdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
     if (!hasS3method("cdf", cls))
-        stop("no S3 method 'cdf' found for object of class: ", paste(cls, collapse = ", "))
+        stop("S3 method 'cdf' missing for object of class:", paste(cls, collapse = ", "))
     if (!hasS3method("is_discrete", cls))
         stop("S3 method 'is_discrete' missing for object of class: ", paste(cls, collapse = ", "))
     if (!hasS3method("support", cls))
@@ -194,9 +194,10 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
     stopifnot(isTRUE(log) || isFALSE(log))
 
     stopifnot(is.null(applyfun) || is.function(applyfun))
-    if (is.numeric(cores)) {
-      cores <- as.integer(cores)
-      stopifnot(length(cores) == 1L, cores >= 1L)
+    if (!is.null(cores)) {
+      cores <- as.integer(cores)[[1L]]
+      stopifnot("argument 'cores' must evaluate to positive integer" =
+                length(cores) == 1L && !is.na(cores) && cores >= 1L)
     }
 
     ## define apply functions for parallelization
@@ -556,7 +557,7 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
     # a pdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
     if (!hasS3method("pdf", cls))
-        stop("no S3 method 'pdf' found for object of class: ", paste(cls, collapse = ", "))
+        stop("S3 method 'pdf' missing for object of class: ", paste(cls, collapse = ", "))
     if (!hasS3method("is_discrete", cls))
         stop("S3 method 'is_discrete' missing for object of class: ", paste(cls, collapse = ", "))
     if (!hasS3method("support", cls))
@@ -742,9 +743,10 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
   batchsize <- as.integer(batchsize); stopifnot(batchsize >= 1L)
 
   stopifnot(is.null(applyfun) || is.function(applyfun))
-  if (is.numeric(cores)) {
-    cores <- as.integer(cores)
-    stopifnot(length(cores) == 1L, cores >= 1L)
+  if (!is.null(cores)) {
+    cores <- as.integer(cores)[[1L]]
+    stopifnot("argument `cores` must evaluate to positive integer" =
+              length(cores) == 1L && !is.na(cores) && cores >= 1L)
   }
 
   ## basic properties:

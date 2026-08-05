@@ -81,8 +81,8 @@ test_that("pdf.distribution (approximation) comparing MyPoissonQuantilePDF and P
     expect_silent(rn  <- pdf(n, x))
     expect_equal(rd, rn,  tolerance = 1e-8)
 
-    plot(rd,  x, type = "s", col = "gray", lwd = 4)
-    lines(rn, x, type = "s", col = "tomato", lwd = 1)
+    ###plot(rd,  x, type = "s", col = "gray", lwd = 4)
+    ###lines(rn, x, type = "s", col = "tomato", lwd = 1)
 })
 
 
@@ -92,8 +92,8 @@ test_that("cdf.distribution (approximation) comparing MyPoissonQuantilePDF and P
     expect_silent(rn  <- cdf(n, x))
     expect_equal(rd, rn,  tolerance = 1e-8)
 
-    plot(rd,  x, type = "s", col = "gray", lwd = 4)
-    lines(rn, x, type = "s", col = "tomato", lwd = 1)
+    ###plot(rd,  x, type = "s", col = "gray", lwd = 4)
+    ###lines(rn, x, type = "s", col = "tomato", lwd = 1)
 })
 
 
@@ -103,8 +103,8 @@ test_that("quantile.distribution (approximation) comparing MyPoissonQuantilePDF 
     expect_silent(rn  <- quantile(n, x))
     expect_equal(rd, rn,  tolerance = 1e-8)
 
-    ##plot(rd,  x, type = "s", col = "gray", lwd = 4)
-    ##lines(rn, x, type = "s", col = "tomato", lwd = 1)
+    ###plot(rd,  x, type = "s", col = "gray", lwd = 4)
+    ###lines(rn, x, type = "s", col = "tomato", lwd = 1)
 })
 
 

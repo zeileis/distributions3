@@ -76,7 +76,7 @@ n <- MyPoissonQuantile(3.2)
 
 test_that("pdf.distribution (approximation) comparing MyPoissonQuantile and Poisson", {
     expect_error(pdf(n, 0:30),
-        regexp = "no S3 method 'cdf' found")
+        regexp = "S3 method 'cdf' missing for object of class")
 })
 
 
