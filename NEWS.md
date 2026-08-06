@@ -1,3 +1,9 @@
+# distributions3 0.2.4.99
+
+- Start working on new development version with additions by Reto @retostauffer
+  especially for numerical approximations of various distribution functions.
+
+
 # distributions3 0.2.4
 
 - Achim Zeileis (@zeileis) takes over maintenance from Alex Hayes (@alexpghayes).
