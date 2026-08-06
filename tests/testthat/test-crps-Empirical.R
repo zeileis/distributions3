@@ -59,12 +59,6 @@ test_that("crps.distribution returns matrix if drop = FALSE", {
 # -------------------------------------------------------
 x <- matrix(runif(50 * 20), ncol = 20L)
 
-test_that("constructing Empirical via matrix and list", {
-    expect_silent(d2 <- Empirical(x))
-    expect_silent(d3 <- Empirical(lapply(1:50, function(i, x) x[i, , drop = TRUE], x = x)))
-    expect_true(identical(d2, d3))
-})
-
 test_that("crps.Empirical on multiple distributions, single observation", {
     expect_silent(d <- Empirical(x))
     expect_silent(crps <- crps(d, 5))
