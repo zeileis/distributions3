@@ -2,6 +2,8 @@
 
 ## distributions3 0.2.4
 
+CRAN release: 2026-07-22
+
 - Achim Zeileis ([@zeileis](https://github.com/zeileis)) takes over
   maintenance from Alex Hayes
   ([@alexpghayes](https://github.com/alexpghayes)). All URLs, links, and

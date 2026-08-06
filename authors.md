@@ -28,7 +28,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/zeileis/distributions3/blob/v0.2.4/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/zeileis/distributions3/blob/main/DESCRIPTION)
 
 Hayes A, Moller-Trane R, Jordan D, Northrop P, Lang MN, Zeileis A
 (2026). *distributions3: Probability Distributions as S3 Objects*. R
