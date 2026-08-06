@@ -6,7 +6,7 @@
 # r2u mirror-setup cost (which can stall if the upstream r2u mirror is down).
 on:
   push:
-    branches: [main, master, gha-rocker]
+    branches: [main, master]
   pull_request:
     branches: [main, master]
 
