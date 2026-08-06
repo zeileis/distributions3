@@ -29,6 +29,12 @@ check: build
 	##@echo Checking current version: $(VERSION)
 	##(cd ../ && R CMD check --as-cran distributions3_$(VERSION).tar.gz)
 
+.PHONY: documentation
+documentation:
+	@echo "Building pkgdown page (documentation)"
+	Rscript -e "pkgdown::build_site()"
+
+
 .PHONY: test
 test: clean install
 	Rscript -e "testthat::test_local()"

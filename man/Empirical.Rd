@@ -2,10 +2,6 @@
 % Please edit documentation in R/Empirical.R
 \name{Empirical}
 \alias{Empirical}
-\alias{pempirical}
-\alias{dempirical}
-\alias{qempirical}
-\alias{rempirical}
 \alias{mean.Empirical}
 \alias{variance.Empirical}
 \alias{skewness.Empirical}
@@ -13,20 +9,11 @@
 \alias{random.Empirical}
 \alias{pdf.Empirical}
 \alias{log_pdf.Empirical}
-\alias{cdf.Empirical}
 \alias{quantile.Empirical}
 \alias{support.Empirical}
 \title{Create an Empirical distribution}
 \usage{
 Empirical(x)
-
-pempirical(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE)
-
-dempirical(x, y, log = FALSE, method = "hist", ...)
-
-qempirical(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...)
-
-rempirical(n, y, na.rm = TRUE)
 
 \method{mean}{Empirical}(x, ...)
 
@@ -42,40 +29,20 @@ rempirical(n, y, na.rm = TRUE)
 
 \method{log_pdf}{Empirical}(d, x, drop = TRUE, elementwise = NULL, ...)
 
-\method{cdf}{Empirical}(d, x, drop = TRUE, elementwise = NULL, ...)
-
 \method{quantile}{Empirical}(x, probs, drop = TRUE, elementwise = NULL, ...)
 
 \method{support}{Empirical}(d, drop = TRUE, ...)
 }
 \arguments{
-\item{x}{A vector of elements whose cumulative probabilities you would
-like to determine given the distribution \code{d}.}
+\item{x}{A vector of elements whose probabilities you would like to
+determine given the distribution \code{d}.}
 
-\item{q}{vector of quantiles.}
-
-\item{y}{vector of observations of the empirical distribution with two or more non-missing finite values.}
-
-\item{lower.tail}{logical; if \code{TRUE} (default), probabilities are
-\code{P[X <= x]} otherwise, \code{P[X > x]}.
-or \code{"density"}.}
-
-\item{na.rm}{logical evaluating to \code{TRUE} or \code{FALSE} indicating whether
-\code{NA} values should be stripped before the computation
-proceeds.}
-
-\item{log, log.p}{logical; if \code{TRUE}, probabilities \code{p} are given as \code{log(p)}.}
-
-\item{method}{character; the method to calculate the empirical density. Either \code{"hist"} (default)}
-
-\item{...}{Currently not used.}
-
-\item{p}{vector of probabilities.}
-
-\item{n}{The number of samples to draw. Defaults to \code{1L}.}
+\item{...}{currently not used.}
 
 \item{type}{integer between \code{1L} and \code{3L} (default) selecting one of three
 algorithms. See Details for more information.}
+
+\item{n}{The number of samples to draw. Defaults to \code{1L}.}
 
 \item{drop}{logical. Should the result be simplified to a vector if possible?}
 
@@ -104,11 +71,6 @@ object, a matrix with \code{length(x)} columns containing all possible combinati
 
 In case of a single distribution object, either a numeric
 vector of length \code{probs} (if \code{drop = TRUE}, default) or a \code{matrix} with
-\code{length(x)} columns (if \code{drop = FALSE}). In case of a vectorized distribution
-object, a matrix with \code{length(x)} columns containing all possible combinations.
-
-In case of a single distribution object, either a numeric
-vector of length \code{probs} (if \code{drop = TRUE}, default) or a \code{matrix} with
 \code{length(probs)} columns (if \code{drop = FALSE}). In case of a vectorized
 distribution object, a matrix with \code{length(probs)} columns containing all
 possible combinations.
@@ -120,7 +82,7 @@ matrix with 2 columns containing all minima and maxima.
 }
 \description{
 An empirical distribution consists of a series of \code{N} observations
-out of a typically unknown distribution, i.e., a random sample 'X'.
+out of a typically unknown distribution, i.e., a random sample \eqn{X}.
 
 Draws \code{n} random values from the empirical ensemble
 with replacement.
@@ -144,43 +106,51 @@ as main input \code{x}.
 empirical distribution.
 \item List (named or unnamed) of vectors: Each element in the list describes
 one empirical distribution defined by the numeric values in each of the vectors.
-\item Matrix or data.frame: Each row corresponds to one empirical distribution, whilst
+\item Data frame: Each column (variable) in the data frame describes one empirical
+distribution.
+\item Matrix: Each row corresponds to one empirical distribution, whilst
 the columns contain the individual observations.
 }
 
 Missing values are allowed, however, each distribution requires at least two
 finite observations (\code{-Inf}/\code{Inf} is replaced by \code{NA}).
+Certain types of moments (see \code{\link[=skewness.Empirical]{skewness.Empirical()}}, \code{\link[=kurtosis.Empirical]{kurtosis.Empirical()}})
+require at least three or four finite observations.
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{**Support**: \eqn{R}, the set of all real numbers
+\strong{Support}: \eqn{R}, the set of all real numbers
+\itemize{
+\item Expectation: \deqn{E(x) = \text{mean(x)} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
+}
 
-**Mean**: \deqn{\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{\bar{x} = 1 / N * sum(x)}
+\strong{Probability mass function (p.m.f.):}
+\deqn{f(y) = \frac{1}{n} \sum_{i=1}^{N} (x_i = y)}{f(x) = 1 / N * \sum(x == y)}
 
-**Variance**: \deqn{\frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{1 / (N - 1) * sum((x - \bar{x})^2)}
+\strong{Cummulative distribution function (c.d.f.):}
+\deqn{F(y) = \frac{1}{N} \sum_{i=1}^N \mathbf{I}(x_i \leq y)}{F(y) = 1 / N * sum(x <= y)}
 
-**Skewness**:
+\strong{Moment generating functions}:
+\itemize{
+\item Mean/expectation: \deqn{\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
+\item Variance: \deqn{\text{VAR}(x) = \frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{variance(x) = 1 / (N - 1) * sum((x - mean(x))^2)}
+}
 
-\eqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}
-
-\eqn{S_2 = \frac{\sqrt{N * (N - 1)}}{(N - 2)} S_1} (only defined for \eqn{N > 2})
-
-\eqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} * S_1} (default)
-
-For more details about the different types of sample skewness see Joanes and Gill (1998).
-
-**Kurtosis**:
-
-\eqn{K_1 = N * \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}
-
-\eqn{K_2 = \frac{(N + 1) * K_1 + 6) * (N - 1)}{(N - 2) * (N - 3)}} (only defined for \eqn{N > 2})
-
-\eqn{K_3 = \big(1 - \frac{1}{N}\big)^2 * (K_1 + 3) - 3} (default)
-
-For more details about the different types of sample kurtosis see Joanes and Gill (1998).
-
-**TODO(RETO)**: Add empirical distribution function information (step-function 1/N)
-
-**Probability density function (p.d.f)**:
-}\if{html}{\out{</div>}}
+Third and fourth order moments are also available via \code{\link[=skewness]{skewness()}} and \code{\link[=kurtosis]{kurtosis()}}. For both
+different measures (types) are available as defined below. For details see Joanes and Gill (1998).
+\itemize{
+\item Skewness:
+\itemize{
+\item Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
+\item Type 2 (only defined for three or more finite values): \deqn{S_2 = \frac{\sqrt{N \cdot (N - 1)}}{(N - 2)} S_1}{S2 = sqrt(N * (N - 1)) / (N - 2) * S1}
+\item Type 3 (default): \deqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} \cdot S_1}{S3 = sqrt((1 - 1 / N)^3) * S1}
+\item For more details about the different types of sample skewness see Joanes and Gill (1998).
+}
+\item Kurtosis:
+\itemize{
+\item Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}{K1 = N * (sum(x - mean(x))^4) / (sum(x - mean(x))^2)^2 - 3}
+\item Type 2 (only defined for four or more finite values): \deqn{K_2 = \frac{((N + 1) \cdot K_1 + 6) \cdot (N - 1)}{(N - 2) \cdot (N - 3)}}{K2 = ((N + 1) * K_1 + 6) * (N - 1)) / ((N - 2) * (N - 3))}
+\item Type 3 (default): \deqn{K_3 = \big(1 - \frac{1}{N}\big)^2 \cdot (K_1 + 3) - 3}{K3 = (1 - 1 / N)^2 * (K1 + 3) - 3}
+}
+}
 
 This function returns the same values that you get from a Z-table. Note
 \code{quantile()} is the inverse of \code{cdf()}. Please see the documentation of
@@ -190,7 +160,6 @@ intervals.
 }
 \examples{
 
-require("distributions3")
 set.seed(28)
 
 X <- Empirical(rnorm(50))
@@ -233,12 +202,28 @@ d3 <- Empirical(Y3)
 d3
 mean(d3)
 
-## Matrix or data.frame
+## Matrix
 Y4 <- matrix(rnorm(20), ncol = 5, dimnames = list(sprintf("D_\%d", 1:4), sprintf("obs_\%d", 1:5)))
 d4 <- Empirical(Y4)
 d4
-d5 <- Empirical(as.data.frame(Y4))
+
+## Data frame
+d5 <- Empirical(as.data.frame(t(Y4)))
 d5
+
+mean(d5)
+variance(d5)
+skewness(d5)
+kurtosis(d5)
+
+pdf(d5, c(-0.5, 0, 0.5, 1)) # Defaults to elementwise = TRUE
+pdf(d5, c(-0.5, 0, 0.5, 1), elementwise = FALSE)
+
+cdf(d5, c(-0.5, 0, 0.5, 1)) # Defaults to elementwise = TRUE
+cdf(d5, c(-0.5, 0, 0.5, 1), elementwise = FALSE)
+
+quantile(d5, c(0.2, 0.4, 0.6, 0.8)) # Defaults to elementwise = TRUE
+quantile(d5, c(0.2, 0.4, 0.6, 0.8), elementwise = FALSE)
 
 }
 \references{
@@ -247,6 +232,11 @@ Sample Skewness and Kurtosis.} \emph{Journal of the Royal Statistical
 Society D}, \bold{47}(1), 183--189. \doi{10.1111/1467-9884.00122}
 }
 \seealso{
+Other Empirical distribution:
+\code{\link[=cdf.Empirical]{cdf.Empirical()}},
+\code{\link[=dempirical]{dempirical()}},
+\code{\link[=is_continuous.Empirical]{is_continuous.Empirical()}}
+
 Other Normal distribution:
 \code{\link[=cdf.Normal]{cdf.Normal()}},
 \code{\link[=fit_mle.Normal]{fit_mle.Normal()}},
@@ -255,4 +245,3 @@ Other Normal distribution:
 }
 \concept{Empirical distribution}
 \concept{Normal distribution}
-\concept{distributions}

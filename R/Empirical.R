@@ -1,63 +1,62 @@
 
-
 #' Create an Empirical distribution
 #'
 #' An empirical distribution consists of a series of \code{N} observations
-#' out of a typically unknown distribution, i.e., a random sample 'X'.
+#' out of a typically unknown distribution, i.e., a random sample \eqn{X}.
 #'
-#' @param x a numeric vector, list of numeric vectors, numeric matrix,
-#'        or data.frame. See 'Details' for more information.
+#' @param x a numeric vector, list of numeric vectors, matrix,
+#'        or data.frame (see section 'Details' for more information).
 #'
 #' @return An `Empirical` object.
-#' @export
-#'
-#' @family distributions
 #'
 #' @details
-#'   The creation function [Empirical()] allows for a variety of different objects
-#'   as main input \code{x}.
+#' The creation function [Empirical()] allows for a variety of different objects
+#' as main input \code{x}.
 #'
-#'   * Vector: Assumes that the vector contains a series of observations from one
-#'     empirical distribution.
+#' * Vector: Assumes that the vector contains a series of observations from one
+#'   empirical distribution.
 #'
-#'   * List (named or unnamed) of vectors: Each element in the list describes
-#'     one empirical distribution defined by the numeric values in each of the vectors.
+#' * List (named or unnamed) of vectors: Each element in the list describes
+#'   one empirical distribution defined by the numeric values in each of the vectors.
 #'
-#'   * Matrix or data.frame: Each row corresponds to one empirical distribution, whilst
-#'     the columns contain the individual observations.
+#' * Data frame: Each column (variable) in the data frame describes one empirical
+#'   distribution.
 #'
-#'   Missing values are allowed, however, each distribution requires at least two
-#'   finite observations (\code{-Inf}/\code{Inf} is replaced by \code{NA}).
+#' * Matrix: Each row corresponds to one empirical distribution, whilst
+#'   the columns contain the individual observations.
 #'
-#'     **Support**: \eqn{R}, the set of all real numbers
+#' Missing values are allowed, however, each distribution requires at least two
+#' finite observations (\code{-Inf}/\code{Inf} is replaced by \code{NA}).
+#' Certain types of moments (see [skewness.Empirical()], [kurtosis.Empirical()])
+#' require at least three or four finite observations.
 #'
-#'     **Mean**: \deqn{\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{\bar{x} = 1 / N * sum(x)}
+#' **Support**: \eqn{R}, the set of all real numbers
 #'
-#'     **Variance**: \deqn{\frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{1 / (N - 1) * sum((x - \bar{x})^2)}
+#' * Expectation: \deqn{E(x) = \text{mean(x)} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
 #'
-#'     **Skewness**:
+#' **Probability mass function (p.m.f.):**
+#' \deqn{f(y) = \frac{1}{n} \sum_{i=1}^{N} (x_i = y)}{f(x) = 1 / N * \sum(x == y)}
 #'
-#'     \eqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}
+#' **Cummulative distribution function (c.d.f.):**
+#' \deqn{F(y) = \frac{1}{N} \sum_{i=1}^N \mathbf{I}(x_i \leq y)}{F(y) = 1 / N * sum(x <= y)}
 #'
-#'     \eqn{S_2 = \frac{\sqrt{N * (N - 1)}}{(N - 2)} S_1} (only defined for \eqn{N > 2})
+#' **Moment generating functions**:
 #'
-#'     \eqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} * S_1} (default)
+#' * Mean/expectation: \deqn{\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
+#' * Variance: \deqn{\text{VAR}(x) = \frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{variance(x) = 1 / (N - 1) * sum((x - mean(x))^2)}
 #'
-#'     For more details about the different types of sample skewness see Joanes and Gill (1998).
+#' Third and fourth order moments are also available via [skewness()] and [kurtosis()]. For both
+#' different measures (types) are available as defined below. For details see Joanes and Gill (1998).
 #'
-#'     **Kurtosis**:
-#'
-#'     \eqn{K_1 = N * \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}
-#'
-#'     \eqn{K_2 = \frac{(N + 1) * K_1 + 6) * (N - 1)}{(N - 2) * (N - 3)}} (only defined for \eqn{N > 2})
-#'
-#'     \eqn{K_3 = \big(1 - \frac{1}{N}\big)^2 * (K_1 + 3) - 3} (default)
-#'
-#'     For more details about the different types of sample kurtosis see Joanes and Gill (1998).
-#'
-#'     **TODO(RETO)**: Add empirical distribution function information (step-function 1/N)
-#'
-#'     **Probability density function (p.d.f)**:
+#' * Skewness:
+#'   * Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
+#'   * Type 2 (only defined for three or more finite values): \deqn{S_2 = \frac{\sqrt{N \cdot (N - 1)}}{(N - 2)} S_1}{S2 = sqrt(N * (N - 1)) / (N - 2) * S1}
+#'   * Type 3 (default): \deqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} \cdot S_1}{S3 = sqrt((1 - 1 / N)^3) * S1}
+#'   * For more details about the different types of sample skewness see Joanes and Gill (1998).
+#' * Kurtosis: 
+#'   * Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}{K1 = N * (sum(x - mean(x))^4) / (sum(x - mean(x))^2)^2 - 3}
+#'   * Type 2 (only defined for four or more finite values): \deqn{K_2 = \frac{((N + 1) \cdot K_1 + 6) \cdot (N - 1)}{(N - 2) \cdot (N - 3)}}{K2 = ((N + 1) * K_1 + 6) * (N - 1)) / ((N - 2) * (N - 3))}
+#'   * Type 3 (default): \deqn{K_3 = \big(1 - \frac{1}{N}\big)^2 \cdot (K_1 + 3) - 3}{K3 = (1 - 1 / N)^2 * (K1 + 3) - 3}
 #'
 #' @references Joanes DN and Gill CA (1998). \dQuote{Comparing Measures of
 #' Sample Skewness and Kurtosis.} \emph{Journal of the Royal Statistical
@@ -65,7 +64,6 @@
 #'
 #' @examples
 #'
-#' require("distributions3")
 #' set.seed(28)
 #'
 #' X <- Empirical(rnorm(50))
@@ -108,13 +106,31 @@
 #' d3
 #' mean(d3)
 #'
-#' ## Matrix or data.frame
+#' ## Matrix
 #' Y4 <- matrix(rnorm(20), ncol = 5, dimnames = list(sprintf("D_%d", 1:4), sprintf("obs_%d", 1:5)))
 #' d4 <- Empirical(Y4)
 #' d4
-#' d5 <- Empirical(as.data.frame(Y4))
+#'
+#' ## Data frame
+#' d5 <- Empirical(as.data.frame(t(Y4)))
 #' d5
 #'
+#' mean(d5)
+#' variance(d5)
+#' skewness(d5)
+#' kurtosis(d5)
+#'
+#' pdf(d5, c(-0.5, 0, 0.5, 1)) # Defaults to elementwise = TRUE
+#' pdf(d5, c(-0.5, 0, 0.5, 1), elementwise = FALSE)
+#'
+#' cdf(d5, c(-0.5, 0, 0.5, 1)) # Defaults to elementwise = TRUE
+#' cdf(d5, c(-0.5, 0, 0.5, 1), elementwise = FALSE)
+#'
+#' quantile(d5, c(0.2, 0.4, 0.6, 0.8)) # Defaults to elementwise = TRUE
+#' quantile(d5, c(0.2, 0.4, 0.6, 0.8), elementwise = FALSE)
+#'
+#' @family Empirical distribution
+#' @export
 Empirical <- function(x) {
   stopifnot(requireNamespace("distributions3"))
   ## If input is given as a list of vectors
@@ -149,6 +165,7 @@ Empirical <- function(x) {
   d
 }
 
+
 # Helper function
 dpqrempirical_prep <- function(x, y) {
   x   <- as.numeric(x)
@@ -174,43 +191,32 @@ dpqrempirical_prep <- function(x, y) {
   return(list(x, y))
 }
 
-#' @param q vector of quantiles.
-#' @param p vector of probabilities.
-#' @param y vector of observations of the empirical distribution with two or more non-missing finite values.
-#' @param log,log.p logical; if \code{TRUE}, probabilities \code{p} are given as \code{log(p)}.
-#' @param method character; the method to calculate the empirical density. Either \code{"hist"} (default)
-#' @param lower.tail logical; if \code{TRUE} (default), probabilities are
-#'        \code{P[X <= x]} otherwise, \code{P[X > x]}.
-#'        or \code{"density"}.
-#' @param na.rm logical evaluating to \code{TRUE} or \code{FALSE} indicating whether
-#'        \code{NA} values should be stripped before the computation
-#'        proceeds.
-#' @param ... forwarded to \code{method}.
+
+#' The Empirical Distribution
 #'
-#' @export
-#' @rdname Empirical
-pempirical <- function(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE) {
-  lower.tail <- as.logical(lower.tail)[1L]
-  log.p      <- as.logical(log.p)[1L]
-
-  tmp <- dpqrempirical_prep(q, y)
-  q <- tmp[[1L]]
-  y <- tmp[[2L]]
-
-  # If length(x) equals to 1 apply can be used
-  if (length(q) == 1) {
-    rval <- apply(y, MARGIN = 1, function(y, q) mean(y <= q, na.rm = na.rm), q = q)
-  } else {
-    rval <- sapply(seq_len(NROW(y)), function(i) mean(y[i, ] <= q[i], na.rm = na.rm))
-  }
-  rval[is.nan(rval)] <- NA
-  if (!lower.tail) rval <- 1. - rval
-  return(if (!log.p) rval else log(rval))
-}
-
+#' Density (point mass), distribution, quantile function, as well as
+#' a random generation for the Empirical distribution.
+#'
+#' @param x vector of finite quantiles.
+#' @param y vector of observations of the empirical distribution with two or
+#'          more non-missing finite values.
+#' @param log,log.p logical indicating whether probabilities p are given as log(p)
+#'        (both default to `FALSE`).
+#' @param method character; the method to calculate the empirical density.
+#'        Either \code{"hist"} (default) TODO(R)
+#' @param ... allows to forward arguments to \code{\link[graphics]{hist}}, [density()]
+#'        and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
+#'        [dempirical()] or sample \code{\link[stats]{quantile}} function when calling
+#'        [qempirical()]. Else currently unused.
+#'
+#' @details
+#' All functions follow the usual conventions of d/p/q/r functions in base R. In
+#' particular, all four functions for the Empirical distribution call
+#' the corresponding `*empirical` functions.
+#'
 #' @importFrom graphics hist
+#' @family Empirical distribution
 #' @export
-#' @rdname Empirical
 dempirical <- function(x, y, log = FALSE, method = "hist", ...) {
   tmp <- dpqrempirical_prep(x, y)
   x <- tmp[[1L]]
@@ -246,8 +252,40 @@ dempirical <- function(x, y, log = FALSE, method = "hist", ...) {
   return(if (!log) rval else log(rval))
 }
 
+#' @param q vector of quantiles.
+#' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]}
+#'        (lower tail) or \eqn{P[X > x]} (upper tail).
+#' @param na.rm logical indicating whether missing values (`NA`) are stripped
+#'        before computation, defaults to `TRUE`.
+#'
+#' @family Empirical distribution
 #' @export
-#' @rdname Empirical
+#' @rdname dempirical
+pempirical <- function(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE) {
+  lower.tail <- as.logical(lower.tail)[1L]
+  log.p      <- as.logical(log.p)[1L]
+
+  tmp <- dpqrempirical_prep(q, y)
+  q <- tmp[[1L]]
+  y <- tmp[[2L]]
+
+  # If length(x) equals to 1 apply can be used
+  if (length(q) == 1) {
+    rval <- apply(y, MARGIN = 1, function(y, q) mean(y <= q, na.rm = na.rm), q = q)
+  } else {
+    rval <- sapply(seq_len(NROW(y)), function(i) mean(y[i, ] <= q[i], na.rm = na.rm))
+  }
+  rval[is.nan(rval)] <- NA
+  if (!lower.tail) rval <- 1. - rval
+  return(if (!log.p) rval else log(rval))
+}
+
+
+#' @param p numeric vector of probabilities (`[0, 1]`).
+#'
+#' @family Empirical distribution
+#' @export
+#' @rdname dempirical
 qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...) {
   lower.tail <- as.logical(lower.tail)[1L]
   log.p      <- as.logical(log.p)[1L]
@@ -268,8 +306,9 @@ qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...
 }
 
 #' @importFrom utils head
+#' @family Empirical distribution
 #' @export
-#' @rdname Empirical
+#' @rdname dempirical
 rempirical <- function(n, y, na.rm = TRUE) {
   n <- if (length(n) > 1L) length(n) else as.integer(n)
   stopifnot("invalid arguments" = length(n) == 1L && n >= 0L)
@@ -289,6 +328,9 @@ rempirical <- function(n, y, na.rm = TRUE) {
   return(rval)
 }
 
+#' @param ... currently unused.
+#'
+#' @family Empirical distribution
 #' @export
 #' @rdname Empirical
 mean.Empirical <- function(x, ...) {
@@ -296,6 +338,8 @@ mean.Empirical <- function(x, ...) {
   setNames(rowMeans(as.matrix(x), na.rm = TRUE), names(x))
 }
 
+#' @param ... currently unused.
+#'
 #' @export
 #' @rdname Empirical
 variance.Empirical <- function(x, ...) {
@@ -306,6 +350,9 @@ variance.Empirical <- function(x, ...) {
 #' @param x an object of class \code{Empirical} (see [Empirical()]).
 #' @param type integer between \code{1L} and \code{3L} (default) selecting one of three
 #'        algorithms. See Details for more information.
+#' @param ... currently unused.
+#'
+#' @family Empirical distribution
 #' @export
 #' @rdname Empirical
 skewness.Empirical <- function(x, type = 1L, ...) {
@@ -330,6 +377,9 @@ skewness.Empirical <- function(x, type = 1L, ...) {
   setNames(apply(as.matrix(x), MARGIN = 1, FUN = FUN, type = type), names(x))
 }
 
+#' @param ... currently unused.
+#'
+#' @family Empirical distribution
 #' @export
 #' @rdname Empirical
 kurtosis.Empirical <- function(x, type = 3L, ...) {
@@ -363,8 +413,7 @@ kurtosis.Empirical <- function(x, type = 3L, ...) {
 #' @param x A n `Empirical` object created by a call to [Empirical()].
 #' @param n The number of samples to draw. Defaults to `1L`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
-#' @param ... Unused. Unevaluated arguments will generate a warning to
-#'   catch mispellings or other possible errors.
+#' @param ... currently unused.
 #'
 #' @return In case of a single distribution object or `n = 1`, either a numeric
 #'   vector of length `n` (if `drop = TRUE`, default) or a `matrix` with `n` columns
@@ -372,6 +421,7 @@ kurtosis.Empirical <- function(x, type = 3L, ...) {
 #'
 #' @importFrom distributions3 random apply_dpqr make_positive_integer
 #' @exportS3Method
+#' @family Empirical distribution
 #' @rdname Empirical
 random.Empirical <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
@@ -399,9 +449,7 @@ random.Empirical <- function(x, n = 1L, drop = TRUE, ...) {
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
-#' @param ... Arguments to be passed to \code{\link[stats]{dnorm}}.
-#'   Unevaluated arguments will generate a warning to catch mispellings or other
-#'   possible errors.
+#' @param ... arguments to be passed to [dempirical()].
 #'
 #' @family Normal distribution
 #'
@@ -411,6 +459,7 @@ random.Empirical <- function(x, n = 1L, drop = TRUE, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
 #' @importFrom distributions3 pdf
+#' @family Empirical distribution
 #' @export
 #' @rdname Empirical
 pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
@@ -419,6 +468,7 @@ pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 }
 
 #' @importFrom distributions3 log_pdf
+#' @family Empirical distribution
 #' @export
 #' @rdname Empirical
 log_pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
@@ -440,9 +490,7 @@ log_pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
-#' @param ... Arguments to be passed to \code{\link[stats]{pnorm}}.
-#'   Unevaluated arguments will generate a warning to catch mispellings or other
-#'   possible errors.
+#' @param ... arguments to be passed to [pempirical()].
 #'
 #' @family Empirical distribution
 #'
@@ -452,8 +500,8 @@ log_pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
 #' @importFrom distributions3 cdf
+#' @family Empirical distribution
 #' @export
-#' @rdname Empirical
 cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
   FUN <- function(at, d) pempirical(q = at, y = as.matrix(d), ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
@@ -482,25 +530,25 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
-#' @param ... Arguments to be passed to \code{\link[stats]{qnorm}}.
-#'   Unevaluated arguments will generate a warning to catch mispellings or other
-#'   possible errors.
+#' @param ... arguments to be passed to [qempirical()].
 #'
 #' @return In case of a single distribution object, either a numeric
 #'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
-#' @rdname Empirical
 #'
 #' @family Empirical distribution
-#'
+#' @export
+#' @rdname Empirical
 quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   FUN <- function(at, d) qempirical(at, y = as.matrix(d), ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
+#' @param ... forwarded to format method.
+#' @param ... currently not used.
+#'
 #' @exportS3Method
 format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...) {
   if (length(x) < 1L) return(character(0))
@@ -519,7 +567,7 @@ format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...
 #' TODO(RETO): Check description
 #' @param d An `Empirical` object created by a call to [Empirical()].
 #' @param drop logical. Should the result be simplified to a vector if possible?
-#' @param ... Currently not used.
+#' @param ... currently not used.
 #'
 #' @return In case of a single distribution object, a numeric vector of length 2
 #' with the minimum and maximum value of the support (if `drop = TRUE`, default)
@@ -527,6 +575,7 @@ format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...
 #' matrix with 2 columns containing all minima and maxima.
 #'
 #' @importFrom distributions3 support make_support
+#' @family Empirical distribution
 #' @exportS3Method
 #' @rdname Empirical
 support.Empirical <- function(d, drop = TRUE, ...) {
@@ -536,13 +585,17 @@ support.Empirical <- function(d, drop = TRUE, ...) {
 }
 
 #' @importFrom distributions3 is_discrete
+#' @family Empirical distribution
 #' @exportS3Method
 is_discrete.Empirical <- function(d, ...) {
   ## ellipsis::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
+#' @param ... currently not used.
+#'
 #' @importFrom distributions3 is_continuous
+#' @family Empirical distribution
 #' @exportS3Method
 is_continuous.Empirical <- function(d, ...) {
   ## ellipsis::check_dots_used()
