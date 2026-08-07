@@ -22,7 +22,7 @@
 \alias{crps.XBetaX}
 \alias{crps.GAMLSS}
 \alias{crps.BAMLSS}
-\title{Method for Numerically Evaluating the CRPS of Probability Distributions}
+\title{Method for numerically evaluating the CRPS of probability distributions}
 \usage{
 crps.distribution(
   y,
@@ -213,4 +213,3 @@ crps(Y, x)
 crps.distribution(Y, x)
 
 }
-\keyword{internal}

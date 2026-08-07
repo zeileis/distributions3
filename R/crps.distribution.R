@@ -1,4 +1,4 @@
-#' Method for Numerically Evaluating the CRPS of Probability Distributions
+#' Method for numerically evaluating the CRPS of probability distributions
 #'
 #' Method to the \code{\link[scoringRules]{crps}} generic function from
 #' the \pkg{scoringRules} package for numerically evaluating the (continuous) ranked probability
@@ -124,7 +124,6 @@
 #'
 #' @useDynLib distributions3, .registration = TRUE
 #' @export crps.distribution
-#' @keywords internal
 #' @exportS3Method scoringRules::crps distribution
 crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 500L, batchsize = 1e4L, applyfun = NULL, cores = NULL, method = NULL, ...) {
   ## essentially follow apply_dpqr() but try to exploit specific structure of CRPS

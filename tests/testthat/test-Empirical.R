@@ -118,9 +118,9 @@ test_that("is_continuous/is_discrete methods both works", {
         as.pairlist(alist(d =, ... =)))
 
     d <- Empirical(list(a = 8:20, b = c(-1.2, -1, -0.8)))
-    expect_silent(x <- is_continuous(d))
-    expect_identical(x, rep(FALSE, 2L) |> setNames(letters[1:2]))
     expect_silent(x <- is_discrete(d))
+    expect_identical(x, rep(TRUE, 2L) |> setNames(letters[1:2]))
+    expect_silent(x <- is_continuous(d))
     expect_identical(x, rep(FALSE, 2L) |> setNames(letters[1:2]))
 })
 
@@ -325,13 +325,10 @@ test_that("kurtosis.Empirical works as expected", {
 # Additional tests for dedicated dpqr methods
 # -------------------------------------------------------------------
 
-if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
-
 # dempirical
 test_that("dempirical works as expected", {
     expect_identical(formals(dempirical),
-        as.pairlist(alist(x =, y =, log = FALSE, na.rm = FALSE, method = NULL, ... = )))
+        as.pairlist(alist(x =, y =, log = FALSE, na.rm = TRUE, method = NULL, ... = )))
 
     y <- c(1, 1, NA_real_, 2, 2, 2, 3, 4, 5, NA_real_)
     n <- sum(!is.na(y))
@@ -340,13 +337,14 @@ test_that("dempirical works as expected", {
     expect_error(dempirical(0, y, method = "foo"), regexp = "'arg' should be one of .hist., .density.")
 
     # Using default 'method = NULL' (discrete)
-    expect_identical(dempirical(0, y), NA_real_)
-    expect_identical(dempirical(1:2, y), rep(NA_real_, 2L))
+    expect_identical(dempirical(0, y), 0)
+    expect_identical(dempirical(0, y, na.rm = FALSE), NA_real_)
 
-    expect_identical(dempirical(0, y, na.rm = TRUE), 0)
-    expect_identical(dempirical(1, y, na.rm = TRUE), 2 / n)
-    expect_identical(x <- dempirical(0:6, y, na.rm = TRUE),
-            sapply(0:6, function(x) { sum(y == x, na.rm = TRUE) / sum(!is.na(y)) }))
+    expect_identical(dempirical(1, y), 2 / n)
+    expect_identical(dempirical(1, y, na.rm = FALSE), NA_real_)
+
+    expect_identical(x <- dempirical(0:6, y), sapply(0:6, function(x) { sum(y == x, na.rm = TRUE) / sum(!is.na(y)) }))
+    expect_identical(dempirical(0:6, y, na.rm = FALSE), rep(NA_real_, 7L))
 
     expect_identical(log(x), dempirical(0:6, y, na.rm = TRUE, log = TRUE))
 

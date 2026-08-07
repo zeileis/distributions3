@@ -6,7 +6,6 @@
 \alias{variance.Empirical}
 \alias{skewness.Empirical}
 \alias{kurtosis.Empirical}
-\alias{format.Empirical}
 \title{Create an Empirical distribution}
 \usage{
 Empirical(x)
@@ -18,19 +17,14 @@ Empirical(x)
 \method{skewness}{Empirical}(x, type = 1L, ...)
 
 \method{kurtosis}{Empirical}(x, type = 3L, ...)
-
-\method{format}{Empirical}(x, digits = pmax(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
-\item{x}{object of class \code{Empirical}.}
+\item{x}{an object of class \code{Empirical} (see \code{\link[=Empirical]{Empirical()}}).}
 
-\item{...}{forwarded to \code{\link[base]{format}}.}
+\item{...}{currently unused.}
 
 \item{type}{integer between \code{1L} and \code{3L} (default) selecting one of three
 algorithms. See Details for more information.}
-
-\item{digits}{a positive integer indicating how many significant
-digits are used.}
 }
 \value{
 An \code{Empirical} object.

@@ -5,9 +5,9 @@
 \alias{pempirical}
 \alias{qempirical}
 \alias{rempirical}
-\title{The Empirical Distribution}
+\title{The Empirical distribution}
 \usage{
-dempirical(x, y, log = FALSE, na.rm = FALSE, method = NULL, ...)
+dempirical(x, y, log = FALSE, na.rm = TRUE, method = NULL, ...)
 
 pempirical(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE)
 
@@ -43,6 +43,9 @@ and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 (lower tail) or \eqn{P[X > x]} (upper tail).}
 
 \item{p}{numeric vector of probabilities (\verb{[0, 1]}).}
+
+\item{n}{number of observations. If \code{length(n) > 1}, the length is
+taken to be the number required.}
 }
 \description{
 Density (point mass), distribution, quantile function, as well as

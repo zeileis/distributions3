@@ -2,7 +2,7 @@
 % Please edit documentation in R/distribution.R
 \name{distribution_calculate_moments}
 \alias{distribution_calculate_moments}
-\title{Method for Numerically Evaluate Central Moments of Probability Distributions}
+\title{Workhorse function for numerically calculating central moments of probability distributions}
 \usage{
 distribution_calculate_moments(
   x,
@@ -28,8 +28,8 @@ the numerical calculation of the CRPS.}
 Lower values reduce required memory but may increase computation time.}
 
 \item{applyfun}{an optional \code{\link[base]{lapply}}-style function with arguments
-\code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
-of \code{y}. The default is to use the basic \code{lapply}
+\verb{function(X, FUN, ...)}. It is used to compute the CRPS for each element
+of \code{y}. The default is to use the basic \code{\link[base]{lapply}}
 function unless the \code{cores} argument is specified (see below).}
 
 \item{cores}{numeric. If set to an integer the \code{applyfun} is set to
@@ -42,23 +42,22 @@ and \code{method = "cdf"} be used to compute the corresponding
 probabilities? Or should the grid be set up on the probability scale and
 \code{method = "quantile"} be used to compute the corresponding
 observations? By default, \code{"cdf"} is used for discrete observations
-whose range is smaller than the \code{gridsize} and \code{"quantile"}
-otherwise.}
+whose range is smaller than the \code{gridsize} and \code{"quantile"} otherwise.}
 
-\item{...}{\code{\link{mean.distribution}},
-\code{\link{variance.distribution}}, \code{\link{skewness.distribution}} and
-\code{\link{kurtosis.distribution}} forward the additional arguments
-(\code{...}) to \code{\link{distribution_calculate_moments}}; all other
-functions/methods ignore additional arguments.}
+\item{...}{\code{mean.distribution()}, \code{variance.distribution()},
+\code{skewness.distribution()} and \code{kurtosis.distribution()} forward the
+additional arguments (\code{...}) to \code{\link[=distribution_calculate_moments]{distribution_calculate_moments()}}; all
+other functions/methods ignore additional arguments.}
 }
 \value{
 A (potentially named) numeric vector of length \code{length(x)} with
 the requested central moment.
 }
 \description{
-Method used to evaluate (approximate) the central moments (mean, variance, skewness, and kurtosis)
-for probability distributions for which only the cummulative distribution function (CDF) and -
-potentially - the quantile function is provided.
+Method used to evaluate (approximate) the central moments (mean, variance,
+skewness, and kurtosis) for probability distributions for which only the
+cummulative distribution function (CDF) and - potentially - the quantile
+function is provided.
 }
 \details{
 For discrete distributions spanning a range less than \code{gridsize} the PDF is calculated
@@ -71,8 +70,8 @@ intervals is created. Given the distribution provides a quantile function,
 this grid is specified on a (mostly) uniform grid on the quantile scale. If
 no quantile function is provided, the \code{0.01} and \code{99.99} percentile are
 calculated approximated via the CDF, between which a uniform grid is
-spanned. For each interval the density is approximated using numeric
-forward differences
+spanned. For each interval the density is approximated using numeric forward
+differences
 
 \deqn{f(x_j) = (F(x_{i+1}) - F(x_i)) / (x_{i+1} - x_i)}{f(x[j]) = (F(x[i+1]) - F(x[i])) / (x[i+1] - x[i])}
 

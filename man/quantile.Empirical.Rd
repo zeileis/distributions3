@@ -7,6 +7,8 @@
 \method{quantile}{Empirical}(x, probs, drop = TRUE, elementwise = NULL, ...)
 }
 \arguments{
+\item{x}{an object of class \code{Empirical}.}
+
 \item{probs}{A vector of probabilities.}
 
 \item{drop}{logical. Should the result be simplified to a vector if possible?}

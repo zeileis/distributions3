@@ -30,6 +30,17 @@ reference:
       - is_distribution
       - prodist
       - simulate.default
+  - title: "Default methods based on numerical approximations"
+    contents:
+      - crps.distribution
+      - pdf.distribution
+      - cdf.distribution
+      - quantile.distribution
+      - random.distribution
+      - mean.distribution
+      - variance.distribution
+      - skewness.distribution
+      - kurtosis.distribution
   - title: "Utilities, tools, and data"
     contents:
       - apply_dpqr

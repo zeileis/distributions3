@@ -7,7 +7,7 @@
 \method{support}{Empirical}(d, drop = TRUE, ...)
 }
 \arguments{
-\item{d}{An \code{Empirical} object created by a call to \code{\link[=Empirical]{Empirical()}}.}
+\item{d}{an \code{Empirical} object created by a call to \code{\link[=Empirical]{Empirical()}}.}
 
 \item{drop}{logical. Should the result be simplified to a vector if possible?}
 
@@ -20,7 +20,11 @@ or a \code{matrix} with 2 columns. In case of a vectorized distribution object, 
 matrix with 2 columns containing all minima and maxima.
 }
 \description{
-TODO(RETO): Check description
+Though the support of an empirical distribution is
+defined by its unique numeric values this function
+returns only the range, i.e., the lowest (minimum)
+and highest (maximum) observation as the outer
+bounds of the support.
 }
 \seealso{
 Other Empirical distribution:

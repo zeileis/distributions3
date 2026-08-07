@@ -191,7 +191,7 @@ dpqrempirical_prep <- function(x, y) {
 }
 
 
-#' The Empirical Distribution
+#' The Empirical distribution
 #'
 #' Density (point mass), distribution, quantile function, as well as
 #' a random generation for the Empirical distribution.
@@ -205,7 +205,7 @@ dpqrempirical_prep <- function(x, y) {
 #'        considered a random variable from a discrete empirical distribution.
 #'        Method `"hist"` and `"density"` approximate a 'continuous' distribution
 #'        based on the empirical sample `y`.
-#' @param na.rm logical, defaults to `FALSE`.
+#' @param na.rm logical, defaults to `TRUE`.
 #' @param ... allows to forward arguments to \code{\link[graphics]{hist}}, [density()]
 #'        and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 #'        [dempirical()] or sample \code{\link[stats]{quantile}} function when calling
@@ -219,7 +219,7 @@ dpqrempirical_prep <- function(x, y) {
 #' @importFrom graphics hist
 #' @family Empirical distribution
 #' @export
-dempirical <- function(x, y, log = FALSE, na.rm = FALSE, method = NULL, ...) {
+dempirical <- function(x, y, log = FALSE, na.rm = TRUE, method = NULL, ...) {
   log   <- as.logical(log)[[1L]]
   na.rm <- as.logical(na.rm)[[1L]]
 
@@ -316,6 +316,10 @@ qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...
   return(rval)
 }
 
+
+#' @param n number of observations. If `length(n) > 1`, the length is
+#'        taken to be the number required.
+#'
 #' @importFrom utils head
 #' @family Empirical distribution
 #' @export
@@ -515,6 +519,7 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' Please see the documentation of [Empirical()] for some properties
 #' of the Empirical distribution.
 #'
+#' @param x an object of class `Empirical`.
 #' @param probs A vector of probabilities.
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param elementwise logical. Should each distribution in \code{x} be evaluated
@@ -540,13 +545,11 @@ quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 }
 
 
-#' @param x object of class `Empirical`.
-#' @param ... forwarded to \code{\link[base]{format}}.
-#' @param digits a positive integer indicating how many significant
-#'        digits are used.
-#'
+#### @param x object of class `Empirical`.
+#### @param ... forwarded to \code{\link[base]{format}}.
+#### @param digits a positive integer indicating how many significant
+####        digits are used.
 #' @exportS3Method
-#' @rdname Empirical
 format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...) {
   if (length(x) < 1L) return(character(0))
   n <- names(x)
@@ -561,9 +564,13 @@ format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...
 
 #' Return the support of the Empirical distribution
 #'
-#' TODO(RETO): Check description
+#' Though the support of an empirical distribution is
+#' defined by its unique numeric values this function
+#' returns only the range, i.e., the lowest (minimum)
+#' and highest (maximum) observation as the outer
+#' bounds of the support.
 #'
-#' @param d An `Empirical` object created by a call to [Empirical()].
+#' @param d an `Empirical` object created by a call to [Empirical()].
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... currently not used.
 #'
@@ -584,11 +591,11 @@ support.Empirical <- function(d, drop = TRUE, ...) {
 #' @exportS3Method
 is_discrete.Empirical <- function(d, ...) {
   ## ellipsis::check_dots_used()
-  setNames(rep.int(FALSE, length(d)), names(d))
+  setNames(rep.int(TRUE, length(d)), names(d))
 }
 
-# @family Empirical distribution
-# @exportS3Method
+#' @family Empirical distribution
+#' @exportS3Method
 is_continuous.Empirical <- function(d, ...) {
   ## ellipsis::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
