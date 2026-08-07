@@ -165,3 +165,13 @@ test_that("named return values for Beta distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+
+suppressPackageStartupMessages(library("scoringRules"))
+test_that("crps method for Beta returns correct object", {
+  d <- Beta(c(1, 1), c(3, 5))
+  expect_silent(crps <- crps(d, 5))
+  expect_type(crps, "double")
+  expect_true(is.vector(crps))
+  expect_true(!all(is.na(crps)) & all(crps >= 0))
+})

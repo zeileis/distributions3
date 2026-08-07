@@ -153,3 +153,12 @@ test_that("named return values for Gumbel distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+suppressPackageStartupMessages(library("scoringRules"))
+test_that("crps method for Gumbel returns correct object", {
+  d <- Gumbel(0, c(0.5, 1))
+  expect_warning(crps <- crps(d, 3))
+  expect_type(crps, "double")
+  expect_true(is.vector(crps))
+  expect_true(!all(is.na(crps)) & all(crps >= 0))
+})

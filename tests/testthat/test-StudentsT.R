@@ -165,3 +165,12 @@ test_that("named return values for StudentsT distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+suppressPackageStartupMessages(library("scoringRules"))
+test_that("crps method for StudentsT returns correct object", {
+  d <- StudentsT(c(3, 10))
+  expect_silent(crps <- crps(d, 7))
+  expect_type(crps, "double")
+  expect_true(is.vector(crps))
+  expect_true(!all(is.na(crps)) & all(crps >= 0))
+})
