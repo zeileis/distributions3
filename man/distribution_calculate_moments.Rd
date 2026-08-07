@@ -2,11 +2,6 @@
 % Please edit documentation in R/distribution.R
 \name{distribution_calculate_moments}
 \alias{distribution_calculate_moments}
-\alias{random.distribution}
-\alias{mean.distribution}
-\alias{variance.distribution}
-\alias{skewness.distribution}
-\alias{kurtosis.distribution}
 \title{Method for Numerically Evaluate Central Moments of Probability Distributions}
 \usage{
 distribution_calculate_moments(
@@ -19,24 +14,15 @@ distribution_calculate_moments(
   method = NULL,
   ...
 )
-
-\method{random}{distribution}(x, n = 1L, drop = TRUE, ...)
-
-\method{mean}{distribution}(x, ...)
-
-\method{variance}{distribution}(x, ...)
-
-\method{skewness}{distribution}(x, ...)
-
-\method{kurtosis}{distribution}(x, ...)
 }
 \arguments{
-\item{x}{object of class \code{c("NumericNormal", "distribution")}.}
+\item{x}{Object of class 'distribution'}
 
 \item{what}{single integer, controls what the C code returns. 1L (mean) 2L
 (variance) 3L (skewness) 4L (kurtosis).}
 
-\item{gridsize}{integer, number of grid points used for approximation. Defaults to \code{500L}.}
+\item{gridsize}{positive size of the grid used to approximate the CDF for
+the numerical calculation of the CRPS.}
 
 \item{batchsize}{maximum batch size. Used to split the input into batches.
 Lower values reduce required memory but may increase computation time.}
@@ -64,10 +50,6 @@ otherwise.}
 \code{\link{kurtosis.distribution}} forward the additional arguments
 (\code{...}) to \code{\link{distribution_calculate_moments}}; all other
 functions/methods ignore additional arguments.}
-
-\item{n}{integer. Number of observations to be drawn.}
-
-\item{drop}{logical. Should the result be simplified to a vector if possible?}
 }
 \value{
 A (potentially named) numeric vector of length \code{length(x)} with
@@ -131,3 +113,4 @@ is_discrete.MyPoisson   <- getS3method("is_discrete", class = "Poisson")
 support.MyPoisson       <- getS3method("support", class = "Poisson")
 
 }
+\keyword{internal}

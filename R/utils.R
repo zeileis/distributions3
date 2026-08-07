@@ -27,6 +27,7 @@ is_distribution <- function(x) {
 #'
 #' @return Returns \code{TRUE} if the method exists for one of the given classes, else \code{FALSE}.
 #'
+#' @keywords internal
 #' @importFrom utils getS3method
 hasS3method <- function(method, classes) {
   any(sapply(classes, function(cls) {

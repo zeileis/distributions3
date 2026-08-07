@@ -7,7 +7,7 @@
 \alias{rempirical}
 \title{The Empirical Distribution}
 \usage{
-dempirical(x, y, log = FALSE, method = "hist", ...)
+dempirical(x, y, log = FALSE, na.rm = FALSE, method = NULL, ...)
 
 pempirical(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE)
 
@@ -24,8 +24,13 @@ more non-missing finite values.}
 \item{log, log.p}{logical indicating whether probabilities p are given as log(p)
 (both default to \code{FALSE}).}
 
-\item{method}{character; the method to calculate the empirical density.
-Either \code{"hist"} (default) TODO(R)}
+\item{na.rm}{logical indicating whether missing values (\code{NA}) are stripped
+before computation, defaults to \code{TRUE}.}
+
+\item{method}{\code{NULL} or one of \code{"hist"} or \code{"density"}. If \code{NULL}, \code{y} is
+considered a random variable from a discrete empirical distribution.
+Method \code{"hist"} and \code{"density"} approximate a 'continuous' distribution
+based on the empirical sample \code{y}.}
 
 \item{...}{allows to forward arguments to \code{\link[graphics]{hist}}, \code{\link[=density]{density()}}
 and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
@@ -36,9 +41,6 @@ and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 
 \item{lower.tail}{logical indicating whether probabilities are \eqn{P[X \le x]}
 (lower tail) or \eqn{P[X > x]} (upper tail).}
-
-\item{na.rm}{logical indicating whether missing values (\code{NA}) are stripped
-before computation, defaults to \code{TRUE}.}
 
 \item{p}{numeric vector of probabilities (\verb{[0, 1]}).}
 }
@@ -55,6 +57,9 @@ the corresponding \verb{*empirical} functions.
 Other Empirical distribution:
 \code{\link[=Empirical]{Empirical()}},
 \code{\link[=cdf.Empirical]{cdf.Empirical()}},
-\code{\link[=is_continuous.Empirical]{is_continuous.Empirical()}}
+\code{\link[=pdf.Empirical]{pdf.Empirical()}},
+\code{\link[=quantile.Empirical]{quantile.Empirical()}},
+\code{\link[=random.Empirical]{random.Empirical()}},
+\code{\link[=support.Empirical]{support.Empirical()}}
 }
 \concept{Empirical distribution}

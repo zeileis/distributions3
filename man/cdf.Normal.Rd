@@ -122,7 +122,6 @@ quantile(X, cdf(X, 7))
 }
 \seealso{
 Other Normal distribution:
-\code{\link[=Empirical]{Empirical()}},
 \code{\link[=fit_mle.Normal]{fit_mle.Normal()}},
 \code{\link[=pdf.Normal]{pdf.Normal()}},
 \code{\link[=quantile.Normal]{quantile.Normal()}}

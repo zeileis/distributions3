@@ -52,7 +52,6 @@
 #'   * Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
 #'   * Type 2 (only defined for three or more finite values): \deqn{S_2 = \frac{\sqrt{N \cdot (N - 1)}}{(N - 2)} S_1}{S2 = sqrt(N * (N - 1)) / (N - 2) * S1}
 #'   * Type 3 (default): \deqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} \cdot S_1}{S3 = sqrt((1 - 1 / N)^3) * S1}
-#'   * For more details about the different types of sample skewness see Joanes and Gill (1998).
 #' * Kurtosis: 
 #'   * Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}{K1 = N * (sum(x - mean(x))^4) / (sum(x - mean(x))^2)^2 - 3}
 #'   * Type 2 (only defined for four or more finite values): \deqn{K_2 = \frac{((N + 1) \cdot K_1 + 6) \cdot (N - 1)}{(N - 2) \cdot (N - 3)}}{K2 = ((N + 1) * K_1 + 6) * (N - 1)) / ((N - 2) * (N - 3))}
@@ -202,8 +201,11 @@ dpqrempirical_prep <- function(x, y) {
 #'          more non-missing finite values.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p)
 #'        (both default to `FALSE`).
-#' @param method character; the method to calculate the empirical density.
-#'        Either \code{"hist"} (default) TODO(R)
+#' @param method `NULL` or one of `"hist"` or `"density"`. If `NULL`, `y` is
+#'        considered a random variable from a discrete empirical distribution.
+#'        Method `"hist"` and `"density"` approximate a 'continuous' distribution
+#'        based on the empirical sample `y`.
+#' @param na.rm logical, defaults to `FALSE`.
 #' @param ... allows to forward arguments to \code{\link[graphics]{hist}}, [density()]
 #'        and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 #'        [dempirical()] or sample \code{\link[stats]{quantile}} function when calling
@@ -217,36 +219,45 @@ dpqrempirical_prep <- function(x, y) {
 #' @importFrom graphics hist
 #' @family Empirical distribution
 #' @export
-dempirical <- function(x, y, log = FALSE, method = "hist", ...) {
+dempirical <- function(x, y, log = FALSE, na.rm = FALSE, method = NULL, ...) {
+  log   <- as.logical(log)[[1L]]
+  na.rm <- as.logical(na.rm)[[1L]]
+
   tmp <- dpqrempirical_prep(x, y)
   x <- tmp[[1L]]
   y <- tmp[[2L]]
-  log <- as.logical(log)[1L]
-  method <- match.arg(method, c("hist", "density"))
+  rm(tmp)
 
-  # Helper function
-  fn <- function(y, x, ...) {
-    if (method == "hist") {
-      tmp  <- hist(y, plot = FALSE, ...)
-      idx  <- which(tmp$breaks > x)
-      if (length(idx) == 0) {
-        rval <- NA
+  method <- if (is.null(method)) method else match.arg(method, c("hist", "density"))
+
+  # Discrete point mass
+  if (is.null(method)) {
+      eps <- sqrt(.Machine$double.eps) # scoped
+      fn <- function(y, x, na.rm, ...) mean(abs(y - x) < eps, na.rm = na.rm)
+  # Approximating an underlying continuous distribution
+  } else {
+    # Helper function
+    fn <- function(y, x, na.rm, ...) {
+      if (method == "hist") {
+        tmp  <- hist(y, plot = FALSE, ...)
+        if (x < min(tmp$breaks) || x > max(tmp$breaks)) return(0)
+        # Else check in which interval we fall
+        idx  <- min(which(tmp$breaks >= x))
+        rval <- tmp$density[pmax(1L, idx - 1L)]
       } else {
-        idx <- min(idx)
-        rval <- if (!is.finite(idx) || idx == 1L) NA else tmp$density[idx - 1L]
+        tmp  <- density(na.omit(y), ...)
+        rval <- approx(tmp$x, tmp$y, xout = x)$y
+        if (is.na(rval)) rval <- 0
       }
-    } else {
-      tmp  <- density(na.omit(y), ...)
-      rval <- approx(tmp$x, tmp$y, xout = x)$y
+      return(rval)
     }
-    return(rval)
   }
 
   # If length(x) equals to 1 apply can be used
   if (length(x) == 1) {
-    rval <- apply(y, MARGIN = 1, fn, x = x, ...)
+    rval <- apply(y, MARGIN = 1, fn, x = x, na.rm = na.rm, ...)
   } else {
-    rval <- sapply(seq_len(NROW(y)), function(i) fn(y[i, ], x[i], ...))
+    rval <- sapply(seq_len(NROW(y)), function(i) fn(y[i, ], x[i], na.rm = na.rm, ...))
   }
 
   return(if (!log) rval else log(rval))
@@ -407,8 +418,9 @@ kurtosis.Empirical <- function(x, type = 3L, ...) {
 
 #' Draw a random sample from an Empirical distribution
 #'
-#' Draws \code{n} random values from the empirical ensemble
-#' with replacement.
+#' Draws \code{n} random values from the empirical distribution with
+#' replacement. Please see the documentation of [Empirical()] for some
+#' properties of the empircal ensemble distribution.
 #'
 #' @param x A n `Empirical` object created by a call to [Empirical()].
 #' @param n The number of samples to draw. Defaults to `1L`.
@@ -419,10 +431,9 @@ kurtosis.Empirical <- function(x, type = 3L, ...) {
 #'   vector of length `n` (if `drop = TRUE`, default) or a `matrix` with `n` columns
 #'   (if `drop = FALSE`).
 #'
-#' @importFrom distributions3 random apply_dpqr make_positive_integer
-#' @exportS3Method
 #' @family Empirical distribution
-#' @rdname Empirical
+#' @inherit Empirical examples
+#' @exportS3Method
 random.Empirical <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric(0L))
@@ -434,10 +445,7 @@ random.Empirical <- function(x, n = 1L, drop = TRUE, ...) {
 #' Evaluate the probability mass function of an Empirical distribution
 #'
 #' Please see the documentation of [Empirical()] for some properties
-#' of the empircal ensemble distribution, as well as extensive examples
-#' showing to how calculate p-values and confidence intervals.
-#'
-#' @inherit Empirical examples
+#' of the Empirical distribution.
 #'
 #' @param d An `Empirical` object created by a call to [Empirical()].
 #' @param x A vector of elements whose probabilities you would like to
@@ -451,34 +459,31 @@ random.Empirical <- function(x, n = 1L, drop = TRUE, ...) {
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
 #' @param ... arguments to be passed to [dempirical()].
 #'
-#' @family Normal distribution
-#'
 #' @return In case of a single distribution object, either a numeric
 #'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
 #'   `length(x)` columns (if `drop = FALSE`). In case of a vectorized distribution
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
-#' @importFrom distributions3 pdf
+#' @inherit Empirical examples
 #' @family Empirical distribution
 #' @export
-#' @rdname Empirical
 pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dempirical(x = at, y = as.matrix(d), ...)
+  FUN <- function(at, d) dempirical(x = at, y = as.matrix(d), na.rm = TRUE, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
-#' @importFrom distributions3 log_pdf
 #' @family Empirical distribution
 #' @export
-#' @rdname Empirical
+#' @rdname pdf.Empirical
 log_pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dempirical(x = at, y = as.matrix(d), log = TRUE)
+  FUN <- function(at, d) dempirical(x = at, y = as.matrix(d), na.rm = TRUE, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
-#' Evaluate the cumulative distribution function of a Empirical distribution
+#' Evaluate the cumulative distribution function of an Empirical distribution
 #'
-#' @inherit Empirical examples
+#' Please see the documentation of [Empirical()] for some properties
+#' of the Empirical distribution.
 #'
 #' @param d An `Empirical` object created by a call to [Empirical()].
 #' @param x A vector of elements whose cumulative probabilities you would
@@ -492,14 +497,12 @@ log_pdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
 #' @param ... arguments to be passed to [pempirical()].
 #'
-#' @family Empirical distribution
-#'
 #' @return In case of a single distribution object, either a numeric
 #'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
 #'   `length(x)` columns (if `drop = FALSE`). In case of a vectorized distribution
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
-#' @importFrom distributions3 cdf
+#' @inherit Empirical examples
 #' @family Empirical distribution
 #' @export
 cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
@@ -510,17 +513,7 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' Determine quantiles of an Empirical distribution
 #'
 #' Please see the documentation of [Empirical()] for some properties
-#' of the Empirical distribution, as well as extensive examples
-#' showing to how calculate p-values and confidence intervals.
-#' `quantile()`
-#'
-#' This function returns the same values that you get from a Z-table. Note
-#' `quantile()` is the inverse of `cdf()`. Please see the documentation of
-#' [Empirical()] for some properties of the Empirical distribution, as well as
-#' extensive examples showing to how calculate p-values and confidence
-#' intervals.
-#'
-#' @inherit Empirical examples
+#' of the Empirical distribution.
 #'
 #' @param probs A vector of probabilities.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -538,18 +531,22 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
 #'
+#' @inherit Empirical examples
 #' @family Empirical distribution
 #' @export
-#' @rdname Empirical
 quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   FUN <- function(at, d) qempirical(at, y = as.matrix(d), ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
-#' @param ... forwarded to format method.
-#' @param ... currently not used.
+
+#' @param x object of class `Empirical`.
+#' @param ... forwarded to \code{\link[base]{format}}.
+#' @param digits a positive integer indicating how many significant
+#'        digits are used.
 #'
 #' @exportS3Method
+#' @rdname Empirical
 format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...) {
   if (length(x) < 1L) return(character(0))
   n <- names(x)
@@ -565,6 +562,7 @@ format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...
 #' Return the support of the Empirical distribution
 #'
 #' TODO(RETO): Check description
+#'
 #' @param d An `Empirical` object created by a call to [Empirical()].
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... currently not used.
@@ -574,17 +572,14 @@ format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...
 #' or a `matrix` with 2 columns. In case of a vectorized distribution object, a
 #' matrix with 2 columns containing all minima and maxima.
 #'
-#' @importFrom distributions3 support make_support
 #' @family Empirical distribution
 #' @exportS3Method
-#' @rdname Empirical
 support.Empirical <- function(d, drop = TRUE, ...) {
   ## ellipsis::check_dots_used()
   minmax <- apply(as.matrix(d), MARGIN = 1, FUN = range, na.rm = TRUE)
   make_support(minmax[1, ], minmax[2, ], d, drop = drop)
 }
 
-#' @importFrom distributions3 is_discrete
 #' @family Empirical distribution
 #' @exportS3Method
 is_discrete.Empirical <- function(d, ...) {
@@ -592,11 +587,8 @@ is_discrete.Empirical <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
-#' @param ... currently not used.
-#'
-#' @importFrom distributions3 is_continuous
-#' @family Empirical distribution
-#' @exportS3Method
+# @family Empirical distribution
+# @exportS3Method
 is_continuous.Empirical <- function(d, ...) {
   ## ellipsis::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))

@@ -6,11 +6,7 @@
 \alias{variance.Empirical}
 \alias{skewness.Empirical}
 \alias{kurtosis.Empirical}
-\alias{random.Empirical}
-\alias{pdf.Empirical}
-\alias{log_pdf.Empirical}
-\alias{quantile.Empirical}
-\alias{support.Empirical}
+\alias{format.Empirical}
 \title{Create an Empirical distribution}
 \usage{
 Empirical(x)
@@ -23,80 +19,25 @@ Empirical(x)
 
 \method{kurtosis}{Empirical}(x, type = 3L, ...)
 
-\method{random}{Empirical}(x, n = 1L, drop = TRUE, ...)
-
-\method{pdf}{Empirical}(d, x, drop = TRUE, elementwise = NULL, ...)
-
-\method{log_pdf}{Empirical}(d, x, drop = TRUE, elementwise = NULL, ...)
-
-\method{quantile}{Empirical}(x, probs, drop = TRUE, elementwise = NULL, ...)
-
-\method{support}{Empirical}(d, drop = TRUE, ...)
+\method{format}{Empirical}(x, digits = pmax(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
-\item{x}{A vector of elements whose probabilities you would like to
-determine given the distribution \code{d}.}
+\item{x}{object of class \code{Empirical}.}
 
-\item{...}{currently not used.}
+\item{...}{forwarded to \code{\link[base]{format}}.}
 
 \item{type}{integer between \code{1L} and \code{3L} (default) selecting one of three
 algorithms. See Details for more information.}
 
-\item{n}{The number of samples to draw. Defaults to \code{1L}.}
-
-\item{drop}{logical. Should the result be simplified to a vector if possible?}
-
-\item{d}{An \code{Empirical} object created by a call to \code{\link[=Empirical]{Empirical()}}.}
-
-\item{elementwise}{logical. Should each distribution in \code{x} be evaluated
-at all elements of \code{probs} (\code{elementwise = FALSE}, yielding a matrix)?
-Or, if \code{x} and \code{probs} have the same length, should the evaluation be
-done element by element (\code{elementwise = TRUE}, yielding a vector)? The
-default of \code{NULL} means that \code{elementwise = TRUE} is used if the
-lengths match and otherwise \code{elementwise = FALSE} is used.}
-
-\item{probs}{A vector of probabilities.}
+\item{digits}{a positive integer indicating how many significant
+digits are used.}
 }
 \value{
 An \code{Empirical} object.
-
-In case of a single distribution object or \code{n = 1}, either a numeric
-vector of length \code{n} (if \code{drop = TRUE}, default) or a \code{matrix} with \code{n} columns
-(if \code{drop = FALSE}).
-
-In case of a single distribution object, either a numeric
-vector of length \code{probs} (if \code{drop = TRUE}, default) or a \code{matrix} with
-\code{length(x)} columns (if \code{drop = FALSE}). In case of a vectorized distribution
-object, a matrix with \code{length(x)} columns containing all possible combinations.
-
-In case of a single distribution object, either a numeric
-vector of length \code{probs} (if \code{drop = TRUE}, default) or a \code{matrix} with
-\code{length(probs)} columns (if \code{drop = FALSE}). In case of a vectorized
-distribution object, a matrix with \code{length(probs)} columns containing all
-possible combinations.
-
-In case of a single distribution object, a numeric vector of length 2
-with the minimum and maximum value of the support (if \code{drop = TRUE}, default)
-or a \code{matrix} with 2 columns. In case of a vectorized distribution object, a
-matrix with 2 columns containing all minima and maxima.
 }
 \description{
 An empirical distribution consists of a series of \code{N} observations
 out of a typically unknown distribution, i.e., a random sample \eqn{X}.
-
-Draws \code{n} random values from the empirical ensemble
-with replacement.
-
-Please see the documentation of \code{\link[=Empirical]{Empirical()}} for some properties
-of the empircal ensemble distribution, as well as extensive examples
-showing to how calculate p-values and confidence intervals.
-
-Please see the documentation of \code{\link[=Empirical]{Empirical()}} for some properties
-of the Empirical distribution, as well as extensive examples
-showing to how calculate p-values and confidence intervals.
-\code{quantile()}
-
-TODO(RETO): Check description
 }
 \details{
 The creation function \code{\link[=Empirical]{Empirical()}} allows for a variety of different objects
@@ -142,7 +83,6 @@ different measures (types) are available as defined below. For details see Joane
 \item Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
 \item Type 2 (only defined for three or more finite values): \deqn{S_2 = \frac{\sqrt{N \cdot (N - 1)}}{(N - 2)} S_1}{S2 = sqrt(N * (N - 1)) / (N - 2) * S1}
 \item Type 3 (default): \deqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} \cdot S_1}{S3 = sqrt((1 - 1 / N)^3) * S1}
-\item For more details about the different types of sample skewness see Joanes and Gill (1998).
 }
 \item Kurtosis:
 \itemize{
@@ -151,12 +91,6 @@ different measures (types) are available as defined below. For details see Joane
 \item Type 3 (default): \deqn{K_3 = \big(1 - \frac{1}{N}\big)^2 \cdot (K_1 + 3) - 3}{K3 = (1 - 1 / N)^2 * (K1 + 3) - 3}
 }
 }
-
-This function returns the same values that you get from a Z-table. Note
-\code{quantile()} is the inverse of \code{cdf()}. Please see the documentation of
-\code{\link[=Empirical]{Empirical()}} for some properties of the Empirical distribution, as well as
-extensive examples showing to how calculate p-values and confidence
-intervals.
 }
 \examples{
 
@@ -235,13 +169,9 @@ Society D}, \bold{47}(1), 183--189. \doi{10.1111/1467-9884.00122}
 Other Empirical distribution:
 \code{\link[=cdf.Empirical]{cdf.Empirical()}},
 \code{\link[=dempirical]{dempirical()}},
-\code{\link[=is_continuous.Empirical]{is_continuous.Empirical()}}
-
-Other Normal distribution:
-\code{\link[=cdf.Normal]{cdf.Normal()}},
-\code{\link[=fit_mle.Normal]{fit_mle.Normal()}},
-\code{\link[=pdf.Normal]{pdf.Normal()}},
-\code{\link[=quantile.Normal]{quantile.Normal()}}
+\code{\link[=pdf.Empirical]{pdf.Empirical()}},
+\code{\link[=quantile.Empirical]{quantile.Empirical()}},
+\code{\link[=random.Empirical]{random.Empirical()}},
+\code{\link[=support.Empirical]{support.Empirical()}}
 }
 \concept{Empirical distribution}
-\concept{Normal distribution}

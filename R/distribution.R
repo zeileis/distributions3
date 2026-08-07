@@ -175,6 +175,7 @@
 #'     labs(title = "Density of random numbers (lambda = 2.5)")
 #'
 #' @rdname pdf.distribution
+#' @keywords internal
 #' @exportS3Method
 pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE, applyfun = NULL, cores = NULL, ...) {
     # To be able to numerically approximate the pdf the object must have
@@ -723,7 +724,7 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
 #' support.MyPoisson       <- getS3method("support", class = "Poisson")
 #'
 #' @useDynLib distributions3, .registration = TRUE
-#' @rdname mean.distribution
+#' @keywords internal
 distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize = 1e4L, applyfun = NULL, cores = NULL, method = NULL, ...) {
   ## essentially follow apply_dpqr() but try to exploit specific structure of CRPS
 

@@ -18,3 +18,4 @@ Returns \code{TRUE} if the method exists for one of the given classes, else \cod
 Evaluates whether or not there is support for a given S3 method for specific
 objects.
 }
+\keyword{internal}

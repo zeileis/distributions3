@@ -143,7 +143,7 @@ test_that("cdf.Empirical works as expected", {
     expect_identical(x, c(0.5, 2 / 15) |> setNames(letters[1:2]))
 
     expect_silent(x <- cdf(d, c(-2, 0, 2)))
-    expect_identical(x, matrix(c(1/6, 3/6, 6/6, 2/15, 2/15, 4/15),
+    expect_identical(x, matrix(c(1/6, 1/2, 6/6, 2/15, 2/15, 4/15),
             nrow = 2, byrow = TRUE, dimnames = list(letters[1:2], paste0("p_", c(-2, 0, 2)))))
 
     # Upper tail
@@ -157,24 +157,23 @@ test_that("pdf.Empirical works as expected", {
     expect_identical(formals(distributions3:::pdf.Empirical),
         as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)))
 
-    expect_silent(x <- pdf(d, 0))
-    expect_identical(x, c(1 / 3, 0.08) |> setNames(letters[1:2]))
+    expect_silent(x <- pdf(d, 1))
+    expect_identical(x, c(2 / 6, 0) |> setNames(letters[1:2]))
 
-    expect_silent(x <- pdf(d, c(-2, 0, 2)))
-    expect_equal(x, matrix(c(0.5, 1/3, NA_real_, 0.01333333, 0.08, 0.08),
-            nrow = 2, byrow = TRUE, dimnames = list(letters[1:2], paste0("d_", c(-2, 0, 2)))),
-            tolerance = 1e-6)
+    expect_silent(x <- pdf(d, c(-2, 0, 1)))
+    expect_equal(x, matrix(c(1/6, 0, 2/6, 0, 0, 0),
+            nrow = 2, byrow = TRUE, dimnames = list(letters[1:2], paste0("d_", c(-2, 0, 1)))))
 
     # Log-pdf
-    expect_silent(x2 <- pdf(d, c(-2, 0, 2), log = TRUE))
+    expect_silent(x2 <- pdf(d, c(-2, 0, 1), log = TRUE))
     expect_identical(x2, log(x))
 
     # log_pdf function
     expect_identical(formals(distributions3:::log_pdf.Empirical),
         as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)))
-    expect_silent(x3 <- log_pdf(d, c(-2, 0, 2)))
+    expect_silent(x3 <- log_pdf(d, c(-2, 0, 1)))
     expect_equal(x2, x3, ignore_attr = TRUE)
-    expect_identical(dimnames(x3), list(letters[1:2], paste0("l_", c(-2, 0, 2))))
+    expect_identical(dimnames(x3), list(letters[1:2], paste0("l_", c(-2, 0, 1))))
 })
 
 
@@ -326,28 +325,38 @@ test_that("kurtosis.Empirical works as expected", {
 # Additional tests for dedicated dpqr methods
 # -------------------------------------------------------------------
 
+if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
+
 # dempirical
 test_that("dempirical works as expected", {
     expect_identical(formals(dempirical),
-        as.pairlist(alist(x =, y =, log = FALSE, method = "hist", ... = )))
+        as.pairlist(alist(x =, y =, log = FALSE, na.rm = FALSE, method = NULL, ... = )))
 
-    set.seed(1234)
-    y <- c(rnorm(50), NA_real_)
+    y <- c(1, 1, NA_real_, 2, 2, 2, 3, 4, 5, NA_real_)
+    n <- sum(!is.na(y))
 
     # Incorrect argument
     expect_error(dempirical(0, y, method = "foo"), regexp = "'arg' should be one of .hist., .density.")
 
-    # Using default 'hist' method
-    expect_identical(dempirical(0, y), 0.2)
-    expect_identical(x <- dempirical(0:2, y), c(0.2, 0.12, 0.04))
-    expect_identical(log(x), dempirical(0:2, y, log = TRUE))
+    # Using default 'method = NULL' (discrete)
+    expect_identical(dempirical(0, y), NA_real_)
+    expect_identical(dempirical(1:2, y), rep(NA_real_, 2L))
+
+    expect_identical(dempirical(0, y, na.rm = TRUE), 0)
+    expect_identical(dempirical(1, y, na.rm = TRUE), 2 / n)
+    expect_identical(x <- dempirical(0:6, y, na.rm = TRUE),
+            sapply(0:6, function(x) { sum(y == x, na.rm = TRUE) / sum(!is.na(y)) }))
+
+    expect_identical(log(x), dempirical(0:6, y, na.rm = TRUE, log = TRUE))
+
+    # Using histogram estimation
+    expect_equal(x <- dempirical(1.5, y, method = "hist"), 0.625)
+    expect_equal(log(x), dempirical(1.5, y, method = "hist", log = TRUE))
 
     # Using density estimation
-    expect_equal(x <- dempirical(0, y, method = "density"), 0.2624794, tolerance = 1e-6)
-    expect_equal(log(x), dempirical(0, y, method = "density", log = TRUE))
-
-    # length of x > 1L
-    expect_identical(dempirical((-1):1, y), c(0.68, 0.20, 0.12))
+    expect_equal(x <- dempirical(1.5, y, method = "density"), 0.2885984, tolerance = 1e-6)
+    expect_equal(log(x), dempirical(1.5, y, method = "density", log = TRUE))
 })
 
 # pempirical

@@ -28,6 +28,7 @@ Authors:
   \item Daniel Jordan \email{dandermotj@gmail.com}
   \item Paul Northrop \email{p.northrop@ucl.ac.uk} (\href{https://orcid.org/0000-0002-1992-4882}{ORCID})
   \item Moritz N. Lang \email{moritz.n.lang@gmail.com} (\href{https://orcid.org/0000-0002-2533-9903}{ORCID})
+  \item Reto Stauffer \email{reto.stauffer@uibk.ac.at} (\href{https://orcid.org/0000-0002-3798-5507}{ORCID})
 }
 
 Other contributors:

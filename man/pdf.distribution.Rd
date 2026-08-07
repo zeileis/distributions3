@@ -229,3 +229,4 @@ ggplot(data = freq, aes(x = x, y = Freq, fill = distribution)) +
     labs(title = "Density of random numbers (lambda = 2.5)")
 
 }
+\keyword{internal}
