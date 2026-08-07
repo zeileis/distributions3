@@ -7,6 +7,7 @@ Authors@R: c(
     person(given = "Daniel", family = "Jordan", email = "dandermotj@gmail.com", role = "aut"),
     person(given = "Paul", family = "Northrop", email = "p.northrop@ucl.ac.uk", role = "aut", comment = c(ORCID = "0000-0002-1992-4882")),
     person(given = c("Moritz", "N."), family = "Lang", email = "moritz.n.lang@gmail.com", role = "aut", comment = c(ORCID = "0000-0002-2533-9903")),
+    person(given = "Reto", family = "Stauffer", email = "reto.stauffer@uibk.ac.at", role = "aut", comment = c(ORCID = "0000-0002-3798-5507")),
     person(given = "Achim", family = "Zeileis", email = "Achim.Zeileis@R-project.org", role = c("aut", "cre"), comment = c(ORCID = "0000-0003-0918-3766")),
     person(given = "Emil", family = "Hvitfeldt", email = "emilhhvitfeldt@gmail.com", role = "ctb", comment = c(ORCID = "0000-0002-0679-1945")),
     person(given = "Bruna", family = "Wundervald", email = "brunadaviesw@gmail.com", role = "ctb", comment = c(ORCID = "0000-0001-8163-220X")),
