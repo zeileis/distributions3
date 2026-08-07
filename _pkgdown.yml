@@ -95,6 +95,18 @@ reference:
       - quantile.ChiSquare
       - random.ChiSquare
       - support.ChiSquare
+  - title: "Empirical distribution"
+    contents:
+      - dempirical
+      - pempirical
+      - qempirical
+      - rempirical
+      - Empirical
+      - cdf.Empirical
+      - pdf.Empirical
+      - quantile.Empirical
+      - random.Empirical
+      - support.Empirical
   - title: "Erlang distribution"
     contents:
       - Erlang
