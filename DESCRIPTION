@@ -37,7 +37,7 @@ Suggests:
     tibble,
     vctrs,
     scoringRules,
-    crch,
+    crch (>= 1.1-1),
     numDeriv
 VignetteBuilder: 
     knitr
