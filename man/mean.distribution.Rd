@@ -16,14 +16,15 @@
 \method{kurtosis}{distribution}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \code{distribution}.}
+\item{x}{An object of class \code{distribution}.}
 
-\item{...}{forwarded to internal function \code{\link[=distribution_calculate_moments]{distribution_calculate_moments()}} when
+\item{...}{Forwarded to internal function \code{\link[=distribution_calculate_moments]{distribution_calculate_moments()}} when
 calculating moments (i.e., mean, variance, skewness, kurtosis), else ignored
 (see \code{\link[=distribution_calculate_moments]{distribution_calculate_moments()}} for available options/arguments).}
 }
 \value{
-A (potentially named) numeric vector.
+A (potentially named) numeric vector of length \code{length(x)} with
+the requested central moment.
 }
 \description{
 A series of S3 methods used as fallback for calculating/approximating
@@ -35,14 +36,17 @@ distributional properties if no dedicated S3 method exists.
 
 ## Mockup class
 MyNormal <- function(mu, sigma) {
-    data.frame(mu = mu, sigma = sigma) |>
-        structure(class = c("MyNormal", "distribution"))
+    structure(data.frame(mu = mu, sigma = sigma),
+              class = c("MyNormal", "distribution"))
 }
 
-## Adding minimal required methods
-registerS3method("cdf",         "MyNormal", getS3method("cdf", "Normal"))
-registerS3method("is_discrete", "MyNormal", getS3method("is_discrete", "Normal"))
-registerS3method("support",     "MyNormal", getS3method("support", "Normal"))
+## Adding minimal required methods (borrowed from class Normal)
+registerS3method("cdf", "MyNormal",
+                 getS3method("cdf", "Normal"))
+registerS3method("is_discrete", "MyNormal",
+                 getS3method("is_discrete", "Normal"))
+registerS3method("support", "MyNormal",
+                 getS3method("support", "Normal"))
 
 ## Drawing parameters
 set.seed(6020)
@@ -54,15 +58,17 @@ sigma <- runif(N, 0.5, 20)^2 / 100 + 0.2
 n20 <- MyNormal(mu = mu,  sigma = sigma)
 N20 <- Normal(mu = mu, sigma = sigma)
 
-## Calculating moments for first distribution (n3[1], N3[1])
-list(numerically  = list(mean = mean(n20[1]),
-                         variance = variance(n20[1L]),
-                         skewness = skewness(n20[1L]),
-                         kurtosis = kurtosis(n20[1L])),
-     analytically = list(mean = mean(N20[1]),
-                         variance = variance(N20[1L]),
-                         skewness = skewness(N20[1L]),
-                         kurtosis = kurtosis(N20[1L]))) |> str()
+## Calculating moments for first distribution (n20[1], N20[1])
+do.call(cbind,
+    list(numerically  = list(mean = mean(n20[1]),
+                             variance = variance(n20[1L]),
+                             skewness = skewness(n20[1L]),
+                             kurtosis = kurtosis(n20[1L])),
+         analytically = list(mean = mean(N20[1]),
+                             variance = variance(N20[1L]),
+                             skewness = skewness(N20[1L]),
+                             kurtosis = kurtosis(N20[1L])))
+)
 
 ## Visual comparison
 par(ask = TRUE)
@@ -74,7 +80,7 @@ plot(mean(n20), mean(N20),
 abline(0, 1, col = 2, lty = 2)
 
 plot(mean(n20, gridsize = 10L), mean(N20),
-     main = "Mean: Normal vs. MyNormal\nminimal gridsize (rougher approximation)",
+     main = "Mean: Normal vs. MyNormal\nminimal gridsize (less precise)",
      xlab = "numerically approximated mean",
      ylab = "analytic mean")
 abline(0, 1, col = 2, lty = 2)
@@ -98,7 +104,7 @@ plot(kurtosis(n20), kurtosis(N20),
 abline(h = 0, col = 2, lty = 2)
 
 plot(kurtosis(n20, gridsize = 150L), kurtosis(N20),
-     main = "Kurtosis: Normal vs. MyNormal\nreduced gridsize (rougher approximation)",
+     main = "Kurtosis: Normal vs. MyNormal\nreduced gridsize (less precise)",
      xlab = "numerically approximated kurtosis",
      ylab = "analytic kurtosis")
 abline(h = 0, col = 2, lty = 2)

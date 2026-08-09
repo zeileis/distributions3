@@ -7,9 +7,9 @@
 \method{random}{distribution}(x, n = 1L, drop = TRUE, ...)
 }
 \arguments{
-\item{x}{an object of class \code{distribution}.}
+\item{x}{An object of class \code{distribution}.}
 
-\item{n}{number of observations. If \code{length(n) > 1}, the length is
+\item{n}{Number of observations. If \code{length(n) > 1}, the length is
 taken to be the number required.}
 
 \item{drop}{logical. Should the result be simplified to a vector if possible?}
@@ -18,7 +18,7 @@ taken to be the number required.}
 }
 \value{
 A numeric vector of random values if \code{length(d)} equals one
-or \code{n = 1L} and \code{drop = TRUE} (default) or a matrix where rows correspond
+or \code{n = 1L} and \code{drop = TRUE} (default), or a matrix where rows correspond
 to the distribution(s) \code{d} whilst the columns contain the random values.
 }
 \description{
@@ -28,10 +28,10 @@ uniform random variates through the target quantile function.
 \examples{
 ## Drawing random numbers from a Poisson distribution
 ## using the inverse transform sampling method
-random.distribution(Poisson(3), n = 10)
+random.distribution(Poisson(3), n = 6)
 
 ## Drawing random numbers from a series of Normal distributions
 ## using the inverse transform sampling method
-random.distribution(Normal(1:3, 1:3 / 2), n = 10)
+random.distribution(Normal(1:3, 1:3 / 2), n = 6)
 
 }

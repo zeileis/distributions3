@@ -32,30 +32,34 @@
 \method{cdf}{distribution}(d, x, drop = TRUE, elementwise = NULL, lower.tail = TRUE, ...)
 }
 \arguments{
-\item{d}{an object of class \code{distribution}.}
+\item{d}{An object of class \code{distribution}.}
 
 \item{x}{Either a numeric vector of probabilities to be evaluated (if
-\code{\link[=pdf]{pdf()}} is called), or an object of class \code{distributions} (as \code{d}) when
+\code{\link[=pdf]{pdf()}} is called), or an object of class \code{distributions} when
 calling the \code{\link[=quantile]{quantile()}} function.}
 
 \item{drop}{logical. Should the result be simplified to a vector if possible?}
 
-\item{elementwise}{Logical. Should each distribution (in \code{d}/\code{x}) be
-evaluated at all elements in \code{x} (when \code{\link[=pdf]{pdf()}} is called) or probs\verb{(if [quantile()] is called)? The default}NULL\verb{means that}elementwise = TRUE\verb{is used if the lengths match, else}elementwise\verb{is set}FALSE`.}
+\item{elementwise}{logical. Should each distribution (in \code{d}/\code{x}) be
+evaluated at all elements in \code{x} (when \code{\link[=pdf]{pdf()}} is called) or \code{probs}
+(if \code{\link[=quantile]{quantile()}} is called)? By default (if \code{elementwise = NULL}) it
+is set to \code{elementwise = TRUE} if the lengths match, else
+\code{elementwise} is set \code{FALSE}.}
 
 \item{log}{logical. If \code{TRUE}, probabilities are given as \code{log(p)}.}
 
-\item{applyfun}{an optional \code{\link[base]{lapply}}-style function with
-arguments \verb{function(X, FUN, ...)}. It is used to compute the CRPS for each
-element of \code{y}. The default is to use the basic \code{\link[base]{lapply}}
-function unless the \code{cores} argument is specified (see below).}
+\item{applyfun}{An optional \code{\link[base]{lapply}}-style function with
+arguments \verb{function(X, FUN, ...)}. It is used to compute the CRPS
+for each element of \code{y}. The default is to use the basic
+\code{\link[base]{lapply}} function unless the \code{cores} argument is
+specified (see below).}
 
-\item{cores}{numeric. If set to an integer the \code{applyfun} is set to
-\code{\link[parallel]{mclapply}} with the desired number of \code{cores}, except
-on Windows where \code{\link[parallel]{parLapply}} with \code{makeCluster(cores)}
-is used.}
+\item{cores}{\code{NULL} or positive integer. If set to an integer the \code{applyfun}
+is set to \code{\link[parallel]{mclapply}} with the desired number of
+\code{cores}, except on Windows where \code{\link[parallel]{parLapply}}
+with \code{makeCluster(cores)} is used.}
 
-\item{...}{currently ignored.}
+\item{...}{Currently ignored.}
 
 \item{probs}{Numeric vector of probabilities with values in \verb{[0,1]}.}
 
@@ -64,11 +68,12 @@ be searched, forwarded to \code{\link[stats]{uniroot}}.}
 
 \item{tol}{numeric. Desired accuracy for \code{\link[stats]{uniroot}}.}
 
-\item{maxit}{Integer (default \code{1000L}). Maximum number of iterations used when iteratively evaluating
-quantiles based on a pdf (discrete distributions only). If \code{maxit} is reached
-before the quantile has been found, an error will be thrown.}
+\item{maxit}{integer. Maximum number of iterations used when iteratively
+evaluating quantiles based on a pdf (discrete distributions only).
+If \code{maxit} is reached before the quantile has been found,
+an error will be thrown.}
 
-\item{lower.tail}{Logical. If \code{TRUE} (default), probabilities are
+\item{lower.tail}{logical. If \code{TRUE} (default), probabilities are
 \eqn{P[X \le x]}{P[X <= x]}, else \eqn{P[X \ge x]}{P[X >= x]}.}
 }
 \description{
@@ -83,61 +88,65 @@ offering analytical solutions for all expected functions, such as
 the probability density function (PDF), the cumulative distribution
 function (CDF), quantile function, or random number generation, the
 \code{distribution} class tries to fill the gap by providing functions
-which numerically approximate these missing functions.
+which numerically approximate them.
 
 These numerical approximations may not always be the most efficient
-or may lack precision, but they allow for prototyping and/or using the
-full suite of distribution3 features even if some analytical functions
+or may lack precision, but allow for fast prototyping and/or using the
+full suite of \pkg{distributions3} features even if some analytical functions
 are not (yet) implemented or an analytical solution is not available.
 
-Always required are S3 methods for \code{is_discrete} and \code{support}. Besides
+S3 methods for \code{is_discrete} and \code{support} are mandatory! Besides
 these two (fairly simple) methods, the following minimal requirements
 for certain types of distributions are supported/implemented:
-\itemize{
-\item Continuous distributions:
+
+\emph{Continuous distributions:}
 \itemize{
 \item provide (at least) a \verb{cdf.*} method,
 \item or provide (at least) a \verb{pdf.*} and \verb{quantile.*} method.
 }
-\item Discrete distributions:
+
+\emph{Discrete distributions:}
 \itemize{
 \item provide (at least) a \verb{pdf.*} method,
 \item or (at least) a \verb{cdf.*} method.
 }
-}
 
-Any method provided on top of the minimal requirements will always
-be used if available (i.e., the more dedicated/analytical methods
-provided, the better).
+Any additional S3 method provided on top of the minimal requirements will
+always be leveraged if available (i.e., the more dedicated/analytical
+methods provided the better).
 }
 \examples{
-## ------------- custom Normal distribution (MyNormal) ----------------
+## ------------- custom Normal distribution (MyNormal1) ---------------
 ## -------------------------- using cdf -------------------------------
 
 library("scoringRules")
 
-## Constructor function for new 'MyNormal' distribution
-MyNormal <- function(mu, sigma) {
+## Constructor function for new 'MyNormal1' distribution
+MyNormal1 <- function(mu, sigma) {
     d <- data.frame(mu = mu, sigma = sigma)
-    class(d) <- c("MyNormal", "distribution")
+    class(d) <- c("MyNormal1", "distribution")
     return(d)
 }
 
-## Additional S3 methods required
-registerS3method("cdf",         "MyNormal", getS3method("cdf", class = "Normal"))
-registerS3method("is_discrete", "MyNormal", getS3method("is_discrete", class = "Normal"))
-registerS3method("support",     "MyNormal", getS3method("support", class = "Normal"))
+## Additionally required S3 methods (borrowed from class Normal)
+registerS3method("cdf", "MyNormal1",
+                 getS3method("cdf", class = "Normal"))
+registerS3method("is_discrete", "MyNormal1",
+                 getS3method("is_discrete", class = "Normal"))
+registerS3method("support", "MyNormal1",
+                 getS3method("support", class = "Normal"))
 
 ## Constructing objects; three normal distributions with
 ## mean c(1, 2, 3) and standard deviation c(1, 2.5, 5).
-## mn3: Based on MyNormal where only cdf, id_discrete, and support are defined.
+## mn3: Based on MyNormal1 where only cdf, id_discrete, and support
+##      are defined.
 ## n3:  Analytic solution (distributions3::Normal()) with analytic functions
-##      for all distribution functions (pdf, cdf, quantile) as well as for the first
-##      four central moments (mean, variance, skewness, kurtosis)
-mn3 <- MyNormal(mu = 1:3, sigma = c(1, 2.5, 5))
+##      for all distribution functions (pdf, cdf, quantile) as well as for
+##      the first four central moments (mean, variance, skewness, kurtosis)
+mn3 <- MyNormal1(mu = 1:3, sigma = c(1, 2.5, 5))
 n3  <- Normal(mu = 1:3, sigma = c(1, 2.5, 5))
 
-## Class 'MyNormal' knows the analytic cdf:
+## Class 'MyNormal1' knows the analytic cdf:
 cdf(mn3, x = 2)
 identical(cdf(mn3, x = 2), cdf(n3, x = 2))
 
@@ -157,7 +166,8 @@ qn3    <- quantile(n3,  probs = probs2) ## Analytic solution
 range(qmn3 - qn3) ## Range of pairwise differences/precision
 
 ## Central moments and CRPS
-cbind(mean = mean(mn3), variance = variance(mn3), skewness = skewness(mn3), kurtosis = kurtosis(mn3))
+cbind(mean     = mean(mn3),     variance = variance(mn3),
+      skewness = skewness(mn3), kurtosis = kurtosis(mn3))
 crps(mn3, 3)
 
 ## Visual comparison: density
@@ -168,9 +178,11 @@ dpdf <- data.frame(x          = x,
                    analytical = pdf(n3[1],  x = x),
                    numerical  = pdf(mn3[1], x = x))
 
-matplot(dpdf[, 1], dpdf[, -1],  type = "l", col = 1:2, xlab = NA, ylab = "density",
-        lty = 1, lwd = 2:1, main = "Density function (mean = 1, sigma = 1)")
-legend("bottom", legend = names(dpdf)[-1], bty = "n", col = 1:2, lty = 1, lwd = 2:1)
+matplot(dpdf[, 1], dpdf[, -1],  type = "l", col = 1:2,
+        xlab = NA, ylab = "density", lty = 1, lwd = 2:1,
+        main = "Density function (mean = 1, sigma = 1)")
+legend("bottom", legend = names(dpdf)[-1], bty = "n",
+       col = 1:2, lty = 1, lwd = 2:1)
 
 ## Visual comparison: quantiles
 probs     <- c(0.001, seq(0.01, 0.99, by = 0.01), 0.999)
@@ -178,14 +190,17 @@ dquantile <- data.frame(probs      = probs,
                         analytical = quantile(n3[1],  probs = probs),
                         numerical  = quantile(mn3[1], probs = probs))
 
-matplot(dquantile[, -1], dquantile[, 1], type = "l", col = 1:2,  xlab = NA, ylab = "distribution",
-        lty = 1, lwd = 2:1, main = "Quantile function (mean = 1, sigma = 1)")
-legend("bottom", legend = names(dquantile)[-1], bty = "n", col = 1:2, lwd = 2:1)
+matplot(dquantile[, -1], dquantile[, 1], type = "l", col = 1:2,
+        xlab = NA, ylab = "probability", lty = 1, lwd = 2:1,
+        main = "Quantile function (mean = 1, sigma = 1)")
+legend("bottom", legend = names(dquantile)[-1], bty = "n",
+       col = 1:2, lwd = 2:1)
 
 ## Visual comparison: quantile-quantile plot
 plot(dquantile[, "analytical"], dquantile[, "analytical"],
-     xlab = "numerically approximated quantiles", ylab = "theoretical quantiles",
-     main = "QQ-plot Normal vs. MyNormal")
+     xlab = "numerically approximated quantiles",
+     ylab = "theoretical quantiles",
+     main = "QQ-plot Normal vs. MyNormal1")
 abline(0, 1, col = 2, lty = 2)
 
 ## Drawing random numbers (500 on third distribution)
@@ -196,7 +211,8 @@ hmn <- hist(rmn, breaks = 15L, plot = FALSE)
 hn  <- hist(rn,  breaks = 15L, plot = FALSE)
 
 plot(hmn$mids, hmn$density, type = "l",
-     xlab = NA, ylab = "density", main = "Density of random numbers: Normal vs. MyNormal")
+     xlab = NA, ylab = "density",
+     main = "Density of random numbers: Normal vs. MyNormal1")
 lines(hn$mids, hn$density, col = 2)
 
 ## ------------ custom Normal distribution (MyNormal2) ----------------
@@ -209,49 +225,60 @@ MyNormal2 <- function(mu, sigma) {
     return(d)
 }
 
-## Additional S3 methods required
-registerS3method("pdf",         "MyNormal2", getS3method("pdf", class = "Normal"))
-registerS3method("quantile",    "MyNormal2", getS3method("quantile", class = "Normal"))
-registerS3method("is_discrete", "MyNormal2", getS3method("is_discrete", class = "Normal"))
-registerS3method("support",     "MyNormal2", getS3method("support", class = "Normal"))
+## Additionally required S3 methods (borrowed from class Normal)
+registerS3method("pdf", "MyNormal2",
+                 getS3method("pdf", class = "Normal"))
+registerS3method("quantile", "MyNormal2",
+                 getS3method("quantile", class = "Normal"))
+registerS3method("is_discrete", "MyNormal2",
+                 getS3method("is_discrete", class = "Normal"))
+registerS3method("support", "MyNormal2",
+                 getS3method("support", class = "Normal"))
 
-## Constructing objects; creating three (named) 'MyNormal2' distributions with
-## mean c(1, 2, 3) and standard deviation c(1, 2.5, 5) for which only
+## Constructing objects; creating three (named) 'MyNormal2' distributions
+## with mean c(1, 2, 3) and standard deviation c(1, 2.5, 5) for which only
 ## pdf, quantile, is_discrete, and support are defined.
-mn3 <- MyNormal2(mu = 1:3, sigma = c(1, 2.5, 5)) |> setNames(LETTERS[1:3])
+mn3 <- MyNormal2(mu = 1:3, sigma = c(1, 2.5, 5))
+mn3 <- setNames(mn3, LETTERS[1:3])
 
 random(mn3, n = 3L)
 cdf(mn3, x = 2)
 pdf(mn3, x = 2)
 quantile(mn3, 0.5)
-cbind(mean = mean(mn3), variance = variance(mn3), skewness = skewness(mn3), kurtosis = kurtosis(mn3))
+cbind(mean     = mean(mn3),     variance = variance(mn3),
+      skewness = skewness(mn3), kurtosis = kurtosis(mn3))
 crps(mn3, 0.5)
 
-## ------------- custom Poisson distribution (MyPoisson) --------------
+## ------------ custom Poisson distribution (MyPoisson1) --------------
 ## -------------------------- using pdf -------------------------------
 
-## Custom constructor function for the 'MyPoisson' distribution
-MyPoisson <- function(lambda) {
+## Custom constructor function for the 'MyPoisson1' distribution
+MyPoisson1 <- function(lambda) {
     d <- data.frame(lambda = lambda)
-    class(d) <- c("MyPoisson", "distribution")
+    class(d) <- c("MyPoisson1", "distribution")
     return(d)
 }
 
-## Additional S3 methods required
-registerS3method("pdf",         "MyPoisson", getS3method("pdf", class = "Poisson"))
-registerS3method("is_discrete", "MyPoisson", getS3method("is_discrete", class = "Poisson"))
-registerS3method("support",     "MyPoisson", getS3method("support", class = "Poisson"))
+## Additionally required S3 methods (borrowed from class Poisson)
+registerS3method("pdf", "MyPoisson1",
+                 getS3method("pdf", class = "Poisson"))
+registerS3method("is_discrete", "MyPoisson1",
+                 getS3method("is_discrete", class = "Poisson"))
+registerS3method("support", "MyPoisson1",
+                 getS3method("support", class = "Poisson"))
 
 ## Constructing objects; three normal distributions with
 ## parameter lambda = c(1, 2.5, 5).
-## mp3: Based on MyPoisson where only pdf, id_discrete, and support are defined.
-## p3:  Analytic solution (distributions3::Poisson()) with analytic functions
-##      for all distribution functions (pdf, cdf, quantile) as well as for the first
-##      four central moments (mean, variance, skewness, kurtosis)
-mp3 <- MyPoisson(lambda = c(1, 2.5, 5))
+## mp3: Based on MyPoisson1 where only pdf, id_discrete, and support
+##      are defined.
+## p3:  Analytic solution (distributions3::Poisson()) with analytic
+##      functions for all distribution functions (pdf, cdf, quantile)
+##      as well as for the first four central moments (mean,
+##      variance, skewness, kurtosis)
+mp3 <- MyPoisson1(lambda = c(1, 2.5, 5))
 p3  <- Poisson(lambda = c(1, 2.5, 5))
 
-## Class 'MyPoisson' knows the analytic cdf:
+## Class 'MyPoisson1' knows the analytic cdf:
 pdf(mp3, x = 2)
 identical(pdf(mp3, x = 2), pdf(p3, x = 2))
 
@@ -271,7 +298,8 @@ qp3    <- quantile(p3,  probs = probs2) ## Analytic solution
 range(qmp3 - qp3) ## Range of pairwise differences/precision
 
 ## Central moments and CRPS
-cbind(mean = mean(mp3), variance = variance(mp3), skewness = skewness(mp3), kurtosis = kurtosis(mp3))
+cbind(mean     = mean(mp3),     variance = variance(mp3),
+      skewness = skewness(mp3), kurtosis = kurtosis(mp3))
 crps(mp3, 3)
 
 ## Visual comparison: distribution function
@@ -280,9 +308,11 @@ dcdf <- data.frame(x          = x,
                    analytical = cdf(p3[2L], x = x),
                    numerical  = cdf(mp3[2L], x = x))
 
-matplot(dcdf[, 1], dcdf[, -1], type = "s", col = 1:2, xlab = NA, ylab = "distribution",
-        lty = 1, lwd = 2:1, main = "Density function (lambda = 2.5)")
-legend("bottomright", legend = names(dcdf)[-1], lty = 1, col = 1:2, lwd = 2:1, bty = "n")
+matplot(dcdf[, 1], dcdf[, -1], type = "s", col = 1:2,
+        xlab = NA, ylab = "probability",
+        lty = 1, lwd = 2:1, main = "Distribution function (lambda = 2.5)")
+legend("bottomright", legend = names(dcdf)[-1], lty = 1,
+       col = 1:2, lwd = 2:1, bty = "n")
 
 
 ## Visual comparison: quantile function
@@ -291,14 +321,16 @@ dquantile <- data.frame(probs = probs,
                         analytical = quantile(p3[2L],  probs = probs),
                         numerical  = quantile(mp3[2L], probs = probs))
 
-matplot(dpdf[, 1], dpdf[, -1], type = "s", col = 1:2, xlab = NA, ylab = "distribution",
-        lty = 1, lwd = 2:1, main = "Qauntile function (lambda = 2.5)")
-legend("bottomright", legend = names(dpdf)[-1], lty = 1, col = 1:2, lwd = 2:1, bty = "n")
+matplot(dquantile[, -1], dquantile[, 1], type = "s", col = 1:2,
+        xlab = NA, ylab = "probability",
+        lty = 1, lwd = 2:1, main = "Quantile function (lambda = 2.5)")
+legend("bottomright", legend = names(dquantile)[-1], lty = 1,
+       col = 1:2, lwd = 2:1, bty = "n")
 
 ## Quantile-Quantile plot
 probs <- seq(0.01, 0.99, by = 0.01)
 plot(quantile(p3[2], probs), quantile(mp3[2], probs),
-     main = "QQ-plot Poisson vs. MyPoisson",
+     main = "QQ-plot Poisson vs. MyPoisson1",
      xlab = "approximated quantiles", ylab = "theoretical quantiles")
 abline(0, 1, col = 2, lty = 2)
 
@@ -310,7 +342,8 @@ hmp <- hist(rmp, breaks = 0:15, plot = FALSE)
 hp  <- hist(rp,  breaks = 0:15, plot = FALSE)
 
 plot(hmp$breaks[-1], hmp$density, type = "s",
-     xlab = NA, ylab = "density", main = "Density of random numbers: Poisson vs. MyPoisson")
+     xlab = NA, ylab = "density",
+     main = "Density of random numbers: Poisson vs. MyPoisson1")
 lines(hp$breaks[-1], hp$density, col = 2, type = "s")
 
 
@@ -324,21 +357,27 @@ MyPoisson2 <- function(lambda) {
     return(d)
 }
 
-## Additional S3 methods required
-registerS3method("cdf",         "MyPoisson2", getS3method("cdf", class = "Poisson"))
-registerS3method("is_discrete", "MyPoisson2", getS3method("is_discrete", class = "Poisson"))
-registerS3method("support",     "MyPoisson2", getS3method("support", class = "Poisson"))
+## Additionally required S3 methods (borrowed from class Poisson)
+registerS3method("cdf", "MyPoisson2",
+                 getS3method("cdf", class = "Poisson"))
+registerS3method("is_discrete", "MyPoisson2",
+                 getS3method("is_discrete", class = "Poisson"))
+registerS3method("support", "MyPoisson2",
+                 getS3method("support", class = "Poisson"))
 
 
-## Constructing objects; creating three (named) 'MyPoisson2' distributions with
-## lambda c(1, 2.5, 5) for which only cdf, is_discrete, and support are defined.
-mp3 <- MyPoisson2(lambda = c(1, 2.5, 5)) |> setNames(LETTERS[1:3])
+## Constructing objects; creating three (named) 'MyPoisson2' distributions
+## with lambda c(1, 2.5, 5) for which only cdf, is_discrete,
+## and support are defined.
+mp3 <- MyPoisson2(lambda = c(1, 2.5, 5))
+mp3 <- setNames(mp3, LETTERS[4:6])
 
 random(mp3, n = 3L)
 cdf(p3, x = 2)
 pdf(p3, x = 2)
 quantile(p3, 0.5)
-cbind(mean = mean(p3), variance = variance(p3), skewness = skewness(p3), kurtosis = kurtosis(p3))
+cbind(mean     = mean(p3),     variance = variance(p3),
+      skewness = skewness(p3), kurtosis = kurtosis(p3))
 crps(mp3, 3)
 
 }

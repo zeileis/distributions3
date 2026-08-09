@@ -4,34 +4,68 @@
 #' the \pkg{scoringRules} package for numerically evaluating the (continuous) ranked probability
 #' score (CRPS) of any probability \pkg{distributions3} object.
 #'
+#' @param y A distribution object, e.g., as created by
+#'   \code{\link[distributions3]{Normal}} or \code{\link[distributions3]{Binomial}}.
+#' @param x A vector of elements whose CRPS should be determined given the
+#'   distribution \code{y}.
+#' @param drop logical. Should the result be simplified to a vector if possible?
+#' @param elementwise logical. Should each distribution in \code{y} be evaluated
+#'   at all elements of \code{x} (\code{elementwise = FALSE}, yielding a matrix)?
+#'   Or, if \code{y} and \code{x} have the same length, should the evaluation be
+#'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
+#'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
+#'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param gridsize positive integer. Size of the grid used to approximate the CDF for
+#'   the numerical calculation of the CRPS.
+#' @param batchsize positive integer. Maximum batch size. Used to split the
+#'   input into batches. Lower values reduce required memory but may increase
+#'   computation time.
+#' @param applyfun An optional \code{\link[base]{lapply}}-style function with arguments
+#'   \code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
+#'   of \code{y}. The default is to use the basic \code{lapply}
+#'   function unless the \code{cores} argument is specified (see below).
+#' @param cores `NULL` (default) or positive integer. If integer, the
+#'   \code{applyfun} is set to \code{\link[parallel]{mclapply}} with the
+#'   desired number of \code{cores}, except on Windows where
+#'   \code{\link[parallel]{parLapply}} with \code{makeCluster(cores)} is used.
+#' @param method `NULL` (default) or character.
+#'   Specifies how the grid for the calculation is set up. If `NULL` it is set to
+#'   `method = "cdf"` if the distribution (`y`) is discrete and `gridsize` is
+#'   large enough to span the required range for CRPS calculation. Else
+#'   (including continuous distributions) `method = "quantile"` is used.
+#' @param ... Currently not used.
+#'
+#' @details
 #' The (continuous) ranked probability score (CRPS) for (univariate) probability
 #' distributions can be computed based on the the object-oriented infrastructure
 #' provided by the \pkg{distributions3} package. The general \code{crps.distribution}
 #' method does so by using numeric integration based on the \code{cdf} and/or \code{quantile}
-#' methods (for more details see below). Additionally, if dedicated closed-form
-#' CRPS computations are provided by the \pkg{scoringRules} package for the specified
-#' distribution, then these are used because they are both computationally faster
+#' methods (for more details see below). If dedicated closed-form
+#' CRPS computations are provided (either by the \pkg{scoringRules} package or
+#' \pkg{distributions3}) these are used as they are both computationally faster
 #' and numerically more precise. For example, the \code{crps} method for \code{Normal}
 #' objects leverages \code{\link[scoringRules]{crps_norm}} rather than relying on
 #' numeric integration.
 #'
-#' The general method for any \code{distribution} object uses the following strategy
-#' for numerical CRPS computation. By default (if the \code{method} argument is \code{NULL}),
-#' it distinguishes distributions whose entire support is continuous, or whose entire
-#' support is discrete, or mixed discrete-continuous distribution using
-#' \code{\link[distributions3]{is_continuous}} and \code{\link[distributions3]{is_discrete}},
-#' respectively.
+#' @section Numerical approximation strategy:
 #'
-#' For continuous and mixed distributions, an equidistant grid of \code{gridsize + 5}
+#' The general method for any \code{distribution} object uses the following
+#' strategy. By default (if the \code{method} argument is \code{NULL}), it
+#' distinguishes distributions whose entire support is continuous, or whose
+#' entire support is discrete or mixed discrete-continuous distribution using
+#' \code{\link[distributions3]{is_continuous}} and
+#' \code{\link[distributions3]{is_discrete}}, respectively.
+#'
+#' For continuous and mixed distributions, an equidistant grid of \code{gridsize + 5L}
 #' probabilities is drawn for which the corresponding \code{quantile}s for each
 #' distribution \code{y} are calculated (including the observation \code{x}). The
 #' calculation of the CRPS then uses a trapezoidal approximation for the
-#' numeric integration.  For discrete distributions, \code{gridsize} equidistant quantiles
-#' (in steps of 1) are drawn and the corresponding probabilities from the \code{cdf}
-#' are calculated for each distribution \code{y} (including the observation \code{x})
-#' and the CRPS calculated using numeric integration.  If the \code{gridsize} in steps of 1 is not
-#' sufficient to cover the required range, the method falls back to the procedure used for
-#' continuous and mixed distributions to approximate the CRPS.
+#' numeric integration. For discrete distributions, \code{gridsize} equidistant quantiles
+#' (in steps of `1L`) are drawn and the corresponding probabilities from the \code{cdf}
+#' are calculated (including the observation \code{x}) used to numerically integrate
+#' for calculating the CRPS. If \code{gridsize} is not sufficient to cover the
+#' required range, the method falls back to the procedure used for continuous
+#' and mixed distributions to approximate the CRPS.
 #'
 #' If the \code{method} argument is set to either \code{"cdf"} or \code{"quantile"},
 #' then the specific strategy for setting up the grid of observations and corresponding
@@ -40,9 +74,9 @@
 #' one of them is numerically stable or computationally efficient etc.
 #'
 #' The numeric approximation requires to set up a matrix of dimension
-#' \code{length(y) * (gridsize + 5)} (or \code{length(y) * (gridsize + 1)}) which may be very
+#' \code{length(y) * (gridsize + 5L)} (or \code{length(y) * (gridsize + 1L)}) which may be very
 #' memory intensive if \code{length(y)} and/or \code{gridsize} are large. Thus, the data is
-#' split batches of (approximately) equal size, not larger than \code{batchsize}.
+#' split in batches of (approximately) equal size, not larger than \code{batchsize}.
 #' Thus, the memory requirement is reduced to \code{batchsize * (gridsize + 5)} in each step.
 #' Hence, a smaller value of \code{batchsize} will reduce memory footprint but will
 #' slightly increase computation time.
@@ -60,41 +94,11 @@
 #' a multiple of \code{cores} with a maximum size of \code{batchsize}. On systems running
 #' Windows \code{parlapply} is used, else \code{mclapply}.
 #'
-#' @param y A distribution object, e.g., as created by
-#'   \code{\link[distributions3]{Normal}} or \code{\link[distributions3]{Binomial}}.
-#' @param x A vector of elements whose CRPS should be determined given the
-#'   distribution \code{y}.
-#' @param drop logical. Should the result be simplified to a vector if possible?
-#' @param elementwise logical. Should each distribution in \code{y} be evaluated
-#'   at all elements of \code{x} (\code{elementwise = FALSE}, yielding a matrix)?
-#'   Or, if \code{y} and \code{x} have the same length, should the evaluation be
-#'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
-#'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
-#'   lengths match and otherwise \code{elementwise = FALSE} is used.
-#' @param gridsize positive size of the grid used to approximate the CDF for
-#'   the numerical calculation of the CRPS.
-#' @param batchsize maximum batch size. Used to split the input into batches.
-#'   Lower values reduce required memory but may increase computation time.
-#' @param applyfun an optional \code{\link[base]{lapply}}-style function with arguments
-#'   \code{function(X, FUN, \dots)}. It is used to compute the CRPS for each element
-#'   of \code{y}. The default is to use the basic \code{lapply}
-#'   function unless the \code{cores} argument is specified (see below).
-#' @param cores numeric. If set to an integer the \code{applyfun} is set to    
-#'   \code{\link[parallel]{mclapply}} with the desired number of \code{cores},
-#'   except on Windows where \code{\link[parallel]{parLapply}} with
-#'   \code{makeCluster(cores)} is used.
-#' @param method character. Should the grid be set up on the observation scale
-#'   and \code{method = "cdf"} be used to compute the corresponding probabilities?
-#'   Or should the grid be set up on the probability scale and \code{method = "quantile"}
-#'   be used to compute the corresponding observations? By default, \code{"cdf"}
-#'   is used for discrete observations whose range is smaller than the \code{gridsize}
-#'   and \code{"quantile"} otherwise.
-#' @param ... currently not used.
 #'
-#' @return In case of a single distribution object, either a numeric
-#'   vector of \code{length(x)} (if \code{drop = TRUE}, default) or a matrix with
-#'   \code{length(x)} columns (if \code{drop = FALSE}). In case of a vectorized distribution
-#'   object, a matrix with \code{length(x)} columns containing all possible combinations.
+#' @return
+#' If `length(y)` equals one or `length(y) = length(x)` a (possibly named)
+#' numeric vector is returned if `drop = TRUE` (default). Else a matrix
+#' of dimension `length(y)` times `length(x)` is returned containing the CRPS.
 #'
 #' @examples
 #' \dontshow{ if(!requireNamespace("scoringRules")) {
@@ -128,18 +132,22 @@
 crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 500L, batchsize = 1e4L, applyfun = NULL, cores = NULL, method = NULL, ...) {
   ## essentially follow apply_dpqr() but try to exploit specific structure of CRPS
 
+
+  gridsize <- as.integer(gridsize)[[1L]]
+
   ## sanity checks
-  stopifnot(inherits(y, "distribution"), is.numeric(x))
-  stopifnot(is.null(drop) || isTRUE(drop) || isFALSE(drop))
-  stopifnot(is.null(elementwise) || isTRUE(elementwise) || isFALSE(elementwise))
-  stopifnot(is.numeric(gridsize), length(gridsize) == 1L, gridsize >= 2L)
-  gridsize <- as.integer(gridsize)
-  stopifnot(is.numeric(batchsize), length(batchsize) == 1L, batchsize >= 1L)
-  stopifnot(is.null(cores) || is.numeric(cores))
-  stopifnot(is.null(applyfun) || is.function(applyfun))
+  stopifnot(
+    inherits(y, "distribution"), is.numeric(x),
+    is.null(drop)        || isTRUE(drop)        || isFALSE(drop),
+    is.null(elementwise) || isTRUE(elementwise) || isFALSE(elementwise),
+    is.integer(gridsize)  && length(gridsize)  == 1L && gridsize  >= 2L,
+    is.numeric(batchsize) && length(batchsize) == 1L && batchsize >= 1L,
+    is.null(cores)    || is.numeric(cores),
+    is.null(applyfun) || is.function(applyfun)
+  )
   if (is.numeric(cores)) {
-    cores <- as.integer(cores)
-    stopifnot(length(cores) == 1L, cores >= 1L)
+    cores <- as.integer(cores)[[1L]]
+    stopifnot(length(cores) == 1L && cores >= 1L)
   }
 
   ## basic properties:

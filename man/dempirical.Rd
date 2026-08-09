@@ -16,12 +16,12 @@ qempirical(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...)
 rempirical(n, y, na.rm = TRUE)
 }
 \arguments{
-\item{x}{vector of finite quantiles.}
+\item{x}{Vector of finite quantiles.}
 
-\item{y}{vector of observations of the empirical distribution with two or
+\item{y}{Vector of observations of the empirical distribution with two or
 more non-missing finite values.}
 
-\item{log, log.p}{logical indicating whether probabilities p are given as log(p)
+\item{log, log.p}{logical. Indicates whether probabilities p are given as log(p)
 (both default to \code{FALSE}).}
 
 \item{na.rm}{logical indicating whether missing values (\code{NA}) are stripped
@@ -32,7 +32,7 @@ considered a random variable from a discrete empirical distribution.
 Method \code{"hist"} and \code{"density"} approximate a 'continuous' distribution
 based on the empirical sample \code{y}.}
 
-\item{...}{allows to forward arguments to \code{\link[graphics]{hist}}, \code{\link[=density]{density()}}
+\item{...}{Allows to forward arguments to \code{\link[graphics]{hist}}, \code{\link[=density]{density()}}
 and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 \code{\link[=dempirical]{dempirical()}} or sample \code{\link[stats]{quantile}} function when calling
 \code{\link[=qempirical]{qempirical()}}. Else currently unused.}
@@ -55,6 +55,36 @@ a random generation for the Empirical distribution.
 All functions follow the usual conventions of d/p/q/r functions in base R. In
 particular, all four functions for the Empirical distribution call
 the corresponding \verb{*empirical} functions.
+}
+\examples{
+## Drawing two random empirical sample Y from the LogNormal distribution
+## rounded to closest 0.5 (discrete)
+set.seed(6020)
+Y <- rlnorm(500L, meanlog = 1.5, sdlog = log(1.5))
+Y <- round(Y * 2) / 2
+
+bk <- seq(-0.25, 18.25, by = 1L)
+hist(Y, freq = FALSE, breaks = bk, main = "Sample histogram")
+
+x <- seq(0, 15, by = 0.5) # Quantiles
+density <- dempirical(x, Y)
+plot(density ~ x, type = "h", main = "Empirical density")
+
+probability <- pempirical(x, Y)
+plot(probability ~ x, type = "s", main = "Empirical distribution")
+
+probs <- seq(0.01, 0.99, by = 0.01)
+quantiles <- qempirical(probs, Y)
+plot(probs ~ quantiles, type = "S", col = 2,
+     main = "Empirical quantile function")
+
+## Drawing random numbers (sampling with replacement)
+set.seed(6020)
+r <- rempirical(500L, Y)
+
+hist(Y, freq = FALSE, breaks = bk, main = "Sample histogram")
+hist(r, freq = FALSE, breaks = bk, main = "Random sample histogram")
+
 }
 \seealso{
 Other Empirical distribution:

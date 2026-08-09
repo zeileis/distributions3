@@ -18,36 +18,32 @@ distribution_calculate_moments(
 \arguments{
 \item{x}{Object of class 'distribution'}
 
-\item{what}{single integer, controls what the C code returns. 1L (mean) 2L
-(variance) 3L (skewness) 4L (kurtosis).}
+\item{what}{integer. Controls what the C code returns: \code{1L} (mean)
+\code{2L} (variance), \code{3L} (skewness), or \code{4L} (kurtosis).}
 
-\item{gridsize}{positive size of the grid used to approximate the CDF for
-the numerical calculation of the CRPS.}
+\item{gridsize}{positive integer. Size of the grid used to numerically
+calculate central moments.}
 
-\item{batchsize}{maximum batch size. Used to split the input into batches.
+\item{batchsize}{integer. Maximum batch size. Used to split the input into batches.
 Lower values reduce required memory but may increase computation time.}
 
-\item{applyfun}{an optional \code{\link[base]{lapply}}-style function with arguments
-\verb{function(X, FUN, ...)}. It is used to compute the CRPS for each element
-of \code{y}. The default is to use the basic \code{\link[base]{lapply}}
+\item{applyfun}{An optional \code{\link[base]{lapply}}-style function with arguments
+\verb{function(X, FUN, ...)}. It is used to compute the moment for each
+distribution in \code{x}. The default is to use the basic \code{\link[base]{lapply}}
 function unless the \code{cores} argument is specified (see below).}
 
-\item{cores}{numeric. If set to an integer the \code{applyfun} is set to
-\code{\link[parallel]{mclapply}} with the desired number of \code{cores},
-except on Windows where \code{\link[parallel]{parLapply}} with
-\code{makeCluster(cores)} is used.}
+\item{cores}{\code{NULL} or positive integer. If set to an integer the \code{applyfun}
+is set to \code{\link[parallel]{mclapply}} with the desired number of
+\code{cores}, except on Windows where \code{\link[parallel]{parLapply}}
+with \code{makeCluster(cores)} is used.}
 
-\item{method}{character. Should the grid be set up on the observation scale
-and \code{method = "cdf"} be used to compute the corresponding
-probabilities? Or should the grid be set up on the probability scale and
-\code{method = "quantile"} be used to compute the corresponding
-observations? By default, \code{"cdf"} is used for discrete observations
-whose range is smaller than the \code{gridsize} and \code{"quantile"} otherwise.}
+\item{method}{\code{NULL} (default) or character.
+Specifies how the grid for the calculation is set up. If \code{NULL} it is set to
+\code{method = "cdf"} if the distribution (\code{y}) is discrete and \code{gridsize} is
+large enough to span the required range for calculation. Else
+(including continuous distributions) \code{method = "quantile"} is used.}
 
-\item{...}{\code{mean.distribution()}, \code{variance.distribution()},
-\code{skewness.distribution()} and \code{kurtosis.distribution()} forward the
-additional arguments (\code{...}) to \code{\link[=distribution_calculate_moments]{distribution_calculate_moments()}}; all
-other functions/methods ignore additional arguments.}
+\item{...}{Additional arguments forwarded to \code{\link[=distribution_calculate_moments]{distribution_calculate_moments()}}.}
 }
 \value{
 A (potentially named) numeric vector of length \code{length(x)} with
@@ -56,34 +52,33 @@ the requested central moment.
 \description{
 Method used to evaluate (approximate) the central moments (mean, variance,
 skewness, and kurtosis) for probability distributions for which only the
-cummulative distribution function (CDF) and - potentially - the quantile
+cumulative distribution function (CDF) and - potentially - the quantile
 function is provided.
 }
 \details{
-For discrete distributions spanning a range less than \code{gridsize} the PDF is calculated
-at \eqn{i = \{0, 1, 2, 3, \dots\}} by differenciating the CDF provided which is then used
-to calculate the central moments.
+For discrete distributions spanning a range less than \code{0:gridsize} the PDF
+is calculated at \eqn{x = \{0, 1, 2, 3, \dots\}} by differentiating the CDF
+provided, which is then used to calculate the central moments.
 
 For continuous distributions as well as discrete distributions spanning a
-wide range of values (larger than \code{gridsize}) a grid with \code{gridsize}
+wide range of values (larger than \code{0:gridsize}) a numeric grid with \code{gridsize}
 intervals is created. Given the distribution provides a quantile function,
 this grid is specified on a (mostly) uniform grid on the quantile scale. If
 no quantile function is provided, the \code{0.01} and \code{99.99} percentile are
-calculated approximated via the CDF, between which a uniform grid is
-spanned. For each interval the density is approximated using numeric forward
-differences
+calculated via the CDF to serve as upper/lower bound for a
+uniform numeric grid. For each interval the density is approximated using
+numeric forward differences
 
 \deqn{f(x_j) = (F(x_{i+1}) - F(x_i)) / (x_{i+1} - x_i)}{f(x[j]) = (F(x[i+1]) - F(x[i])) / (x[i+1] - x[i])}
 
-at each \eqn{x_j = (x_{i+1} + x_i) * 0.5}{x[j] = (x[i+1] + x[i]) * 0.5}
+at each \eqn{x_j = (x_{i+1} + x_i) \cdot 0.5}{x[j] = (x[i+1] + x[i]) * 0.5}
 with interval width of \eqn{x_{i+1} - x_i}{x[i+1] - x[i]}.
-The densities \eqn{f(x_j)}{f(x[j])} and interval mids \eqn{x_j}{x[j]} are used to calculate
-the weighted moments.
+The densities \eqn{f(x_j)}{f(x[j])} and interval mids \eqn{x_j}{x[j]} are
+used to calculate the weighted moments.
 }
 \examples{
-library("distributions3")
-
 ## ------------- custom Normal distribution (MyNormal) ----------------
+## -------------------------- using cdf -------------------------------
 
 ## Constructor function for new 'MyNormal' distribution
 MyNormal <- function(mu, sigma) {
@@ -92,12 +87,26 @@ MyNormal <- function(mu, sigma) {
     return(d)
 }
 
-## Additional S3 methods required
-cdf.MyNormal <- getS3method("cdf", class = "Normal")
-is_discrete.MyNormal   <- getS3method("is_discrete", class = "Normal")
-support.MyNormal       <- getS3method("support", class = "Normal")
+## Additionally required S3 methods (borrowed from class Normal)
+registerS3method("cdf", "MyNormal",
+                 getS3method("cdf", class = "Normal"))
+registerS3method("is_discrete", "MyNormal",
+                 getS3method("is_discrete", class = "Normal"))
+registerS3method("support", "MyNormal",
+                 getS3method("support", class = "Normal"))
+
+## Creating 3 distributions
+dn <- MyNormal(mu = 1:3, sigma = 1:3 / 3)
+dn <- setNames(dn, LETTERS[1:3])
+
+## Calculating central moments
+cbind(mean     = distribution_calculate_moments(dn, 1L),
+      variance = distribution_calculate_moments(dn, 2L),
+      skewness = distribution_calculate_moments(dn, 3L),
+      kurtosis = distribution_calculate_moments(dn, 4L))
 
 ## ------------- custom Poisson distribution (MyPoisson) --------------
+## -------------------------- using pdf -------------------------------
 
 ## Custom constructor function for the 'MyPoisson' distribution
 MyPoisson <- function(lambda) {
@@ -106,10 +115,23 @@ MyPoisson <- function(lambda) {
     return(d)
 }
 
-## Additional S3 methods required
-cdf.MyPoisson <- getS3method("cdf", class = "Poisson")
-is_discrete.MyPoisson   <- getS3method("is_discrete", class = "Poisson")
-support.MyPoisson       <- getS3method("support", class = "Poisson")
+## Additionally required S3 methods (borrowed from class Poisson)
+registerS3method("pdf", "MyPoisson",
+                 getS3method("pdf", class = "Poisson"))
+registerS3method("is_discrete", "MyPoisson",
+                 getS3method("is_discrete", class = "Poisson"))
+registerS3method("support", "MyPoisson",
+                 getS3method("support", class = "Poisson"))
+
+## Creating 3 distributions
+dp <- MyPoisson(lambda = 1:3)
+dp <- setNames(dp, LETTERS[4:6])
+
+## Calculating central moments
+cbind(mean     = distribution_calculate_moments(dp, 1L),
+      variance = distribution_calculate_moments(dp, 2L),
+      skewness = distribution_calculate_moments(dp, 3L),
+      kurtosis = distribution_calculate_moments(dp, 4L))
 
 }
 \keyword{internal}

@@ -30,19 +30,18 @@ algorithms. See Details for more information.}
 An \code{Empirical} object.
 }
 \description{
-An empirical distribution consists of a series of \code{N} observations
-out of a typically unknown distribution, i.e., a random sample \eqn{X}.
+An empirical distribution consists of a random sample \code{x}.
 }
 \details{
-The creation function \code{\link[=Empirical]{Empirical()}} allows for a variety of different objects
-as main input \code{x}.
+The constructor function \code{\link[=Empirical]{Empirical()}} allows for a variety of different
+objects as main input \code{x}.
 \itemize{
 \item Vector: Assumes that the vector contains a series of observations from one
 empirical distribution.
-\item List (named or unnamed) of vectors: Each element in the list describes
-one empirical distribution defined by the numeric values in each of the vectors.
-\item Data frame: Each column (variable) in the data frame describes one empirical
-distribution.
+\item List (named or unnamed) of vectors: Each element in the list describes one
+empirical distribution defined by the numeric values in each of the vectors.
+\item Data frame: Each column (variable) in the data frame describes one
+empirical distribution.
 \item Matrix: Each row corresponds to one empirical distribution, whilst
 the columns contain the individual observations.
 }
@@ -52,10 +51,7 @@ finite observations (\code{-Inf}/\code{Inf} is replaced by \code{NA}).
 Certain types of moments (see \code{\link[=skewness.Empirical]{skewness.Empirical()}}, \code{\link[=kurtosis.Empirical]{kurtosis.Empirical()}})
 require at least three or four finite observations.
 
-\strong{Support}: \eqn{R}, the set of all real numbers
-\itemize{
-\item Expectation: \deqn{E(x) = \text{mean(x)} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
-}
+\strong{Support}: Set of unique observations in \code{x}.
 
 \strong{Probability mass function (p.m.f.):}
 \deqn{f(y) = \frac{1}{n} \sum_{i=1}^{N} (x_i = y)}{f(x) = 1 / N * \sum(x == y)}
@@ -65,12 +61,12 @@ require at least three or four finite observations.
 
 \strong{Moment generating functions}:
 \itemize{
-\item Mean/expectation: \deqn{\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
+\item Mean/expectation: \deqn{E(x) = \bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
 \item Variance: \deqn{\text{VAR}(x) = \frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{variance(x) = 1 / (N - 1) * sum((x - mean(x))^2)}
 }
 
-Third and fourth order moments are also available via \code{\link[=skewness]{skewness()}} and \code{\link[=kurtosis]{kurtosis()}}. For both
-different measures (types) are available as defined below. For details see Joanes and Gill (1998).
+Third and fourth central moments are also available via \code{\link[=skewness]{skewness()}} and \code{\link[=kurtosis]{kurtosis()}}. For both
+different types are available as defined below. For details see Joanes and Gill (1998).
 \itemize{
 \item Skewness:
 \itemize{
@@ -131,7 +127,8 @@ d3
 mean(d3)
 
 ## Matrix
-Y4 <- matrix(rnorm(20), ncol = 5, dimnames = list(sprintf("D_\%d", 1:4), sprintf("obs_\%d", 1:5)))
+Y4 <- matrix(rnorm(20), ncol = 5,
+             dimnames = list(sprintf("D_\%d", 1:4), sprintf("obs_\%d", 1:5)))
 d4 <- Empirical(Y4)
 d4
 

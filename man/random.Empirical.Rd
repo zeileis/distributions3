@@ -70,7 +70,8 @@ d3
 mean(d3)
 
 ## Matrix
-Y4 <- matrix(rnorm(20), ncol = 5, dimnames = list(sprintf("D_\%d", 1:4), sprintf("obs_\%d", 1:5)))
+Y4 <- matrix(rnorm(20), ncol = 5,
+             dimnames = list(sprintf("D_\%d", 1:4), sprintf("obs_\%d", 1:5)))
 d4 <- Empirical(Y4)
 d4
 

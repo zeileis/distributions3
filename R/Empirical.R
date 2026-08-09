@@ -1,26 +1,25 @@
 
 #' Create an Empirical distribution
 #'
-#' An empirical distribution consists of a series of \code{N} observations
-#' out of a typically unknown distribution, i.e., a random sample \eqn{X}.
+#' An empirical distribution consists of a random sample `x`.
 #'
-#' @param x a numeric vector, list of numeric vectors, matrix,
+#' @param x A numeric vector, list of numeric vectors, matrix,
 #'        or data.frame (see section 'Details' for more information).
 #'
 #' @return An `Empirical` object.
 #'
 #' @details
-#' The creation function [Empirical()] allows for a variety of different objects
-#' as main input \code{x}.
+#' The constructor function [Empirical()] allows for a variety of different
+#' objects as main input \code{x}.
 #'
 #' * Vector: Assumes that the vector contains a series of observations from one
 #'   empirical distribution.
 #'
-#' * List (named or unnamed) of vectors: Each element in the list describes
-#'   one empirical distribution defined by the numeric values in each of the vectors.
+#' * List (named or unnamed) of vectors: Each element in the list describes one
+#'   empirical distribution defined by the numeric values in each of the vectors.
 #'
-#' * Data frame: Each column (variable) in the data frame describes one empirical
-#'   distribution.
+#' * Data frame: Each column (variable) in the data frame describes one
+#'   empirical distribution.
 #'
 #' * Matrix: Each row corresponds to one empirical distribution, whilst
 #'   the columns contain the individual observations.
@@ -30,9 +29,7 @@
 #' Certain types of moments (see [skewness.Empirical()], [kurtosis.Empirical()])
 #' require at least three or four finite observations.
 #'
-#' **Support**: \eqn{R}, the set of all real numbers
-#'
-#' * Expectation: \deqn{E(x) = \text{mean(x)} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
+#' **Support**: Set of unique observations in `x`.
 #'
 #' **Probability mass function (p.m.f.):**
 #' \deqn{f(y) = \frac{1}{n} \sum_{i=1}^{N} (x_i = y)}{f(x) = 1 / N * \sum(x == y)}
@@ -42,11 +39,11 @@
 #'
 #' **Moment generating functions**:
 #'
-#' * Mean/expectation: \deqn{\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
+#' * Mean/expectation: \deqn{E(x) = \bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
 #' * Variance: \deqn{\text{VAR}(x) = \frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{variance(x) = 1 / (N - 1) * sum((x - mean(x))^2)}
 #'
-#' Third and fourth order moments are also available via [skewness()] and [kurtosis()]. For both
-#' different measures (types) are available as defined below. For details see Joanes and Gill (1998).
+#' Third and fourth central moments are also available via [skewness()] and [kurtosis()]. For both
+#' different types are available as defined below. For details see Joanes and Gill (1998).
 #'
 #' * Skewness:
 #'   * Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
@@ -106,7 +103,8 @@
 #' mean(d3)
 #'
 #' ## Matrix
-#' Y4 <- matrix(rnorm(20), ncol = 5, dimnames = list(sprintf("D_%d", 1:4), sprintf("obs_%d", 1:5)))
+#' Y4 <- matrix(rnorm(20), ncol = 5,
+#'              dimnames = list(sprintf("D_%d", 1:4), sprintf("obs_%d", 1:5)))
 #' d4 <- Empirical(Y4)
 #' d4
 #'
@@ -196,17 +194,17 @@ dpqrempirical_prep <- function(x, y) {
 #' Density (point mass), distribution, quantile function, as well as
 #' a random generation for the Empirical distribution.
 #'
-#' @param x vector of finite quantiles.
-#' @param y vector of observations of the empirical distribution with two or
+#' @param x Vector of finite quantiles.
+#' @param y Vector of observations of the empirical distribution with two or
 #'          more non-missing finite values.
-#' @param log,log.p logical indicating whether probabilities p are given as log(p)
+#' @param log,log.p logical. Indicates whether probabilities p are given as log(p)
 #'        (both default to `FALSE`).
 #' @param method `NULL` or one of `"hist"` or `"density"`. If `NULL`, `y` is
 #'        considered a random variable from a discrete empirical distribution.
 #'        Method `"hist"` and `"density"` approximate a 'continuous' distribution
 #'        based on the empirical sample `y`.
 #' @param na.rm logical, defaults to `TRUE`.
-#' @param ... allows to forward arguments to \code{\link[graphics]{hist}}, [density()]
+#' @param ... Allows to forward arguments to \code{\link[graphics]{hist}}, [density()]
 #'        and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 #'        [dempirical()] or sample \code{\link[stats]{quantile}} function when calling
 #'        [qempirical()]. Else currently unused.
@@ -215,6 +213,35 @@ dpqrempirical_prep <- function(x, y) {
 #' All functions follow the usual conventions of d/p/q/r functions in base R. In
 #' particular, all four functions for the Empirical distribution call
 #' the corresponding `*empirical` functions.
+#'
+#' @examples
+#' ## Drawing two random empirical sample Y from the LogNormal distribution
+#' ## rounded to closest 0.5 (discrete)
+#' set.seed(6020)
+#' Y <- rlnorm(500L, meanlog = 1.5, sdlog = log(1.5))
+#' Y <- round(Y * 2) / 2
+#'
+#' bk <- seq(-0.25, 18.25, by = 1L)
+#' hist(Y, freq = FALSE, breaks = bk, main = "Sample histogram")
+#'
+#' x <- seq(0, 15, by = 0.5) # Quantiles
+#' density <- dempirical(x, Y)
+#' plot(density ~ x, type = "h", main = "Empirical density")
+#'
+#' probability <- pempirical(x, Y)
+#' plot(probability ~ x, type = "s", main = "Empirical distribution")
+#'
+#' probs <- seq(0.01, 0.99, by = 0.01)
+#' quantiles <- qempirical(probs, Y)
+#' plot(probs ~ quantiles, type = "S", col = 2,
+#'      main = "Empirical quantile function")
+#'
+#' ## Drawing random numbers (sampling with replacement)
+#' set.seed(6020)
+#' r <- rempirical(500L, Y)
+#'
+#' hist(Y, freq = FALSE, breaks = bk, main = "Sample histogram")
+#' hist(r, freq = FALSE, breaks = bk, main = "Random sample histogram")
 #'
 #' @importFrom graphics hist
 #' @family Empirical distribution
