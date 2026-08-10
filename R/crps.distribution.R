@@ -134,20 +134,31 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
 
 
   gridsize <- as.integer(gridsize)[[1L]]
+  drop     <- as.logical(drop)[[1L]]
 
   ## sanity checks
   stopifnot(
-    inherits(y, "distribution"), is.numeric(x),
-    is.null(drop)        || isTRUE(drop)        || isFALSE(drop),
-    is.null(elementwise) || isTRUE(elementwise) || isFALSE(elementwise),
-    is.integer(gridsize)  && length(gridsize)  == 1L && gridsize  >= 2L,
-    is.numeric(batchsize) && length(batchsize) == 1L && batchsize >= 1L,
-    is.null(cores)    || is.numeric(cores),
-    is.null(applyfun) || is.function(applyfun)
+    "argument `y` must be an object of class 'distribution'" = inherits(y, "distribution"),
+    "argument `x` must be numeric with all finite values" =
+        is.numeric(x) && all(is.finite(x)),
+    "argument `drop` must evaluate to TRUE or FALSE" =
+        is.null(drop)        || isTRUE(drop)        || isFALSE(drop),
+    "argument `elementwise` must be NULL, TRUE, or FALSE" =
+        is.null(elementwise) || isTRUE(elementwise) || isFALSE(elementwise),
+    "argument `gridsize` must evaluate to single integer >= 2L" =
+        is.integer(gridsize)  && length(gridsize)  == 1L && gridsize  >= 2L,
+    "argument `batchsize` must evaluate to single integer >= 1L" =
+        is.numeric(batchsize) && length(batchsize) == 1L && batchsize >= 1L,
+    "argument `cores` must be NULL or numeric" =
+        is.null(cores)    || is.numeric(cores),
+    "argument `applyfun` must be NULL or function" =
+        is.null(applyfun) || is.function(applyfun)
   )
+
+  ## Evaluate 'cores' argument
   if (is.numeric(cores)) {
     cores <- as.integer(cores)[[1L]]
-    stopifnot(length(cores) == 1L && cores >= 1L)
+    stopifnot("if not NULL, `cores` must evaluate to integer >= 1L" = length(cores) == 1L && cores >= 1L)
   }
 
   ## basic properties:
@@ -275,7 +286,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   }
 
   ## cdf method: set up observations and compute probabilities via cdf()
-  if ((method == "cdf") && !inherits(y, "Empirical")) {
+  if (method == "cdf" && !inherits(y, "Empirical")) {
       ## Drawing one set of quantiles; calculate probabilities for all distributions
       q <- if(discrete && (diff(xrange) <= gridsize)) {
         seq(xrange[1L], xrange[2L] + 1, by = 1.0)
@@ -311,7 +322,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   }
 
   ## quantile method: set up probabilities and compute observations via quantile()
-  if ((method == "quantile") && !inherits(y, "Empirical")) {
+  if (method == "quantile" && !inherits(y, "Empirical")) {
     ## Drawing one set of probabilities; calculate quantiles for all distributions
     p <- c(0.001, 0.01, 0.1, 1L:(gridsize - 1L), gridsize - c(0.1, 0.01, 0.001)) / gridsize
     ## Not elementwise: Same observation(s) `x` for all distributions `y`

@@ -335,13 +335,15 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
     if (!hasS3method("support", cls))
         stop("S3 method 'support' missing for object of class: ", paste(cls, collapse = ", "))
 
-    stopifnot(is.numeric(x) && all(is.finite(x)))
-    x <- as.numeric(x) # Required for numericDeriv
     drop <- as.logical(drop)[[1L]]
-    stopifnot(isTRUE(drop) || isFALSE(drop))
-    stopifnot(isTRUE(log) || isFALSE(log))
+    x    <- as.numeric(x) # Required for numericDeriv
+    stopifnot(
+        "argument `x` must be numeric with finite values" = is.numeric(x) && all(is.finite(x)),
+        "argument `drop` must evaluate to TRUE or FALSE" = isTRUE(drop) || isFALSE(drop),
+        "argument `log` must evaluate to TRUE or FALSE" = isTRUE(log) || isFALSE(log),
+        "argument `applyfun` must be NULL or a function" = is.null(applyfun) || is.function(applyfun)
+    )
 
-    stopifnot(is.null(applyfun) || is.function(applyfun))
     if (!is.null(cores)) {
       cores <- as.integer(cores)[[1L]]
       stopifnot("argument 'cores' must evaluate to positive integer" =
@@ -515,13 +517,23 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
     if (!hasS3method("support", cls))
         stop("S3 method 'support' missing for object of class: ", paste(cls, collapse = ", "))
 
-    stopifnot(is.numeric(lower), length(lower) == 1L)
-    stopifnot(is.numeric(upper), length(upper) == 1L)
-    stopifnot(lower < upper)
-    stopifnot(is.numeric(tol), length(tol) == 1L, tol >= .Machine$double.eps, tol < 0.01)
-    stopifnot(is.numeric(maxit), length(maxit) >= 1L)
-    maxit <- as.integer(maxit)[1L]
-    stopifnot(maxit > 0)
+    maxit <- as.integer(maxit)[[1L]]
+    drop  <- as.logical(drop)[[1L]]
+    stopifnot(
+        "argument `probs` must be numeric with all finite values" =
+            is.numeric(probs) && all(is.finite(probs)),
+        "argument `drop` must evaluate to TRUE or FALSE" =
+            isTRUE(drop) || isFALSE(drop),
+        "argument `lower` must be finite numeric of length 1" =
+            is.numeric(lower) && length(lower) == 1L && is.finite(lower),
+        "argument `upper` must be finite numeric of length 1" =
+            is.numeric(upper) && length(upper) == 1L && is.finite(upper),
+        "argument `lower` must be smaller than `upper`" = lower < upper,
+        "argument `tol` must be numeric in [.Machine$double.eps, 0.01]" =
+            is.numeric(tol) && length(tol) == 1L && tol >= .Machine$double.eps && tol < 0.01,
+        "argument `maxit` must evaluate to single integer >= 1L" =
+            is.integer(maxit) && maxit >= 1L
+    )
 
     # Check if calculation is performed elementwise or not
     k <- length(probs); n <- length(x)
@@ -712,11 +724,18 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
     if (!hasS3method("support", cls))
         stop("S3 method 'support' missing for object of class: ", paste(cls, collapse = ", "))
 
-    stopifnot(is.numeric(x) && all(is.finite(x)))
-    x <- as.numeric(x) # Required for numericDeriv
-    drop <- as.logical(drop)[[1L]]
-    stopifnot(isTRUE(drop) || isFALSE(drop))
-    stopifnot(isTRUE(lower.tail) || isFALSE(lower.tail))
+
+    drop       <- as.logical(drop)[[1L]]
+    lower.tail <- as.logical(lower.tail)[[1L]]
+    x          <- as.numeric(x) # Required for numericDeriv
+    stopifnot(
+        "argument `x` must be numeric with all finite values" =
+            is.numeric(x) && all(is.finite(x)),
+        "argument `drop` must evaluate to TRUE or FALSE" =
+            isTRUE(drop) || isFALSE(drop),
+        "argument `lower.tail` must evaluate to TRUE or FALSE" =
+            isTRUE(lower.tail) || isFALSE(lower.tail)
+    )
 
     ## Check if calculation is performed elementwise or not
     k <- length(x); n <- length(d)
