@@ -133,8 +133,9 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   ## essentially follow apply_dpqr() but try to exploit specific structure of CRPS
 
 
-  gridsize <- as.integer(gridsize)[[1L]]
-  drop     <- as.logical(drop)[[1L]]
+  gridsize  <- as.integer(gridsize)[[1L]]
+  batchsize <- as.integer(batchsize)[[1L]]
+  drop      <- as.logical(drop)[[1L]]
 
   ## sanity checks
   stopifnot(
@@ -148,7 +149,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
     "argument `gridsize` must evaluate to single integer >= 2L" =
         is.integer(gridsize)  && length(gridsize)  == 1L && gridsize  >= 2L,
     "argument `batchsize` must evaluate to single integer >= 1L" =
-        is.numeric(batchsize) && length(batchsize) == 1L && batchsize >= 1L,
+        is.integer(batchsize) && length(batchsize) == 1L && batchsize >= 1L,
     "argument `cores` must be NULL or numeric" =
         is.null(cores)    || is.numeric(cores),
     "argument `applyfun` must be NULL or function" =

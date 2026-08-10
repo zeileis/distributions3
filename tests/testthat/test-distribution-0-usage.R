@@ -21,13 +21,49 @@ test_that("pdf.distributions default arguments", {
                      as.pairlist(alist(d =, x = , drop = TRUE, elementwise = NULL, log = FALSE, applyfun = NULL, cores = NULL, ... = )))
 })
 
+test_that("pdf.distributions sanity checks/incorrect use", {
+    d <- Normal()
 
-test_that("pdf.distributions invalid arguments", {
-    d <- Normal(3:5)
-    expect_error(expect_warning(distributions3:::pdf.distribution(d, 0, cores = "foo")),
-        regexp = "argument 'cores' must evaluate to positive integer")
-    expect_error(distributions3:::pdf.distribution(d, 0, cores = -1.3),
-        regexp = "argument 'cores' must evaluate to positive integer")
+    # Argument x
+    expect_error(expect_warning(distributions3:::pdf.distribution(d, x = "foo",
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = NULL, cores = NULL)),
+        regexp = "argument `x` must be numeric with all finite values")
+    expect_error(distributions3:::pdf.distribution(d, x = c(1, 2, NA),
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = NULL, cores = NULL),
+        regexp = "argument `x` must be numeric with all finite values")
+    expect_error(distributions3:::pdf.distribution(d, x = c(1, 2, Inf),
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = NULL, cores = NULL),
+        regexp = "argument `x` must be numeric with all finite values")
+
+    # Arguments log and drop
+    expect_error(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = "foo", elementwise = NULL, log = TRUE, applyfun = NULL, cores = NULL),
+        regexp = "argument `drop` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = NA, elementwise = NULL, log = TRUE, applyfun = NULL, cores = NULL),
+        regexp = "argument `drop` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, log = "foo", applyfun = NULL, cores = NULL),
+        regexp = "argument `log` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, log = NA, applyfun = NULL, cores = NULL),
+        regexp = "argument `log` must evaluate to TRUE or FALSE")
+
+    # Argument applyfun
+    expect_error(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = TRUE, cores = NULL),
+        regexp = "argument `applyfun` must be NULL or a function")
+    expect_error(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = "foo", cores = NULL),
+        regexp = "argument `applyfun` must be NULL or a function")
+
+    # Argument core
+    expect_error(expect_warning(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = NULL, cores = "foo")),
+        regexp = "argument `cores` must evaluate to positive integer")
+    expect_error(expect_warning(distributions3:::pdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, log = TRUE, applyfun = NULL, cores = 0.99)),
+        regexp = "argument `cores` must evaluate to positive integer")
 
     # Number of distributions does not match number of points to evaluate
     expect_error(distributions3:::pdf.distribution(d, 1:2, elementwise = TRUE),
@@ -196,7 +232,34 @@ test_that("cdf.distributions default arguments", {
 })
 
 
-test_that("cdf.distributions invalid arguments", {
+test_that("cdf.distributions sanity checks/incorrect use", {
+    d <- Normal()
+
+    # Argument x
+    expect_error(expect_warning(distributions3:::cdf.distribution(d, x = "foo",
+        drop = TRUE, elementwise = NULL, lower.tail = TRUE)),
+        regexp = "argument `x` must be numeric with all finite values")
+    expect_error(distributions3:::cdf.distribution(d, x = c(1, 2, NA),
+        drop = TRUE, elementwise = NULL, lower.tail = TRUE),
+        regexp = "argument `x` must be numeric with all finite values")
+    expect_error(distributions3:::cdf.distribution(d, x = c(1, 2, Inf),
+        drop = TRUE, elementwise = NULL, lower.tail = TRUE),
+        regexp = "argument `x` must be numeric with all finite values")
+
+    # Arguments drop and lower.tail
+    expect_error(distributions3:::cdf.distribution(d, x = 1:3,
+        drop = "foo", elementwise = NULL, lower.tail = TRUE),
+        regexp = "argument `drop` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::cdf.distribution(d, x = 1:3,
+        drop = NA, elementwise = NULL, lower.tail = TRUE),
+        regexp = "argument `drop` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::cdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, lower.tail = "foo"),
+        regexp = "argument `lower.tail` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::cdf.distribution(d, x = 1:3,
+        drop = TRUE, elementwise = NULL, lower.tail = NA),
+        regexp = "argument `lower.tail` must evaluate to TRUE or FALSE")
+
     # Number of distributions does not match number of points to evaluate
     expect_error(distributions3:::cdf.distribution(Normal(1:3), 1:2, elementwise = TRUE),
         regexp = "lengths of distributions and arguments do not match")
@@ -332,6 +395,76 @@ test_that("quantile.distributions default arguments", {
 
 
 test_that("quantile.distributions invalid arguments", {
+    d <- Normal()
+
+    # Argument probs
+    expect_error(distributions3:::quantile.distribution(d, probs = "foo",
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `probs` must be numeric with all finite values")
+    expect_error(distributions3:::quantile.distribution(d, probs = c(0.1, 0.2, NA),
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `probs` must be numeric with all finite values")
+    expect_error(distributions3:::quantile.distribution(d, probs = c(0.1, 0.2, Inf),
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `probs` must be numeric with all finite values")
+
+    # Arguments drop
+    expect_error(expect_warning(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = "foo", elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = 1e3)),
+        regexp = "argument `drop` must evaluate to TRUE or FALSE")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = NA, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `drop` must evaluate to TRUE or FALSE")
+
+    # Lower and upper
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = "foo", upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `lower` must be finite numeric of length 1")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = NA, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `lower` must be finite numeric of length 1")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0:1, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `lower` must be finite numeric of length 1")
+
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = "foo", tol = 1e-3, maxit = 1e3),
+        regexp = "argument `upper` must be finite numeric of length 1")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = NA, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `upper` must be finite numeric of length 1")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 0:1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `upper` must be finite numeric of length 1")
+
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 1, upper = 1, tol = 1e-3, maxit = 1e3),
+        regexp = "argument `lower` must be smaller than `upper`")
+
+    # Argument tol and maxit
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = "foo", maxit = 1e3),
+        regexp = "argument `tol` must be numeric in")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = c(0.001, 0.002), maxit = 1e3),
+        regexp = "argument `tol` must be numeric in")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 0.011, maxit = 1e3),
+        regexp = "argument `tol` must be numeric in")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 0, maxit = 1e3),
+        regexp = "argument `tol` must be numeric in")
+
+    expect_error(expect_warning(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = "foo")),
+        regexp = "argument `maxit` must evaluate to single integer >= 1L")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = NA),
+        regexp = "argument `maxit` must evaluate to single integer >= 1L")
+    expect_error(distributions3:::quantile.distribution(d, probs = 1:9/10,
+        drop = TRUE, elementwise = NULL, lower = 0, upper = 1, tol = 1e-3, maxit = 0.99),
+        regexp = "argument `maxit` must evaluate to single integer >= 1L")
+
     # Number of distributions does not match number of points to evaluate
     expect_error(distributions3:::quantile.distribution(Normal(1:3), 1:2, elementwise = TRUE),
         regexp = "lengths of distributions and arguments do not match")

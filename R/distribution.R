@@ -338,7 +338,7 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
     drop <- as.logical(drop)[[1L]]
     x    <- as.numeric(x) # Required for numericDeriv
     stopifnot(
-        "argument `x` must be numeric with finite values" = is.numeric(x) && all(is.finite(x)),
+        "argument `x` must be numeric with all finite values" = is.numeric(x) && all(is.finite(x)),
         "argument `drop` must evaluate to TRUE or FALSE" = isTRUE(drop) || isFALSE(drop),
         "argument `log` must evaluate to TRUE or FALSE" = isTRUE(log) || isFALSE(log),
         "argument `applyfun` must be NULL or a function" = is.null(applyfun) || is.function(applyfun)
@@ -346,7 +346,7 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
 
     if (!is.null(cores)) {
       cores <- as.integer(cores)[[1L]]
-      stopifnot("argument 'cores' must evaluate to positive integer" =
+      stopifnot("argument `cores` must evaluate to positive integer" =
                 length(cores) == 1L && !is.na(cores) && cores >= 1L)
     }
 

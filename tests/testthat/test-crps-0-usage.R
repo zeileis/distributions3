@@ -19,6 +19,87 @@ test_that("generic function crps and S3 method crps.distribution exist", {
     expect_true(is.function(crps.distribution))
 })
 
+test_that("crps.distribution sanity checks/incorrect use", {
+    d <- Normal(1, 1)
+    # Argument y
+    expect_error(crps.distribution(structure(d, class = "foo"),
+                                   x = 0:3, drop = TRUE, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `y` must be an object of class 'distribution'")
+
+    # Argument x
+    expect_error(crps.distribution(d, x = "foo", drop = TRUE, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `x` must be numeric with all finite values")
+    expect_error(crps.distribution(d, x = c(1, 2, NA), drop = TRUE, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `x` must be numeric with all finite values")
+    expect_error(crps.distribution(d, x = c(1, 2, Inf), drop = TRUE, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `x` must be numeric with all finite values")
+
+    # Arguments drop, elementwise
+    expect_error(crps.distribution(d, x = 0:2, drop = "foo", elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `drop` must evaluate to TRUE or FALSE")
+
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = "foo",
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `elementwise` must be NULL, TRUE, or FALSE")
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = c(TRUE, TRUE),
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `elementwise` must be NULL, TRUE, or FALSE")
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = logical(),
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `elementwise` must be NULL, TRUE, or FALSE")
+
+    # Arguments gridsize and batchsize
+    expect_error(expect_warning(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = "foo", batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL)),
+                 regexp = "argument `gridsize` must evaluate to single integer >= 2L")
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 1.999, batchsize = 1e4L,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `gridsize` must evaluate to single integer >= 2L")
+
+    expect_error(expect_warning(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 500L, batchsize = "foo",
+                                   applyfun = NULL, cores = NULL, method = NULL)),
+                 regexp = "argument `batchsize` must evaluate to single integer >= 1L")
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 0.999,
+                                   applyfun = NULL, cores = NULL, method = NULL),
+                 regexp = "argument `batchsize` must evaluate to single integer >= 1L")
+
+    # Arguments core and applyfun
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = "foo", cores = NULL, method = NULL),
+                 regexp = "argument `applyfun` must be NULL or function")
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = TRUE, cores = NULL, method = NULL),
+                 regexp = "argument `applyfun` must be NULL or function")
+
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = "foo", method = NULL),
+                 regexp = "argument `cores` must be NULL or numeric")
+    expect_error(crps.distribution(d, x = 0:2, drop = 1, elementwise = NULL,
+                                   gridsize = 500L, batchsize = 1e4L,
+                                   applyfun = NULL, cores = 0, method = NULL),
+                 regexp = "if not NULL, `cores` must evaluate to integer >= 1L")
+})
+
 # -------------------------------------------------------
 # Single distrubiton, evaluate at many observations 'x'
 # -------------------------------------------------------
@@ -62,6 +143,7 @@ test_that("recycling observations if required", {
     expect_silent(crps2 <- crps(Normal(1:3), rep(1.5, 3)))
     expect_equal(crps1, crps2)
 })
+
 
 test_that("crps.distribution with single distribution, multiple observations, drop = TRUE (default) -> vector", {
     expect_silent(crps <- crps(Normal(1), 1:5))
