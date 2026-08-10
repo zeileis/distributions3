@@ -18,10 +18,7 @@
 #' * List (named or unnamed) of vectors: Each element in the list describes one
 #'   empirical distribution defined by the numeric values in each of the vectors.
 #'
-#' * Data frame: Each column (variable) in the data frame describes one
-#'   empirical distribution.
-#'
-#' * Matrix: Each row corresponds to one empirical distribution, whilst
+#' * Matrix/data frame: Each row corresponds to one empirical distribution, whilst
 #'   the columns contain the individual observations.
 #'
 #' Missing values are allowed, however, each distribution requires at least two
@@ -81,7 +78,7 @@
 #' ### example: allowed types/classes of input arguments
 #'
 #' ## Single vector (will be coerced to numeric)
-#' Y1  <- rnorm(3, mean = -10)
+#' Y1 <- rnorm(3, mean = -10)
 #' d1 <- Empirical(Y1)
 #' d1
 #' mean(d1)
@@ -104,13 +101,15 @@
 #'
 #' ## Matrix
 #' Y4 <- matrix(rnorm(20), ncol = 5,
-#'              dimnames = list(sprintf("D_%d", 1:4), sprintf("obs_%d", 1:5)))
+#'              dimnames = list(paste0("D_", 1:4), paste0("obs_", 1:5)))
 #' d4 <- Empirical(Y4)
 #' d4
 #'
 #' ## Data frame
-#' d5 <- Empirical(as.data.frame(t(Y4)))
+#' d5 <- Empirical(as.data.frame(Y4))
 #' d5
+#'
+#' identical(d4, d5)
 #'
 #' mean(d5)
 #' variance(d5)
@@ -126,10 +125,20 @@
 #' quantile(d5, c(0.2, 0.4, 0.6, 0.8)) # Defaults to elementwise = TRUE
 #' quantile(d5, c(0.2, 0.4, 0.6, 0.8), elementwise = FALSE)
 #'
+#' ## The quantile function is the inverse of the distribution
+#' ## function (cdf) if x in Y
+#' set.seed(6020)
+#' Y <- round(rlnorm(20, log(3), log(2)), 1)
+#' d <- Empirical(Y)
+#'
+#' cdf(d, 4.0)
+#' quantile(d, cdf(d, 4.0))
+#'
 #' @family Empirical distribution
 #' @export
 Empirical <- function(x) {
   stopifnot(requireNamespace("distributions3"))
+  if (is.data.frame(x)) x <- as.matrix(x)
   ## If input is given as a list of vectors
   if (is.list(x) && all(sapply(x, function(x) is.vector(x) && !is.matrix(x)))) {
     stopifnot("empty input vectors not allowed" = all(sapply(x, length) > 0))
@@ -392,14 +401,15 @@ variance.Empirical <- function(x, ...) {
 }
 
 #' @param x an object of class \code{Empirical} (see [Empirical()]).
-#' @param type integer between \code{1L} and \code{3L} (default) selecting one of three
-#'        algorithms. See Details for more information.
+#' @param type integer between \code{1L} and \code{3L} (default) selecting one
+#'        of three algorithms used for calculating sample skewness/kurtosis.
+#'        See section Details for more information.
 #' @param ... currently unused.
 #'
 #' @family Empirical distribution
 #' @export
 #' @rdname Empirical
-skewness.Empirical <- function(x, type = 1L, ...) {
+skewness.Empirical <- function(x, type = 3L, ...) {
   type <- as.integer(type)[1]
   stopifnot("invalid 'type' argument" = is.finite(type) && type >= 1L && type <= 3L)
 
@@ -557,19 +567,21 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param type integer, forwarded to \code{\link[stats]{quantile}}.
+#'        Defaults to `type = 1L`.
 #' @param ... arguments to be passed to [qempirical()].
 #'
 #' @return In case of a single distribution object, either a numeric
-#'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
-#'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
-#'   distribution object, a matrix with `length(probs)` columns containing all
-#'   possible combinations.
+#' vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
+#' `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
+#' distribution object, a matrix with `length(probs)` columns containing all
+#' possible combinations.
 #'
 #' @inherit Empirical examples
 #' @family Empirical distribution
 #' @export
-quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) qempirical(at, y = as.matrix(d), ...)
+quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, type = 1L, ...) {
+  FUN <- function(at, d) qempirical(at, y = as.matrix(d), type = type, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 

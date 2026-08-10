@@ -20,6 +20,7 @@ test_that("Empirical unexpected input", {
 
 test_that("Empirical construction function from vector", {
     x <- sample(1:10)
+
     expect_silent(d <- Empirical(x))
     expect_identical(length(d), 1L)
     expect_null(names(d))
@@ -68,16 +69,31 @@ test_that("Empirical construction from named matrix", {
     expect_true(!any(is.na(m)))
 })
 
-test_that("Empirical construction from data.frame (list)", {
-    x <- data.frame(a = 1:3, b = 11:13)
+test_that("Empirical construction from data.frame", {
+    x <- data.frame(a = 1:3, b = 11:13, c = 21:23, d = 31:33)
     expect_silent(d <- Empirical(x))
-    expect_identical(length(d), 2L)
-    expect_identical(names(d), letters[1:2])
+    expect_identical(length(d), 3L)
+    expect_null(names(d))
 
-    # Converting to matrix
-    expect_silent(m <- as.matrix(d))
-    expect_identical(m, matrix(as.double(c(1:3, 11:13)), byrow = TRUE,
-                               nrow = 2, dimnames = list(letters[1:2], paste0("o_", 1:3))))
+    # Check that Empirical(matrix) and Empirical(Dataframe) behave the same
+    m <- matrix(rnorm(5 * 3), ncol = 5,
+                dimnames = list(LETTERS[1:3], letters[1:5]))
+    expect_silent(d1 <- Empirical(m))
+    expect_silent(d2 <- Empirical(as.data.frame(m)))
+    expect_identical(d1, d2)
+})
+
+test_that("Empirical construction from matrix/data.frame with missing values", {
+    m <- matrix(rnorm(25), ncol = 5, dimnames = list(LETTERS[11:15], letters[11:15]))
+    arr <- cbind(row = c(1, 1, 3, 3, 5), col = c(1, 2, 3, 5, 2))
+    m[arr] <- NA
+
+    # Creating Empirical object
+    expect_silent(d1 <- Empirical(m))
+    expect_silent(d2 <- Empirical(as.data.frame(m)))
+
+    expect_identical(as.matrix(d1), m)
+    expect_identical(as.matrix(d2), m)
 })
 
 test_that("Empirical construction from list, unequal number of observations", {
@@ -180,7 +196,7 @@ test_that("pdf.Empirical works as expected", {
 test_that("quantile.Empirical works as expected", {
     # Checking defaults
     expect_identical(formals(distributions3:::quantile.Empirical),
-        as.pairlist(alist(x =, probs = , drop = TRUE, elementwise = NULL, ... =)))
+        as.pairlist(alist(x =, probs = , drop = TRUE, elementwise = NULL, type = 1L, ... =)))
 
     expect_silent(x <- quantile(d, 0))
     expect_identical(x, c(min(a), min(b)) |> setNames(letters[1:2]))
@@ -208,9 +224,16 @@ test_that("quantile.Empirical works as expected", {
                               quantile(b, c(0.2, 0.5), type = 1L)) |>
         structure(dimnames = list(letters[1:2], paste0("q_", c(0.2, 0.5)))))
 
+
     # Lower tail
     expect_silent(x2 <- quantile(d, c(0.2, 0.5), type = 1L, elementwise = FALSE, lower.tail = FALSE))
     expect_identical(x2, 1 - x)
+
+    # Testing different type
+    expect_silent(x <- quantile(d, 0.5, type = 7))
+    expect_identical(x, c(unname(quantile(a, 0.5, type = 7L)),
+                          unname(quantile(b, 0.5, type = 7L))) |>
+                     setNames(letters[1:2]))
 
 })
 
@@ -262,7 +285,7 @@ test_that("mean.Empirical works as expected", {
 test_that("skewness.Empirical works as expected", {
     # Checking defaults
     expect_identical(formals(distributions3:::skewness.Empirical),
-            as.pairlist(alist(x =, type = 1L, ... =)))
+            as.pairlist(alist(x =, type = 3L, ... =)))
 
     sk1 <- function(x) {
         x <- na.omit(x)

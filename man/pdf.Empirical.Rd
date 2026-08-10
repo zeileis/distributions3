@@ -59,7 +59,7 @@ quantile(X, 0.7)
 ### example: allowed types/classes of input arguments
 
 ## Single vector (will be coerced to numeric)
-Y1  <- rnorm(3, mean = -10)
+Y1 <- rnorm(3, mean = -10)
 d1 <- Empirical(Y1)
 d1
 mean(d1)
@@ -82,13 +82,15 @@ mean(d3)
 
 ## Matrix
 Y4 <- matrix(rnorm(20), ncol = 5,
-             dimnames = list(sprintf("D_\%d", 1:4), sprintf("obs_\%d", 1:5)))
+             dimnames = list(paste0("D_", 1:4), paste0("obs_", 1:5)))
 d4 <- Empirical(Y4)
 d4
 
 ## Data frame
-d5 <- Empirical(as.data.frame(t(Y4)))
+d5 <- Empirical(as.data.frame(Y4))
 d5
+
+identical(d4, d5)
 
 mean(d5)
 variance(d5)
@@ -103,6 +105,15 @@ cdf(d5, c(-0.5, 0, 0.5, 1), elementwise = FALSE)
 
 quantile(d5, c(0.2, 0.4, 0.6, 0.8)) # Defaults to elementwise = TRUE
 quantile(d5, c(0.2, 0.4, 0.6, 0.8), elementwise = FALSE)
+
+## The quantile function is the inverse of the distribution
+## function (cdf) if x in Y
+set.seed(6020)
+Y <- round(rlnorm(20, log(3), log(2)), 1)
+d <- Empirical(Y)
+
+cdf(d, 4.0)
+quantile(d, cdf(d, 4.0))
 
 }
 \seealso{
