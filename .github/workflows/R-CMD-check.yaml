@@ -23,12 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # x64 version
           - { name: "r-release (x64)", os: ubuntu-latest, container: rocker/r2u4ci }
           - { name: "r-devel (x64)",   os: ubuntu-latest, container: rocker/drd }
-          # arm64 version
-          - { name: "r-release (arm)", os: ubuntu-24.04-arm, container: rocker/r2u4ci }
-          - { name: "r-devel (arm)",   os: ubuntu-24.04-arm, container: rocker/drd }
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
