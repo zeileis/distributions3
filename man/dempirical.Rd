@@ -11,7 +11,15 @@ dempirical(x, y, log = FALSE, na.rm = TRUE, method = NULL, ...)
 
 pempirical(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE)
 
-qempirical(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...)
+qempirical(
+  p,
+  y,
+  lower.tail = TRUE,
+  log.p = FALSE,
+  na.rm = TRUE,
+  type = 1L,
+  ...
+)
 
 rempirical(n, y, na.rm = TRUE)
 }
@@ -43,6 +51,9 @@ and \code{\link[base]{apply}}/\code{\link[base]{sapply}} when calling
 (lower tail) or \eqn{P[X > x]} (upper tail).}
 
 \item{p}{numeric vector of probabilities (\verb{[0, 1]}).}
+
+\item{type}{integer, forwarded to \code{\link[stats]{quantile}}.
+Defaults to \code{type = 1L}.}
 
 \item{n}{number of observations. If \code{length(n) > 1}, the length is
 taken to be the number required.}

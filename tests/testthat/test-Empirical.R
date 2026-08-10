@@ -189,23 +189,27 @@ test_that("quantile.Empirical works as expected", {
     expect_identical(x, c(max(a), max(b)) |> setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, 0.5))
-    expect_identical(x, c(unname(quantile(a, 0.5)), unname(quantile(b, 0.5))) |>
+    expect_identical(x, c(unname(quantile(a, 0.5, type = 1L)),
+                          unname(quantile(b, 0.5, type = 1L))) |>
                      setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, c(0.2, 0.5)))
-    expect_identical(x, c(unname(quantile(a, 0.2)), unname(quantile(b, 0.5))) |>
+    expect_identical(x, c(unname(quantile(a, 0.2, type = 1L)),
+                          unname(quantile(b, 0.5, type = 1L))) |>
                      setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, c(0.2, 0.5)))
-    expect_identical(x, c(unname(quantile(a, 0.2)), unname(quantile(b, 0.5))) |>
+    expect_identical(x, c(unname(quantile(a, 0.2, type = 1L)),
+                          unname(quantile(b, 0.5, type = 1L))) |>
                      setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, c(0.2, 0.5), elementwise = FALSE))
-    expect_identical(x, rbind(quantile(a, c(0.2, 0.5)), quantile(b, c(0.2, 0.5))) |>
+    expect_identical(x, rbind(quantile(a, c(0.2, 0.5), type = 1L),
+                              quantile(b, c(0.2, 0.5), type = 1L)) |>
         structure(dimnames = list(letters[1:2], paste0("q_", c(0.2, 0.5)))))
 
     # Lower tail
-    expect_silent(x2 <- quantile(d, c(0.2, 0.5), elementwise = FALSE, lower.tail = FALSE))
+    expect_silent(x2 <- quantile(d, c(0.2, 0.5), type = 1L, elementwise = FALSE, lower.tail = FALSE))
     expect_identical(x2, 1 - x)
 
 })
@@ -379,20 +383,22 @@ test_that("pempirical works as expected", {
 # qempirical
 test_that("qempirical works as expected", {
     expect_identical(formals(qempirical),
-        as.pairlist(alist(p =, y = , lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ... =)))
+        as.pairlist(alist(p =, y = , lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, type = 1L, ... =)))
 
     set.seed(1234)
     y <- c(rnorm(50), NA_real_)
 
     expect_error(qempirical(0.77, y, na.rm = FALSE), regexp = "missing values and NaN's not allowed if 'na.rm' is FALSE")
 
-    expect_identical(x <- qempirical(0.77, y), unname(quantile(y, 0.77, na.rm = TRUE)))
+    expect_identical(x <- qempirical(0.77, y),
+                     unname(quantile(y, 0.77, na.rm = TRUE, type = 1L)))
     expect_identical(qempirical(log(0.77), y, log.p = TRUE), x)
     expect_identical(qempirical(0.77, y, lower.tail = FALSE), 1 - x)
     expect_identical(qempirical(log(0.77), y, lower.tail = FALSE, log.p = TRUE), 1 - x)
 
     # length of p > 1L
-    expect_identical(x <- qempirical(c(0.2, 0.5, 0.8), y), unname(quantile(y, c(0.2, 0.5, 0.8), na.rm = TRUE)))
+    expect_identical(x <- qempirical(c(0.2, 0.5, 0.8), y),
+                     unname(quantile(y, c(0.2, 0.5, 0.8), na.rm = TRUE, type = 1L)))
 
     # Not removing NAs - expecting error)
     expect_error(qempirical(0.5, y, na.rm = FALSE),

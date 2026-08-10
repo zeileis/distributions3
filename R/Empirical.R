@@ -320,11 +320,13 @@ pempirical <- function(q, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE) {
 
 
 #' @param p numeric vector of probabilities (`[0, 1]`).
+#' @param type integer, forwarded to \code{\link[stats]{quantile}}.
+#'        Defaults to `type = 1L`.
 #'
 #' @family Empirical distribution
 #' @export
 #' @rdname dempirical
-qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...) {
+qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, type = 1L, ...) {
   lower.tail <- as.logical(lower.tail)[1L]
   log.p      <- as.logical(log.p)[1L]
   na.rm      <- as.logical(na.rm)[1L]
@@ -335,9 +337,9 @@ qempirical <- function(p, y, lower.tail = TRUE, log.p = FALSE, na.rm = TRUE, ...
 
   # If length(x) equals to 1 apply can be used
   if (length(p) == 1) {
-      rval <- apply(y, MARGIN = 1, FUN = function(y) quantile(y, probs = p, na.rm = na.rm, ...)[[1]])
+      rval <- apply(y, MARGIN = 1, FUN = function(y) quantile(y, probs = p, na.rm = na.rm, type = type, ...)[[1]])
   } else {
-      rval <- sapply(seq_len(NROW(y)), function(i) quantile(y[i, ], probs = p[i], na.rm = na.rm, ...)[[1]])
+      rval <- sapply(seq_len(NROW(y)), function(i) quantile(y[i, ], probs = p[i], na.rm = na.rm, type = type, ...)[[1]])
   }
   if (!lower.tail) rval <- 1. - rval
   return(rval)
