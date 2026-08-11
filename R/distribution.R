@@ -484,6 +484,9 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
     return(if (!log) res else log(res))
 }
 
+#' @rdname pdf.distribution
+#' @exportS3Method
+log_pdf.distribution <- function(d, x, ...) pdf(d, x, log = TRUE, ...)
 
 #' @param probs Numeric vector of probabilities with values in `[0,1]`.
 #' @param lower,upper numeric. Lower and upper end points for the interval to

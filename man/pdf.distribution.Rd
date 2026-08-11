@@ -2,6 +2,7 @@
 % Please edit documentation in R/distribution.R
 \name{pdf.distribution}
 \alias{pdf.distribution}
+\alias{log_pdf.distribution}
 \alias{quantile.distribution}
 \alias{cdf.distribution}
 \title{Methods for numerically approximating distribution functions}
@@ -16,6 +17,8 @@
   cores = NULL,
   ...
 )
+
+\method{log_pdf}{distribution}(d, x, ...)
 
 \method{quantile}{distribution}(
   x,
