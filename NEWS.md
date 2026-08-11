@@ -1,7 +1,23 @@
 # distributions3 0.2.4.99
 
-- Start working on new development version with additions by Reto @retostauffer
-  especially for numerical approximations of various distribution functions.
+- New `Empirical()` distribution based on a random `sample`. This is particularly
+  useful when forecasts are represented by samples rather than by parametric
+  distributions. Contributed by Reto Stauffer.
+  
+- Fallback methods for all standard `distributions3` methods such as `cdf()`,
+  `pdf()`, `quantile()`, `random()`, and moments such as `mean()`, `variance()`,
+  `skewness()`, and `kurtosis()`. These leverage those methods that are available
+  but fill the gaps using numerical integration/differentiation. Contributed by
+  Reto Stauffer.
+  
+- Methods for `crps()` function from the
+  [scoringRules](https://CRAN.R-project.org/package=scoringRules) package for
+  computing the (continuous) ranked probabiity score of a distribution. This is
+  a useful proper scoring rule as an alternative to the log-likelihood. A numerical
+  fallback method is provided as well. Contributed by Reto Stauffer and Achim Zeileis.
+
+- Streamline the `apply_dpqr()` workhorse function to avoid unnecessary computations
+  more carefully.
 
 
 # distributions3 0.2.4
