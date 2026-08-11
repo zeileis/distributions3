@@ -272,13 +272,11 @@ test_that("mean.Empirical works as expected", {
 
     expect_silent(x <- mean(d))
     expect_type(x, "double")
-    expect_identical(x, c(mean(a, na.rm = TRUE), mean(b)) |>
-                     setNames(letters[1:2]))
+    expect_equal(x, c("a" = mean(a), "b" = mean(b)))
 
     expect_silent(x <- variance(d))
     expect_type(x, "double")
-    expect_equal(x, c(sd(a, na.rm = TRUE)^2, sd(b)^2) |>
-                 setNames(letters[1:2]))
+    expect_equal(x, c("a" = var(a), "b" = var(b)))
 })
 
 
