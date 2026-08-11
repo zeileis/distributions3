@@ -1,0 +1,897 @@
+# distributions3
+
+`distributions3`, inspired by the [eponymous Julia
+package](https://github.com/JuliaStats/Distributions.jl), provides a
+generic function interface to probability distributions.
+`distributions3` has two goals:
+
+1.  Replace the [`rnorm()`](https://rdrr.io/r/stats/Normal.html),
+    [`pnorm()`](https://rdrr.io/r/stats/Normal.html), etc, family of
+    functions with S3 methods for distribution objects
+
+2.  Be extremely well documented and friendly for students in intro stat
+    classes.
+
+The main generics are:
+
+- [`random()`](https://zeileis.github.io/distributions3/dev/reference/random.md):
+  Draw samples from a distribution.
+- [`pdf()`](https://zeileis.github.io/distributions3/dev/reference/pdf.md):
+  Evaluate the probability density (or mass) at a point.
+- [`cdf()`](https://zeileis.github.io/distributions3/dev/reference/cdf.md):
+  Evaluate the cumulative probability up to a point.
+- [`quantile()`](https://rdrr.io/r/stats/quantile.html): Determine the
+  quantile for a given probability. Inverse of
+  [`cdf()`](https://zeileis.github.io/distributions3/dev/reference/cdf.md).
+
+## Installation
+
+You can install `distributions3` with:
+
+``` r
+
+install.packages("distributions3")
+```
+
+You can install the development version with:
+
+``` r
+
+install.packages("distributions3", repos = "https://zeileis.R-universe.dev")
+```
+
+## Basic Usage
+
+The basic usage of `distributions3` looks like:
+
+``` r
+
+library("distributions3")
+
+X <- Bernoulli(0.1)
+
+random(X, 10)
+#>  [1] 0 0 0 0 1 0 0 1 0 0
+pdf(X, 1)
+#> [1] 0.1
+
+cdf(X, 0)
+#> [1] 0.9
+quantile(X, 0.5)
+#> [1] 0
+```
+
+Note that [`quantile()`](https://rdrr.io/r/stats/quantile.html)
+**always** returns lower tail probabilities. If you aren’t sure what
+this means, please read the last several paragraphs of
+[`vignette("one-sample-z-confidence-interval")`](https://zeileis.github.io/distributions3/dev/articles/one-sample-z-confidence-interval.md)
+and have a gander at the plot.
+
+## Contributing
+
+If you are interested in contributing to `distributions3`, please reach
+out on Github! We are happy to review PRs contributing bug fixes.
+
+Please note that `distributions3` is released with a [Contributor Code
+of
+Conduct](https://zeileis.github.io/distributions3/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
+
+## Related work
+
+For a comprehensive overview of the many packages providing various
+distribution related functionality see the [CRAN Task
+View](https://cran.r-project.org/view=Distributions).
+
+- [`distributional`](https://cran.r-project.org/package=distributional)
+  provides distribution objects as vectorized S3 objects
+- [`distr6`](https://cran.r-project.org/package=distr6) builds on
+  `distr`, but uses R6 objects
+- [`distr`](https://cran.r-project.org/package=distr) is quite similar
+  to `distributions`, but uses S4 objects and is less focused on
+  documentation.
+- [`fitdistrplus`](https://cran.r-project.org/package=fitdistrplus)
+  provides extensive functionality for fitting various distributions but
+  does not treat distributions themselves as objects
+
+# Package index
+
+## Generic functions for S3 distribution objects
+
+- [`pdf()`](https://zeileis.github.io/distributions3/dev/reference/pdf.md)
+  [`log_pdf()`](https://zeileis.github.io/distributions3/dev/reference/pdf.md)
+  [`pmf()`](https://zeileis.github.io/distributions3/dev/reference/pdf.md)
+  : Evaluate the probability density of a probability distribution
+- [`cdf()`](https://zeileis.github.io/distributions3/dev/reference/cdf.md)
+  : Evaluate the cumulative distribution function of a probability
+  distribution
+- [`random()`](https://zeileis.github.io/distributions3/dev/reference/random.md)
+  [`simulate(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.md)
+  : Draw a random sample from a probability distribution
+- [`variance()`](https://zeileis.github.io/distributions3/dev/reference/variance.md)
+  [`skewness()`](https://zeileis.github.io/distributions3/dev/reference/variance.md)
+  [`kurtosis()`](https://zeileis.github.io/distributions3/dev/reference/variance.md)
+  : Compute the moments of a probability distribution
+- [`support()`](https://zeileis.github.io/distributions3/dev/reference/support.md)
+  : Return the support of a distribution
+- [`is_discrete()`](https://zeileis.github.io/distributions3/dev/reference/is_discrete.md)
+  [`is_continuous()`](https://zeileis.github.io/distributions3/dev/reference/is_discrete.md)
+  : Determine whether a distribution is discrete or continuous
+- [`suff_stat()`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.md)
+  : Compute the sufficient statistics of a distribution from data
+- [`fit_mle()`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.md)
+  : Fit a distribution to data
+- [`is_distribution()`](https://zeileis.github.io/distributions3/dev/reference/is_distribution.md)
+  : Is an object a distribution?
+- [`prodist()`](https://zeileis.github.io/distributions3/dev/reference/prodist.md)
+  : Extracting fitted or predicted probability distributions from models
+- [`simulate(`*`<default>`*`)`](https://zeileis.github.io/distributions3/dev/reference/simulate.default.md)
+  : Simulate responses from fitted model objects
+
+## Default methods based on numerical approximations
+
+- [`crps.distribution()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Beta()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Bernoulli()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Binomial()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Erlang()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Exponential()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Gamma()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.GEV()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Geometric()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Gumbel()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.HyperGeometric()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Logistic()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.LogNormal()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.NegativeBinomial()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Normal()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Poisson()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.StudentsT()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.Uniform()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.XBetaX()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.GAMLSS()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  [`crps.BAMLSS()`](https://zeileis.github.io/distributions3/dev/reference/crps.distribution.md)
+  : Method for numerically evaluating the CRPS of probability
+  distributions
+- [`pdf(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.distribution.md)
+  [`log_pdf(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.distribution.md)
+  [`quantile(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.distribution.md)
+  [`cdf(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.distribution.md)
+  : Methods for numerically approximating distribution functions
+- [`random(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.distribution.md)
+  : Inverse transform sampling for random number generation
+- [`mean(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/mean.distribution.md)
+  [`variance(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/mean.distribution.md)
+  [`skewness(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/mean.distribution.md)
+  [`kurtosis(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/mean.distribution.md)
+  : Methods for numerically calculating central moments of probability
+  distributions
+
+## Utilities, tools, and data
+
+- [`apply_dpqr()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
+  [`make_support()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
+  [`make_positive_integer()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
+  :
+
+  Utilities for `distributions3` objects
+
+- [`log_likelihood()`](https://zeileis.github.io/distributions3/dev/reference/log_likelihood.md)
+  [`likelihood()`](https://zeileis.github.io/distributions3/dev/reference/log_likelihood.md)
+  : Compute the (log-)likelihood of a probability distribution given
+  data
+
+- [`FIFA2018`](https://zeileis.github.io/distributions3/dev/reference/FIFA2018.md)
+  : Goals scored in all 2018 FIFA World Cup matches
+
+## Visualization infrastructure
+
+- [`plot(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/dev/reference/plot.distribution.md)
+  : Plot the p.m.f, p.d.f or c.d.f. of a univariate distribution
+- [`plot_cdf()`](https://zeileis.github.io/distributions3/dev/reference/plot_cdf.md)
+  : Plot the CDF of a distribution
+- [`plot_pdf()`](https://zeileis.github.io/distributions3/dev/reference/plot_pdf.md)
+  : Plot the PDF of a distribution
+- [`stat_auc()`](https://zeileis.github.io/distributions3/dev/reference/geom_auc.md)
+  [`geom_auc()`](https://zeileis.github.io/distributions3/dev/reference/geom_auc.md)
+  : Fill out area under the curve for a plotted PDF
+
+## Bernoulli distribution
+
+- [`Bernoulli()`](https://zeileis.github.io/distributions3/dev/reference/Bernoulli.md)
+  : Create a Bernoulli distribution
+- [`cdf(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Bernoulli.md)
+  : Evaluate the cumulative distribution function of a Bernoulli
+  distribution
+- [`fit_mle(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Bernoulli.md)
+  : Fit a Bernoulli distribution to data
+- [`pdf(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Bernoulli.md)
+  [`log_pdf(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Bernoulli.md)
+  : Evaluate the probability mass function of a Bernoulli distribution
+- [`quantile(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Bernoulli.md)
+  : Determine quantiles of a Bernoulli distribution
+- [`random(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Bernoulli.md)
+  : Draw a random sample from a Bernoulli distribution
+- [`suff_stat(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Bernoulli.md)
+  : Compute the sufficient statistics for a Bernoulli distribution from
+  data
+- [`support(`*`<Bernoulli>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Bernoulli.md)
+  : Return the support of the Bernoulli distribution
+
+## Beta distribution
+
+- [`Beta()`](https://zeileis.github.io/distributions3/dev/reference/Beta.md)
+  : Create a Beta distribution
+- [`cdf(`*`<Beta>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Beta.md)
+  : Evaluate the cumulative distribution function of a Beta distribution
+- [`pdf(`*`<Beta>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Beta.md)
+  [`log_pdf(`*`<Beta>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Beta.md)
+  : Evaluate the probability mass function of a Beta distribution
+- [`quantile(`*`<Beta>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Beta.md)
+  : Determine quantiles of a Beta distribution
+- [`random(`*`<Beta>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Beta.md)
+  : Draw a random sample from a Beta distribution
+- [`support(`*`<Beta>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Beta.md)
+  : Return the support of the Beta distribution
+
+## Binomial distribution
+
+- [`Binomial()`](https://zeileis.github.io/distributions3/dev/reference/Binomial.md)
+  : Create a Binomial distribution
+- [`cdf(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Binomial.md)
+  : Evaluate the cumulative distribution function of a Binomial
+  distribution
+- [`fit_mle(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Binomial.md)
+  : Fit a Binomial distribution to data
+- [`pdf(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Binomial.md)
+  [`log_pdf(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Binomial.md)
+  : Evaluate the probability mass function of a Binomial distribution
+- [`quantile(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Binomial.md)
+  : Determine quantiles of a Binomial distribution
+- [`random(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Binomial.md)
+  : Draw a random sample from a Binomial distribution
+- [`suff_stat(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Binomial.md)
+  : Compute the sufficient statistics for the Binomial distribution from
+  data
+- [`support(`*`<Binomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Binomial.md)
+  : Return the support of the Binomial distribution
+
+## Categorical distribution
+
+- [`Categorical()`](https://zeileis.github.io/distributions3/dev/reference/Categorical.md)
+  : Create a Categorical distribution
+- [`cdf(`*`<Categorical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Categorical.md)
+  : Evaluate the cumulative distribution function of a Categorical
+  distribution
+- [`pdf(`*`<Categorical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Categorical.md)
+  [`log_pdf(`*`<Categorical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Categorical.md)
+  : Evaluate the probability mass function of a Categorical discrete
+  distribution
+- [`quantile(`*`<Categorical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Categorical.md)
+  : Determine quantiles of a Categorical discrete distribution
+- [`random(`*`<Categorical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Categorical.md)
+  : Draw a random sample from a Categorical distribution
+
+## Cauchy distribution
+
+- [`Cauchy()`](https://zeileis.github.io/distributions3/dev/reference/Cauchy.md)
+  : Create a Cauchy distribution
+- [`cdf(`*`<Cauchy>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Cauchy.md)
+  : Evaluate the cumulative distribution function of a Cauchy
+  distribution
+- [`pdf(`*`<Cauchy>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Cauchy.md)
+  [`log_pdf(`*`<Cauchy>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Cauchy.md)
+  : Evaluate the probability mass function of a Cauchy distribution
+- [`quantile(`*`<Cauchy>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Cauchy.md)
+  : Determine quantiles of a Cauchy distribution
+- [`random(`*`<Cauchy>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Cauchy.md)
+  : Draw a random sample from a Cauchy distribution
+- [`support(`*`<Cauchy>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Cauchy.md)
+  : Return the support of the Cauchy distribution
+
+## Chi-square distribution
+
+- [`ChiSquare()`](https://zeileis.github.io/distributions3/dev/reference/ChiSquare.md)
+  : Create a Chi-Square distribution
+- [`cdf(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.ChiSquare.md)
+  : Evaluate the cumulative distribution function of a chi square
+  distribution
+- [`pdf(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ChiSquare.md)
+  [`log_pdf(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ChiSquare.md)
+  : Evaluate the probability mass function of a chi square distribution
+- [`quantile(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.ChiSquare.md)
+  : Determine quantiles of a chi square distribution
+- [`random(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.ChiSquare.md)
+  : Draw a random sample from a chi square distribution
+- [`support(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.ChiSquare.md)
+  : Return the support of the ChiSquare distribution
+
+## Empirical distribution
+
+- [`dempirical()`](https://zeileis.github.io/distributions3/dev/reference/dempirical.md)
+  [`pempirical()`](https://zeileis.github.io/distributions3/dev/reference/dempirical.md)
+  [`qempirical()`](https://zeileis.github.io/distributions3/dev/reference/dempirical.md)
+  [`rempirical()`](https://zeileis.github.io/distributions3/dev/reference/dempirical.md)
+  : The Empirical distribution
+- [`Empirical()`](https://zeileis.github.io/distributions3/dev/reference/Empirical.md)
+  [`mean(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/Empirical.md)
+  [`variance(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/Empirical.md)
+  [`skewness(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/Empirical.md)
+  [`kurtosis(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/Empirical.md)
+  : Create an Empirical distribution
+- [`cdf(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Empirical.md)
+  : Evaluate the cumulative distribution function of an Empirical
+  distribution
+- [`pdf(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Empirical.md)
+  [`log_pdf(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Empirical.md)
+  : Evaluate the probability mass function of an Empirical distribution
+- [`quantile(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Empirical.md)
+  : Determine quantiles of an Empirical distribution
+- [`random(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Empirical.md)
+  : Draw a random sample from an Empirical distribution
+- [`support(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Empirical.md)
+  : Return the support of the Empirical distribution
+
+## Erlang distribution
+
+- [`Erlang()`](https://zeileis.github.io/distributions3/dev/reference/Erlang.md)
+  : Create an Erlang distribution
+- [`cdf(`*`<Erlang>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Erlang.md)
+  : Evaluate the cumulative distribution function of an Erlang
+  distribution
+- [`pdf(`*`<Erlang>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Erlang.md)
+  [`log_pdf(`*`<Erlang>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Erlang.md)
+  : Evaluate the probability mass function of an Erlang distribution
+- [`quantile(`*`<Erlang>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Erlang.md)
+  : Determine quantiles of an Erlang distribution
+- [`random(`*`<Erlang>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Erlang.md)
+  : Draw a random sample from an Erlang distribution
+- [`support(`*`<Erlang>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Erlang.md)
+  : Return the support of the Erlang distribution
+
+## Exponential distribution
+
+- [`Exponential()`](https://zeileis.github.io/distributions3/dev/reference/Exponential.md)
+  : Create an Exponential distribution
+- [`cdf(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Exponential.md)
+  : Evaluate the cumulative distribution function of an Exponential
+  distribution
+- [`fit_mle(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Exponential.md)
+  : Fit an Exponential distribution to data
+- [`pdf(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Exponential.md)
+  [`log_pdf(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Exponential.md)
+  : Evaluate the probability density function of an Exponential
+  distribution
+- [`quantile(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Exponential.md)
+  : Determine quantiles of an Exponential distribution
+- [`random(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Exponential.md)
+  : Draw a random sample from an Exponential distribution
+- [`suff_stat(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Exponential.md)
+  : Compute the sufficient statistics of an Exponential distribution
+  from data
+- [`support(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Exponential.md)
+  : Return the support of the Exponential distribution
+
+## Fisher F distribution
+
+- [`FisherF()`](https://zeileis.github.io/distributions3/dev/reference/FisherF.md)
+  : Create an F distribution
+- [`cdf(`*`<FisherF>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.FisherF.md)
+  : Evaluate the cumulative distribution function of an F distribution
+- [`pdf(`*`<FisherF>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.FisherF.md)
+  [`log_pdf(`*`<FisherF>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.FisherF.md)
+  : Evaluate the probability mass function of an F distribution
+- [`quantile(`*`<FisherF>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.FisherF.md)
+  : Determine quantiles of an F distribution
+- [`random(`*`<FisherF>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.FisherF.md)
+  : Draw a random sample from an F distribution
+- [`support(`*`<FisherF>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.FisherF.md)
+  : Return the support of the FisherF distribution
+
+## Frechet distribution
+
+- [`Frechet()`](https://zeileis.github.io/distributions3/dev/reference/Frechet.md)
+  : Create a Frechet distribution
+- [`cdf(`*`<Frechet>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Frechet.md)
+  : Evaluate the cumulative distribution function of a Frechet
+  distribution
+- [`pdf(`*`<Frechet>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Frechet.md)
+  [`log_pdf(`*`<Frechet>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Frechet.md)
+  : Evaluate the probability mass function of a Frechet distribution
+- [`quantile(`*`<Frechet>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Frechet.md)
+  : Determine quantiles of a Frechet distribution
+- [`random(`*`<Frechet>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Frechet.md)
+  : Draw a random sample from a Frechet distribution
+- [`support(`*`<Frechet>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Frechet.md)
+  : Return the support of the Frechet distribution
+
+## Generalized extreme value (GEV) distribution
+
+- [`GEV()`](https://zeileis.github.io/distributions3/dev/reference/GEV.md)
+  : Create a Generalised Extreme Value (GEV) distribution
+- [`cdf(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.GEV.md)
+  : Evaluate the cumulative distribution function of a GEV distribution
+- [`pdf(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.GEV.md)
+  [`log_pdf(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.GEV.md)
+  : Evaluate the probability mass function of a GEV distribution
+- [`quantile(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.GEV.md)
+  : Determine quantiles of a GEV distribution
+- [`random(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.GEV.md)
+  : Draw a random sample from a GEV distribution
+- [`support(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.GEV.md)
+  : Return the support of a GEV distribution
+
+## Generalized Pareto (GP) distribution
+
+- [`GP()`](https://zeileis.github.io/distributions3/dev/reference/GP.md)
+  : Create a Generalised Pareto (GP) distribution
+- [`cdf(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.GP.md)
+  : Evaluate the cumulative distribution function of a GP distribution
+- [`pdf(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.GP.md)
+  [`log_pdf(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.GP.md)
+  : Evaluate the probability mass function of a GP distribution
+- [`quantile(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.GP.md)
+  : Determine quantiles of a GP distribution
+- [`random(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.GP.md)
+  : Draw a random sample from a GP distribution
+- [`support(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.GP.md)
+  : Return the support of the GP distribution
+
+## Gamma distribution
+
+- [`Gamma()`](https://zeileis.github.io/distributions3/dev/reference/Gamma.md)
+  : Create a Gamma distribution
+- [`cdf(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Gamma.md)
+  : Evaluate the cumulative distribution function of a Gamma
+  distribution
+- [`fit_mle(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Gamma.md)
+  : Fit a Gamma distribution to data
+- [`pdf(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Gamma.md)
+  [`log_pdf(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Gamma.md)
+  : Evaluate the probability mass function of a Gamma distribution
+- [`quantile(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Gamma.md)
+  : Determine quantiles of a Gamma distribution
+- [`random(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Gamma.md)
+  : Draw a random sample from a Gamma distribution
+- [`suff_stat(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Gamma.md)
+  : Compute the sufficient statistics for a Gamma distribution from data
+- [`support(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Gamma.md)
+  : Return the support of the Gamma distribution
+
+## Geometric distribution
+
+- [`Geometric()`](https://zeileis.github.io/distributions3/dev/reference/Geometric.md)
+  : Create a Geometric distribution
+- [`cdf(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Geometric.md)
+  : Evaluate the cumulative distribution function of a Geometric
+  distribution
+- [`fit_mle(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Geometric.md)
+  : Fit a Geometric distribution to data
+- [`pdf(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Geometric.md)
+  [`log_pdf(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Geometric.md)
+  : Evaluate the probability mass function of a Geometric distribution
+- [`quantile(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Geometric.md)
+  : Determine quantiles of a Geometric distribution
+- [`random(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Geometric.md)
+  : Draw a random sample from a Geometric distribution
+- [`suff_stat(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Geometric.md)
+  : Compute the sufficient statistics for the Geometric distribution
+  from data
+- [`support(`*`<Geometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Geometric.md)
+  : Return the support of the Geometric distribution
+
+## Gumbel distribution
+
+- [`Gumbel()`](https://zeileis.github.io/distributions3/dev/reference/Gumbel.md)
+  : Create a Gumbel distribution
+- [`cdf(`*`<Gumbel>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Gumbel.md)
+  : Evaluate the cumulative distribution function of a Gumbel
+  distribution
+- [`pdf(`*`<Gumbel>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Gumbel.md)
+  [`log_pdf(`*`<Gumbel>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Gumbel.md)
+  : Evaluate the probability mass function of a Gumbel distribution
+- [`quantile(`*`<Gumbel>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Gumbel.md)
+  : Determine quantiles of a Gumbel distribution
+- [`random(`*`<Gumbel>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Gumbel.md)
+  : Draw a random sample from a Gumbel distribution
+- [`support(`*`<Gumbel>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Gumbel.md)
+  : Return the support of the Gumbel distribution
+
+## Hurdle negative binomial distribution
+
+- [`dhnbinom()`](https://zeileis.github.io/distributions3/dev/reference/hnbinom.md)
+  [`phnbinom()`](https://zeileis.github.io/distributions3/dev/reference/hnbinom.md)
+  [`qhnbinom()`](https://zeileis.github.io/distributions3/dev/reference/hnbinom.md)
+  [`rhnbinom()`](https://zeileis.github.io/distributions3/dev/reference/hnbinom.md)
+  : The hurdle negative binomial distribution
+- [`HurdleNegativeBinomial()`](https://zeileis.github.io/distributions3/dev/reference/HurdleNegativeBinomial.md)
+  : Create a hurdle negative binomial distribution
+- [`cdf(`*`<HurdleNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.HurdleNegativeBinomial.md)
+  : Evaluate the cumulative distribution function of a hurdle negative
+  binomial distribution
+- [`pdf(`*`<HurdleNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.HurdleNegativeBinomial.md)
+  [`log_pdf(`*`<HurdleNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.HurdleNegativeBinomial.md)
+  : Evaluate the probability mass function of a hurdle negative binomial
+  distribution
+- [`quantile(`*`<HurdleNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.HurdleNegativeBinomial.md)
+  : Determine quantiles of a hurdle negative binomial distribution
+- [`random(`*`<HurdleNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.HurdleNegativeBinomial.md)
+  : Draw a random sample from a hurdle negative binomial distribution
+- [`support(`*`<HurdleNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.HurdleNegativeBinomial.md)
+  : Return the support of the hurdle negative binomial distribution
+
+## Hurdle Poisson distribution
+
+- [`dhpois()`](https://zeileis.github.io/distributions3/dev/reference/hpois.md)
+  [`phpois()`](https://zeileis.github.io/distributions3/dev/reference/hpois.md)
+  [`qhpois()`](https://zeileis.github.io/distributions3/dev/reference/hpois.md)
+  [`rhpois()`](https://zeileis.github.io/distributions3/dev/reference/hpois.md)
+  : The hurdle Poisson distribution
+- [`HurdlePoisson()`](https://zeileis.github.io/distributions3/dev/reference/HurdlePoisson.md)
+  : Create a hurdle Poisson distribution
+- [`cdf(`*`<HurdlePoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.HurdlePoisson.md)
+  : Evaluate the cumulative distribution function of a hurdle Poisson
+  distribution
+- [`pdf(`*`<HurdlePoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.HurdlePoisson.md)
+  [`log_pdf(`*`<HurdlePoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.HurdlePoisson.md)
+  : Evaluate the probability mass function of a hurdle Poisson
+  distribution
+- [`quantile(`*`<HurdlePoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.HurdlePoisson.md)
+  : Determine quantiles of a hurdle Poisson distribution
+- [`random(`*`<HurdlePoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.HurdlePoisson.md)
+  : Draw a random sample from a hurdle Poisson distribution
+- [`support(`*`<HurdlePoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.HurdlePoisson.md)
+  : Return the support of the hurdle Poisson distribution
+
+## Hypergeometric distribution
+
+- [`HyperGeometric()`](https://zeileis.github.io/distributions3/dev/reference/HyperGeometric.md)
+  : Create a HyperGeometric distribution
+- [`cdf(`*`<HyperGeometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.HyperGeometric.md)
+  : Evaluate the cumulative distribution function of a HyperGeometric
+  distribution
+- [`pdf(`*`<HyperGeometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.HyperGeometric.md)
+  [`log_pdf(`*`<HyperGeometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.HyperGeometric.md)
+  : Evaluate the probability mass function of a HyperGeometric
+  distribution
+- [`quantile(`*`<HyperGeometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.HyperGeometric.md)
+  : Determine quantiles of a HyperGeometric distribution
+- [`random(`*`<HyperGeometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.HyperGeometric.md)
+  : Draw a random sample from a HyperGeometric distribution
+- [`support(`*`<HyperGeometric>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.HyperGeometric.md)
+  : Return the support of the HyperGeometric distribution
+
+## Log-normal distribution
+
+- [`LogNormal()`](https://zeileis.github.io/distributions3/dev/reference/LogNormal.md)
+  : Create a LogNormal distribution
+- [`cdf(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.LogNormal.md)
+  : Evaluate the cumulative distribution function of a LogNormal
+  distribution
+- [`fit_mle(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.LogNormal.md)
+  : Fit a Log Normal distribution to data
+- [`pdf(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.LogNormal.md)
+  [`log_pdf(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.LogNormal.md)
+  : Evaluate the probability mass function of a LogNormal distribution
+- [`quantile(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.LogNormal.md)
+  : Determine quantiles of a LogNormal distribution
+- [`random(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.LogNormal.md)
+  : Draw a random sample from a LogNormal distribution
+- [`suff_stat(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.LogNormal.md)
+  : Compute the sufficient statistics for a Log-normal distribution from
+  data
+- [`support(`*`<LogNormal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.LogNormal.md)
+  : Return the support of the LogNormal distribution
+
+## Logistic distribution
+
+- [`Logistic()`](https://zeileis.github.io/distributions3/dev/reference/Logistic.md)
+  : Create a Logistic distribution
+- [`cdf(`*`<Logistic>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Logistic.md)
+  : Evaluate the cumulative distribution function of a Logistic
+  distribution
+- [`pdf(`*`<Logistic>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Logistic.md)
+  [`log_pdf(`*`<Logistic>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Logistic.md)
+  : Evaluate the probability mass function of a Logistic distribution
+- [`quantile(`*`<Logistic>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Logistic.md)
+  : Determine quantiles of a Logistic distribution
+- [`random(`*`<Logistic>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Logistic.md)
+  : Draw a random sample from a Logistic distribution
+- [`support(`*`<Logistic>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Logistic.md)
+  : Return the support of the Logistic distribution
+
+## Multinomial distribution
+
+- [`Multinomial()`](https://zeileis.github.io/distributions3/dev/reference/Multinomial.md)
+  : Create a Multinomial distribution
+- [`pdf(`*`<Multinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Multinomial.md)
+  [`log_pdf(`*`<Multinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Multinomial.md)
+  : Evaluate the probability mass function of a Multinomial distribution
+- [`random(`*`<Multinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Multinomial.md)
+  : Draw a random sample from a Multinomial distribution
+
+## Negative binomial distribution
+
+- [`NegativeBinomial()`](https://zeileis.github.io/distributions3/dev/reference/NegativeBinomial.md)
+  : Create a negative binomial distribution
+- [`cdf(`*`<NegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.NegativeBinomial.md)
+  : Evaluate the cumulative distribution function of a negative binomial
+  distribution
+- [`pdf(`*`<NegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.NegativeBinomial.md)
+  [`log_pdf(`*`<NegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.NegativeBinomial.md)
+  : Evaluate the probability mass function of a NegativeBinomial
+  distribution
+- [`quantile(`*`<NegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.NegativeBinomial.md)
+  : Determine quantiles of a NegativeBinomial distribution
+- [`random(`*`<NegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.NegativeBinomial.md)
+  : Draw a random sample from a negative binomial distribution
+- [`support(`*`<NegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.NegativeBinomial.md)
+  : Return the support of the NegativeBinomial distribution
+
+## Normal distribution
+
+- [`Normal()`](https://zeileis.github.io/distributions3/dev/reference/Normal.md)
+  : Create a Normal distribution
+- [`cdf(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Normal.md)
+  : Evaluate the cumulative distribution function of a Normal
+  distribution
+- [`fit_mle(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Normal.md)
+  : Fit a Normal distribution to data
+- [`pdf(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Normal.md)
+  [`log_pdf(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Normal.md)
+  : Evaluate the probability mass function of a Normal distribution
+- [`quantile(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Normal.md)
+  : Determine quantiles of a Normal distribution
+- [`random(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Normal.md)
+  : Draw a random sample from a Normal distribution
+- [`suff_stat(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Normal.md)
+  : Compute the sufficient statistics for a Normal distribution from
+  data
+- [`support(`*`<Normal>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Normal.md)
+  : Return the support of the Normal distribution
+
+## Poisson distribution
+
+- [`Poisson()`](https://zeileis.github.io/distributions3/dev/reference/Poisson.md)
+  : Create a Poisson distribution
+- [`cdf(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Poisson.md)
+  : Evaluate the cumulative distribution function of a Poisson
+  distribution
+- [`fit_mle(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/fit_mle.Poisson.md)
+  : Fit an Poisson distribution to data
+- [`pdf(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Poisson.md)
+  [`log_pdf(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Poisson.md)
+  : Evaluate the probability mass function of a Poisson distribution
+- [`quantile(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Poisson.md)
+  : Determine quantiles of a Poisson distribution
+- [`random(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Poisson.md)
+  : Draw a random sample from a Poisson distribution
+- [`suff_stat(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/suff_stat.Poisson.md)
+  : Compute the sufficient statistics of an Poisson distribution from
+  data
+- [`support(`*`<Poisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Poisson.md)
+  : Return the support of the Poisson distribution
+
+## PoissonBinomial distribution
+
+- [`PoissonBinomial()`](https://zeileis.github.io/distributions3/dev/reference/PoissonBinomial.md)
+  : Create a Poisson binomial distribution
+- [`cdf(`*`<PoissonBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.PoissonBinomial.md)
+  : Evaluate the cumulative distribution function of a PoissonBinomial
+  distribution
+- [`pdf(`*`<PoissonBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.PoissonBinomial.md)
+  [`log_pdf(`*`<PoissonBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.PoissonBinomial.md)
+  : Evaluate the probability mass function of a PoissonBinomial
+  distribution
+- [`quantile(`*`<PoissonBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.PoissonBinomial.md)
+  : Determine quantiles of a PoissonBinomial distribution
+- [`random(`*`<PoissonBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.PoissonBinomial.md)
+  : Draw a random sample from a PoissonBinomial distribution
+- [`support(`*`<PoissonBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.PoissonBinomial.md)
+  : Return the support of the PoissonBinomial distribution
+
+## Reversed Weibull distribution
+
+- [`RevWeibull()`](https://zeileis.github.io/distributions3/dev/reference/RevWeibull.md)
+  : Create a reversed Weibull distribution
+- [`cdf(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.RevWeibull.md)
+  : Evaluate the cumulative distribution function of an RevWeibull
+  distribution
+- [`pdf(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.RevWeibull.md)
+  [`log_pdf(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.RevWeibull.md)
+  : Evaluate the probability mass function of an RevWeibull distribution
+- [`quantile(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.RevWeibull.md)
+  : Determine quantiles of a RevWeibull distribution
+- [`random(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.RevWeibull.md)
+  : Draw a random sample from an RevWeibull distribution
+- [`support(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.RevWeibull.md)
+  : Return the support of the RevWeibull distribution
+
+## Student’s T distribution
+
+- [`StudentsT()`](https://zeileis.github.io/distributions3/dev/reference/StudentsT.md)
+  : Create a Student's T distribution
+- [`cdf(`*`<StudentsT>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.StudentsT.md)
+  : Evaluate the cumulative distribution function of a StudentsT
+  distribution
+- [`pdf(`*`<StudentsT>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.StudentsT.md)
+  [`log_pdf(`*`<StudentsT>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.StudentsT.md)
+  : Evaluate the probability mass function of a StudentsT distribution
+- [`quantile(`*`<StudentsT>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.StudentsT.md)
+  : Determine quantiles of a StudentsT distribution
+- [`random(`*`<StudentsT>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.StudentsT.md)
+  : Draw a random sample from a StudentsT distribution
+- [`support(`*`<StudentsT>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.StudentsT.md)
+  : Return the support of the StudentsT distribution
+
+## Tukey distribution
+
+- [`Tukey()`](https://zeileis.github.io/distributions3/dev/reference/Tukey.md)
+  : Create a Tukey distribution
+- [`cdf(`*`<Tukey>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Tukey.md)
+  : Evaluate the cumulative distribution function of a Tukey
+  distribution
+- [`quantile(`*`<Tukey>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Tukey.md)
+  : Determine quantiles of a Tukey distribution
+- [`random(`*`<Tukey>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Tukey.md)
+  : Draw a random sample from a Tukey distribution
+- [`support(`*`<Tukey>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Tukey.md)
+  : Return the support of the Tukey distribution
+
+## Uniform distribution
+
+- [`Uniform()`](https://zeileis.github.io/distributions3/dev/reference/Uniform.md)
+  : Create a Continuous Uniform distribution
+- [`cdf(`*`<Uniform>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Uniform.md)
+  : Evaluate the cumulative distribution function of a continuous
+  Uniform distribution
+- [`pdf(`*`<Uniform>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Uniform.md)
+  [`log_pdf(`*`<Uniform>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Uniform.md)
+  : Evaluate the probability mass function of a continuous Uniform
+  distribution
+- [`quantile(`*`<Uniform>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Uniform.md)
+  : Determine quantiles of a continuous Uniform distribution
+- [`random(`*`<Uniform>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Uniform.md)
+  : Draw a random sample from a continuous Uniform distribution
+- [`support(`*`<Uniform>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Uniform.md)
+  : Return the support of the Uniform distribution
+
+## Weibull distribution
+
+- [`Weibull()`](https://zeileis.github.io/distributions3/dev/reference/Weibull.md)
+  : Create a Weibull distribution
+- [`cdf(`*`<Weibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.Weibull.md)
+  : Evaluate the cumulative distribution function of a Weibull
+  distribution
+- [`pdf(`*`<Weibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Weibull.md)
+  [`log_pdf(`*`<Weibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.Weibull.md)
+  : Evaluate the probability mass function of a Weibull distribution
+- [`quantile(`*`<Weibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.Weibull.md)
+  : Determine quantiles of a Weibull distribution
+- [`random(`*`<Weibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.Weibull.md)
+  : Draw a random sample from a Weibull distribution
+- [`support(`*`<Weibull>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.Weibull.md)
+  : Return the support of the Weibull distribution
+
+## Zero-inflated negative binomial distribution
+
+- [`dzinbinom()`](https://zeileis.github.io/distributions3/dev/reference/zinbinom.md)
+  [`pzinbinom()`](https://zeileis.github.io/distributions3/dev/reference/zinbinom.md)
+  [`qzinbinom()`](https://zeileis.github.io/distributions3/dev/reference/zinbinom.md)
+  [`rzinbinom()`](https://zeileis.github.io/distributions3/dev/reference/zinbinom.md)
+  : The zero-inflated negative binomial distribution
+- [`ZINegativeBinomial()`](https://zeileis.github.io/distributions3/dev/reference/ZINegativeBinomial.md)
+  : Create a zero-inflated negative binomial distribution
+- [`cdf(`*`<ZINegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.ZINegativeBinomial.md)
+  : Evaluate the cumulative distribution function of a zero-inflated
+  negative binomial distribution
+- [`pdf(`*`<ZINegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZINegativeBinomial.md)
+  [`log_pdf(`*`<ZINegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZINegativeBinomial.md)
+  : Evaluate the probability mass function of a zero-inflated negative
+  binomial distribution
+- [`quantile(`*`<ZINegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.ZINegativeBinomial.md)
+  : Determine quantiles of a zero-inflated negative binomial
+  distribution
+- [`random(`*`<ZINegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.ZINegativeBinomial.md)
+  : Draw a random sample from a zero-inflated negative binomial
+  distribution
+- [`support(`*`<ZINegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.ZINegativeBinomial.md)
+  : Return the support of the zero-inflated negative binomial
+  distribution
+
+## Zero-inflated Poisson distribution
+
+- [`dzipois()`](https://zeileis.github.io/distributions3/dev/reference/zipois.md)
+  [`pzipois()`](https://zeileis.github.io/distributions3/dev/reference/zipois.md)
+  [`qzipois()`](https://zeileis.github.io/distributions3/dev/reference/zipois.md)
+  [`rzipois()`](https://zeileis.github.io/distributions3/dev/reference/zipois.md)
+  : The zero-inflated Poisson distribution
+- [`ZIPoisson()`](https://zeileis.github.io/distributions3/dev/reference/ZIPoisson.md)
+  : Create a zero-inflated Poisson distribution
+- [`cdf(`*`<ZIPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.ZIPoisson.md)
+  : Evaluate the cumulative distribution function of a zero-inflated
+  Poisson distribution
+- [`pdf(`*`<ZIPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZIPoisson.md)
+  [`log_pdf(`*`<ZIPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZIPoisson.md)
+  : Evaluate the probability mass function of a zero-inflated Poisson
+  distribution
+- [`quantile(`*`<ZIPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.ZIPoisson.md)
+  : Determine quantiles of a zero-inflated Poisson distribution
+- [`random(`*`<ZIPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.ZIPoisson.md)
+  : Draw a random sample from a zero-inflated Poisson distribution
+- [`support(`*`<ZIPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.ZIPoisson.md)
+  : Return the support of the zero-inflated Poisson distribution
+
+## Zero-truncated negative binomial distribution
+
+- [`dztnbinom()`](https://zeileis.github.io/distributions3/dev/reference/ztnbinom.md)
+  [`pztnbinom()`](https://zeileis.github.io/distributions3/dev/reference/ztnbinom.md)
+  [`qztnbinom()`](https://zeileis.github.io/distributions3/dev/reference/ztnbinom.md)
+  [`rztnbinom()`](https://zeileis.github.io/distributions3/dev/reference/ztnbinom.md)
+  : The zero-truncated negative binomial distribution
+- [`ZTNegativeBinomial()`](https://zeileis.github.io/distributions3/dev/reference/ZTNegativeBinomial.md)
+  : Create a zero-truncated negative binomial distribution
+- [`cdf(`*`<ZTNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.ZTNegativeBinomial.md)
+  : Evaluate the cumulative distribution function of a zero-truncated
+  negative binomial distribution
+- [`pdf(`*`<ZTNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZTNegativeBinomial.md)
+  [`log_pdf(`*`<ZTNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZTNegativeBinomial.md)
+  : Evaluate the probability mass function of a zero-truncated negative
+  binomial distribution
+- [`quantile(`*`<ZTNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.ZTNegativeBinomial.md)
+  : Determine quantiles of a zero-truncated negative binomial
+  distribution
+- [`random(`*`<ZTNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.ZTNegativeBinomial.md)
+  : Draw a random sample from a zero-truncated negative binomial
+  distribution
+- [`support(`*`<ZTNegativeBinomial>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.ZTNegativeBinomial.md)
+  : Return the support of the zero-truncated negative binomial
+  distribution
+
+## Zero-truncated Poisson distribution
+
+- [`dztpois()`](https://zeileis.github.io/distributions3/dev/reference/ztpois.md)
+  [`pztpois()`](https://zeileis.github.io/distributions3/dev/reference/ztpois.md)
+  [`qztpois()`](https://zeileis.github.io/distributions3/dev/reference/ztpois.md)
+  [`rztpois()`](https://zeileis.github.io/distributions3/dev/reference/ztpois.md)
+  : The zero-truncated Poisson distribution
+- [`ZTPoisson()`](https://zeileis.github.io/distributions3/dev/reference/ZTPoisson.md)
+  : Create a zero-truncated Poisson distribution
+- [`cdf(`*`<ZTPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/cdf.ZTPoisson.md)
+  : Evaluate the cumulative distribution function of a zero-truncated
+  Poisson distribution
+- [`pdf(`*`<ZTPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZTPoisson.md)
+  [`log_pdf(`*`<ZTPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/pdf.ZTPoisson.md)
+  : Evaluate the probability mass function of a zero-truncated Poisson
+  distribution
+- [`quantile(`*`<ZTPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/quantile.ZTPoisson.md)
+  : Determine quantiles of a zero-truncated Poisson distribution
+- [`random(`*`<ZTPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/random.ZTPoisson.md)
+  : Draw a random sample from a zero-truncated Poisson distribution
+- [`support(`*`<ZTPoisson>`*`)`](https://zeileis.github.io/distributions3/dev/reference/support.ZTPoisson.md)
+  : Return the support of the zero-truncated Poisson distribution
+
+# Articles
+
+### All vignettes
+
+- [Intro to hypothesis
+  testing](https://zeileis.github.io/distributions3/dev/articles/intro-to-hypothesis-testing.md):
+- [One sample sign
+  tests](https://zeileis.github.io/distributions3/dev/articles/one-sample-sign-tests.md):
+- [T confidence interval for a
+  mean](https://zeileis.github.io/distributions3/dev/articles/one-sample-t-confidence-interval.md):
+- [One sample
+  T-tests](https://zeileis.github.io/distributions3/dev/articles/one-sample-t-test.md):
+- [Z confidence interval for a
+  mean](https://zeileis.github.io/distributions3/dev/articles/one-sample-z-confidence-interval.md):
+- [One sample Z-tests for a
+  proportion](https://zeileis.github.io/distributions3/dev/articles/one-sample-z-test-for-proportion.md):
+- [One sample
+  Z-tests](https://zeileis.github.io/distributions3/dev/articles/one-sample-z-test.md):
+- [Paired
+  tests](https://zeileis.github.io/distributions3/dev/articles/paired-tests.md):
+- [The Poisson distribution: From basic probability theory to regression
+  models](https://zeileis.github.io/distributions3/dev/articles/poisson.md):
+- [Two sample
+  Z-tests](https://zeileis.github.io/distributions3/dev/articles/two-sample-z-test.md):

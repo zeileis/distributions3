@@ -13,8 +13,8 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="The Poisson distribution: From basic probability theory to regression models">
 <meta name="robots" content="noindex">
@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">distributions3</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.2.3.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.2.4.99</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/alexpghayes/distributions3/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/zeileis/distributions3/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -75,7 +75,7 @@
       <h1>The Poisson distribution: From basic probability theory to regression models</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/alexpghayes/distributions3/blob/main/vignettes/poisson.Rmd" class="external-link"><code>vignettes/poisson.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/zeileis/distributions3/blob/main/vignettes/poisson.Rmd" class="external-link"><code>vignettes/poisson.Rmd</code></a></small>
       <div class="d-none name"><code>poisson.Rmd</code></div>
     </div>
 
@@ -115,7 +115,7 @@ in <code>distributions3</code>: print; extract mean and variance;
 evaluate density, cumulative distribution, or quantile function; or
 simulate random samples.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/alexpghayes/distributions3" class="external-link">"distributions3"</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/zeileis/distributions3" class="external-link">"distributions3"</a></span><span class="op">)</span></span>
 <span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Poisson.html">Poisson</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">Y</span><span class="op">)</span></span>
 <span><span class="co">## [1] "Poisson(lambda = 1.5)"</span></span>
@@ -142,7 +142,7 @@ the parameter is <span class="math inline">\(\lambda = 0.5, 2, 5,
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poisson.html">Poisson</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>,   main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">lambda</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span>,   xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poisson.html">Poisson</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span>,   main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">lambda</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span>,   xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poisson.html">Poisson</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>,  main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">lambda</span> <span class="op">==</span> <span class="fl">10</span><span class="op">)</span>,  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="poisson_files/figure-html/unnamed-chunk-3-1.png" width="100%"></p>
+<p><img src="poisson_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="100%"></p>
 <p>In this vignette we will illustrate how this infrastructure can be
 leveraged to obtain predicted probabilities for the number of goals in
 soccer matches from the 2018 FIFA World Cup.</p>
@@ -241,9 +241,9 @@ consider that there are stronger and weaker teams in the tournament.</p>
 <p>To account for different expected performances from the teams in the
 2018 FIFA World Cup, the <code>FIFA2018</code> data provides an
 estimated <code>logability</code> for each team. These have been
-estimated by <span class="citation">Zeileis, Leitner, and Hornik (<a href="#ref-Zeileis+Leitner+Hornik:2018">2018</a>)</span> prior to the
+estimated by <span class="citation">Zeileis et al. (<a href="#ref-Zeileis+Leitner+Hornik:2018">2018</a>)</span> prior to the
 start of the tournament (2018-05-20) based on quoted odds from 26 online
-bookmakers using the bookmaker consensus model of <span class="citation">Leitner, Zeileis, and Hornik (<a href="#ref-Leitner+Zeileis+Hornik:2010">2010</a>)</span>. The
+bookmakers using the bookmaker consensus model of <span class="citation">Leitner et al. (<a href="#ref-Leitner+Zeileis+Hornik:2010">2010</a>)</span>. The
 <code>difference</code> in <code>logability</code> between a team and
 its opponent is a useful predictor for the number of <code>goals</code>
 scored.</p>
@@ -425,7 +425,7 @@ zero.</p>
 <span>  xlab <span class="op">=</span> <span class="st">"Goals"</span>, ylab <span class="op">=</span> <span class="st">"sqrt(Frequency)"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">bp</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">expected</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"o"</span>, pch <span class="op">=</span> <span class="fl">19</span>, lwd <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="poisson_files/figure-html/unnamed-chunk-18-1.png" width="60%"></p>
+<p><img src="poisson_files/figure-html/unnamed-chunk-18-1.png" class="r-plt" alt="" width="60%"></p>
 <p>Finally, we want to point out that while the log-abilities (and thus
 their differences) had been obtained based on bookmakers odds prior to
 the tournament, the calibration of the intercept and slope coefficients
@@ -492,12 +492,11 @@ model.</p>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Groll+Hvattum+Ley:2021" class="csl-entry">
-Groll, Andreas, Lars Magnus Hvattum, Christophe Ley, Franziska Popp,
-Gunther Schauberger, Hans Van Eetvelde, and Achim Zeileis. 2021.
-<span>“Hybrid Machine Learning Forecasts for the <span>UEFA</span>
-<span>EURO</span> 2020.”</span> arXiv 2106.05799. arXiv.org E-Print
+Groll, Andreas, Lars Magnus Hvattum, Christophe Ley, et al. 2021.
+<em>Hybrid Machine Learning Forecasts for the <span>UEFA</span>
+<span>EURO</span> 2020</em>. arXiv 2106.05799. arXiv.org E-Print
 Archive. <a href="https://arxiv.org/abs/2106.05799" class="external-link">https://arxiv.org/abs/2106.05799</a>.
 </div>
 <div id="ref-Groll+Ley+Schauberger:2019" class="csl-entry">
@@ -518,16 +517,15 @@ Comparison for the <span>EURO</span> 2008.”</span> <em>International
 Journal of Forecasting</em> 26 (3): 471–81. <a href="https://doi.org/10.1016/j.ijforecast.2009.10.001" class="external-link">https://doi.org/10.1016/j.ijforecast.2009.10.001</a>.
 </div>
 <div id="ref-Wiki+Poisson" class="csl-entry">
-Wikipedia. 2022. <span>“<span>P</span>oisson Distribution —
-<span>W</span>ikipedia<span>,</span> the Free Encyclopedia.”</span> URL
-<a href="https://en.wikipedia.org/wiki/Poisson_distribution" class="external-link uri">https://en.wikipedia.org/wiki/Poisson_distribution</a>,
+Wikipedia. 2022. <em><span>P</span>oisson Distribution —
+<span>W</span>ikipedia<span>,</span> the Free Encyclopedia</em>. URL <a href="https://en.wikipedia.org/wiki/Poisson_distribution" class="external-link uri">https://en.wikipedia.org/wiki/Poisson_distribution</a>,
 accessed 2022-02-21.
 </div>
 <div id="ref-Zeileis+Leitner+Hornik:2018" class="csl-entry">
 Zeileis, Achim, Christoph Leitner, and Kurt Hornik. 2018.
-<span>“Probabilistic Forecasts for the 2018 <span>FIFA</span>
+<em>Probabilistic Forecasts for the 2018 <span>FIFA</span>
 <span>W</span>orld <span>C</span>up Based on the Bookmaker Consensus
-Model.”</span> Working Paper 2018-09. Working Papers in Economics;
+Model</em>. Working Paper Nos. 2018-09. Working Papers in Economics;
 Statistics, Research Platform Empirical; Experimental Economics,
 Universität Innsbruck. <a href="https://EconPapers.RePEc.org/RePEc:inn:wpaper:2018-09" class="external-link">https://EconPapers.RePEc.org/RePEc:inn:wpaper:2018-09</a>.
 </div>
@@ -540,11 +538,11 @@ Universität Innsbruck. <a href="https://EconPapers.RePEc.org/RePEc:inn:wpaper:2
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Alex Hayes, Ralph Moller-Trane, Daniel Jordan, Paul Northrop, Moritz N. Lang, Achim Zeileis.</p>
+  <p>Developed by Alex Hayes, Ralph Moller-Trane, Daniel Jordan, Paul Northrop, Moritz N. Lang, Reto Stauffer, Achim Zeileis.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

@@ -1,0 +1,75 @@
+# Paired tests
+
+This vignette will make most sense if you are familiar with one sample
+and two sample tests. If these are new to you, have a look at
+[`vignette("one-sample-z-test")`](https://zeileis.github.io/distributions3/dev/articles/one-sample-z-test.md)
+and
+[`vignette("two-sample-z-test")`](https://zeileis.github.io/distributions3/dev/articles/two-sample-z-test.md).
+
+## Problem setup
+
+Suppose we’re interested in people’s happiness before and after
+discovering the \#rstats Twitter community. We survey them get before
+and after happiness scores, using a happiness survey that goes from 0 to
+100.
+
+The data looks like this
+
+| person | before | after |
+|-------:|-------:|------:|
+|      1 |     88 |    80 |
+|      2 |     73 |    78 |
+|      3 |     35 |    56 |
+|      4 |     21 |    28 |
+|      5 |     28 |    26 |
+|      6 |     56 |    50 |
+|      7 |     50 |    39 |
+|      8 |     73 |    67 |
+|      9 |     93 |    98 |
+|     10 |     55 |    63 |
+
+## Working with the differences
+
+Crucially, since the before measurement and the after measurement are on
+the *same person*, we can subtract the before measurement from the after
+measurement and do a one sample test on these differences.
+
+``` r
+
+before <- c(88, 73, 35, 21, 28, 56, 50, 73, 93, 55)
+after <- c(80, 78, 56, 28, 26, 50, 39, 67, 98, 63) 
+
+diff <- after - before
+diff
+#>  [1]  -8   5  21   7  -2  -6 -11  -6   5   8
+```
+
+## Paired tests versus two sample tests
+
+One key question is: when should we use paired instead of two sample
+tests? Students typically struggle with this, and it’s worth spending
+some time thinking about this. In abstract terms, we should use paired
+tests when we have *two observations on the same experimental unit* and
+two sample tests when we have *two observations on different
+experimental units*.
+
+The difficulty here is that it takes some time to become comfortable
+with experimental units. I recommend memorizing
+
+Some examples where paired tests are appropriate:
+
+- left/right shoe
+
+Some examples where you should use a two sample test:
+
+Also note that we
+
+two sample tests, and when should we use
+
+why pair - power pair if you can memorize and analogize
+
+## Paired Z-test
+
+## Paired T-test
+
+## Paired sign-test
