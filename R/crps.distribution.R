@@ -241,7 +241,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   xrange <- range(support(y), na.rm = TRUE)
   if(!is.finite(xrange[1L])) xrange[1L] <- min(quantile(y, 0.0001), na.rm = TRUE)
   if(!is.finite(xrange[2L])) xrange[2L] <- max(quantile(y, 0.9999), na.rm = TRUE)
-  discrete <- all(requireNamespace("scoringRules", quietly = TRUE)is_discrete(y))
+  discrete <- all(is_discrete(y))
   if(is.null(method)) {
     method <- if(discrete && (diff(xrange) <= gridsize)) "cdf" else "quantile"
   }
@@ -388,7 +388,7 @@ crps_suffix <- function(x, digits = pmax(3L, getOption("digits") - 3L)) {
 crps.Beta <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_beta(y = at, shape1 = d$alpha, shape2 = d$beta)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -396,7 +396,7 @@ crps.Beta <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Bernoulli <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = 1)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -404,7 +404,7 @@ crps.Bernoulli <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Binomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = d$size)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -412,7 +412,7 @@ crps.Binomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Erlang <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$k, rate = d$lambda)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -420,7 +420,7 @@ crps.Erlang <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Exponential <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_exp(y = at, rate = d$rate)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -428,7 +428,7 @@ crps.Exponential <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Gamma <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$shape, rate = d$rate)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -436,7 +436,7 @@ crps.Gamma <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.GEV <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gev(y = at, location = d$mu, scale = d$sigma, shape = d$xi)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -444,7 +444,7 @@ crps.GEV <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Geometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gev(y = at, prob = d$p, size = 1)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -452,7 +452,7 @@ crps.Geometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Gumbel <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gev(y = at, location = d$mu, scale = d$sigma, shape = 0)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -460,7 +460,7 @@ crps.Gumbel <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.HyperGeometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_hyper(y = at, m = d$m, n = d$n, k = d$k)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -468,7 +468,7 @@ crps.HyperGeometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Logistic <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_logis(y = at, location = d$location, scale = d$scale)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -476,7 +476,7 @@ crps.Logistic <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.LogNormal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_lnorm(y = at, meanlog = d$log_mu, sdlog = d$log_sigma)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -488,7 +488,7 @@ crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   } else {
     function(at, d) scoringRules::crps_nbinom(y = at, p = d$p, size = d$size)
   }
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -496,7 +496,7 @@ crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Normal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_norm(y = at, mean = d$mu, sd = d$sigma)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -504,7 +504,7 @@ crps.Normal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Poisson <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_pois(y = at, lambda = d$lambda)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -512,7 +512,7 @@ crps.Poisson <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.StudentsT <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_t(y = at, df = d$df)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -520,7 +520,7 @@ crps.StudentsT <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Uniform <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_unif(y = at, min = d$a, max = d$b)
-  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -557,7 +557,7 @@ crps.GAMLSS <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
     NextMethod()
   } else {
     ## use apply_dpqr() with scoringRules::crps_*() function
-    requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+    apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
   }
 }
 
@@ -585,6 +585,6 @@ crps.BAMLSS <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
     NextMethod()
   } else {
     ## use apply_dpqr() with scoringRules::crps_*() function
-    requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+    apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
   }
 }
