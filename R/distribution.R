@@ -2,9 +2,9 @@
 #' Methods for numerically approximating distribution functions
 #'
 #' S3 methods for distribution objects used if certain (analytic)
-#' distribution functions are not available. Allows to use the full
-#' \pkg{distributions3} features even if not all distribution functions
-#' are available. See section 'Details' for more information.
+#' distribution functions are not available. Allows to use all
+#' \pkg{distributions3} methods even if there are no dedicated methods
+#' for a certain distribution. See section 'Details' for more information.
 #'
 #' @param d An object of class `distribution`.
 #' @param x Either a numeric vector of probabilities to be evaluated (if
@@ -29,29 +29,24 @@
 #' @param ... Currently ignored.
 #'
 #' @details
-#' For distributions not providing all 'required' functions or not (yet)
-#' offering analytical solutions for all expected functions, such as
-#' the probability density function (PDF), the cumulative distribution
-#' function (CDF), quantile function, or random number generation, the
-#' `distribution` class tries to fill the gap by providing functions
-#' which numerically approximate them.
+#' For distribution classes that do not (or not yet) provide all S3 methods for
+#' the usual generic functions (`pdf`, `cdf`, `quantile`, `random`), a fallback
+#' method for the general `distribution` class is provided. This fallback
+#' method numerically approximates 
+#' the probability density function (PDF), cumulative distribution
+#' function (CDF), quantile function, or random number generation, 
+#' provided that at least some of the methods are available (see below).
 #'
-#' These numerical approximations may not always be the most efficient
-#' or may lack precision, but allow for fast prototyping and/or using the
-#' full suite of \pkg{distributions3} features even if some analytical functions
-#' are not (yet) implemented or an analytical solution is not available.
-#'
-#' S3 methods for `is_discrete` and `support` are mandatory! Besides
-#' these two (fairly simple) methods, the following minimal requirements
-#' for certain types of distributions are supported/implemented:
+#' S3 methods for `is_discrete` and `support` are mandatory. Besides
+#' these two (fairly simple) methods, the following methods are required.
 #'
 #' *Continuous distributions:*
-#' - provide (at least) a `cdf.*` method,
-#' - or provide (at least) a `pdf.*` and `quantile.*` method.
+#' - provide a `cdf.*` method,
+#' - or a `pdf.*` and `quantile.*` method.
 #'
 #' *Discrete distributions:*
-#' - provide (at least) a `pdf.*` method,
-#' - or (at least) a `cdf.*` method.
+#' - provide a `pdf.*` method,
+#' - or a `cdf.*` method.
 #'
 #' Any additional S3 method provided on top of the minimal requirements will
 #' always be leveraged if available (i.e., the more dedicated/analytical
@@ -1083,9 +1078,9 @@ random.distribution <- function(x, n = 1L, drop = TRUE, ...) {
 
 #' Methods for numerically calculating central moments of probability distributions
 #'
-#' Several S3 methods used as fallback for calculating/approximating
+#' Several fallback S3 methods for numerically calculating/approximating
 #' central moments (mean, variance, skewness, kurtosis) if no dedicated S3 method
-#' for that distribution exists.
+#' for a certain distribution exists.
 #'
 #' @param x An object of class `distribution`.
 #' @param ... Forwarded to internal function [distribution_calculate_moments()] when

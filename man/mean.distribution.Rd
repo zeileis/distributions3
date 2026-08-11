@@ -27,8 +27,9 @@ A (potentially named) numeric vector of length \code{length(x)} with
 the requested central moment.
 }
 \description{
-A series of S3 methods used as fallback for calculating/approximating
-distributional properties if no dedicated S3 method exists.
+Several fallback S3 methods for numerically calculating/approximating
+central moments (mean, variance, skewness, kurtosis) if no dedicated S3 method
+for a certain distribution exists.
 }
 \examples{
 ## For demonstration using the Normal distribution, comparing the

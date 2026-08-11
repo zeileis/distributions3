@@ -78,37 +78,32 @@ an error will be thrown.}
 }
 \description{
 S3 methods for distribution objects used if certain (analytic)
-distribution functions are not available. Allows to use the full
-\pkg{distributions3} features even if not all distribution functions
-are available. See section 'Details' for more information.
+distribution functions are not available. Allows to use all
+\pkg{distributions3} methods even if there are no dedicated methods
+for a certain distribution. See section 'Details' for more information.
 }
 \details{
-For distributions not providing all 'required' functions or not (yet)
-offering analytical solutions for all expected functions, such as
-the probability density function (PDF), the cumulative distribution
-function (CDF), quantile function, or random number generation, the
-\code{distribution} class tries to fill the gap by providing functions
-which numerically approximate them.
+For distribution classes that do not (or not yet) provide all S3 methods for
+the usual generic functions (\code{pdf}, \code{cdf}, \code{quantile}, \code{random}), a fallback
+method for the general \code{distribution} class is provided. This fallback
+method numerically approximates
+the probability density function (PDF), cumulative distribution
+function (CDF), quantile function, or random number generation,
+provided that at least some of the methods are available (see below).
 
-These numerical approximations may not always be the most efficient
-or may lack precision, but allow for fast prototyping and/or using the
-full suite of \pkg{distributions3} features even if some analytical functions
-are not (yet) implemented or an analytical solution is not available.
-
-S3 methods for \code{is_discrete} and \code{support} are mandatory! Besides
-these two (fairly simple) methods, the following minimal requirements
-for certain types of distributions are supported/implemented:
+S3 methods for \code{is_discrete} and \code{support} are mandatory. Besides
+these two (fairly simple) methods, the following methods are required.
 
 \emph{Continuous distributions:}
 \itemize{
-\item provide (at least) a \verb{cdf.*} method,
-\item or provide (at least) a \verb{pdf.*} and \verb{quantile.*} method.
+\item provide a \verb{cdf.*} method,
+\item or a \verb{pdf.*} and \verb{quantile.*} method.
 }
 
 \emph{Discrete distributions:}
 \itemize{
-\item provide (at least) a \verb{pdf.*} method,
-\item or (at least) a \verb{cdf.*} method.
+\item provide a \verb{pdf.*} method,
+\item or a \verb{cdf.*} method.
 }
 
 Any additional S3 method provided on top of the minimal requirements will
@@ -140,7 +135,7 @@ registerS3method("support", "MyNormal1",
 ## mean c(1, 2, 3) and standard deviation c(1, 2.5, 5).
 ## mn3: Based on MyNormal1 where only cdf, id_discrete, and support
 ##      are defined.
-## n3:  Analytic solution (distributions3::Normal()) with analytic functions
+## n3:  Analytic solution (Normal()) with analytic functions
 ##      for all distribution functions (pdf, cdf, quantile) as well as for
 ##      the first four central moments (mean, variance, skewness, kurtosis)
 mn3 <- MyNormal1(mu = 1:3, sigma = c(1, 2.5, 5))
@@ -271,7 +266,7 @@ registerS3method("support", "MyPoisson1",
 ## parameter lambda = c(1, 2.5, 5).
 ## mp3: Based on MyPoisson1 where only pdf, id_discrete, and support
 ##      are defined.
-## p3:  Analytic solution (distributions3::Poisson()) with analytic
+## p3:  Analytic solution (Poisson()) with analytic
 ##      functions for all distribution functions (pdf, cdf, quantile)
 ##      as well as for the first four central moments (mean,
 ##      variance, skewness, kurtosis)
