@@ -473,7 +473,7 @@ crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
     function(at, d) scoringRules::crps_nbinom(y = at, p = d$p, size = d$size)
   }
   s <- try(apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise), silent = TRUE)
-  if (inherits(s, "try-error")) NextMethod()
+  if (inherits(s, "try-error")) s <- NextMethod()
   return(s)
 }
 
