@@ -185,7 +185,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   anam <- if ((k == 1L || n == 1L) && drop) {
     NULL
   } else {
-    crps_suffix(x)
+    make_suffix(x)
   }
 
   ## handle different types of "x"
@@ -251,7 +251,6 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
 
   ## Special approach for objects of class 'Empirical' where all
   ## observations will be used as quantiles to be evaluated.
-  ## FIXME: Move this to crps.Empirical() ??
   if (inherits(y, "Empirical")) {
 
     ## Not elementwise: Same observation(s) 'x' for all distributions 'y'
@@ -368,21 +367,6 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   return(rval)
 }
 
-## essentially a copy of make_suffix() from distributions3 because we haven't
-## exported that helper function, yet
-crps_suffix <- function(x, digits = pmax(3L, getOption("digits") - 3L)) {
-  rval <- format(x, digits = digits, trim = TRUE, drop0trailing = TRUE)
-  nok <- duplicated(rval)
-  while (any(nok) && digits < 10L) {
-    digits <- digits + 1L
-    rval[nok] <- format(x[nok], digits = digits, trim = TRUE, drop0trailing = TRUE)
-    nok <- duplicated(rval)
-  }
-  nok <- duplicated(rval) | duplicated(rval, fromLast = TRUE)
-  if (any(nok)) rval[nok] <- make.unique(rval[nok], sep = "_")
-  return(rval)
-}
-
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Beta
 crps.Beta <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
@@ -482,13 +466,15 @@ crps.LogNormal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps NegativeBinomial
 crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  if (!(requireNamespace("scoringRules", quietly = TRUE) && requireNamespace("hypergeo", quietly = TRUE))) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- if ("mu" %in% names(unclass(y))) {
     function(at, d) scoringRules::crps_nbinom(y = at, mu = d$mu, size = d$size)
   } else {
     function(at, d) scoringRules::crps_nbinom(y = at, p = d$p, size = d$size)
   }
-  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  s <- try(apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise), silent = TRUE)
+  if (inherits(s, "try-error")) NextMethod()
+  return(s)
 }
 
 #' @rdname crps.distribution
