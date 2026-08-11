@@ -83,8 +83,9 @@ HyperGeometric <- function(m, n, k) {
   idx <- which(d$k > d$n + d$m)
   if (length(idx) == 1) {
     stop(
-      glue::glue(
-        "k ({d$k[idx]}) cannot be greater than m + n ({d$m[idx]} + {d$n[idx]} = {(d$m+d$n)[idx]})"
+      sprintf(
+        "k (%s) cannot be greater than m + n (%s + %s = %s)",
+        d$k[idx], d$m[idx], d$n[idx], (d$m+d$n)[idx]
       )
     )
   } else if (length(idx) > 1 & length(idx) <= 3) {
@@ -98,7 +99,7 @@ HyperGeometric <- function(m, n, k) {
       )
     )
   } else if (length(idx) > 3) {
-    stop(glue::glue("no k is allowed to be greater than m + n"))
+    stop("no k is allowed to be greater than m + n")
   }
 
   class(d) <- c("HyperGeometric", "distribution")

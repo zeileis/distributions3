@@ -73,9 +73,9 @@ print.Categorical <- function(x, ...) {
   }
 
   cat(
-    glue(
-      "Categorical distribution\n  outcomes = [{outcomes}]\n  p = [{p}]",
-      .trim = FALSE
+    sprintf(
+      "Categorical distribution\n  outcomes = [%s]\n  p = [%s]",
+      outcomes, p
     ),
     "\n"
   )
