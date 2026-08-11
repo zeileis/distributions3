@@ -157,7 +157,7 @@ test_that("named return values for Gumbel distribution work correctly", {
 suppressPackageStartupMessages(library("scoringRules"))
 test_that("crps method for Gumbel returns correct object", {
   d <- Gumbel(0, c(0.5, 1))
-  crps <- crps(d, 3)
+  suppressWarnings(crps <- crps(d, 3))
   expect_type(crps, "double")
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
