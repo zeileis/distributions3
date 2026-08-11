@@ -241,7 +241,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   xrange <- range(support(y), na.rm = TRUE)
   if(!is.finite(xrange[1L])) xrange[1L] <- min(quantile(y, 0.0001), na.rm = TRUE)
   if(!is.finite(xrange[2L])) xrange[2L] <- max(quantile(y, 0.9999), na.rm = TRUE)
-  discrete <- all(distributions3::is_discrete(y))
+  discrete <- all(requireNamespace("scoringRules", quietly = TRUE)is_discrete(y))
   if(is.null(method)) {
     method <- if(discrete && (diff(xrange) <= gridsize)) "cdf" else "quantile"
   }
@@ -386,141 +386,141 @@ crps_suffix <- function(x, digits = pmax(3L, getOption("digits") - 3L)) {
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Beta
 crps.Beta <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_beta(y = at, shape1 = d$alpha, shape2 = d$beta)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Bernoulli
 crps.Bernoulli <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = 1)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Binomial
 crps.Binomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = d$size)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Erlang
 crps.Erlang <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$k, rate = d$lambda)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Exponential
 crps.Exponential <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_exp(y = at, rate = d$rate)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Gamma
 crps.Gamma <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$shape, rate = d$rate)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps GEV
 crps.GEV <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gev(y = at, location = d$mu, scale = d$sigma, shape = d$xi)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Geometric
 crps.Geometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gev(y = at, prob = d$p, size = 1)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Gumbel
 crps.Gumbel <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_gev(y = at, location = d$mu, scale = d$sigma, shape = 0)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps HyperGeometric
 crps.HyperGeometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_hyper(y = at, m = d$m, n = d$n, k = d$k)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Logistic
 crps.Logistic <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_logis(y = at, location = d$location, scale = d$scale)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps LogNormal
 crps.LogNormal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_lnorm(y = at, meanlog = d$log_mu, sdlog = d$log_sigma)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps NegativeBinomial
 crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!(requireNamespace("scoringRules", quietly = TRUE) && requireNamespace("hypergeo", quietly = TRUE))) NextMethod()
   FUN <- if ("mu" %in% names(unclass(y))) {
     function(at, d) scoringRules::crps_nbinom(y = at, mu = d$mu, size = d$size)
   } else {
     function(at, d) scoringRules::crps_nbinom(y = at, p = d$p, size = d$size)
   }
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Normal
 crps.Normal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_norm(y = at, mean = d$mu, sd = d$sigma)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Poisson
 crps.Poisson <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_pois(y = at, lambda = d$lambda)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps StudentsT
 crps.StudentsT <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_t(y = at, df = d$df)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps Uniform
 crps.Uniform <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  stopifnot(requireNamespace("scoringRules"))
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
   FUN <- function(at, d) scoringRules::crps_unif(y = at, min = d$a, max = d$b)
-  distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+  requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 #' @rdname crps.distribution
@@ -532,7 +532,7 @@ crps.XBetaX <- function(y, x, drop = TRUE, elementwise = NULL, method = "cdf", .
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps GAMLSS
 crps.GAMLSS <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  if(requireNamespace("scoringRules")) {
+  if(requireNamespace("scoringRules", quietly = TRUE)) {
     ## manually match gamlss.dist distribution names with scoringRules, if possible
     f <- attr(y, "family")[1L]
     FUN <- switch(EXPR = f,
@@ -557,14 +557,14 @@ crps.GAMLSS <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
     NextMethod()
   } else {
     ## use apply_dpqr() with scoringRules::crps_*() function
-    distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+    requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
   }
 }
 
 #' @rdname crps.distribution
 #' @exportS3Method scoringRules::crps BAMLSS
 crps.BAMLSS <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
-  if(requireNamespace("scoringRules")) {
+  if(requireNamespace("scoringRules", quietly = TRUE)) {
     ## manually match bamlss family distribution names with scoringRules, if possible
     f <- family(y)$family
     FUN <- switch(EXPR = f,
@@ -585,6 +585,6 @@ crps.BAMLSS <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
     NextMethod()
   } else {
     ## use apply_dpqr() with scoringRules::crps_*() function
-    distributions3::apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+    requireNamespace("scoringRules", quietly = TRUE)apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
   }
 }
