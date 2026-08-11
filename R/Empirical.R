@@ -1,16 +1,16 @@
 
 #' Create an Empirical distribution
 #'
-#' An empirical distribution consists of a random sample `x`.
+#' An empirical distribution based on a random `sample`.
 #'
-#' @param x A numeric vector, list of numeric vectors, matrix,
+#' @param sample A numeric vector, list of numeric vectors, matrix,
 #'        or data.frame (see section 'Details' for more information).
 #'
 #' @return An `Empirical` object.
 #'
 #' @details
 #' The constructor function [Empirical()] allows for a variety of different
-#' objects as main input \code{x}.
+#' objects as main input `sample`.
 #'
 #' * Vector: Assumes that the vector contains a series of observations from one
 #'   empirical distribution.
@@ -26,28 +26,28 @@
 #' Certain types of moments (see [skewness.Empirical()], [kurtosis.Empirical()])
 #' require at least three or four finite observations.
 #'
-#' **Support**: Set of unique observations in `x`.
+#' **Support**: Set of unique observations in the `sample`, denoted \eqn{y} below.
 #'
 #' **Probability mass function (p.m.f.):**
-#' \deqn{f(y) = \frac{1}{n} \sum_{i=1}^{N} (x_i = y)}{f(x) = 1 / N * \sum(x == y)}
+#' \deqn{f(x) = \frac{1}{n} \sum_{i=1}^{N} (y_i = x)}{f(x) = 1 / N * \sum(y == x)}
 #'
 #' **Cummulative distribution function (c.d.f.):**
-#' \deqn{F(y) = \frac{1}{N} \sum_{i=1}^N \mathbf{I}(x_i \leq y)}{F(y) = 1 / N * sum(x <= y)}
+#' \deqn{F(x) = \frac{1}{N} \sum_{i=1}^N \mathbf{I}(y_i \leq x)}{F(x) = 1 / N * sum(y <= x)}
 #'
 #' **Moment generating functions**:
 #'
-#' * Mean/expectation: \deqn{E(x) = \bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
-#' * Variance: \deqn{\text{VAR}(x) = \frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{variance(x) = 1 / (N - 1) * sum((x - mean(x))^2)}
+#' * Mean/expectation: \deqn{\bar{y} = \frac{1}{N} \sum_{i=1}^{N} y_i}{1 / N * sum(y)}
+#' * Variance: \deqn{\frac{1}{N - 1} \sum_{i=1}^{N} (y_i - \bar{y})}{1 / (N - 1) * sum((y - mean(y))^2)}
 #'
 #' Third and fourth central moments are also available via [skewness()] and [kurtosis()]. For both
 #' different types are available as defined below. For details see Joanes and Gill (1998).
 #'
 #' * Skewness:
-#'   * Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
+#'   * Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (y_i - \bar{y})^3}{\sqrt{\big(\sum_{i=1}^N (y_i - \bar{y})^2\big)^3}}}{S1 = sqrt(N) * sum(y - mean(y))^3) / sqrt(sum(y - mean(y))^2)^3}
 #'   * Type 2 (only defined for three or more finite values): \deqn{S_2 = \frac{\sqrt{N \cdot (N - 1)}}{(N - 2)} S_1}{S2 = sqrt(N * (N - 1)) / (N - 2) * S1}
 #'   * Type 3 (default): \deqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} \cdot S_1}{S3 = sqrt((1 - 1 / N)^3) * S1}
 #' * Kurtosis: 
-#'   * Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}{K1 = N * (sum(x - mean(x))^4) / (sum(x - mean(x))^2)^2 - 3}
+#'   * Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (y_i - \bar{y})^4}{\big(\sum_{i=1}^N (y_i - \bar{y})^2\big)^2} - 3}{K1 = N * (sum(y - mean(y))^4) / (sum(y - mean(y))^2)^2 - 3}
 #'   * Type 2 (only defined for four or more finite values): \deqn{K_2 = \frac{((N + 1) \cdot K_1 + 6) \cdot (N - 1)}{(N - 2) \cdot (N - 3)}}{K2 = ((N + 1) * K_1 + 6) * (N - 1)) / ((N - 2) * (N - 3))}
 #'   * Type 3 (default): \deqn{K_3 = \big(1 - \frac{1}{N}\big)^2 \cdot (K_1 + 3) - 3}{K3 = (1 - 1 / N)^2 * (K1 + 3) - 3}
 #'
@@ -136,32 +136,32 @@
 #'
 #' @family Empirical distribution
 #' @export
-Empirical <- function(x) {
+Empirical <- function(sample) {
   stopifnot(requireNamespace("distributions3"))
-  if (is.data.frame(x)) x <- as.matrix(x)
+  if (is.data.frame(sample)) sample <- as.matrix(sample)
   ## If input is given as a list of vectors
-  if (is.list(x) && all(sapply(x, function(x) is.vector(x) && !is.matrix(x)))) {
-    stopifnot("empty input vectors not allowed" = all(sapply(x, length) > 0))
-    n <- max(sapply(x <- lapply(x, as.numeric), length))
-    tmp <- matrix(NA_real_, nrow = length(x), ncol = n,
-                  dimnames = list(names(x), sprintf("o_%d", seq_len(n))))
-    for (i in seq_along(x)) tmp[i, seq_along(x[[i]])] <- x[[i]]
-    x <- tmp; rm(tmp)
+  if (is.list(sample) && all(sapply(sample, function(sample) is.vector(sample) && !is.matrix(sample)))) {
+    stopifnot("empty input vectors not allowed" = all(sapply(sample, length) > 0))
+    n <- max(sapply(sample <- lapply(sample, as.numeric), length))
+    tmp <- matrix(NA_real_, nrow = length(sample), ncol = n,
+                  dimnames = list(names(sample), sprintf("o_%d", seq_len(n))))
+    for (i in seq_along(sample)) tmp[i, seq_along(sample[[i]])] <- sample[[i]]
+    sample <- tmp; rm(tmp)
   ## Input is a vector (dimension NULL)
-  } else if (is.null(dim(x))) {
-    stopifnot("empty input vector not allowed" = length(x) > 0L)
-    x <- matrix(as.numeric(x), nrow = 1, dimnames = list(NULL, sprintf("o_%d", seq_along(x))))
+  } else if (is.null(dim(sample))) {
+    stopifnot("empty input vector not allowed" = length(sample) > 0L)
+    sample <- matrix(as.numeric(sample), nrow = 1, dimnames = list(NULL, sprintf("o_%d", seq_along(sample))))
   ## Input is of class matrix
-  } else if (is.matrix(x)) {
-      if (!is.numeric(x)) x <- matrix(as.numeric(x), ncol = NCOL(x), dimnames = dimnames(x))
-      if (is.null(colnames(x))) colnames(x) <- sprintf("o_%d", seq_len(NCOL(x)))
+  } else if (is.matrix(sample)) {
+      if (!is.numeric(sample)) sample <- matrix(as.numeric(sample), ncol = NCOL(sample), dimnames = dimnames(sample))
+      if (is.null(colnames(sample))) colnames(sample) <- sprintf("o_%d", seq_len(NCOL(sample)))
   ## Unknown input
   } else {
-      stopifnot("invalid input `x`" = all(sapply(x, is.numeric)))
+      stopifnot("invalid input `sample`" = all(sapply(sample, is.numeric)))
   }
 
   ## Coerce to data.frame
-  d <- as.data.frame(x)
+  d <- as.data.frame(sample)
   ## Replacing -Inf/Inf with missing values
   for (i in seq_along(d)) d[[i]] <- ifelse(is.infinite(d[[i]]), NA, d[[i]])
   ## Check that there are at least two finite values per distribution

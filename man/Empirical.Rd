@@ -8,7 +8,7 @@
 \alias{kurtosis.Empirical}
 \title{Create an Empirical distribution}
 \usage{
-Empirical(x)
+Empirical(sample)
 
 \method{mean}{Empirical}(x, ...)
 
@@ -19,6 +19,9 @@ Empirical(x)
 \method{kurtosis}{Empirical}(x, type = 3L, ...)
 }
 \arguments{
+\item{sample}{A numeric vector, list of numeric vectors, matrix,
+or data.frame (see section 'Details' for more information).}
+
 \item{x}{an object of class \code{Empirical} (see \code{\link[=Empirical]{Empirical()}}).}
 
 \item{...}{currently unused.}
@@ -31,11 +34,11 @@ See section Details for more information.}
 An \code{Empirical} object.
 }
 \description{
-An empirical distribution consists of a random sample \code{x}.
+An empirical distribution based on a random \code{sample}.
 }
 \details{
 The constructor function \code{\link[=Empirical]{Empirical()}} allows for a variety of different
-objects as main input \code{x}.
+objects as main input \code{sample}.
 \itemize{
 \item Vector: Assumes that the vector contains a series of observations from one
 empirical distribution.
@@ -50,18 +53,18 @@ finite observations (\code{-Inf}/\code{Inf} is replaced by \code{NA}).
 Certain types of moments (see \code{\link[=skewness.Empirical]{skewness.Empirical()}}, \code{\link[=kurtosis.Empirical]{kurtosis.Empirical()}})
 require at least three or four finite observations.
 
-\strong{Support}: Set of unique observations in \code{x}.
+\strong{Support}: Set of unique observations in the \code{sample}, denoted \eqn{y} below.
 
 \strong{Probability mass function (p.m.f.):}
-\deqn{f(y) = \frac{1}{n} \sum_{i=1}^{N} (x_i = y)}{f(x) = 1 / N * \sum(x == y)}
+\deqn{f(x) = \frac{1}{n} \sum_{i=1}^{N} (y_i = x)}{f(x) = 1 / N * \sum(y == x)}
 
 \strong{Cummulative distribution function (c.d.f.):}
-\deqn{F(y) = \frac{1}{N} \sum_{i=1}^N \mathbf{I}(x_i \leq y)}{F(y) = 1 / N * sum(x <= y)}
+\deqn{F(x) = \frac{1}{N} \sum_{i=1}^N \mathbf{I}(y_i \leq x)}{F(x) = 1 / N * sum(y <= x)}
 
 \strong{Moment generating functions}:
 \itemize{
-\item Mean/expectation: \deqn{E(x) = \bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i}{mean(x) = 1 / N * sum(x)}
-\item Variance: \deqn{\text{VAR}(x) = \frac{1}{N - 1} \sum_{i=1}^{N} (x_i - \bar{x})}{variance(x) = 1 / (N - 1) * sum((x - mean(x))^2)}
+\item Mean/expectation: \deqn{\bar{y} = \frac{1}{N} \sum_{i=1}^{N} y_i}{1 / N * sum(y)}
+\item Variance: \deqn{\frac{1}{N - 1} \sum_{i=1}^{N} (y_i - \bar{y})}{1 / (N - 1) * sum((y - mean(y))^2)}
 }
 
 Third and fourth central moments are also available via \code{\link[=skewness]{skewness()}} and \code{\link[=kurtosis]{kurtosis()}}. For both
@@ -69,13 +72,13 @@ different types are available as defined below. For details see Joanes and Gill 
 \itemize{
 \item Skewness:
 \itemize{
-\item Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (x_i - \bar{x})^3}{\sqrt{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^3}}}{S1 = sqrt(N) * sum(x - mean(x))^3) / sqrt(sum(x - mean(x))^2)^3}
+\item Type 1: \deqn{S_1 = \sqrt{N} \frac{\sum_{i=1}^N (y_i - \bar{y})^3}{\sqrt{\big(\sum_{i=1}^N (y_i - \bar{y})^2\big)^3}}}{S1 = sqrt(N) * sum(y - mean(y))^3) / sqrt(sum(y - mean(y))^2)^3}
 \item Type 2 (only defined for three or more finite values): \deqn{S_2 = \frac{\sqrt{N \cdot (N - 1)}}{(N - 2)} S_1}{S2 = sqrt(N * (N - 1)) / (N - 2) * S1}
 \item Type 3 (default): \deqn{S_3 = \sqrt{(1 - \frac{1}{N})^3} \cdot S_1}{S3 = sqrt((1 - 1 / N)^3) * S1}
 }
 \item Kurtosis:
 \itemize{
-\item Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (x_i - \bar{x})^4}{\big(\sum_{i=1}^N (x_i - \bar{x})^2\big)^2} - 3}{K1 = N * (sum(x - mean(x))^4) / (sum(x - mean(x))^2)^2 - 3}
+\item Type 1: \deqn{K_1 = N \cdot \frac{\sum_{i=1}^N (y_i - \bar{y})^4}{\big(\sum_{i=1}^N (y_i - \bar{y})^2\big)^2} - 3}{K1 = N * (sum(y - mean(y))^4) / (sum(y - mean(y))^2)^2 - 3}
 \item Type 2 (only defined for four or more finite values): \deqn{K_2 = \frac{((N + 1) \cdot K_1 + 6) \cdot (N - 1)}{(N - 2) \cdot (N - 3)}}{K2 = ((N + 1) * K_1 + 6) * (N - 1)) / ((N - 2) * (N - 3))}
 \item Type 3 (default): \deqn{K_3 = \big(1 - \frac{1}{N}\big)^2 \cdot (K_1 + 3) - 3}{K3 = (1 - 1 / N)^2 * (K1 + 3) - 3}
 }
