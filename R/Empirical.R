@@ -183,7 +183,7 @@ dpqrempirical_prep <- function(x, y) {
     matrix(as.numeric(y), nrow = 1)
   }
   # Checking that each distribution (row) contains at least two finite values
-  stopifnot("each empirical distribution in `y` must have at least two finite values" =
+  stopifnot("each empirical distribution in 'y' must have at least two finite values" =
             all(apply(y, MARGIN = 1, FUN = function(x) sum(is.finite(x))) > 1L))
 
   # If length(x) equals to 1 apply can be used

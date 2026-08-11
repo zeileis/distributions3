@@ -338,15 +338,15 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
     drop <- as.logical(drop)[[1L]]
     x    <- as.numeric(x) # Required for numericDeriv
     stopifnot(
-        "argument `x` must be numeric with all finite values" = is.numeric(x) && all(is.finite(x)),
-        "argument `drop` must evaluate to TRUE or FALSE" = isTRUE(drop) || isFALSE(drop),
-        "argument `log` must evaluate to TRUE or FALSE" = isTRUE(log) || isFALSE(log),
-        "argument `applyfun` must be NULL or a function" = is.null(applyfun) || is.function(applyfun)
+        "argument 'x' must be numeric with all finite values" = is.numeric(x) && all(is.finite(x)),
+        "argument 'drop' must evaluate to TRUE or FALSE" = isTRUE(drop) || isFALSE(drop),
+        "argument 'log' must evaluate to TRUE or FALSE" = isTRUE(log) || isFALSE(log),
+        "argument 'applyfun' must be NULL or a function" = is.null(applyfun) || is.function(applyfun)
     )
 
     if (!is.null(cores)) {
       cores <- as.integer(cores)[[1L]]
-      stopifnot("argument `cores` must evaluate to positive integer" =
+      stopifnot("argument 'cores' must evaluate to positive integer" =
                 length(cores) == 1L && !is.na(cores) && cores >= 1L)
     }
 
@@ -442,7 +442,7 @@ pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE,
         ## Check which numeric derivative function to be used.
         ## By default, numDeriv::grad is used (if the package is available),
         ## else we use stats::numericDeriv. For testing, `deriv.method`
-        ## can be specified via the `...` argument (non-documented feature).
+        ## can be specified via the '...' argument (non-documented feature).
         if ("deriv.method" %in% names(args)) {
             deriv.method <- match.arg(args$deriv.method, c("grad", "numericDeriv"))
             if (deriv.method == "grad" && !requireNamespace("numDeriv", quietly = TRUE)) {
@@ -520,18 +520,18 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
     maxit <- as.integer(maxit)[[1L]]
     drop  <- as.logical(drop)[[1L]]
     stopifnot(
-        "argument `probs` must be numeric with all finite values" =
+        "argument 'probs' must be numeric with all finite values" =
             is.numeric(probs) && all(is.finite(probs)),
-        "argument `drop` must evaluate to TRUE or FALSE" =
+        "argument 'drop' must evaluate to TRUE or FALSE" =
             isTRUE(drop) || isFALSE(drop),
-        "argument `lower` must be finite numeric of length 1" =
+        "argument 'lower' must be finite numeric of length 1" =
             is.numeric(lower) && length(lower) == 1L && is.finite(lower),
-        "argument `upper` must be finite numeric of length 1" =
+        "argument 'upper' must be finite numeric of length 1" =
             is.numeric(upper) && length(upper) == 1L && is.finite(upper),
-        "argument `lower` must be smaller than `upper`" = lower < upper,
-        "argument `tol` must be numeric in [.Machine$double.eps, 0.01]" =
+        "argument 'lower' must be smaller than 'upper'" = lower < upper,
+        "argument 'tol' must be numeric in [.Machine$double.eps, 0.01]" =
             is.numeric(tol) && length(tol) == 1L && tol >= .Machine$double.eps && tol < 0.01,
-        "argument `maxit` must evaluate to single integer >= 1L" =
+        "argument 'maxit' must evaluate to single integer >= 1L" =
             is.integer(maxit) && maxit >= 1L
     )
 
@@ -729,11 +729,11 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
     lower.tail <- as.logical(lower.tail)[[1L]]
     x          <- as.numeric(x) # Required for numericDeriv
     stopifnot(
-        "argument `x` must be numeric with all finite values" =
+        "argument 'x' must be numeric with all finite values" =
             is.numeric(x) && all(is.finite(x)),
-        "argument `drop` must evaluate to TRUE or FALSE" =
+        "argument 'drop' must evaluate to TRUE or FALSE" =
             isTRUE(drop) || isFALSE(drop),
-        "argument `lower.tail` must evaluate to TRUE or FALSE" =
+        "argument 'lower.tail' must evaluate to TRUE or FALSE" =
             isTRUE(lower.tail) || isFALSE(lower.tail)
     )
 
@@ -935,7 +935,7 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
   stopifnot(is.null(applyfun) || is.function(applyfun))
   if (!is.null(cores)) {
     cores <- as.integer(cores)[[1L]]
-    stopifnot("argument `cores` must evaluate to positive integer" =
+    stopifnot("argument 'cores' must evaluate to positive integer" =
               length(cores) == 1L && !is.na(cores) && cores >= 1L)
   }
 
@@ -995,7 +995,7 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
   ## can lead to inaccurate results if the range the values span is < gridsize.
   if (discrete && method == "quantile" && gridsize >= abs(diff(xrange))) {
       if (get_auto_method(x) == "cdf") {
-          warning("switching to method = 'cdf' (method = 'quantile' can result in inaccurate results)")
+          warning("switching to method = \"cdf\" (method = \"quantile\" can result in inaccurate results)")
           method <- "cdf"
       } else {
           ## TODO(R): This is as I consider binwidth == 1.0 I guess.
@@ -1016,10 +1016,10 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
         seq(xrange[1L], xrange[2L], length.out = gridsize)
       }
 
-      ## Scoping `batch_id`, `x`, `q`
+      ## Scoping 'batch_id', 'x', 'q'
       batch_fn <- function(i) {
-          idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
-          p    <- cdf(x[idx], q, elementwise = FALSE, drop = FALSE) ## Calculating quantiles at `p` for `x[idx]`
+          idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
+          p    <- cdf(x[idx], q, elementwise = FALSE, drop = FALSE) ## Calculating quantiles at 'p' for 'x[idx]'
           ## Here 'p' is our matrix (n x k) whilst q is just a numeric vector
           .Call("c_moments_numeric", p = p, q = q, dim(p),
                 discrete = as.integer(discrete), what = what, PACKAGE = "distributions3")
@@ -1032,10 +1032,10 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
     ## Drawing one set of probabilities; calculate quantiles for all distributions
     p <- c(0.001, 0.01, 0.1, 1L:(gridsize - 1L), gridsize - c(0.1, 0.01, 0.001)) / gridsize
 
-    ## Scoping `batch_id`, `y`, `x`, `p`
+    ## Scoping 'batch_id', 'y', 'x', 'p'
     batch_fn <- function(i) {
-        idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
-        q    <- quantile(x[idx], p, elementwise = FALSE, drop = FALSE) ## Calculating quantiles at `p` for `y[idx]`
+        idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
+        q    <- quantile(x[idx], p, elementwise = FALSE, drop = FALSE) ## Calculating quantiles at 'p' for 'y[idx]'
         ## Here 'q' is our matrix (n x k) whilst p is just a numeric vector
         .Call("c_moments_numeric", p = p, q = q, dim(q),
               discrete = as.integer(discrete), what = what, PACKAGE = "distributions3")

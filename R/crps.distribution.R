@@ -139,27 +139,27 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
 
   ## sanity checks
   stopifnot(
-    "argument `y` must be an object of class 'distribution'" = inherits(y, "distribution"),
-    "argument `x` must be numeric with all finite values" =
+    "argument 'y' must be an object of class 'distribution'" = inherits(y, "distribution"),
+    "argument 'x' must be numeric with all finite values" =
         is.numeric(x) && all(is.finite(x)),
-    "argument `drop` must evaluate to TRUE or FALSE" =
+    "argument 'drop' must evaluate to TRUE or FALSE" =
         is.null(drop)        || isTRUE(drop)        || isFALSE(drop),
-    "argument `elementwise` must be NULL, TRUE, or FALSE" =
+    "argument 'elementwise' must be NULL, TRUE, or FALSE" =
         is.null(elementwise) || isTRUE(elementwise) || isFALSE(elementwise),
-    "argument `gridsize` must evaluate to single integer >= 2L" =
+    "argument 'gridsize' must evaluate to single integer >= 2L" =
         is.integer(gridsize)  && length(gridsize)  == 1L && gridsize  >= 2L,
-    "argument `batchsize` must evaluate to single integer >= 1L" =
+    "argument 'batchsize' must evaluate to single integer >= 1L" =
         is.integer(batchsize) && length(batchsize) == 1L && batchsize >= 1L,
-    "argument `cores` must be NULL or numeric" =
+    "argument 'cores' must be NULL or numeric" =
         is.null(cores)    || is.numeric(cores),
-    "argument `applyfun` must be NULL or function" =
+    "argument 'applyfun' must be NULL or function" =
         is.null(applyfun) || is.function(applyfun)
   )
 
   ## Evaluate 'cores' argument
   if (is.numeric(cores)) {
     cores <- as.integer(cores)[[1L]]
-    stopifnot("if not NULL, `cores` must evaluate to integer >= 1L" = length(cores) == 1L && cores >= 1L)
+    stopifnot("if not NULL, 'cores' must evaluate to integer >= 1L" = length(cores) == 1L && cores >= 1L)
   }
 
   ## basic properties:
@@ -254,32 +254,32 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   ## FIXME: Move this to crps.Empirical() ??
   if (inherits(y, "Empirical")) {
 
-    ## Not elementwise: Same observation(s) `x` for all distributions `y`
+    ## Not elementwise: Same observation(s) 'x' for all distributions 'y'
     if (isFALSE(elementwise)) {
-      ## Scoping `batch_id`, `y`, `x`, `q`
+      ## Scoping 'batch_id', 'y', 'x', 'q'
       batch_fn <- function(i) {
-          idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
+          idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
           # Sort quantiles for the current batch
           q    <- t(apply(as.matrix(y[idx]), 1L, sort, na.last = TRUE))
-          p    <- t(apply(q, 1L, function(x) pempirical(x, x))) ## Calculating quantiles at `q` for `y[idx]`
+          p    <- t(apply(q, 1L, function(x) pempirical(x, x))) ## Calculating quantiles at 'q' for 'y[idx]'
           fn <- function(z) {
-              px   <- cdf(y[idx], z)   ## Probabilities at `y[idx](z)`
+              px   <- cdf(y[idx], z)   ## Probabilities at 'y[idx](z)'
               .Call("c_CRPS_numeric", rep(as.numeric(z), length(idx)), px, p, q, FALSE, PACKAGE = "distributions3")
           }
           return(do.call(cbind, lapply(x, fn)))
       }
-      # Iterate over batches first (this way we only have to calculate `q` once per batch
-      # inside `batch_fn()`). Inside `batch_fn()` we then iterate over `z \in x`
+      # Iterate over batches first (this way we only have to calculate 'q' once per batch
+      # inside 'batch_fn()'). Inside 'batch_fn()' we then iterate over 'z \in x'
       rval <- do.call(rbind, applyfun(seq_len(batch_n), batch_fn))
-    ## Multiple distributions `y`, one (or multiple) observations `x` evaluated for each `y`
+    ## Multiple distributions 'y', one (or multiple) observations 'x' evaluated for each 'y'
     } else {
-      ## Scoping `batch_id`, `y`, `x`, `q`
+      ## Scoping 'batch_id', 'y', 'x', 'q'
       batch_fn <- function(i) {
-          idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
+          idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
           # Sort quantiles
           q    <- t(apply(as.matrix(y[idx]), 1L, sort, na.last = TRUE))
-          p    <- t(apply(q, 1L, function(x) pempirical(x, x))) ## Calculating quantiles at `q` for `y[idx]`
-          px   <- cdf(y[idx], x)   ## Probabilities at `y[idx](z)`
+          p    <- t(apply(q, 1L, function(x) pempirical(x, x))) ## Calculating quantiles at 'q' for 'y[idx]'
+          px   <- cdf(y[idx], x)   ## Probabilities at 'y[idx](z)'
           .Call("c_CRPS_numeric", as.numeric(x[idx]), px, p, q, FALSE, PACKAGE = "distributions3")
       }
       rval <- do.call(c, applyfun(seq_len(batch_n), batch_fn))
@@ -296,26 +296,26 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
       }
       ## Not elementwise: Same observation(s) `x` for all distributions `y`
       if (isFALSE(elementwise)) {
-        ## Scoping `batch_id`, `y`, `x`, `q`
+        ## Scoping 'batch_id', 'y', 'x', 'q'
         batch_fn <- function(i) {
-            idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
-            p    <- cdf(y[idx], q, elementwise = FALSE)      ## Calculating quantiles at `q` for `y[idx]`
+            idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
+            p    <- cdf(y[idx], q, elementwise = FALSE)      ## Calculating quantiles at 'q' for 'y[idx]'
             fn <- function(z) {
-                px   <- cdf(y[idx], z, elementwise = FALSE)  ## Probabilities at `y[idx](z)`
+                px   <- cdf(y[idx], z, elementwise = FALSE)  ## Probabilities at 'y[idx](z)'
                 .Call("c_CRPS_numeric", as.numeric(z), px, p, q, FALSE, PACKAGE = "distributions3")
             }
             return(do.call(cbind, lapply(x, fn)))
         }
-        # Iterate over batches first (this way we only have to calculate `q` once per batch
-        # inside `batch_fn()`). Inside `batch_fn()` we then iterate over `z \in x`
+        # Iterate over batches first (this way we only have to calculate 'q' once per batch
+        # inside 'batch_fn()'). Inside 'batch_fn()' we then iterate over 'z \in x'
         rval <- do.call(rbind, applyfun(seq_len(batch_n), batch_fn))
-      ## Multiple distributions `y`, one (or multiple) observations `x` evaluated for each `y`
+      ## Multiple distributions 'y', one (or multiple) observations 'x' evaluated for each 'y'
       } else {
-        ## Scoping `batch_id`, `y`, `x`, `q`
+        ## Scoping 'batch_id', 'y', 'x', 'q'
         batch_fn <- function(i) {
-            idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
-            p    <- cdf(y[idx], q, elementwise = FALSE)      ## Calculating quantiles at `p` for `y[idx]`
-            px   <- cdf(y[idx], x[idx], elementwise = TRUE)  ## Probability at `x[idx]`
+            idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
+            p    <- cdf(y[idx], q, elementwise = FALSE)      ## Calculating quantiles at 'p' for 'y[idx]'
+            px   <- cdf(y[idx], x[idx], elementwise = TRUE)  ## Probability at 'x[idx]'
             .Call("c_CRPS_numeric", as.numeric(x[idx]), px, p, q, FALSE, PACKAGE = "distributions3")
         }
         rval <- do.call(c, applyfun(seq_len(batch_n), batch_fn))
@@ -326,28 +326,28 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
   if (method == "quantile" && !inherits(y, "Empirical")) {
     ## Drawing one set of probabilities; calculate quantiles for all distributions
     p <- c(0.001, 0.01, 0.1, 1L:(gridsize - 1L), gridsize - c(0.1, 0.01, 0.001)) / gridsize
-    ## Not elementwise: Same observation(s) `x` for all distributions `y`
+    ## Not elementwise: Same observation(s) 'x' for all distributions 'y'
     if (isFALSE(elementwise)) {
-        ## Scoping `batch_id`, `y`, `x`, `p`
+        ## Scoping 'batch_id', 'y', 'x', 'p'
         batch_fn <- function(i) {
-            idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
-            q    <- quantile(y[idx], p, elementwise = FALSE) ## Calculating quantiles at `p` for `y[idx]`
+            idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
+            q    <- quantile(y[idx], p, elementwise = FALSE) ## Calculating quantiles at 'p' for 'y[idx]'
             fn <- function(z) {
-                px   <- cdf(y[idx], z, elementwise = FALSE)  ## Probabilities at `y[idx](z)`
+                px   <- cdf(y[idx], z, elementwise = FALSE)  ## Probabilities at 'y[idx](z)'
                 .Call("c_CRPS_numeric", as.numeric(z), px, p, q, TRUE, PACKAGE = "distributions3")
             }
             return(do.call(cbind, lapply(x, fn)))
         }
-        # Iterate over batches first (this way we only have to calculate `q` once per batch
-        # inside `batch_fn()`). Inside `batch_fn()` we then iterate over `z \in x`
+        # Iterate over batches first (this way we only have to calculate 'q' once per batch
+        # inside 'batch_fn()'). Inside 'batch_fn()' we then iterate over 'z \in x'
         rval <- do.call(rbind, applyfun(seq_len(batch_n), batch_fn))
-    ## Multiple distributions `y`, one (or multiple) observations `x` evaluated for each `y`
+    ## Multiple distributions 'y', one (or multiple) observations 'x' evaluated for each 'y'
     } else {
-        ## Scoping `batch_id`, `y`, `x`, `p`
+        ## Scoping 'batch_id', 'y', 'x', 'p'
         batch_fn <- function(i) {
-            idx  <- which(batch_id == i) ## Index of `x`/`y` falling into current batch `i`
-            q    <- quantile(y[idx], p, elementwise = FALSE) ## Calculating quantiles at `p` for `y[idx]`
-            px   <- cdf(y[idx], x[idx], elementwise = TRUE)  ## Probabilities at `y[idx](x[idx])`
+            idx  <- which(batch_id == i) ## Index of 'x'/'y' falling into current batch 'i'
+            q    <- quantile(y[idx], p, elementwise = FALSE) ## Calculating quantiles at 'p' for 'y[idx]'
+            px   <- cdf(y[idx], x[idx], elementwise = TRUE)  ## Probabilities at 'y[idx](x[idx])'
             .Call("c_CRPS_numeric", as.numeric(x[idx]), px, p, q, TRUE, PACKAGE = "distributions3")
         }
         rval <- do.call(c, applyfun(seq_len(batch_n), batch_fn))
