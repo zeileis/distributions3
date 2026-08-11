@@ -99,9 +99,10 @@ ChiSquare <- function(df) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.ChiSquare <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   rval <- x$df
   setNames(rval, names(x))
 }
@@ -239,9 +240,11 @@ cdf.ChiSquare <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.ChiSquare <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   # TODO: in the documentation, more information on return and
   # how quantiles are calculated
   FUN <- function(at, d) qchisq(at, df = d$df, ...)
@@ -259,7 +262,6 @@ quantile.ChiSquare <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.ChiSquare <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -267,12 +269,10 @@ support.ChiSquare <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.ChiSquare <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.ChiSquare <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

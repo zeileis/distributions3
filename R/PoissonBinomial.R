@@ -376,9 +376,11 @@ cdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, lower.tai
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.PoissonBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, lower.tail = TRUE, log.p = FALSE, verbose = TRUE, ...) {
+  check_dots_used()
   n <- length(x)
   k <- length(probs)
   if(n > 0L && k > 0L && requireNamespace("PoissonBinomial", quietly = TRUE)) {
@@ -429,7 +431,6 @@ quantile.PoissonBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, 
 #'
 #' @export
 support.PoissonBinomial <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep.int(0L, length(d))
   p <- d
   class(p) <- "data.frame"
@@ -440,12 +441,10 @@ support.PoissonBinomial <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.PoissonBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.PoissonBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }

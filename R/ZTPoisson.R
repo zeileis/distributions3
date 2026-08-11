@@ -168,9 +168,10 @@ ZTPoisson <- function(lambda) {
   return(d)
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.ZTPoisson <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m, names(x))
@@ -178,7 +179,6 @@ mean.ZTPoisson <- function(x, ...) {
 
 #' @export
 variance.ZTPoisson <- function(x, ...) {
-  rlang::check_dots_used()
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m * (1 + x$lambda - m), names(x))
@@ -186,7 +186,6 @@ variance.ZTPoisson <- function(x, ...) {
 
 #' @export
 skewness.ZTPoisson <- function(x, ...) {
-  rlang::check_dots_used()
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s <- sqrt(m * (x$lambda + 1 - m))
@@ -197,7 +196,6 @@ skewness.ZTPoisson <- function(x, ...) {
 
 #' @export
 kurtosis.ZTPoisson <- function(x, ...) {
-  rlang::check_dots_used()
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s2 <- m * (x$lambda + 1 - m)
@@ -321,9 +319,11 @@ cdf.ZTPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.ZTPoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qztpois(p = at, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -338,7 +338,6 @@ quantile.ZTPoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.ZTPoisson <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(1, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -346,13 +345,11 @@ support.ZTPoisson <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.ZTPoisson <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.ZTPoisson <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 

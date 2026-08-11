@@ -176,9 +176,10 @@ ZTNegativeBinomial <- function(mu, theta) {
   return(d)
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.ZTNegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   m <- x$mu / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
   m[x$mu <= 0] <- 1
   setNames(m, names(x))
@@ -186,7 +187,6 @@ mean.ZTNegativeBinomial <- function(x, ...) {
 
 #' @export
 variance.ZTNegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
   m <- x$mu / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
   m[x$mu <= 0] <- 1
   v <- m * (x$mu/x$theta + x$mu + 1 - m)
@@ -196,7 +196,6 @@ variance.ZTNegativeBinomial <- function(x, ...) {
 #' @export
 skewness.ZTNegativeBinomial <- function(x, ...) {
   stop("not implemented yet")
-  rlang::check_dots_used()
   f <- 1 / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
   m <- x$mu * f
   s <- sqrt(m * (x$mu/x$theta + x$mu + 1 - m))
@@ -209,7 +208,6 @@ skewness.ZTNegativeBinomial <- function(x, ...) {
 #' @export
 kurtosis.ZTNegativeBinomial <- function(x, ...) {
   stop("not implemented yet")
-  rlang::check_dots_used()
   f <- 1 / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
   m <- x$mu * f
   s2 <- m * (x$mu/x$theta + x$mu + 1 - m)
@@ -334,9 +332,11 @@ cdf.ZTNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.ZTNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qztnbinom(p = at, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -351,7 +351,6 @@ quantile.ZTNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NUL
 #'
 #' @export
 support.ZTNegativeBinomial <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(1, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -359,13 +358,11 @@ support.ZTNegativeBinomial <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.ZTNegativeBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.ZTNegativeBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 

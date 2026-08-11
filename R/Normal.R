@@ -166,9 +166,10 @@ Normal <- function(mu = 0, sigma = 1) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Normal <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   setNames(x$mu, names(x))
 }
 
@@ -322,11 +323,13 @@ cdf.Normal <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family Normal distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Normal <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qnorm(at, mean = d$mu, sd = d$sigma, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -378,7 +381,6 @@ suff_stat.Normal <- function(d, x, ...) {
 #'
 #' @export
 support.Normal <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(-Inf, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -386,12 +388,10 @@ support.Normal <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Normal <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Normal <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

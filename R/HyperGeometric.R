@@ -106,9 +106,10 @@ HyperGeometric <- function(m, n, k) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.HyperGeometric <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   # Reformulating to match Wikipedia
   # N is the population size
   N <- x$n + x$m
@@ -280,11 +281,13 @@ cdf.HyperGeometric <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family HyperGeometric distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.HyperGeometric <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qhyper(p = at, m = d$m, n = d$n, k = d$k, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -300,7 +303,6 @@ quantile.HyperGeometric <- function(x, probs, drop = TRUE, elementwise = NULL, .
 #'
 #' @export
 support.HyperGeometric <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- apply(cbind(0, d$k - d$n), 1, max)
   max <- apply(as.matrix(d)[, c("m", "k"), drop = FALSE], 1, min)
   make_support(min, max, d, drop = drop)
@@ -308,12 +310,10 @@ support.HyperGeometric <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.HyperGeometric <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.HyperGeometric <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
