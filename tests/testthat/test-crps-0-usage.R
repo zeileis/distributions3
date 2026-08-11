@@ -205,6 +205,8 @@ test_that("crps.distribution with multiple named distributions, multiple observa
 # -------------------------------------------------------
 test_that("crps, testing parallel execution", {
     set.seed(1234)
+    d <- Empirical(matrix(rnorm(2 * 30), ncol = 30))
+    identical(crps(d, 1:5, cores = NULL), crps(d, 1:5, cores = 2))
 
     expect_silent(crps1 <- crps(d, 5, cores = NULL))
     expect_silent(crps2 <- crps(d, 5, cores = 2))
