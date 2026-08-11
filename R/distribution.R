@@ -82,7 +82,7 @@
 #' ## mean c(1, 2, 3) and standard deviation c(1, 2.5, 5).
 #' ## mn3: Based on MyNormal1 where only cdf, id_discrete, and support
 #' ##      are defined.
-#' ## n3:  Analytic solution (distributions3::Normal()) with analytic functions
+#' ## n3:  Analytic solution (Normal()) with analytic functions
 #' ##      for all distribution functions (pdf, cdf, quantile) as well as for
 #' ##      the first four central moments (mean, variance, skewness, kurtosis)
 #' mn3 <- MyNormal1(mu = 1:3, sigma = c(1, 2.5, 5))
@@ -213,7 +213,7 @@
 #' ## parameter lambda = c(1, 2.5, 5).
 #' ## mp3: Based on MyPoisson1 where only pdf, id_discrete, and support
 #' ##      are defined.
-#' ## p3:  Analytic solution (distributions3::Poisson()) with analytic
+#' ## p3:  Analytic solution (Poisson()) with analytic
 #' ##      functions for all distribution functions (pdf, cdf, quantile)
 #' ##      as well as for the first four central moments (mean,
 #' ##      variance, skewness, kurtosis)
@@ -1083,8 +1083,9 @@ random.distribution <- function(x, n = 1L, drop = TRUE, ...) {
 
 #' Methods for numerically calculating central moments of probability distributions
 #'
-#' A series of S3 methods used as fallback for calculating/approximating
-#' distributional properties if no dedicated S3 method exists.
+#' Several S3 methods used as fallback for calculating/approximating
+#' central moments (mean, variance, skewness, kurtosis) if no dedicated S3 method
+#' for that distribution exists.
 #'
 #' @param x An object of class `distribution`.
 #' @param ... Forwarded to internal function [distribution_calculate_moments()] when
