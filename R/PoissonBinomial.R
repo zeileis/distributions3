@@ -188,7 +188,7 @@ random.PoissonBinomial <- function(x, n = 1L, drop = TRUE, ...) {
   if (n == 0L) {
     return(numeric(0L))
   }
-  if(requireNamespace("PoissonBinomial")) {
+  if(requireNamespace("PoissonBinomial", quietly = TRUE)) {
     p <- as.matrix(x)
     rval <- numeric(nrow(p))
     if (nrow(p) >= 1L) rval <- vapply(1L:nrow(p), function(i) PoissonBinomial::rpbinom(n, probs = p[i,], ...), numeric(n))
@@ -236,7 +236,7 @@ random.PoissonBinomial <- function(x, n = 1L, drop = TRUE, ...) {
 pdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE, verbose = TRUE, ...) {
   n <- length(d)
   k <- length(x)
-  if(n > 0L && k > 0L && requireNamespace("PoissonBinomial")) {
+  if(n > 0L && k > 0L && requireNamespace("PoissonBinomial", quietly = TRUE)) {
     ## basic properties
     rnam <- names(d)
     
@@ -310,7 +310,7 @@ log_pdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) 
 cdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail = TRUE, log.p = FALSE, verbose = TRUE, ...) {
   n <- length(d)
   k <- length(x)
-  if(n > 0L && k > 0L && requireNamespace("PoissonBinomial")) {
+  if(n > 0L && k > 0L && requireNamespace("PoissonBinomial", quietly = TRUE)) {
     ## basic properties
     rnam <- names(d)
     
@@ -381,7 +381,7 @@ cdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, lower.tai
 quantile.PoissonBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, lower.tail = TRUE, log.p = FALSE, verbose = TRUE, ...) {
   n <- length(x)
   k <- length(probs)
-  if(n > 0L && k > 0L && requireNamespace("PoissonBinomial")) {
+  if(n > 0L && k > 0L && requireNamespace("PoissonBinomial", quietly = TRUE)) {
     ## basic properties
     rnam <- names(x)
     
