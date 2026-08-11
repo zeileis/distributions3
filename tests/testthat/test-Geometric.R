@@ -163,3 +163,13 @@ test_that("named return values for Geometric distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+## TODO(R): Fails
+###suppressPackageStartupMessages(library("scoringRules"))
+###test_that("crps method for Geometric returns correct object", {
+###  d <- Geometric(c(0.1, 0.7))
+###  expect_silent(crps <- crps(d, 0.3))
+###  expect_type(crps, "double")
+###  expect_true(is.vector(crps))
+###  expect_true(!all(is.na(crps)) & all(crps >= 0))
+###})

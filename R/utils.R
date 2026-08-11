@@ -17,12 +17,30 @@ is_distribution <- function(x) {
 }
 
 
+#' Check available support for S3 method
+#'
+#' Evaluates whether or not there is support for a given S3 method for specific
+#' objects.
+#'
+#' @param method character, name of the method (e.g., \code{"is_continuous"}, \code{"print"}, ...)
+#' @param classes character vector of length > 0, classes to check.
+#'
+#' @return Returns \code{TRUE} if the method exists for one of the given classes, else \code{FALSE}.
+#'
+#' @keywords internal
+#' @importFrom utils getS3method
+hasS3method <- function(method, classes) {
+  any(sapply(classes, function(cls) {
+    tryCatch(is.function(getS3method(method, class = cls)), error = function(e) FALSE)
+  }))
+}
+
 # -------------------------------------------------------------------
 # HELPER FUNCTION FOR VECTORIZATION OF DISTRIBUTION OBJECTS
 # -------------------------------------------------------------------
 
 #' Utilities for `distributions3` objects
-#' 
+#'
 #' Various utility functions to implement methods for distributions with a
 #' unified workflow, in particular to facilitate working with vectorized
 #' `distributions3` objects.
@@ -58,8 +76,8 @@ is_distribution <- function(x) {
 #' ## Implementing a new distribution based on the provided utility functions
 #' ## Illustration: Gaussian distribution
 #' ## Note: Gaussian() is really just a copy of Normal() with a different class/distribution name
-#' 
-#' 
+#'
+#'
 #' ## Generator function for the distribution object.
 #' Gaussian <- function(mu = 0, sigma = 1) {
 #'   stopifnot(
@@ -70,15 +88,15 @@ is_distribution <- function(x) {
 #'   class(d) <- c("Gaussian", "distribution")
 #'   d
 #' }
-#' 
+#'
 #' ## Set up a vector Y containing four Gaussian distributions:
 #' Y <- Gaussian(mu = 1:4, sigma = c(1, 1, 2, 2))
 #' Y
-#' 
+#'
 #' ## Extract the underlying parameters:
 #' as.matrix(Y)
-#' 
-#' 
+#'
+#'
 #' ## Extractor functions for moments of the distribution include
 #' ## mean(), variance(), skewness(), kurtosis().
 #' ## These can be typically be defined as functions of the list of parameters.
@@ -87,10 +105,10 @@ is_distribution <- function(x) {
 #'   setNames(x$mu, names(x))
 #' }
 #' ## Analogously for other moments, see distributions3:::variance.Normal etc.
-#' 
+#'
 #' mean(Y)
-#' 
-#' 
+#'
+#'
 #' ## The support() method should return a matrix of "min" and "max" for the
 #' ## distribution. The make_support() function helps to set the right names and
 #' ## dimension.
@@ -99,10 +117,10 @@ is_distribution <- function(x) {
 #'   max <- rep(Inf, length(d))
 #'   make_support(min, max, d, drop = drop)
 #' }
-#' 
+#'
 #' support(Y)
-#' 
-#' 
+#'
+#'
 #' ## Evaluating certain functions associated with the distribution, e.g.,
 #' ## pdf(), log_pdf(), cdf() quantile(), random(), etc. The apply_dpqr()
 #' ## function helps to call the typical d/p/q/r functions (like dnorm,
@@ -111,21 +129,21 @@ is_distribution <- function(x) {
 #'   FUN <- function(at, d) dnorm(x = at, mean = d$mu, sd = d$sigma, ...)
 #'   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", elementwise = elementwise, drop = drop)
 #' }
-#' 
+#'
 #' ## Evaluate all densities at the same argument (returns vector):
 #' pdf(Y, 0)
-#' 
+#'
 #' ## Evaluate all densities at several arguments (returns matrix):
 #' pdf(Y, c(0, 5))
-#' 
+#'
 #' ## Evaluate each density at a different argument (returns vector):
 #' pdf(Y, 4:1)
-#' 
+#'
 #' ## Force evaluation of each density at a different argument (returns vector)
 #' ## or at all arguments (returns matrix):
 #' pdf(Y, 4:1, elementwise = TRUE)
 #' pdf(Y, 4:1, elementwise = FALSE)
-#' 
+#'
 #' ## Drawing random() samples also uses apply_dpqr() with the argument
 #' ## n assured to be a positive integer.
 #' random.Gaussian <- function(x, n = 1L, drop = TRUE, ...) {
@@ -136,18 +154,18 @@ is_distribution <- function(x) {
 #'   FUN <- function(at, d) rnorm(n = at, mean = d$mu, sd = d$sigma)
 #'   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 #' }
-#' 
+#'
 #' ## One random sample for each distribution (returns vector):
 #' random(Y, 1)
-#' 
+#'
 #' ## Several random samples for each distribution (returns matrix):
 #' random(Y, 3)
-#' 
-#' 
+#'
+#'
 #' ## For further analogous methods see the "Normal" distribution provided
 #' ## in distributions3.
 #' methods(class = "Normal")
-#' 
+#'
 #' @export
 apply_dpqr <- function(d,
                        FUN,
@@ -416,3 +434,9 @@ make_positive_integer <- function(n) {
   }
   n
 }
+
+#' @export
+median.distribution <- function(x, na.rm = FALSE, ...) {
+    quantile(x, probs = 0.5, ...)
+}
+

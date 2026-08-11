@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: r-release, os: ubuntu-latest, container: rocker/r2u4ci }
-          - { name: r-devel,   os: ubuntu-latest, container: rocker/drd }
+          - { name: "r-release (x64)", os: ubuntu-latest, container: rocker/r2u4ci }
+          - { name: "r-devel (x64)",   os: ubuntu-latest, container: rocker/drd }
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
