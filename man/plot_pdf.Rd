@@ -21,7 +21,11 @@ interval, or \code{quantile(d, p)} and \code{quantile(d, 1 - p)} if lower and/or
 A function to easily plot the PDF of a distribution using \code{ggplot2}. Requires \code{ggplot2} to be loaded.
 }
 \examples{
-
+\dontshow{ if(!requireNamespace("ggplot2")) {
+  if(interactive() || is.na(Sys.getenv("_R_CHECK_PACKAGE_NAME_", NA))) {
+    stop("not all packages required for the example are installed")
+  } else q() }
+}
 N1 <- Normal()
 plot_pdf(N1)
 

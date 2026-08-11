@@ -364,7 +364,11 @@ plot.distribution <- function(x, cdf = FALSE, p = c(0.1, 99.9), len = 1000,
 #' @export
 #'
 #' @examples
-#'
+#' \dontshow{ if(!requireNamespace("ggplot2")) {
+#'   if(interactive() || is.na(Sys.getenv("_R_CHECK_PACKAGE_NAME_", NA))) {
+#'     stop("not all packages required for the example are installed")
+#'   } else q() }
+#' }
 #' N1 <- Normal()
 #' plot_cdf(N1)
 #'
@@ -487,7 +491,11 @@ plot_cdf <- function(d, limits = NULL, p = 0.001,
 #' @export
 #'
 #' @examples
-#'
+#' \dontshow{ if(!requireNamespace("ggplot2")) {
+#'   if(interactive() || is.na(Sys.getenv("_R_CHECK_PACKAGE_NAME_", NA))) {
+#'     stop("not all packages required for the example are installed")
+#'   } else q() }
+#' }
 #' N1 <- Normal()
 #' plot_pdf(N1)
 #'
@@ -616,6 +624,7 @@ stat_auc <- function(mapping = NULL,
                      annotate = FALSE,
                      digits = 3,
                      ...) {
+  stopifnot(requireNamespace("ggplot2"))
   ggplot2::layer(
     geom = geom,
     stat = StatAuc,
@@ -635,43 +644,46 @@ stat_auc <- function(mapping = NULL,
   )
 }
 
+## function to support conditional definition of StatAuc if ggplot2 is available
+define_StatAuc <- function() {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) return(NULL)
+  ggplot2::ggproto("StatAuc", ggplot2::Stat,
+    compute_group = function(data,
+                             scales,
+                             from = -Inf,
+                             to = Inf,
+                             annotate = FALSE,
+                             digits = 3) {
+
+
+      ## set data outside interval to zero
+      data[data$x < from | data$x > to, "y"] <- 0
+
+      if (!isFALSE(annotate)) {
+        ## compute auc for label based on original implementation
+        n_params <- sum(grepl("param", names(data)))
+        d <- do.call(eval(parse(text = paste0("function(...) ", data$d[1], "(...)"))),
+          args = lapply(paste0("param", 1:n_params), function(x) data[[x]][1])
+        )
+
+        data$label <- paste0(
+          "P(", from, "< X < ", to, ") = ",
+          round(cdf(d, to) - cdf(d, from), digits = digits)
+        )
+      } else {
+        data$label <- ""
+      }
+
+      return(data)
+    },
+    required_aes = c("x", "y")
+  )
+}
 
 #' @rdname geom_auc
-#' @format NULL
 #' @usage NULL
 #' @export
-StatAuc <- ggplot2::ggproto("StatAuc", ggplot2::Stat,
-  compute_group = function(data,
-                           scales,
-                           from = -Inf,
-                           to = Inf,
-                           annotate = FALSE,
-                           digits = 3) {
-
-
-    ## set data outside interval to zero
-    data[data$x < from | data$x > to, "y"] <- 0
-
-    if (!isFALSE(annotate)) {
-      ## compute auc for label based on original implementation
-      n_params <- sum(grepl("param", names(data)))
-      d <- do.call(eval(parse(text = paste0("function(...) ", data$d[1], "(...)"))),
-        args = lapply(paste0("param", 1:n_params), function(x) data[[x]][1])
-      )
-
-      data$label <- paste0(
-        "P(", from, "< X < ", to, ") = ",
-        round(cdf(d, to) - cdf(d, from), digits = digits)
-      )
-    } else {
-      data$label <- ""
-    }
-
-    return(data)
-  },
-  required_aes = c("x", "y")
-)
-
+StatAuc <- define_StatAuc()
 
 #' Fill out area under the curve for a plotted PDF
 #'
@@ -686,7 +698,11 @@ StatAuc <- ggplot2::ggproto("StatAuc", ggplot2::Stat,
 #' @export
 #'
 #' @examples
-#'
+#' \dontshow{ if(!requireNamespace("ggplot2")) {
+#'   if(interactive() || is.na(Sys.getenv("_R_CHECK_PACKAGE_NAME_", NA))) {
+#'     stop("not all packages required for the example are installed")
+#'   } else q() }
+#' }
 #' N1 <- Normal()
 #' plot_pdf(N1) + geom_auc(to = -0.645)
 #' plot_pdf(N1) + geom_auc(from = -0.645, to = 0.1, annotate = TRUE)
@@ -706,6 +722,7 @@ geom_auc <- function(mapping = NULL,
                      annotate = FALSE,
                      digits = 3,
                      ...) {
+  stopifnot(requireNamespace("ggplot2"))
   ggplot2::layer(
     data = data,
     mapping = mapping,
@@ -725,69 +742,74 @@ geom_auc <- function(mapping = NULL,
   )
 }
 
-#' @rdname geom_auc
-#' @format NULL
-#' @usage NULL
-#' @export
-GeomAuc <- ggplot2::ggproto("GeomAuc", ggplot2::GeomArea,
-  required_aes = c("x", "y", "label"),
-  default_aes = ggplot2::aes(
-    colour = NA, fill = "grey40", linewidth = 0.5, linetype = 1,
-    alpha = NA
-  ),
-  draw_panel = function(data,
-                        panel_params,
-                        coord,
-                        na.rm = FALSE,
-                        flipped_aes = FALSE,
-                        outline.type = c("both", "upper", "lower", "full"),
-                        parse = FALSE,
-                        check_overlab = FALSE,
-                        annotate = FALSE) {
-    outline.type <- match.arg(outline.type)
+## function to support conditional definition of GeomAuc if ggplot2 is available
+define_GeomAuc <- function() {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) return(NULL)
+  ggplot2::ggproto("GeomAuc", ggplot2::GeomArea,
+    required_aes = c("x", "y", "label"),
+    default_aes = ggplot2::aes(
+      colour = NA, fill = "grey40", linewidth = 0.5, linetype = 1,
+      alpha = NA
+    ),
+    draw_panel = function(data,
+                          panel_params,
+                          coord,
+                          na.rm = FALSE,
+                          flipped_aes = FALSE,
+                          outline.type = c("both", "upper", "lower", "full"),
+                          parse = FALSE,
+                          check_overlab = FALSE,
+                          annotate = FALSE) {
+      outline.type <- match.arg(outline.type)
+  
+      if (!isFALSE(annotate)) {
+        annotate <- if (isTRUE(annotate)) "black" else annotate[1]
 
-    if (!isFALSE(annotate)) {
-      annotate <- if (isTRUE(annotate)) "black" else annotate[1]
+        data_annotate <- data.frame(
+          x = -Inf,
+          y = Inf,
+          label = data$label[1],
+          colour = annotate,
+          size = 3.88 * data$linewidth[1] * 2,
+          angle = 0,
+          hjust = -0.1,
+          vjust = 2,
+          alpha = NA,
+          family = "",
+          fontface = 1,
+          lineheight = 1.2
+        )
 
-      data_annotate <- data.frame(
-        x = -Inf,
-        y = Inf,
-        label = data$label[1],
-        colour = annotate,
-        size = 3.88 * data$linewidth[1] * 2,
-        angle = 0,
-        hjust = -0.1,
-        vjust = 2,
-        alpha = NA,
-        family = "",
-        fontface = 1,
-        lineheight = 1.2
-      )
-
-      grid::grobTree(
+        grid::grobTree(
+          ggplot2::GeomArea$draw_group(data,
+            panel_params,
+            coord,
+            na.rm = na.rm,
+            flipped_aes = flipped_aes,
+            outline.type = outline.type
+          ),
+          ggplot2::GeomText$draw_panel(data_annotate,
+            panel_params,
+            coord,
+            parse = parse,
+            na.rm = na.rm,
+            check_overlap = check_overlab
+          )
+        )
+      } else {
         ggplot2::GeomArea$draw_group(data,
           panel_params,
           coord,
           na.rm = na.rm,
           flipped_aes = flipped_aes,
           outline.type = outline.type
-        ),
-        ggplot2::GeomText$draw_panel(data_annotate,
-          panel_params,
-          coord,
-          parse = parse,
-          na.rm = na.rm,
-          check_overlap = check_overlab
         )
-      )
-    } else {
-      ggplot2::GeomArea$draw_group(data,
-        panel_params,
-        coord,
-        na.rm = na.rm,
-        flipped_aes = flipped_aes,
-        outline.type = outline.type
-      )
+      }
     }
-  }
-)
+  )
+}
+
+#' @rdname geom_auc
+#' @usage NULL
+#' @export
+GeomAuc <- define_GeomAuc()
