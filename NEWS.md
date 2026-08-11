@@ -19,6 +19,9 @@
 - Streamline the `apply_dpqr()` workhorse function to avoid unnecessary computations
   more carefully.
 
+- Reduce the hard dependencies: `ggplot2` is now a "Suggests" dependency and the
+  usage of `glue` is replaced by base R function `sprintf()`.
+
 
 # distributions3 0.2.4
 
