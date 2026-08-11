@@ -120,9 +120,10 @@ GEV <- function(mu = 0, sigma = 1, xi = 0) {
 # don't export
 g <- function(d, k) gamma(1 - k * d$xi)
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.GEV <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   euler <- -digamma(1)
   rval <- ifelse(x$xi == 0,
     x$mu + x$sigma * euler,

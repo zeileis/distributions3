@@ -200,14 +200,12 @@ test_that("crps.distribution with multiple named distributions, multiple observa
 
 
 
-
-
 # -------------------------------------------------------
 # Parallelization
 # -------------------------------------------------------
-if (requireNamespace("parallel")) {
+test_that("crps, testing parallel execution", {
     set.seed(1234)
-    d <- Normal(runif(20, -5, 5), runif(20, 1, 5))
+
     expect_silent(crps1 <- crps(d, 5, cores = NULL))
     expect_silent(crps2 <- crps(d, 5, cores = 2))
     expect_identical(crps1, crps2)
@@ -216,4 +214,4 @@ if (requireNamespace("parallel")) {
     expect_silent(crps1 <- crps(d, 3:6, cores = NULL))
     expect_silent(crps2 <- crps(d, 3:6, cores = 2))
     expect_identical(crps1, crps2)
-}
+})

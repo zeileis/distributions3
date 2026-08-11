@@ -142,9 +142,11 @@
 #' 
 #' ## Compute median (= mean) forecast along with 80% and 95% interval
 #' quantile(p, c(0.5, 0.1, 0.9, 0.025, 0.975))
-#' 
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 prodist <- function(object, ...) {
+  check_dots_used()
   UseMethod("prodist")
 }
 

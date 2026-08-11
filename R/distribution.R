@@ -1176,8 +1176,10 @@ random.distribution <- function(x, n = 1L, drop = TRUE, ...) {
 #' abline(h = 0, col = 2, lty = 2)
 #'
 #' @rdname mean.distribution
+#' @importFrom rlang check_dots_used
 #' @exportS3Method
 mean.distribution <- function(x, ...) {
+    check_dots_used()
     distribution_calculate_moments(x = x, what = 1L, ...)
 }
 

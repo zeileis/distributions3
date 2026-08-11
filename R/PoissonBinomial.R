@@ -134,8 +134,10 @@ format.PoissonBinomial <- function(x, digits = pmax(3L, getOption("digits") - 3L
 }
 
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.PoissonBinomial <- function(x, ...) {
+  check_dots_used()
   n <- names(x)
   rval <- rowSums(as.matrix(x), na.rm = TRUE)
   setNames(rval, n)
