@@ -177,8 +177,8 @@ SHASH <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
 
 
 # Helper function to compute raw central moments of Z = (X - mu) / sigma
-SHASH_z_moment <- function(k, nu, tau) {
-  fun <- function(z) (z^k) * dshash(z, mu = 0, sigma = 1, nu = nu, tau = tau)
+SHASH_z_moment <- function(k, nu, tau, cores) {
+  fun <- function(z) (z^k) * dshash(z, mu = 0, sigma = 1, nu = nu, tau = tau, cores = cores)
   stats::integrate(fun, lower = -Inf, upper = Inf)$value
 }
 
@@ -313,8 +313,8 @@ random.SHASH <- function(x, n = 1L, drop = TRUE, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
 #' @export
-pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
@@ -322,8 +322,8 @@ pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @rdname pdf.SHASH
 #' @export
 #'
-log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -342,6 +342,7 @@ log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param cores `NULL` or integer. Number of cores/threads to use when calling [pshash()].
 #' @param ... Arguments to be passed to \code{\link[stats]{pnorm}}.
 #'   Unevaluated arguments will generate a warning to catch mispellings or other
 #'   possible errors.
@@ -354,8 +355,8 @@ log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
 #' @export
-cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) pshash(q = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) pshash(q = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
@@ -506,7 +507,7 @@ is_continuous.SHASH <- function(d, ...) {
 #' @family SHASH
 #' @rdname shash
 #' @export
-dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE) {
+dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, useC = FALSE, cores = NULL) {
   nparam <- c(length(x), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -514,17 +515,25 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE) {
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
+  cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
 
-  z                 <- (x - mu) / sigma
-  asinhz            <- asinh(z)
-  exp_tauasinhz     <- exp(tau * asinhz)
-  exp_minusnuasinhz <- exp(-nu * asinhz)
+  if (useC) {
+    ## Arguments are: n, x, mu, sigma, nu, tau, ret_log, ncores
+    loglik <- .Call("c_dshash", max(nparam), x, mu, sigma, nu, tau,
+                    as.logical(log)[1L], cores, PACKAGE = "distributions3")
+  } else {
+    z                 <- (x - mu) / sigma
+    asinhz            <- asinh(z)
+    exp_tauasinhz     <- exp(tau * asinhz)
+    exp_minusnuasinhz <- exp(-nu * asinhz)
 
-  r <- 0.5 * (exp_tauasinhz - exp_minusnuasinhz)
-  c <- 0.5 * (tau * exp_tauasinhz + nu * exp_minusnuasinhz)
+    r <- 0.5 * (exp_tauasinhz - exp_minusnuasinhz)
+    c <- 0.5 * (tau * exp_tauasinhz + nu * exp_minusnuasinhz)
 
-  loglik <- -log(sigma) - 0.5 * log(2 * pi) - 0.5 * log(1 + z^2) + log(c) - 0.5 * (r^2)
-  return(if (log) loglik else exp(loglik))
+    loglik <- -log(sigma) - 0.5 * log(2 * pi) - 0.5 * log(1 + z^2) + log(c) - 0.5 * (r^2)
+    loglik <- if (log) loglik else exp(loglik)
+  }
+  return(loglik)
 }
 ## TODO(R): Checking against gamlss.dist implementation.
 ##          Move this to a dedicated test set (or package) and remove afterwards.
@@ -538,23 +547,27 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE) {
 ## microbenchmark::microbenchmark(dshash(x), gamlss.dist::dSHASH(x))
 
 
+#' @param cores integer. Number of cores/threads to be used (requires OMP support).
+#'
 #' @importFrom parallel detectCores
 #' @useDynLib distributions3, .registration = TRUE
 #' @rdname shash
 #' @importFrom stats pnorm
 #' @export
-pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, useC = FALSE) {
+pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, useC = FALSE, cores = NULL) {
   nparam <- c(length(q), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
+  cores <- if (is.null(cores)) 1L else as.integer(cores)[1L]
+  #cores <- if (is.null(cores)) 1L else pmax(1L, pmin(as.integer(cores)[[1L]], detectCores() - 2))
   ## TODO(R): Add it? Other functions do not have it
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
   if (useC) {
-    ## Arguments are: n, q, mu, sigma, nu, tau, log.p
+    ## Arguments are: n, q, mu, sigma, nu, tau, lowertail, logp, ncores
     p <- .Call("c_pshash", max(nparam), q, mu, sigma, nu, tau,
-               as.logical(lower.tail)[1L], as.logical(log.p)[1L], 10L, PACKAGE = "distributions3")
+               as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
   } else {
     z      <- (q - mu) / sigma
     asinhz <- asinh(z)
@@ -578,7 +591,7 @@ pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
 #' @rdname shash
 #' @importFrom stats uniroot
 #' @export
-qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE) {
+qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL, useC = TRUE) {
   nparam <- c(length(p), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -586,47 +599,53 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
+  cores <- if (is.null(cores)) 1L else as.integer(cores)[1L]
 
-  if (log.p)       p <- exp(p)
-  if (!lower.tail) p <- 1 - p
+  if (useC) {
+    res <- .Call("c_qshash", max(nparam), p, mu, sigma, nu, tau,
+                  as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
+  } else {
+    if (log.p)       p <- exp(p)
+    if (!lower.tail) p <- 1 - p
 
-  nmax <- max(nparam)
-  p     <- rep(p,     length.out = nmax)
-  sigma <- rep(sigma, length.out = nmax)
-  mu    <- rep(mu,    length.out = nmax)
-  nu    <- rep(nu,    length.out = nmax)
-  tau   <- rep(tau,   length.out = nmax)
+    nmax <- max(nparam)
+    p     <- rep(p,     length.out = nmax)
+    sigma <- rep(sigma, length.out = nmax)
+    mu    <- rep(mu,    length.out = nmax)
+    nu    <- rep(nu,    length.out = nmax)
+    tau   <- rep(tau,   length.out = nmax)
 
-  # Creating response vector. The qnorm call is used such that
-  # - res[i] where p[i] = 0 gets -Inf
-  # - res[i] where p[i] = 1 gets +Inf
-  # - res[i] where p[i] is outside [0, 1] gets NaN
-  res <- suppressWarnings(qnorm(p))
-  idx_valid <- which(is.finite(res))
+    # Creating response vector. The qnorm call is used such that
+    # - res[i] where p[i] = 0 gets -Inf
+    # - res[i] where p[i] = 1 gets +Inf
+    # - res[i] where p[i] is outside [0, 1] gets NaN
+    res <- suppressWarnings(qnorm(p))
+    idx_valid <- which(is.finite(res))
 
-  fn1 <- function(x, mu, sigma, nu, tau) pshash(x, mu = mu, sigma = sigma, nu = nu, tau = tau)
-  fn2 <- function(x, mu, sigma, nu, tau, p) fn1(x, mu, sigma, nu, tau) - p
+    fn1 <- function(x, mu, sigma, nu, tau) pshash(x, mu = mu, sigma = sigma, nu = nu, tau = tau)
+    fn2 <- function(x, mu, sigma, nu, tau, p) fn1(x, mu, sigma, nu, tau) - p
 
-  # Calculate quantile for valid probabilities (p \in (0, 1))
-  for (i in idx_valid) {
-    if (fn1(mu[i], mu[i], sigma[i], nu[i], tau[i]) < p[i]) {
-      interval <- c(mu[i], mu[i] + sigma[i])
-      j <- 2
-      while (fn1(interval[2], mu[i], sigma[i], nu[i], tau[i]) < p[i]) {
-        interval[2] <- mu[i] + j * sigma[i]
-        j <- j + 1
+    # Calculate quantile for valid probabilities (p \in (0, 1))
+    for (i in idx_valid) {
+      if (fn1(mu[i], mu[i], sigma[i], nu[i], tau[i]) < p[i]) {
+        interval <- c(mu[i], mu[i] + sigma[i])
+        j <- 2
+        while (fn1(interval[2], mu[i], sigma[i], nu[i], tau[i]) < p[i]) {
+          interval[2] <- mu[i] + j * sigma[i]
+          j <- j + 1
+        }
+      } else {
+        interval <- c(mu[i] - sigma[i], mu[i])
+        j <- 2
+        while (fn1(interval[1], mu[i], sigma[i], nu[i], tau[i]) > p[i]) {
+          interval[1] <- mu[i] - j * sigma[i]
+          j <- j + 1
+        }
       }
-    } else {
-      interval <- c(mu[i] - sigma[i], mu[i])
-      j <- 2
-      while (fn1(interval[1], mu[i], sigma[i], nu[i], tau[i]) > p[i]) {
-        interval[1] <- mu[i] - j * sigma[i]
-        j <- j + 1
-      }
+
+      res[i] <- uniroot(fn2, mu = mu[i], sigma = sigma[i], nu = nu[i], tau = tau[i], p = p[i],
+                        interval = interval)$root
     }
-
-    res[i] <- uniroot(fn2, mu = mu[i], sigma = sigma[i], nu = nu[i], tau = tau[i], p = p[i],
-                      interval = interval)$root
   }
 
   return(res)

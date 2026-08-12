@@ -5,9 +5,9 @@
 \alias{log_pdf.SHASH}
 \title{Evaluate the probability mass function of a SHASH distribution}
 \usage{
-\method{pdf}{SHASH}(d, x, drop = TRUE, elementwise = NULL, ...)
+\method{pdf}{SHASH}(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...)
 
-\method{log_pdf}{SHASH}(d, x, drop = TRUE, elementwise = NULL, ...)
+\method{log_pdf}{SHASH}(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...)
 }
 \arguments{
 \item{d}{A \code{SHASH} object created by a call to \code{\link[=SHASH]{SHASH()}}.}

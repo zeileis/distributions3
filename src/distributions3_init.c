@@ -19,12 +19,17 @@ double c_moments_calculate_trapezoidal(int i, double* p, double* q, int* dim, in
 double c_moments_calculate_discrete(int i,    double* p, double* q, int* dim, int what);
 
 /* dpq functions for the shash distribution */
-SEXP c_pshash(SEXP n, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores);
+SEXP c_pshash(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores);
+SEXP c_dshash(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP ret_log, SEXP ncores);
+SEXP c_qshash(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP cores);
+double local_zeroin(double ax, double bx, double (*f)(double x, void *info), void *info, double tol);
 
-const R_CallMethodDef CallEntries[] = {
+static R_CallMethodDef CallEntries[] = {
   {"c_CRPS_numeric", (DL_FUNC) &c_CRPS_numeric, 5},
   {"c_moments_numeric", (DL_FUNC) &c_moments_numeric, 5},
   {"c_pshash", (DL_FUNC) &c_pshash, 9},
+  {"c_dshash", (DL_FUNC) &c_dshash, 8},
+  {"c_qshash", (DL_FUNC) &c_qshash, 9},
   {NULL, NULL, 0}
 };
 

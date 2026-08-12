@@ -7,7 +7,16 @@
 \alias{rshash}
 \title{The Sinh-Arcsinh (SHASH) distribution}
 \usage{
-dshash(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE)
+dshash(
+  x,
+  mu = 0,
+  sigma = 1,
+  nu = 1,
+  tau = 1,
+  log = FALSE,
+  useC = FALSE,
+  cores = NULL
+)
 
 pshash(
   q,
@@ -17,10 +26,21 @@ pshash(
   tau = 1,
   lower.tail = TRUE,
   log.p = FALSE,
-  useC = FALSE
+  useC = FALSE,
+  cores = NULL
 )
 
-qshash(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE)
+qshash(
+  p,
+  mu = 0,
+  sigma = 1,
+  nu = 1,
+  tau = 1,
+  lower.tail = TRUE,
+  log.p = FALSE,
+  cores = NULL,
+  useC = TRUE
+)
 
 rshash(n, mu = 0, sigma = 1, nu = 1, tau = 1)
 }
@@ -30,6 +50,8 @@ rshash(n, mu = 0, sigma = 1, nu = 1, tau = 1)
 \item{mu, sigma, nu, tau}{vector of (non-negative) SHASH parameters.}
 
 \item{log, log.p}{logical indicating whether probabilities p are given as log(p).}
+
+\item{cores}{integer. Number of cores/threads to be used (requires OMP support).}
 
 \item{q}{vector of quantiles.}
 

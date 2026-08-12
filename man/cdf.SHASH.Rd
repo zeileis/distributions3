@@ -4,7 +4,7 @@
 \alias{cdf.SHASH}
 \title{Evaluate the cumulative distribution function of a SHASH distribution}
 \usage{
-\method{cdf}{SHASH}(d, x, drop = TRUE, elementwise = NULL, ...)
+\method{cdf}{SHASH}(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...)
 }
 \arguments{
 \item{d}{A \code{SHASH} object created by a call to \code{\link[=SHASH]{SHASH()}}.}
@@ -20,6 +20,8 @@ Or, if \code{d} and \code{x} have the same length, should the evaluation be
 done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 lengths match and otherwise \code{elementwise = FALSE} is used.}
+
+\item{cores}{\code{NULL} or integer. Number of cores/threads to use when calling \code{\link[=pshash]{pshash()}}.}
 
 \item{...}{Arguments to be passed to \code{\link[stats]{pnorm}}.
 Unevaluated arguments will generate a warning to catch mispellings or other
