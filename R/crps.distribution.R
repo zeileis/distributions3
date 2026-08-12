@@ -280,7 +280,7 @@ crps.distribution <- function(y, x, drop = TRUE, elementwise = NULL, gridsize = 
           # Sort quantiles
           q    <- t(apply(as.matrix(y[idx]), 1L, sort, na.last = TRUE))
           p    <- t(apply(q, 1L, function(x) pempirical(x, x))) ## Calculating quantiles at 'q' for 'y[idx]'
-          px   <- cdf(y[idx], x)   ## Probabilities at 'y[idx](z)'
+          px   <- cdf(y[idx], x[idx])   ## Probabilities at 'y[idx](z)'
           .Call("c_CRPS_numeric", as.numeric(x[idx]), px, p, q, FALSE, PACKAGE = "distributions3")
       }
       rval <- do.call(c, applyfun(seq_len(batch_n), batch_fn))
