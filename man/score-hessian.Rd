@@ -74,7 +74,7 @@ Either a numeric matrix with suitable column names is returned or a numeric
 vector provided that \code{which} has length 1 and \code{drop = TRUE} (the default).
 }
 \description{
-The functions \code{score} and \code{hessian} are generic functions along with
+Both \code{score} and \code{hessian} are generic functions along with
 methods for distribution objects, enabling the computation of the
 score (first derivative of the log-likelihood with respect to the
 parameters) and Hessian (corresponding second derivative).
@@ -95,4 +95,37 @@ x <- c(0, 0, 1)
 score(X, x)
 hessian(X, x)
 hessian(X, x, expected = TRUE)
+
+h <- hessian(X[1], x[1], expected = TRUE)
+matrix(h, ncol = 2, dimnames = list(c("mu", "sigma"), c("mu", "sigma")))
+
+## Comparison of analytic and numeric score/Hessian (Normal(3, 2))
+X <- Normal(mu = 3, sigma = 2)
+x <- seq(0, 6, by = 0.01)
+
+#' ## score:   derivative of log-likelihood by parameter sigma
+s_analytic <- score(X, x, which = "sigma")
+s_numeric  <- distributions3:::score.distribution(X, x, which = "sigma")
+message("Sum of absolute differences (score): ", sum(abs(s_analytic - s_numeric)))
+
+matplot(x, cbind(s_analytic, s_numeric), col = 1:2, type = "l", lty = 1:2,
+        lwd = 3, xlab = "x", main = "score - analytic vs. numeric solution",
+        ylab = expression(partialdiff * l(x) / partialdiff * sigma))
+legend("topleft", legend = c("analytic score", "numeric score"),
+       bty = "n", pch = NA, lty = 1:2, col = 1:2, lwd = 3)
+abline(h = 0, v = 3, lty = 3)
+
+#' ## Hessian: second derivative of log-likelihood by sigma^2
+h_analytic <- hessian(X, x, which = "sigma")
+h_numeric  <- distributions3:::hessian.distribution(X, x, which = "sigma")
+message("Sum of absolute differences (Hessian): ", sum(abs(h_analytic - h_numeric)))
+
+matplot(x, cbind(h_analytic, h_numeric), col = 1:2, type = "l", lty = 1:2,
+        lwd = 3, xlab = "x", main = "Hessian - analytic vs. numeric solution",
+        ylab = expression(partialdiff^2 * l(x) / partialdiff * sigma^2))
+legend("topleft", legend = c("analytic score", "numeric score"),
+       bty = "n", pch = NA, lty = 1:2, col = 1:2, lwd = 3)
+abline(v = 3, lty = 3)
+
+
 }

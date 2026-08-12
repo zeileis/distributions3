@@ -1,6 +1,6 @@
 #' Generic functions and methods for computing score and Hessian
 #'
-#' The functions `score` and `hessian` are generic functions along with
+#' Both `score` and `hessian` are generic functions along with
 #' methods for distribution objects, enabling the computation of the
 #' score (first derivative of the log-likelihood with respect to the
 #' parameters) and Hessian (corresponding second derivative).
@@ -43,8 +43,39 @@
 #' score(X, x)
 #' hessian(X, x)
 #' hessian(X, x, expected = TRUE)
-
-
+#'
+#' h <- hessian(X[1], x[1], expected = TRUE)
+#' matrix(h, ncol = 2, dimnames = list(c("mu", "sigma"), c("mu", "sigma")))
+#'
+#' ## Comparison of analytic and numeric score/Hessian (Normal(3, 2))
+#' X <- Normal(mu = 3, sigma = 2)
+#' x <- seq(0, 6, by = 0.01)
+#'
+#' #' ## score:   derivative of log-likelihood by parameter sigma
+#' s_analytic <- score(X, x, which = "sigma")
+#' s_numeric  <- distributions3:::score.distribution(X, x, which = "sigma")
+#' message("Sum of absolute differences (score): ", sum(abs(s_analytic - s_numeric)))
+#'
+#' matplot(x, cbind(s_analytic, s_numeric), col = 1:2, type = "l", lty = 1:2,
+#'         lwd = 3, xlab = "x", main = "score - analytic vs. numeric solution",
+#'         ylab = expression(partialdiff * l(x) / partialdiff * sigma))
+#' legend("topleft", legend = c("analytic score", "numeric score"),
+#'        bty = "n", pch = NA, lty = 1:2, col = 1:2, lwd = 3)
+#' abline(h = 0, v = 3, lty = 3)
+#'
+#' #' ## Hessian: second derivative of log-likelihood by sigma^2
+#' h_analytic <- hessian(X, x, which = "sigma")
+#' h_numeric  <- distributions3:::hessian.distribution(X, x, which = "sigma")
+#' message("Sum of absolute differences (Hessian): ", sum(abs(h_analytic - h_numeric)))
+#'
+#' matplot(x, cbind(h_analytic, h_numeric), col = 1:2, type = "l", lty = 1:2,
+#'         lwd = 3, xlab = "x", main = "Hessian - analytic vs. numeric solution",
+#'         ylab = expression(partialdiff^2 * l(x) / partialdiff * sigma^2))
+#' legend("topleft", legend = c("analytic score", "numeric score"),
+#'        bty = "n", pch = NA, lty = 1:2, col = 1:2, lwd = 3)
+#' abline(v = 3, lty = 3)
+#'
+#'
 #' @rdname score-hessian
 #' @export
 score <- function(d, ...) {
@@ -108,7 +139,7 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
     c(diag(pp), pp[upper.tri(pp)], pp[lower.tri(pp)])
   )[pp]
   if (is.null(which)) which <- names(p)
-  
+
   ## which combinations need to be computed?
   which <- match.arg(which, names(p), several.ok = TRUE)
   w <- unique(p[which])
@@ -185,14 +216,14 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
     function(par) switch(par,
-      "mu"    = rep_len(-1/d$sigma^2, n),
-      "sigma" = rep_len(-2 /d$sigma^2, n),
+      "mu"    = rep_len(-1 / d$sigma^2, n),
+      "sigma" = rep_len(-2 / d$sigma^2, n),
       rep.int(0, n))
   } else {
     function(par) switch(par,
-      "mu"    = rep_len(-1/d$sigma^2, n),
-      "sigma" = -3 * (x - d$mu)^2/(d$sigma^4) + 1/d$sigma^2,
-      -2 * (x - d$mu)/d$sigma^3)
+      "mu"    = rep_len(-1 / d$sigma^2, n),
+      "sigma" = -3 * (x - d$mu)^2 / d$sigma^4 + 1/d$sigma^2,
+      -2 * (x - d$mu) / d$sigma^3)
   }
 
   ## if possible return single vector, otherwise collect in matrix
@@ -237,7 +268,7 @@ hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALS
   which <- match.arg(which, "lambda", several.ok = TRUE)
 
   ## compute hessian
-  h <- if (expected) rep_len(-1/d$lambda, n) else -x/d$lambda^2
+  h <- if (expected) rep_len(-1 / d$lambda, n) else -x / d$lambda^2
   if (!drop) h <- cbind("lambda" = h)
   return(h)
 }
@@ -289,7 +320,7 @@ score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
   if (!identical(which, "p")) warning("only the scores with respect to 'p' are supported")
 
   ## compute score
-  s <- (x - d$size * d$p)/(d$p * (1 - d$p))
+  s <- (x - d$size * d$p) / (d$p * (1 - d$p))
   if (!drop) s <- cbind("p" = s)
   return(s)
 }
@@ -307,7 +338,7 @@ hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, .
   if (!identical(which, "p")) warning("only the scores with respect to 'p' are supported")
 
   ## compute hessian
-  h <- if (expected) rep_len(-d$size/(d$p * (1 - d$p)), n) else -x/d$p^2 - (d$size - x)/(1 - d$p)^2
+  h <- if (expected) rep_len(-d$size / (d$p * (1 - d$p)), n) else -x / d$p^2 - (d$size - x) / (1 - d$p)^2
   if (!drop) h <- cbind("p" = h)
   return(h)
 }
