@@ -493,29 +493,21 @@ is_continuous.SHASH <- function(d, ...) {
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
-#' @param lambda vector of (non-negative) Poisson parameters.
+#' @param mu,sigma,nu,tau vector of (non-negative) SHASH parameters.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
-#' @seealso \code{\link{ZTPoisson}}, \code{\link{dpois}}
 #'
 #' @keywords distribution
 #'
 #' @examples
-#' ## theoretical probabilities for a zero-truncated Poisson distribution
-#' x <- 0:8
-#' p <- dztpois(x, lambda = 2.5)
-#' plot(x, p, type = "h", lwd = 2)
+#' ## TODO(R): Add a couple of examples
 #'
-#' ## corresponding empirical frequencies from a simulated sample
-#' set.seed(0)
-#' y <- rztpois(500, lambda = 2.5)
-#' hist(y, breaks = -1:max(y) + 0.5)
-#'
+#' @family SHASH
 #' @rdname shash
 #' @export
 dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE) {
-  nparam <- c(length(mu), length(sigma), length(nu), length(tau))
+  nparam <- c(length(x), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
   ## TODO(R): Add it? Other functions do not have it
@@ -546,24 +538,31 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE) {
 ## microbenchmark::microbenchmark(dshash(x), gamlss.dist::dSHASH(x))
 
 
+#' @importFrom parallel detectCores
+#' @useDynLib distributions3, .registration = TRUE
 #' @rdname shash
 #' @importFrom stats pnorm
 #' @export
-pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE) {
-  nparam <- c(length(mu), length(sigma), length(nu), length(tau))
+pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, useC = FALSE) {
+  nparam <- c(length(q), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
   ## TODO(R): Add it? Other functions do not have it
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
-
-  z      <- (q - mu) / sigma
-  asinhz <- asinh(z)
-  p      <- pnorm(0.5 * (exp(tau * asinhz) - exp(-nu * asinhz)))
-
-  if (!lower.tail) p <- 1 - p
-  return(if (log.p) log(p) else p)
+  if (useC) {
+    ## Arguments are: n, q, mu, sigma, nu, tau, log.p
+    p <- .Call("c_pshash", max(nparam), q, mu, sigma, nu, tau,
+               as.logical(lower.tail)[1L], as.logical(log.p)[1L], 10L, PACKAGE = "distributions3")
+  } else {
+    z      <- (q - mu) / sigma
+    asinhz <- asinh(z)
+    p      <- pnorm(0.5 * (exp(tau * asinhz) - exp(-nu * asinhz)))
+    if (!lower.tail) p <- 1 - p
+    p <- if (log.p) log(p) else p
+  }
+  return(p)
 }
 ## TODO(R): Checking against gamlss.dist implementation.
 ##          Move this to a dedicated test set (or package) and remove afterwards.
@@ -651,14 +650,10 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
 #' @importFrom stats runif
 #' @export
 rshash <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1) {
-  nparam <- c(length(mu), length(sigma), length(nu), length(tau))
-  stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
-      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
   ## TODO(R): Add it? Other functions do not have it
   ## if (any(sigma <= 0)) stop("sigma must be positive")
   ## if (any(tau <= 0)) stop("tau must be positive")
   ## if (any(nu <= 0)) stop("nu must be positive")
-
   qshash(runif(n), mu = mu, sigma = sigma, nu = nu, tau = tau)
 }
 

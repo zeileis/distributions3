@@ -9,7 +9,16 @@
 \usage{
 dshash(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE)
 
-pshash(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE)
+pshash(
+  q,
+  mu = 0,
+  sigma = 1,
+  nu = 1,
+  tau = 1,
+  lower.tail = TRUE,
+  log.p = FALSE,
+  useC = FALSE
+)
 
 qshash(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE)
 
@@ -17,6 +26,8 @@ rshash(n, mu = 0, sigma = 1, nu = 1, tau = 1)
 }
 \arguments{
 \item{x}{vector of (non-negative integer) quantiles.}
+
+\item{mu, sigma, nu, tau}{vector of (non-negative) SHASH parameters.}
 
 \item{log, log.p}{logical indicating whether probabilities p are given as log(p).}
 
@@ -27,8 +38,6 @@ rshash(n, mu = 0, sigma = 1, nu = 1, tau = 1)
 \item{p}{vector of probabilities.}
 
 \item{n}{number of random values to return.}
-
-\item{lambda}{vector of (non-negative) Poisson parameters.}
 }
 \description{
 Density, distribution function, quantile function, and random
@@ -44,18 +53,8 @@ normal distribution.
 All functions follow the usual conventions of d/p/q/r functions in base R.
 }
 \examples{
-## theoretical probabilities for a zero-truncated Poisson distribution
-x <- 0:8
-p <- dztpois(x, lambda = 2.5)
-plot(x, p, type = "h", lwd = 2)
-
-## corresponding empirical frequencies from a simulated sample
-set.seed(0)
-y <- rztpois(500, lambda = 2.5)
-hist(y, breaks = -1:max(y) + 0.5)
+## TODO(R): Add a couple of examples
 
 }
-\seealso{
-\code{\link{ZTPoisson}}, \code{\link{dpois}}
-}
+\concept{SHASH}
 \keyword{distribution}
