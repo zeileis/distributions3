@@ -484,6 +484,12 @@ test_that("Binomial.hessian works as expected", {
     tmp_e <- rep(-30 / 0.5^2, 5L) # Expected hessian for score = 30, p = 0.5
     expect_identical(hessian(Binomial(30, 0.5), x, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
     expect_identical(hessian(Binomial(30, 0.5), x, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+
+    ## Hessian only supported for parameter p (not size), when which = 'size'
+    ## we expect a warning, and 'p' is returned.
+    expect_warning(s2 <- hessian(Binomial(size = 30, p = 0.5), x, which = "size"),
+        regexp = "only the scores with respect to 'p' are supported")
+    expect_identical(s2, hessian(Binomial(size = 30, p = 0.5), x))
 })
 
 
