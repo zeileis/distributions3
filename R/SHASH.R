@@ -1,3 +1,4 @@
+
 #' Create a Sinh-Arcsinh (SHASH) distribution
 #'
 #' The Sinh-Arcsinh (SHASH) distribution is a four-parameter distribution
@@ -5,7 +6,8 @@
 #' controlling location, scale, skewness, and tail-heaviness. It can produce a
 #' wide range of shapes, including symmetric and asymmetric forms and both heavier
 #' and lighter tails, making it useful for modeling real-valued data with
-#' non-normal behavior.
+#' non-normal behavior. Using \eqn{\nu = 1} and \eqn{\tau = 1} results
+#' in a standard normal distribution.
 #'
 #' @param mu The location parameter, written \eqn{\mu} in textbooks.
 #'   Defaults to `0`.
@@ -62,6 +64,14 @@
 #'   }
 #'
 #' @examples
+#'
+#' ## SHASH(), by default, uses nu = 1, tau = 1 which
+#' ## results in the standard normal distribution
+#' set.seed(6020)
+#' X <- SHASH() # Uses mu = 1, sigma = 0, nu = 1, tau = 1)
+#' x <- random(X, 300)
+#' qqnorm(x); qqline(x, col = 2, lwd = 2)
+#' c(mean = mean(x), sd = sd(x))
 #'
 #' ## TODO(R): Write examples
 #' ## set.seed(27)
@@ -152,6 +162,9 @@
 #' @export
 SHASH <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
   ## TODO(R): With this default is should be a Normal dist? Check and describe.
+  ## TODO(R): mu = 0, sigma = 1, nu = 1, tau = 1 should be the standard normal,
+  ##          I am just using the current defaults as these are the defaults
+  ##          in gamlss.dist::SHASH for the dpqr (see below)
   n <- c(mu = length(mu), sigma = length(sigma), nu = length(nu), tau = length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
@@ -162,238 +175,346 @@ SHASH <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
   d
 }
 
-######' @export
-#####mean.SHASH <- function(x, ...) {
-#####  rlang::check_dots_used()
-#####  setNames(x$mu, names(x))
-#####}
-#####
-######' @export
-#####variance.SHASH <- function(x, ...) {
-#####  setNames(x$sigma^2, names(x))
-#####}
-#####
-######' @export
-#####skewness.SHASH <- function(x, ...) {
-#####  setNames(rep.int(0, length(x)), names(x))
-#####}
-#####
-######' @export
-#####kurtosis.SHASH <- function(x, ...) {
-#####  setNames(rep.int(0, length(x)), names(x))
-#####}
-#####
-#####
-######' Draw a random sample from a SHASH distribution
-######'
-######' Please see the documentation of [SHASH()] for some properties
-######' of the SHASH distribution, as well as extensive examples
-######' showing to how calculate p-values and confidence intervals.
-######'
-######' @inherit SHASH examples
-######'
-######' @param x A `SHASH` object created by a call to [SHASH()].
-######' @param n The number of samples to draw. Defaults to `1L`.
-######' @param drop logical. Should the result be simplified to a vector if possible?
-######' @param ... Unused. Unevaluated arguments will generate a warning to
-######'   catch mispellings or other possible errors.
-######'
-######' @return In case of a single distribution object or `n = 1`, either a numeric
-######'   vector of length `n` (if `drop = TRUE`, default) or a `matrix` with `n` columns
-######'   (if `drop = FALSE`).
-######' @export
-######'
-#####random.SHASH <- function(x, n = 1L, drop = TRUE, ...) {
-#####  n <- make_positive_integer(n)
-#####  if (n == 0L) {
-#####    return(numeric(0L))
-#####  }
-#####  FUN <- function(at, d) rnorm(n = at, mean = d$mu, sd = d$sigma)
-#####  apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
-#####}
-#####
-######' Evaluate the probability mass function of a SHASH distribution
-######'
-######' Please see the documentation of [SHASH()] for some properties
-######' of the SHASH distribution, as well as extensive examples
-######' showing to how calculate p-values and confidence intervals.
-######'
-######' @inherit SHASH examples
-######'
-######' @param d A `SHASH` object created by a call to [SHASH()].
-######' @param x A vector of elements whose probabilities you would like to
-######'   determine given the distribution `d`.
-######' @param drop logical. Should the result be simplified to a vector if possible?
-######' @param elementwise logical. Should each distribution in \code{d} be evaluated
-######'   at all elements of \code{x} (\code{elementwise = FALSE}, yielding a matrix)?
-######'   Or, if \code{d} and \code{x} have the same length, should the evaluation be
-######'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
-######'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
-######'   lengths match and otherwise \code{elementwise = FALSE} is used.
-######' @param ... Arguments to be passed to \code{\link[stats]{dnorm}}.
-######'   Unevaluated arguments will generate a warning to catch mispellings or other
-######'   possible errors.
-######'
-######' @family SHASH distribution
-######'
-######' @return In case of a single distribution object, either a numeric
-######'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
-######'   `length(x)` columns (if `drop = FALSE`). In case of a vectorized distribution
-######'   object, a matrix with `length(x)` columns containing all possible combinations.
-######' @export
-######'
-#####pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-#####  FUN <- function(at, d) dnorm(x = at, mean = d$mu, sd = d$sigma, ...)
-#####  apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
-#####}
-#####
-######' @rdname pdf.SHASH
-######' @export
-######'
-#####log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-#####  FUN <- function(at, d) dnorm(x = at, mean = d$mu, sd = d$sigma, log = TRUE)
-#####  apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
-#####}
-#####
-######' Evaluate the cumulative distribution function of a SHASH distribution
-######'
-######' @inherit SHASH examples
-######'
-######' @param d A `SHASH` object created by a call to [SHASH()].
-######' @param x A vector of elements whose cumulative probabilities you would
-######'   like to determine given the distribution `d`.
-######' @param drop logical. Should the result be simplified to a vector if possible?
-######' @param elementwise logical. Should each distribution in \code{d} be evaluated
-######'   at all elements of \code{x} (\code{elementwise = FALSE}, yielding a matrix)?
-######'   Or, if \code{d} and \code{x} have the same length, should the evaluation be
-######'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
-######'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
-######'   lengths match and otherwise \code{elementwise = FALSE} is used.
-######' @param ... Arguments to be passed to \code{\link[stats]{pnorm}}.
-######'   Unevaluated arguments will generate a warning to catch mispellings or other
-######'   possible errors.
-######'
-######' @family SHASH distribution
-######'
-######' @return In case of a single distribution object, either a numeric
-######'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
-######'   `length(x)` columns (if `drop = FALSE`). In case of a vectorized distribution
-######'   object, a matrix with `length(x)` columns containing all possible combinations.
-######' @export
-######'
-#####cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-#####  FUN <- function(at, d) pnorm(q = at, mean = d$mu, sd = d$sigma, ...)
-#####  apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
-#####}
-#####
-######' Determine quantiles of a SHASH distribution
-######'
-######' Please see the documentation of [SHASH()] for some properties
-######' of the SHASH distribution, as well as extensive examples
-######' showing to how calculate p-values and confidence intervals.
-######' `quantile()`
-######'
-######' This function returns the same values that you get from a Z-table. Note
-######' `quantile()` is the inverse of `cdf()`. Please see the documentation of [SHASH()] for some properties
-######' of the SHASH distribution, as well as extensive examples
-######' showing to how calculate p-values and confidence intervals.
-######'
-######' @inherit SHASH examples
-######' @inheritParams random.SHASH
-######'
-######' @param probs A vector of probabilities.
-######' @param drop logical. Should the result be simplified to a vector if possible?
-######' @param elementwise logical. Should each distribution in \code{x} be evaluated
-######'   at all elements of \code{probs} (\code{elementwise = FALSE}, yielding a matrix)?
-######'   Or, if \code{x} and \code{probs} have the same length, should the evaluation be
-######'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
-######'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
-######'   lengths match and otherwise \code{elementwise = FALSE} is used.
-######' @param ... Arguments to be passed to \code{\link[stats]{qnorm}}.
-######'   Unevaluated arguments will generate a warning to catch mispellings or other
-######'   possible errors.
-######'
-######' @return In case of a single distribution object, either a numeric
-######'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
-######'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
-######'   distribution object, a matrix with `length(probs)` columns containing all
-######'   possible combinations.
-######' @export
-######'
-######' @family SHASH distribution
-######'
-#####quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
-#####  FUN <- function(at, d) qnorm(at, mean = d$mu, sd = d$sigma, ...)
-#####  apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
-#####}
-#####
-######' Fit a SHASH distribution to data
-######'
-######' @param d A `SHASH` object created by a call to [SHASH()].
-######' @param x A vector of data.
-######' @param ... Unused.
-######'
-######' @family SHASH distribution
-######'
-######' @return A `SHASH` object.
-######' @export
+
+# Helper function to compute raw central moments of Z = (X - mu) / sigma
+SHASH_z_moment <- function(k, nu, tau) {
+  fun <- function(z) (z^k) * dshash(z, mu = 0, sigma = 1, nu = nu, tau = tau)
+  stats::integrate(fun, lower = -Inf, upper = Inf)$value
+}
+
+
+#' @export
+mean.SHASH <- function(x, ...) {
+  rlang::check_dots_used()
+  fun <- function(i) x$mu[i] + x$sigma[i] * SHASH_z_moment(1, x$nu[i], x$tau[i])
+  setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
+}
+
+
+#' @export
+variance.SHASH <- function(x, ...) {
+  fun <- function(i) {
+    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i])
+    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i])
+    return(x$sigma[i]^2 * (ez2 - ez1^2))
+  }
+  setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
+}
+
+
+#' @export
+skewness.SHASH <- function(x, ...) {
+  fun <- function(i) {
+    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i])
+    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i])
+    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i])
+
+    mu3_z <- ez3 - 3 * ez1 * ez2 + 2 * (ez1^3)
+    var_z <- ez2 - ez1^2
+
+    return(mu3_z / (var_z^(1.5)))
+  }
+  setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
+}
+
+
+#' @export
+kurtosis.SHASH <- function(x, ...) {
+  fun <- function(i) {
+    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i])
+    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i])
+    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i])
+    ez4 <- SHASH_z_moment(4, x$nu[i], x$tau[i])
+
+    var_z <- ez2 - ez1^2
+    mu4_z <- ez4 - 4 * ez1 * ez3 + 6 * (ez1^2) * ez2 - 3 * (ez1^4)
+
+    # Excess kurtosis (subtract 3)
+    return(mu4_z / (var_z^2) - 3)
+  }
+  setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
+}
+
+## TODO(R): Checking against gamlss.dist implementation.
+##          Move this to a dedicated test set (or package) and remove afterwards.
+## set.seed(111)
+## N <- 20
+## X <- SHASH(mu = runif(N, -30, 30), sigma = runif(N, 0.001, 40),
+##            nu = runif(N, 0.5, 1.5), tau = runif(N, 0.5, 1.5))
+##
+## ma <- mean(X)
+## mn <- distributions3:::mean.distribution(X)
+## plot(ma, mn)
+## va <- variance(X)
+## vn <- distributions3:::variance.distribution(X)
+## plot(va, vn)
+## sa <- skewness(X)
+## sn <- distributions3:::skewness.distribution(X)
+## plot(sa, sn)
+## ka <- kurtosis(X)
+## kn <- distributions3:::kurtosis.distribution(X)
+## plot(ka, kn)
+
+
+#' Draw a random sample from a SHASH distribution
+#'
+#' Please see the documentation of [SHASH()] for some properties
+#' of the SHASH distribution, as well as extensive examples
+#' showing to how calculate p-values and confidence intervals.
+#'
+#' @param x A `SHASH` object created by a call to [SHASH()].
+#' @param n The number of samples to draw. Defaults to `1L`.
+#' @param drop logical. Should the result be simplified to a vector if possible?
+#' @param ... Unused. Unevaluated arguments will generate a warning to
+#'   catch mispellings or other possible errors.
+#'
+#' @inherit SHASH examples
+#'
+#' @return In case of a single distribution object or `n = 1`, either a numeric
+#' vector of length `n` (if `drop = TRUE`, default) or a `matrix` with `n` columns
+#' (if `drop = FALSE`).
+#'
+#' @export
+random.SHASH <- function(x, n = 1L, drop = TRUE, ...) {
+  n <- make_positive_integer(n)
+  if (n == 0L) return(numeric())
+  FUN <- function(at, d) rshash(n = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau)
+  apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
+}
+
+
+#' Evaluate the probability mass function of a SHASH distribution
+#'
+#' Please see the documentation of [SHASH()] for some properties
+#' of the SHASH distribution, as well as extensive examples
+#' showing to how calculate p-values and confidence intervals.
+#'
+#' @inherit SHASH examples
+#'
+#' @param d A `SHASH` object created by a call to [SHASH()].
+#' @param x A vector of elements whose probabilities you would like to
+#'   determine given the distribution `d`.
+#' @param drop logical. Should the result be simplified to a vector if possible?
+#' @param elementwise logical. Should each distribution in \code{d} be evaluated
+#'   at all elements of \code{x} (\code{elementwise = FALSE}, yielding a matrix)?
+#'   Or, if \code{d} and \code{x} have the same length, should the evaluation be
+#'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
+#'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
+#'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param ... Arguments to be passed to \code{\link[stats]{dnorm}}.
+#'   Unevaluated arguments will generate a warning to catch mispellings or other
+#'   possible errors.
+#'
+#' @family SHASH distribution
+#'
+#' @return In case of a single distribution object, either a numeric
+#'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
+#'   `length(x)` columns (if `drop = FALSE`). In case of a vectorized distribution
+#'   object, a matrix with `length(x)` columns containing all possible combinations.
+#'
+#' @export
+pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
+  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+  apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
+}
+
+
+#' @rdname pdf.SHASH
+#' @export
+#'
+log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
+  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+  apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
+}
+
+
+#' Evaluate the cumulative distribution function of a SHASH distribution
+#'
+#' @inherit SHASH examples
+#'
+#' @param d A `SHASH` object created by a call to [SHASH()].
+#' @param x A vector of elements whose cumulative probabilities you would
+#'   like to determine given the distribution `d`.
+#' @param drop logical. Should the result be simplified to a vector if possible?
+#' @param elementwise logical. Should each distribution in \code{d} be evaluated
+#'   at all elements of \code{x} (\code{elementwise = FALSE}, yielding a matrix)?
+#'   Or, if \code{d} and \code{x} have the same length, should the evaluation be
+#'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
+#'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
+#'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param ... Arguments to be passed to \code{\link[stats]{pnorm}}.
+#'   Unevaluated arguments will generate a warning to catch mispellings or other
+#'   possible errors.
+#'
+#' @family SHASH distribution
+#'
+#' @return In case of a single distribution object, either a numeric
+#'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
+#'   `length(x)` columns (if `drop = FALSE`). In case of a vectorized distribution
+#'   object, a matrix with `length(x)` columns containing all possible combinations.
+#'
+#' @export
+cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
+  FUN <- function(at, d) pshash(q = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+  apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
+}
+
+
+#' Determine quantiles of a SHASH distribution
+#'
+#' Please see the documentation of [SHASH()] for some properties
+#' of the SHASH distribution, as well as extensive examples
+#' showing to how calculate p-values and confidence intervals.
+#' `quantile()`
+#'
+#' This function returns the same values that you get from a Z-table. Note
+#' `quantile()` is the inverse of `cdf()`. Please see the documentation of [SHASH()] for some properties
+#' of the SHASH distribution, as well as extensive examples
+#' showing to how calculate p-values and confidence intervals.
+#'
+#' @inherit SHASH examples
+#' @inheritParams random.SHASH
+#'
+#' @param probs A vector of probabilities.
+#' @param drop logical. Should the result be simplified to a vector if possible?
+#' @param elementwise logical. Should each distribution in \code{x} be evaluated
+#'   at all elements of \code{probs} (\code{elementwise = FALSE}, yielding a matrix)?
+#'   Or, if \code{x} and \code{probs} have the same length, should the evaluation be
+#'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
+#'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
+#'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param ... Arguments to be passed to \code{\link[stats]{qnorm}}.
+#'   Unevaluated arguments will generate a warning to catch mispellings or other
+#'   possible errors.
+#'
+#' @return In case of a single distribution object, either a numeric
+#'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
+#'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
+#'   distribution object, a matrix with `length(probs)` columns containing all
+#'   possible combinations.
+#' @export
+#'
+#' @family SHASH distribution
+#' @export
+quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  FUN <- function(at, d) qshash(p = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+  apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
+}
+
+
+### TODO(R): Not yet implmenented fit_mle and suff_stat
+###
+###### Fit a SHASH distribution to data
+######
+###### @param d A `SHASH` object created by a call to [SHASH()].
+###### @param x A vector of data.
+###### @param ... Unused.
+######
+###### @family SHASH distribution
+######
+###### @return A `SHASH` object.
+###### @export
 #####fit_mle.SHASH <- function(d, x, ...) {
 #####  ss <- suff_stat(d, x, ...)
 #####  SHASH(ss$mu, ss$sigma)
 #####}
 #####
 #####
-######' Compute the sufficient statistics for a SHASH distribution from data
-######'
-######' @inheritParams fit_mle.SHASH
-######'
-######' @return A named list of the sufficient statistics of the normal
-######'   distribution:
-######'
-######'   - `mu`: The sample mean of the data.
-######'   - `sigma`: The sample standard deviation of the data.
-######'   - `samples`: The number of samples in the data.
-######'
-######' @export
+###### Compute the sufficient statistics for a SHASH distribution from data
+######
+###### @inheritParams fit_mle.SHASH
+######
+###### @return A named list of the sufficient statistics of the normal
+######   distribution:
+######
+######   - `mu`: The sample mean of the data.
+######   - `sigma`: The sample standard deviation of the data.
+######   - `samples`: The number of samples in the data.
+######
+###### @export
 #####suff_stat.SHASH <- function(d, x, ...) {
 #####  valid_x <- is.numeric(x)
 #####  if (!valid_x) stop("`x` must be a numeric vector")
 #####  list(mu = mean(x), sigma = sd(x), samples = length(x))
 #####}
-#####
-######' Return the support of the SHASH distribution
-######'
-######' @param d An `SHASH` object created by a call to [SHASH()].
-######' @param drop logical. Should the result be simplified to a vector if possible?
-######' @param ... Currently not used.
-######'
-######' @return In case of a single distribution object, a numeric vector of length 2
-######' with the minimum and maximum value of the support (if `drop = TRUE`, default)
-######' or a `matrix` with 2 columns. In case of a vectorized distribution object, a
-######' matrix with 2 columns containing all minima and maxima.
-######'
-######' @export
-#####support.SHASH <- function(d, drop = TRUE, ...) {
-#####  rlang::check_dots_used()
-#####  min <- rep(-Inf, length(d))
-#####  max <- rep(Inf, length(d))
-#####  make_support(min, max, d, drop = drop)
-#####}
-#####
-######' @exportS3Method
-#####is_discrete.SHASH <- function(d, ...) {
-#####  rlang::check_dots_used()
-#####  setNames(rep.int(FALSE, length(d)), names(d))
-#####}
-#####
-######' @exportS3Method
-#####is_continuous.SHASH <- function(d, ...) {
-#####  rlang::check_dots_used()
-#####  setNames(rep.int(TRUE, length(d)), names(d))
-#####}
 
 
-dSHASH <- function(x, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, log = FALSE) {
+#' Return the support of the SHASH distribution
+#'
+#' @param d An `SHASH` object created by a call to [SHASH()].
+#' @param drop logical. Should the result be simplified to a vector if possible?
+#' @param ... Currently not used.
+#'
+#' @return In case of a single distribution object, a numeric vector of length 2
+#' with the minimum and maximum value of the support (if `drop = TRUE`, default)
+#' or a `matrix` with 2 columns. In case of a vectorized distribution object, a
+#' matrix with 2 columns containing all minima and maxima.
+#'
+#' @export
+support.SHASH <- function(d, drop = TRUE, ...) {
+  rlang::check_dots_used()
+  min <- rep(-Inf, length(d))
+  max <- rep(Inf, length(d))
+  make_support(min, max, d, drop = drop)
+}
+
+#' @exportS3Method
+is_discrete.SHASH <- function(d, ...) {
+  rlang::check_dots_used()
+  setNames(rep.int(FALSE, length(d)), names(d))
+}
+
+#' @exportS3Method
+is_continuous.SHASH <- function(d, ...) {
+  rlang::check_dots_used()
+  setNames(rep.int(TRUE, length(d)), names(d))
+}
+
+
+
+# --------------------------------------------------------------------------
+# ------------------- the d/p/q/r methods for SHASH ------------------------
+# --------------------------------------------------------------------------
+
+#' The Sinh-Arcsinh (SHASH) distribution
+#'
+#' Density, distribution function, quantile function, and random
+#' generation for the sinh-arcsinh distribution with four parameters
+#' `mu`, `sigma`, `nu`, and `tau`.
+#'
+#' The Sinh-Arcsinh generalizes the Normal distribution by separately
+#' controlling location, scale, skewness, and tail-heaviness and can thus produce a
+#' wide range of shapes. Using `nu = 1` and `tau = 1` results in a 
+#' normal distribution.
+#'
+#' All functions follow the usual conventions of d/p/q/r functions in base R.
+#'
+#' @param x vector of (non-negative integer) quantiles.
+#' @param q vector of quantiles.
+#' @param p vector of probabilities.
+#' @param n number of random values to return.
+#' @param lambda vector of (non-negative) Poisson parameters.
+#' @param log,log.p logical indicating whether probabilities p are given as log(p).
+#' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
+#'
+#' @seealso \code{\link{ZTPoisson}}, \code{\link{dpois}}
+#'
+#' @keywords distribution
+#'
+#' @examples
+#' ## theoretical probabilities for a zero-truncated Poisson distribution
+#' x <- 0:8
+#' p <- dztpois(x, lambda = 2.5)
+#' plot(x, p, type = "h", lwd = 2)
+#'
+#' ## corresponding empirical frequencies from a simulated sample
+#' set.seed(0)
+#' y <- rztpois(500, lambda = 2.5)
+#' hist(y, breaks = -1:max(y) + 0.5)
+#'
+#' @rdname shash
+#' @export
+dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE) {
   nparam <- c(length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -420,13 +541,15 @@ dSHASH <- function(x, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, log = FALSE) {
 ## sigma <- runif(1000, 0.001, 40)
 ## nu    <- runif(1000, 0.001, 40)
 ## tau   <- runif(1000, 0.001, 40)
-## all.equal(dSHASH(x, mu, sigma, nu, tau), gamlss.dist::dSHASH(x, mu, sigma, nu, tau))
-## plot(dSHASH(x, mu, sigma, nu, tau), gamlss.dist::dSHASH(x, mu, sigma, nu, tau))
-## microbenchmark::microbenchmark(dSHASH(x), gamlss.dist::dSHASH(x))
+## all.equal(dshash(x, mu, sigma, nu, tau), gamlss.dist::dSHASH(x, mu, sigma, nu, tau))
+## plot(dshash(x, mu, sigma, nu, tau), gamlss.dist::dSHASH(x, mu, sigma, nu, tau))
+## microbenchmark::microbenchmark(dshash(x), gamlss.dist::dSHASH(x))
 
 
+#' @rdname shash
 #' @importFrom stats pnorm
-pSHASH <- function(q, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, lower.tail = TRUE, log.p = FALSE) {
+#' @export
+pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE) {
   nparam <- c(length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -449,12 +572,14 @@ pSHASH <- function(q, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, lower.tail = TRUE,
 ## sigma <- runif(1000, 0.001, 40)
 ## nu    <- runif(1000, 0.001, 40)
 ## tau   <- runif(1000, 0.001, 40)
-## all.equal(pSHASH(x, mu, sigma, nu, tau), gamlss.dist::pSHASH(x, mu, sigma, nu, tau))
-## plot(pSHASH(x, mu, sigma, nu, tau), gamlss.dist::pSHASH(x, mu, sigma, nu, tau))
-## microbenchmark::microbenchmark(pSHASH(x), gamlss.dist::pSHASH(x))
+## all.equal(pshash(x, mu, sigma, nu, tau), gamlss.dist::pSHASH(x, mu, sigma, nu, tau))
+## plot(pshash(x, mu, sigma, nu, tau), gamlss.dist::pSHASH(x, mu, sigma, nu, tau))
+## microbenchmark::microbenchmark(pshash(x), gamlss.dist::pSHASH(x))
 
+#' @rdname shash
 #' @importFrom stats uniroot
-qSHASH <- function(p, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, lower.tail = TRUE, log.p = FALSE) {
+#' @export
+qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE) {
   nparam <- c(length(p), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -480,7 +605,7 @@ qSHASH <- function(p, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, lower.tail = TRUE,
   res <- suppressWarnings(qnorm(p))
   idx_valid <- which(is.finite(res))
 
-  fn1 <- function(x, mu, sigma, nu, tau) pSHASH(x, mu = mu, sigma = sigma, nu = nu, tau = tau)
+  fn1 <- function(x, mu, sigma, nu, tau) pshash(x, mu = mu, sigma = sigma, nu = nu, tau = tau)
   fn2 <- function(x, mu, sigma, nu, tau, p) fn1(x, mu, sigma, nu, tau) - p
 
   # Calculate quantile for valid probabilities (p \in (0, 1))
@@ -517,13 +642,15 @@ qSHASH <- function(p, mu = 0, sigma = 1, nu = 0.5, tau = 0.5, lower.tail = TRUE,
 ## sigma <- runif(N, 0.001, 40)
 ## nu    <- runif(N, 0.001, 40)
 ## tau   <- runif(N, 0.001, 40)
-## ###plot(p ~ qSHASH(p, mu = 9, sigma = 2, nu = 1, tau = 0.5))
-## all.equal(qSHASH(p, mu, sigma, nu, tau), gamlss.dist::qSHASH(p, mu, sigma, nu, tau))
-## all.equal(qSHASH(p, mu, sigma, nu, tau), gamlss.dist::qSHASH(p, mu, sigma, nu, tau))
-## microbenchmark::microbenchmark(qSHASH(p), gamlss.dist::qSHASH(p))
+## ###plot(p ~ qshash(p, mu = 9, sigma = 2, nu = 1, tau = 0.5))
+## all.equal(qshash(p, mu, sigma, nu, tau), gamlss.dist::qSHASH(p, mu, sigma, nu, tau))
+## all.equal(qshash(p, mu, sigma, nu, tau), gamlss.dist::qSHASH(p, mu, sigma, nu, tau))
+## microbenchmark::microbenchmark(qshash(p), gamlss.dist::qSHASH(p))
 
+#' @rdname shash
 #' @importFrom stats runif
-rSHASH <- function(n, mu = 0, sigma = 1, nu = 0.5, tau = 0.5) {
+#' @export
+rshash <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1) {
   nparam <- c(length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -532,33 +659,6 @@ rSHASH <- function(n, mu = 0, sigma = 1, nu = 0.5, tau = 0.5) {
   ## if (any(tau <= 0)) stop("tau must be positive")
   ## if (any(nu <= 0)) stop("nu must be positive")
 
-  qSHASH(runif(n), mu = mu, sigma = sigma, nu = nu, tau = tau)
-}
-
-#' @export
-pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dSHASH(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
-  apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
-}
-
-
-#' @export
-cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) pSHASH(q = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
-  apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
-}
-
-#' @export
-quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) qSHASH(p = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
-  apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
-}
-
-#' @export
-random.SHASH <- function(x, n = 1L, drop = TRUE, ...) {
-  n <- make_positive_integer(n)
-  if (n == 0L) return(numeric())
-  FUN <- function(at, d) rSHASH(n = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau)
-  apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
+  qshash(runif(n), mu = mu, sigma = sigma, nu = nu, tau = tau)
 }
 
