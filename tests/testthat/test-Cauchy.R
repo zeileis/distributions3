@@ -1,3 +1,9 @@
+
+test_that("Cauchy default arguments", {
+  expect_identical(formals(Cauchy),
+    as.pairlist(alist(location = 0, scale = 1)))
+})
+
 test_that("print.Cauchy works", {
   expect_output(print(Cauchy(1, 1)), regexp = "Cauchy")
 })

@@ -1,3 +1,9 @@
+
+test_that("Uniform default arguments", {
+  expect_identical(formals(Uniform),
+    as.pairlist(alist(a = 0, b = 1)))
+})
+
 test_that("print.Uniform works", {
   expect_output(print(Uniform(1, 1)), regexp = "Uniform")
 })

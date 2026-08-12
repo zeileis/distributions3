@@ -5,8 +5,9 @@
 if (interactive()) { library("distributions3"); library("testthat") }
 suppressPackageStartupMessages(library("scoringRules"))
 
-test_that("Empirical exists", {
-    expect_true(is.function(Empirical))
+test_that("Empirical default arguments", {
+  expect_identical(formals(Empirical),
+    as.pairlist(alist(sample = numeric())))
 })
 
 test_that("Empirical unexpected input", {

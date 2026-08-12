@@ -1,3 +1,9 @@
+
+test_that("HurdleNegativeBinomial default arguments", {
+  expect_identical(formals(HurdleNegativeBinomial),
+    as.pairlist(alist(mu = numeric(), theta = numeric(), pi = numeric())))
+})
+
 test_that("print.HurdleNegativeBinomial works", {
   expect_output(print(HurdleNegativeBinomial(1, 1, 0.7)), regexp = "HurdleNegativeBinomial")
 })

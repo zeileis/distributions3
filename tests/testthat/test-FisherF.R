@@ -1,3 +1,9 @@
+
+test_that("FisherF default arguments", {
+  expect_identical(formals(FisherF),
+    as.pairlist(alist(df1 = numeric(), df2 = numeric(), lambda = 0)))
+})
+
 test_that("print.FisherF works", {
   expect_output(print(FisherF(1, 1)), regexp = "FisherF")
 })

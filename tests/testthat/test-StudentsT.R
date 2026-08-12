@@ -1,3 +1,9 @@
+
+test_that("StudentsT default arguments", {
+  expect_identical(formals(StudentsT),
+    as.pairlist(alist(df = numeric())))
+})
+
 test_that("print.StudentsT works", {
   expect_output(print(StudentsT(1)), regexp = "StudentsT")
 })

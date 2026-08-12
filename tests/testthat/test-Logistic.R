@@ -1,5 +1,11 @@
+
+test_that("Logistic default arguments", {
+  expect_identical(formals(Logistic),
+    as.pairlist(alist(location = 0, scale = 1)))
+})
+
 test_that("print.Logistic works", {
-  expect_output(print(Logistic(1, 1)), regexp = "Logistic")
+  expect_output(print(Logistic()), regexp = "Logistic")
 })
 
 test_that("likelihood.Logistic and log_likelihood.Logistic work correctly", {

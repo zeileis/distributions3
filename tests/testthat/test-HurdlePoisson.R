@@ -1,3 +1,9 @@
+
+test_that("HurdlePoisson default arguments", {
+  expect_identical(formals(HurdlePoisson),
+    as.pairlist(alist(lambda = numeric(), pi = numeric())))
+})
+
 test_that("print.HurdlePoisson works", {
   expect_output(print(HurdlePoisson(1, 0.7)), regexp = "HurdlePoisson")
 })

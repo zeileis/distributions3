@@ -1,3 +1,9 @@
+
+test_that("Beta default arguments", {
+  expect_identical(formals(Beta),
+    as.pairlist(alist(alpha = 1, beta = 1)))
+})
+
 test_that("print.Beta works", {
   expect_output(print(Beta()), regexp = "Beta")
 })
