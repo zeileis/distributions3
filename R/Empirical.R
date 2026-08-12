@@ -383,10 +383,12 @@ rempirical <- function(n, y, na.rm = TRUE) {
 #' @param ... currently unused.
 #'
 #' @family Empirical distribution
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 #' @rdname Empirical
 mean.Empirical <- function(x, ...) {
-  ## ellipsis::check_dots_used()
+  check_dots_used()
   setNames(rowMeans(as.matrix(x), na.rm = TRUE), names(x))
 }
 
@@ -578,8 +580,11 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @inherit Empirical examples
 #' @family Empirical distribution
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, type = 1L, ...) {
+  check_dots_used()
   FUN <- function(at, d) qempirical(at, y = as.matrix(d), type = type, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -622,7 +627,6 @@ format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...
 #' @family Empirical distribution
 #' @exportS3Method
 support.Empirical <- function(d, drop = TRUE, ...) {
-  ## ellipsis::check_dots_used()
   minmax <- apply(as.matrix(d), MARGIN = 1, FUN = range, na.rm = TRUE)
   make_support(minmax[1, ], minmax[2, ], d, drop = drop)
 }
@@ -630,14 +634,12 @@ support.Empirical <- function(d, drop = TRUE, ...) {
 #' @family Empirical distribution
 #' @exportS3Method
 is_discrete.Empirical <- function(d, ...) {
-  ## ellipsis::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @family Empirical distribution
 #' @exportS3Method
 is_continuous.Empirical <- function(d, ...) {
-  ## ellipsis::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 

@@ -125,11 +125,13 @@ cdf.Tukey <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family Tukey distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Tukey <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qtukey(p = at, nmeans = d$nmeans, df = d$df, nranges = d$nranges, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -145,7 +147,6 @@ quantile.Tukey <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.Tukey <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -153,12 +154,10 @@ support.Tukey <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Tukey <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Tukey <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

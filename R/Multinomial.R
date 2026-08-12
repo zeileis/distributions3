@@ -94,9 +94,10 @@ print.Multinomial <- function(x, ...) {
   cat(sprintf("Multinomial distribution (size = %s, p = [%s])", x$size, p), "\n")
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Multinomial <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   x$size * x$p
 }
 
@@ -152,12 +153,10 @@ log_pdf.Multinomial <- function(d, x, ...) {
 
 #' @exportS3Method
 is_discrete.Multinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Multinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }

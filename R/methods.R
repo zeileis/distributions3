@@ -38,9 +38,11 @@
 #' X <- Normal()
 #' ## 10 random samples
 #' random(X, 10)
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 random <- function(x, n = 1L, drop = TRUE, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("random")
 }
 
@@ -96,16 +98,19 @@ simulate.distribution <- function(object, nsim = 1L, seed = NULL, ...) {
 #' ## log-density
 #' pdf(X, c(1, 2, 3, 4, 5), log = TRUE)
 #' log_pdf(X, c(1, 2, 3, 4, 5))
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 pdf <- function(d, x, drop = TRUE, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("pdf")
 }
 
 #' @rdname pdf
+#' @importFrom rlang check_dots_used
 #' @export
 log_pdf <- function(d, x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("log_pdf")
 }
 
@@ -135,9 +140,11 @@ pmf <- function(d, x, ...) {
 #' X <- Normal()
 #' ## probabilities from CDF
 #' cdf(X, c(1, 2, 3, 4, 5))
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 cdf <- function(d, x, drop = TRUE, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("cdf")
 }
 
@@ -163,24 +170,27 @@ cdf <- function(d, x, drop = TRUE, ...) {
 #' @return Numeric vector with the values of the moments.
 #' @seealso \code{\link[base]{mean}}, \code{\link[stats]{quantile}},
 #' \code{\link{cdf}}, \code{\link{random}}
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 variance <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("variance")
 }
 
 #' @rdname variance
+#' @importFrom rlang check_dots_used
 #' @export
 skewness <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("skewness")
 }
 
 #' @rdname variance
+#' @importFrom rlang check_dots_used
 #' @export
 kurtosis <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("kurtosis")
 }
 
@@ -206,6 +216,7 @@ kurtosis <- function(x, ...) {
 #' log_likelihood(X, c(-1, 0, 0, 0, 3))
 #' ## exp of log_likelihood()
 #' likelihood(X, c(-1, 0, 0, 0, 3))
+#'
 #' @export
 log_likelihood <- function(d, x, ...) {
   sum(log_pdf(d, x, ...))
@@ -230,9 +241,11 @@ likelihood <- function(d, x, ...) {
 #' @examples
 #' X <- Normal()
 #' fit_mle(X, c(-1, 0, 0, 0, 3))
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 fit_mle <- function(d, x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("fit_mle")
 }
 
@@ -248,9 +261,11 @@ fit_mle <- function(d, x, ...) {
 #' @examples
 #' X <- Normal()
 #' suff_stat(X, c(-1, 0, 0, 0, 3))
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 suff_stat <- function(d, x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   UseMethod("suff_stat")
 }
 
@@ -273,7 +288,10 @@ suff_stat <- function(d, x, ...) {
 #' support(X)
 #' Y <- Uniform(-1, 1:3)
 #' support(Y)
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 support <- function(d, drop = TRUE, ...) {
+  check_dots_used()
   UseMethod("support")
 }

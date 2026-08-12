@@ -81,9 +81,10 @@ Logistic <- function(location = 0, scale = 1) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Logistic <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   rval <- x$location
   setNames(rval, names(x))
 }
@@ -227,11 +228,13 @@ cdf.Logistic <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family Logistic distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Logistic <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qlogis(p = at, location = d$location, scale = d$scale, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -246,7 +249,6 @@ quantile.Logistic <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.Logistic <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(-Inf, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -254,12 +256,10 @@ support.Logistic <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Logistic <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Logistic <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

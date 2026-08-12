@@ -42,4 +42,5 @@ is_continuous(X)
 Y <- Binomial(size = 10, p = c(0.2, 0.5, 0.8))
 is_discrete(Y)
 is_continuous(Y)
+
 }

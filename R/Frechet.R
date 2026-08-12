@@ -91,9 +91,10 @@ Frechet <- function(location = 0, scale = 1, shape = 1) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Frechet <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
   a <- x$shape
   m <- x$location
   s <- x$scale
@@ -294,9 +295,11 @@ cdf.Frechet <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Frechet <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   # Convert to the GEV parameterisation
   FUN <- function(at, d) {
     loc <- x$location + x$scale
@@ -320,7 +323,6 @@ quantile.Frechet <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.Frechet <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- d$location
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -328,12 +330,10 @@ support.Frechet <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Frechet <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Frechet <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

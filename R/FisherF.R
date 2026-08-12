@@ -49,12 +49,13 @@ FisherF <- function(df1, df2, lambda = 0) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.FisherF <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+
   # The k-th moment of an F(df1, df2) distribution exists and
   # is finite only when 2k < d2
-
   d1 <- x$df1
   d2 <- x$df2
   rval <- ifelse(d2 > 2,
@@ -219,9 +220,11 @@ cdf.FisherF <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.FisherF <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
   FUN <- function(at, d) qf(at, df1 = d$df1, df2 = d$df2, ncp = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -236,7 +239,6 @@ quantile.FisherF <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.FisherF <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -244,12 +246,10 @@ support.FisherF <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.FisherF <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.FisherF <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

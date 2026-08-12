@@ -499,12 +499,15 @@ log_pdf.distribution <- function(d, x, ...) pdf(d, x, log = TRUE, ...)
 #' @param ... Currently ignored.
 #'
 #' @importFrom distributions3 is_discrete support
+#' @importFrom rlang check_dots_used
 #' @rdname pdf.distribution
 #' @exportS3Method
 quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
                                   lower = -1 / sqrt(.Machine$double.eps),
                                   upper = +1 / sqrt(.Machine$double.eps),
                                   tol   = .Machine$double.eps^0.5, maxit = 1e3, ...) {
+    check_dots_used()
+
     ## Check which S3 methods are available
     cls <- setdiff(class(x), "distribution")
     has <- list(cdf = hasS3method("cdf", cls), pdf = hasS3method("pdf", cls))
@@ -1173,8 +1176,10 @@ random.distribution <- function(x, n = 1L, drop = TRUE, ...) {
 #' abline(h = 0, col = 2, lty = 2)
 #'
 #' @rdname mean.distribution
+#' @importFrom rlang check_dots_used
 #' @exportS3Method
 mean.distribution <- function(x, ...) {
+    check_dots_used()
     distribution_calculate_moments(x = x, what = 1L, ...)
 }
 
