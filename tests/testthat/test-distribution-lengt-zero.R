@@ -51,15 +51,15 @@ test_that("distribution objects on zero-length distribution object works", {
         d <- get_zero_length_object(dist)
 
         expect_identical(cdf(d, 1), numeric(),
-            info = paste0("expected NULL from cdf(<", dist, ">, 1) of zero-length object"))
+            info = paste0("expected numeric() from cdf(<", dist, ">, 1) of zero-length object"))
         expect_identical(pdf(d, 1), numeric(),
-            info = paste0("expected NULL from pdf(<", dist, ">, 1) of zero-length object"))
+            info = paste0("expected numeric() from pdf(<", dist, ">, 1) of zero-length object"))
         expect_identical(log_pdf(d, 1), numeric(),
-            info = paste0("expected NULL from log_pdf(<", dist, ">, 1) of zero-length object"))
+            info = paste0("expected numeric() from log_pdf(<", dist, ">, 1) of zero-length object"))
         expect_identical(quantile(d, 0.5), numeric(),
-            info = paste0("expected NULL from quantile(<", dist, ">, 0.5) of zero-length object"))
+            info = paste0("expected numeric() from quantile(<", dist, ">, 0.5) of zero-length object"))
         expect_identical(random(d), numeric(),
-            info = paste0("expected NULL from random(<", dist, ">) of zero-length object"))
+            info = paste0("expected numeric() from random(<", dist, ">) of zero-length object"))
     }
 })
 
@@ -71,13 +71,13 @@ test_that("central moments on zero-length distribution object works", {
 
         # Central moments must return numeric()
         expect_identical(mean(d), numeric(),
-            info = paste0("expected NULL from mean(<", dist, ">) of zero-length object"))
+            info = paste0("expected numeric() from mean(<", dist, ">) of zero-length object"))
         expect_identical(variance(d), numeric(),
-            info = paste0("expected NULL from variance(<", dist, ">) of zero-length object"))
+            info = paste0("expected numeric() from variance(<", dist, ">) of zero-length object"))
         expect_identical(skewness(d), numeric(),
-            info = paste0("expected NULL from skewness(<", dist, ">) of zero-length object"))
+            info = paste0("expected numeric() from skewness(<", dist, ">) of zero-length object"))
         expect_identical(kurtosis(d), numeric(),
-            info = paste0("expected NULL from kurtosis(<", dist, ">) of zero-length object"))
+            info = paste0("expected numeric() from kurtosis(<", dist, ">) of zero-length object"))
     }
 })
 
@@ -88,10 +88,25 @@ test_that("support, is_discrete, and is_continuous on zero-length distribution o
         d <- get_zero_length_object(dist)
 
         expect_identical(support(d), numeric(),
-            info = paste0("expected NULL from support(<", dist, ">) of zero-length object"))
+            info = paste0("expected numeric() from support(<", dist, ">) of zero-length object"))
         expect_identical(is_discrete(d), logical(),
-            info = paste0("expected NULL from is_discrete(<", dist, ">) of zero-length object"))
+            info = paste0("expected logical() from is_discrete(<", dist, ">) of zero-length object"))
         expect_identical(is_continuous(d), logical(),
-            info = paste0("expected NULL from is_continuous(<", dist, ">) of zero-length object"))
+            info = paste0("expected logical() from is_continuous(<", dist, ">) of zero-length object"))
     }
 })
+
+
+test_that("suff_stat and fit_mle on zero-length distribution object works", {
+    for (dist in to_test) {
+        ###message(" ------ ", dist)
+        d <- get_zero_length_object(dist)
+
+        expect_identical(suff_stat(d, 1:2), numeric(),
+            info = paste0("expected numeric() from suff_stat(<", dist, ">, 1:2) of zero-length object"))
+        expect_identical(fit_mle(d, 1:2), numeric(),
+            info = paste0("expected numeric() from fit_mle(<", dist, ">, 1:2) of zero-length object"))
+    }
+})
+
+
