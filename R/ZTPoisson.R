@@ -172,6 +172,7 @@ ZTPoisson <- function(lambda = numeric()) {
 #' @export
 mean.ZTPoisson <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m, names(x))
@@ -324,6 +325,7 @@ cdf.ZTPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.ZTPoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qztpois(p = at, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

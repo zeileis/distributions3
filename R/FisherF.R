@@ -54,6 +54,7 @@ FisherF <- function(df1 = numeric(), df2 = numeric(), lambda = 0) {
 #' @export
 mean.FisherF <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
 
   # The k-th moment of an F(df1, df2) distribution exists and
   # is finite only when 2k < d2
@@ -226,6 +227,7 @@ cdf.FisherF <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.FisherF <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qf(at, df1 = d$df1, df2 = d$df2, ncp = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

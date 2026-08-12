@@ -95,6 +95,7 @@ Frechet <- function(location = 0, scale = 1, shape = 1) {
 #' @export
 mean.Frechet <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   a <- x$shape
   m <- x$location
   s <- x$scale
@@ -300,6 +301,7 @@ cdf.Frechet <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Frechet <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   # Convert to the GEV parameterisation
   FUN <- function(at, d) {
     loc <- x$location + x$scale

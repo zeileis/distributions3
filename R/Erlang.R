@@ -162,6 +162,7 @@ cdf.Erlang <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Erlang <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qgamma(p = at, shape = d$k, rate = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -78,6 +78,7 @@ Poisson <- function(lambda = numeric()) {
 #' @export
 mean.Poisson <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$lambda
   setNames(rval, names(x))
 }
@@ -117,9 +118,7 @@ kurtosis.Poisson <- function(x, ...) {
 #'
 random.Poisson <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
-  if (n == 0L) {
-    return(numeric(0L))
-  }
+  if (n == 0L) return(numeric())
   FUN <- function(at, d) rpois(n = at, lambda = d$lambda)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
@@ -219,6 +218,7 @@ cdf.Poisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Poisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qpois(p = at, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

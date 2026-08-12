@@ -185,6 +185,7 @@ HurdlePoisson <- function(lambda = numeric(), pi = numeric()) {
 #' @export
 mean.HurdlePoisson <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$lambda * x$pi / (1 - exp(-x$lambda))
   setNames(rval, names(x))
 }
@@ -334,6 +335,7 @@ cdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.HurdlePoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qhpois(p = at, lambda = d$lambda, pi = d$pi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

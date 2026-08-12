@@ -47,6 +47,7 @@ Beta <- function(alpha = 1, beta = 1) {
 #' @export
 mean.Beta <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$alpha / (x$alpha + x$beta)
   setNames(rval, names(x))
 }
@@ -196,6 +197,7 @@ cdf.Beta <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Beta <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qbeta(at, shape1 = d$alpha, shape2 = d$beta, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

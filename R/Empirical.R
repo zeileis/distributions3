@@ -392,6 +392,7 @@ rempirical <- function(n, y, na.rm = TRUE) {
 #' @rdname Empirical
 mean.Empirical <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   setNames(rowMeans(as.matrix(x), na.rm = TRUE), names(x))
 }
 
@@ -588,6 +589,7 @@ cdf.Empirical <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, type = 1L, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qempirical(at, y = as.matrix(d), type = type, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -599,7 +601,7 @@ quantile.Empirical <- function(x, probs, drop = TRUE, elementwise = NULL, type =
 ####        digits are used.
 #' @exportS3Method
 format.Empirical <- function(x, digits = pmax(3L, getOption("digits") - 3L), ...) {
-  if (length(x) < 1L) return(character(0))
+  if (!length(x)) return(character(0))
   n <- names(x)
   if (is.null(attr(x, "row.names"))) attr(x, "row.names") <- 1L:length(x)
   fn  <- function(x) c(min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE), n = sum(is.finite(x)))

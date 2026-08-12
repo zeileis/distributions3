@@ -96,6 +96,7 @@ Bernoulli <- function(p = 0.5) {
 #' @export
 mean.Bernoulli <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   setNames(x$p, names(x))
 }
 
@@ -240,6 +241,7 @@ cdf.Bernoulli <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Bernoulli <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qbinom(at, size = 1, prob = d$p, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

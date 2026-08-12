@@ -122,6 +122,7 @@ StudentsT <- function(df = numeric()) {
 #' @export
 mean.StudentsT <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- ifelse(x$df > 1,
     0,
     NaN
@@ -131,6 +132,7 @@ mean.StudentsT <- function(x, ...) {
 
 #' @export
 variance.StudentsT <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   rval <- ifelse(x$df > 2,
     x$df / (x$df - 2),
     ifelse(x$df > 1,
@@ -143,6 +145,7 @@ variance.StudentsT <- function(x, ...) {
 
 #' @export
 skewness.StudentsT <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   rval <- ifelse(x$df > 3,
     0,
     NaN
@@ -152,6 +155,7 @@ skewness.StudentsT <- function(x, ...) {
 
 #' @export
 kurtosis.StudentsT <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   rval <- ifelse(x$df > 4,
     6 / (x$df - 4),
     ifelse(x$df > 2,
@@ -306,6 +310,7 @@ cdf.StudentsT <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.StudentsT <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qt(p = at, df = d$df, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

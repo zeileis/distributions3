@@ -192,6 +192,7 @@ HurdleNegativeBinomial <- function(mu = numeric(), theta = numeric(), pi = numer
 #' @export
 mean.HurdleNegativeBinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$mu * x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
   setNames(rval, names(x))
 }
@@ -345,6 +346,7 @@ cdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ..
 #' @export
 quantile.HurdleNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qhnbinom(p = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -99,6 +99,7 @@ print.Multinomial <- function(x, ...) {
 #' @export
 mean.Multinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   x$size * x$p
 }
 

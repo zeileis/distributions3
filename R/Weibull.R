@@ -70,6 +70,7 @@ Weibull <- function(shape = numeric(), scale = numeric()) {
 #' @export
 mean.Weibull <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$scale * gamma(1 + 1 / x$shape)
   setNames(rval, names(x))
 }
@@ -227,6 +228,7 @@ cdf.Weibull <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Weibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qweibull(p = at, shape = d$shape, scale = d$scale, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

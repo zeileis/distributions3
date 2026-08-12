@@ -180,6 +180,7 @@ ZTNegativeBinomial <- function(mu = numeric(), theta = numeric()) {
 #' @export
 mean.ZTNegativeBinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   m <- x$mu / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
   m[x$mu <= 0] <- 1
   setNames(m, names(x))
@@ -337,6 +338,7 @@ cdf.ZTNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.ZTNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qztnbinom(p = at, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

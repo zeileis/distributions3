@@ -113,6 +113,7 @@ NegativeBinomial <- function(size = numeric(), p = 0.5, mu = size) {
 #' @export
 mean.NegativeBinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- if("mu" %in% names(unclass(x))) {
     x$mu
   } else {
@@ -289,6 +290,7 @@ cdf.NegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.NegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- if("mu" %in% names(unclass(x))) {
     function(at, d) qnbinom(p = at, mu = d$mu, size = d$size, ...)
   } else {

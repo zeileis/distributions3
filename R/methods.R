@@ -43,6 +43,7 @@
 #' @export
 random <- function(x, n = 1L, drop = TRUE, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("random")
 }
 
@@ -103,6 +104,7 @@ simulate.distribution <- function(object, nsim = 1L, seed = NULL, ...) {
 #' @export
 pdf <- function(d, x, drop = TRUE, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("pdf")
 }
 
@@ -111,6 +113,7 @@ pdf <- function(d, x, drop = TRUE, ...) {
 #' @export
 log_pdf <- function(d, x, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("log_pdf")
 }
 
@@ -145,6 +148,7 @@ pmf <- function(d, x, ...) {
 #' @export
 cdf <- function(d, x, drop = TRUE, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("cdf")
 }
 
@@ -175,6 +179,7 @@ cdf <- function(d, x, drop = TRUE, ...) {
 #' @export
 variance <- function(x, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("variance")
 }
 
@@ -183,6 +188,7 @@ variance <- function(x, ...) {
 #' @export
 skewness <- function(x, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("skewness")
 }
 
@@ -191,6 +197,7 @@ skewness <- function(x, ...) {
 #' @export
 kurtosis <- function(x, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("kurtosis")
 }
 
@@ -246,6 +253,7 @@ likelihood <- function(d, x, ...) {
 #' @export
 fit_mle <- function(d, x, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("fit_mle")
 }
 
@@ -266,6 +274,7 @@ fit_mle <- function(d, x, ...) {
 #' @export
 suff_stat <- function(d, x, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("suff_stat")
 }
 
@@ -293,5 +302,6 @@ suff_stat <- function(d, x, ...) {
 #' @export
 support <- function(d, drop = TRUE, ...) {
   check_dots_used()
+  if (!length(d)) return(numeric())
   UseMethod("support")
 }

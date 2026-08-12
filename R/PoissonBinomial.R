@@ -142,6 +142,7 @@ format.PoissonBinomial <- function(x, digits = pmax(3L, getOption("digits") - 3L
 #' @export
 mean.PoissonBinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   n <- names(x)
   rval <- rowSums(as.matrix(x), na.rm = TRUE)
   setNames(rval, n)
@@ -149,6 +150,7 @@ mean.PoissonBinomial <- function(x, ...) {
 
 #' @export
 variance.PoissonBinomial <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   n <- names(x)
   x <- as.matrix(x)
   rval <- rowSums(x * (1 - x), na.rm = TRUE)
@@ -157,6 +159,7 @@ variance.PoissonBinomial <- function(x, ...) {
 
 #' @export
 skewness.PoissonBinomial <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   n <- names(x)
   x <- as.matrix(x)
   v <- rowSums(x * (1 - x), na.rm = TRUE)
@@ -166,6 +169,7 @@ skewness.PoissonBinomial <- function(x, ...) {
 
 #' @export
 kurtosis.PoissonBinomial <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   n <- names(x)
   x <- as.matrix(x)
   v <- rowSums(x * (1 - x), na.rm = TRUE)
@@ -387,18 +391,19 @@ cdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, lower.tai
 #' @export
 quantile.PoissonBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, lower.tail = TRUE, log.p = FALSE, verbose = TRUE, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   n <- length(x)
   k <- length(probs)
   if(n > 0L && k > 0L && requireNamespace("PoissonBinomial", quietly = TRUE)) {
     ## basic properties
     rnam <- names(x)
-    
+
     ## elementwise evaluation?
     if(is.null(elementwise)) elementwise <- k > 1L && k == n && is.null(dim(probs))
     if(elementwise && k > 1L && k != n) stop(
       sprintf("lengths of distribution 'x' and argument 'probs' do not match: %s != %s", n, k))
-    
-    ## apply ppbinom to each row of the parameter matrix    
+
+    ## apply ppbinom to each row of the parameter matrix
     p <- as.matrix(x)
     if (elementwise) {
       rval <- vapply(1L:n, function(i) PoissonBinomial::qpbinom(probs[i], probs = p[i,], lower.tail = lower.tail, log.p = log.p, ...), numeric(1L))
