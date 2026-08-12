@@ -43,7 +43,7 @@
 #' @export
 random <- function(x, n = 1L, drop = TRUE, ...) {
   check_dots_used()
-  if (!length(d)) return(numeric())
+  if (!length(x)) return(numeric())
   UseMethod("random")
 }
 
@@ -179,7 +179,7 @@ cdf <- function(d, x, drop = TRUE, ...) {
 #' @export
 variance <- function(x, ...) {
   check_dots_used()
-  if (!length(d)) return(numeric())
+  if (!length(x)) return(numeric())
   UseMethod("variance")
 }
 
@@ -188,7 +188,7 @@ variance <- function(x, ...) {
 #' @export
 skewness <- function(x, ...) {
   check_dots_used()
-  if (!length(d)) return(numeric())
+  if (!length(x)) return(numeric())
   UseMethod("skewness")
 }
 
@@ -197,7 +197,7 @@ skewness <- function(x, ...) {
 #' @export
 kurtosis <- function(x, ...) {
   check_dots_used()
-  if (!length(d)) return(numeric())
+  if (!length(x)) return(numeric())
   UseMethod("kurtosis")
 }
 
