@@ -443,6 +443,10 @@ test_that("Binomial.score works as expected", {
     expect_silent(s1 <- score(Binomial(30, 0.5), x, which = "p", drop = FALSE))
     expect_identical(s1, cbind(p = tmp))
 
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Binomial(30, 0.5), x)[, "p"]),
+            info = "numeric approximation differs from analytic solution")
+
     ## Scores only supported for parameter p (not size), when which = 'size'
     ## we expect a warning, and 'p' is returned.
     expect_warning(s2 <- score(Binomial(size = 30, p = 0.5), x, which = "size"),
@@ -471,6 +475,10 @@ test_that("Binomial.hessian works as expected", {
     tmp_o <- -x / 0.5^2 - (30 - x) / 0.5^2 # Observed hessian for size = 30, p = 0.5
     expect_identical(hessian(Binomial(30, 0.5), x, expected = FALSE), tmp_o, info = "incorrect observed hessian returned")
     expect_identical(hessian(Binomial(30, 0.5), x, expected = FALSE, drop = FALSE), cbind(p = tmp_o))
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp_o, suppressWarnings(distributions3:::hessian.distribution(Binomial(30, 0.5), x)[, "p"]),
+            tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
     ## Calculating expected hessian and check return
     tmp_e <- rep(-30 / 0.5^2, 5L) # Expected hessian for score = 30, p = 0.5
