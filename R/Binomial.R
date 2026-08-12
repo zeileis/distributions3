@@ -90,7 +90,8 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Binomial <- function(size, p = 0.5) {
+Binomial <- function(size = numeric(), p = 0.5) {
+  if (identical(size, numeric())) p <- numeric() # Ensure empty default
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(size) == length(p) | length(size) == 1 | length(p) == 1

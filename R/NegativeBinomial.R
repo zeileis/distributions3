@@ -85,7 +85,8 @@
 #' Y
 #' cdf(Y, 50)
 #' quantile(Y, 0.7)
-NegativeBinomial <- function(size, p = 0.5, mu = size) {
+NegativeBinomial <- function(size = numeric(), p = 0.5, mu = size) {
+  if (identical(size, numeric())) p <- numeric()
   if(!missing(mu) && !missing(p)) stop("only one of the parameters 'p' or 'mu' must be specified")
   if(missing(mu)) {
     stopifnot("parameter 'size' must always be positive" = all(size > 0))

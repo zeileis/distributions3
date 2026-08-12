@@ -1,5 +1,5 @@
 #' The hurdle Poisson distribution
-#' 
+#'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-hurdle Poisson distribution with
 #' parameters \code{lambda} and \code{pi}.
@@ -10,7 +10,7 @@
 #' functions for the Poisson distribution from base R internally.
 #'
 #' Note, however, that the precision of \code{qhpois} for very large
-#' probabilities (close to 1) is limited because the probabilities 
+#' probabilities (close to 1) is limited because the probabilities
 #' are internally handled in levels and not in logs (even if \code{log.p = TRUE}).
 #'
 #' @aliases dhpois phpois qhpois rhpois
@@ -25,7 +25,7 @@
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
 #' @seealso \code{\link{HurdlePoisson}}, \code{\link{dpois}}
-#' 
+#'
 #' @keywords distribution
 #'
 #' @examples
@@ -33,7 +33,7 @@
 #' x <- 0:8
 #' p <- dhpois(x, lambda = 2.5, pi = 0.75)
 #' plot(x, p, type = "h", lwd = 2)
-#' 
+#'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
 #' y <- rhpois(500, lambda = 2.5, pi = 0.75)
@@ -121,7 +121,7 @@ rhpois <- function(n, lambda, pi) {
 #'
 #'   **Support**: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 #'
-#'   **Mean**: 
+#'   **Mean**:
 #'   \deqn{
 #'     \lambda \cdot \frac{\pi}{1 - e^{-\lambda}}
 #'   }{
@@ -175,7 +175,7 @@ rhpois <- function(n, lambda, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-HurdlePoisson <- function(lambda, pi) {
+HurdlePoisson <- function(lambda = numeric(), pi = numeric()) {
   d <- data.frame(lambda = lambda, pi = pi)
   class(d) <- c("HurdlePoisson", "distribution")
   return(d)

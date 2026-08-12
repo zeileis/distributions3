@@ -68,7 +68,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-HyperGeometric <- function(m, n, k) {
+HyperGeometric <- function(m = numeric(), n = numeric(), k = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(m) == length(n) & length(m) == length(k) |

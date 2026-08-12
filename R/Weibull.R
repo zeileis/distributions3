@@ -56,7 +56,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-Weibull <- function(shape, scale) {
+Weibull <- function(shape = numeric(), scale = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(scale) | length(shape) == 1 | length(scale) == 1

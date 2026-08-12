@@ -93,7 +93,7 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-ChiSquare <- function(df) {
+ChiSquare <- function(df = numeric()) {
   d <- data.frame(df = df)
   class(d) <- c("ChiSquare", "distribution")
   d

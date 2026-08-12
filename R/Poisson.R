@@ -68,7 +68,7 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Poisson <- function(lambda) {
+Poisson <- function(lambda = numeric()) {
   d <- data.frame(lambda = lambda)
   class(d) <- c("Poisson", "distribution")
   d

@@ -32,7 +32,7 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Erlang <- function(k, lambda) {
+Erlang <- function(k = numeric(), lambda = numeric()) {
   stopifnot("'k' must be an integer" = all(abs(k - as.integer(k)) == 0))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =

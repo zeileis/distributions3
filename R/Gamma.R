@@ -79,7 +79,8 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Gamma <- function(shape, rate = 1) {
+Gamma <- function(shape = numeric(), rate = 1) {
+  if (identical(shape, numeric())) rate <- numeric()
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1

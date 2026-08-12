@@ -136,7 +136,10 @@
 #'
 #' @family Empirical distribution
 #' @export
-Empirical <- function(sample) {
+Empirical <- function(sample = numeric()) {
+  if (identical(sample, numeric()))
+      return(structure(data.frame(sample), class = c("Empirical", "distribution")))
+
   if (is.data.frame(sample)) sample <- as.matrix(sample)
   ## If input is given as a list of vectors
   if (is.list(sample) && all(sapply(sample, function(sample) is.vector(sample) && !is.matrix(sample)))) {

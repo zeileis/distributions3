@@ -33,7 +33,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-Tukey <- function(nmeans, df, nranges) {
+Tukey <- function(nmeans = numeric(), df = numeric(), nranges = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(nmeans) == length(df) & length(nmeans) == length(nranges) |

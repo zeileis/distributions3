@@ -35,7 +35,8 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-FisherF <- function(df1, df2, lambda = 0) {
+FisherF <- function(df1 = numeric(), df2 = numeric(), lambda = 0) {
+  if (identical(df1, numeric()) && identical(df2, numeric())) lambda <- numeric()
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(df1) == length(df2) & length(df1) == length(lambda) |

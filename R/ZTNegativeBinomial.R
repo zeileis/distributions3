@@ -1,5 +1,5 @@
 #' The zero-truncated negative binomial distribution
-#' 
+#'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-truncated negative binomial distribution with
 #' parameters \code{mu} and \code{theta} (or \code{size}).
@@ -26,7 +26,7 @@
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
 #' @seealso \code{\link{ZTNegativeBinomial}}, \code{\link{dnbinom}}
-#' 
+#'
 #' @keywords distribution
 #'
 #' @examples
@@ -34,7 +34,7 @@
 #' x <- 0:8
 #' p <- dztnbinom(x, mu = 2.5, theta = 1)
 #' plot(x, p, type = "h", lwd = 2)
-#' 
+#'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
 #' y <- rztnbinom(500, mu = 2.5, theta = 1)
@@ -170,7 +170,7 @@ rztnbinom <- function(n, mu, theta, size) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-ZTNegativeBinomial <- function(mu, theta) {
+ZTNegativeBinomial <- function(mu = numeric(), theta = numeric()) {
   d <- data.frame(mu = mu, theta = theta)
   class(d) <- c("ZTNegativeBinomial", "distribution")
   return(d)

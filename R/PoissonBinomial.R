@@ -104,18 +104,22 @@
 
 #' @export
 PoissonBinomial <- function(...) {
-  d <- list(...)
-  if (length(d) == 1L && is.null(dim(d))) d[[1L]] <- rbind(d[[1L]])
-  d <- do.call("cbind", d)
-  if(any(d < 0) || any(d > 1)) stop("all probabilities must be in [0, 1]")
-  d <- as.data.frame(d)
-  names(d) <- paste0("p", seq_along(d))
+  if (length(d <- list(...)) == 0L) {
+    d <- data.frame(p = numeric())
+  } else {
+    if (length(d) == 1L && is.null(dim(d))) d[[1L]] <- rbind(d[[1L]])
+    d <- do.call("cbind", d)
+    if(any(d < 0) || any(d > 1)) stop("all probabilities must be in [0, 1]")
+    d <- as.data.frame(d)
+    names(d) <- paste0("p", seq_along(d))
+  }
   class(d) <- c("PoissonBinomial", "distribution")
   d
 }
 
 #' @export
 format.PoissonBinomial <- function(x, digits = pmax(3L, getOption("digits") - 3L), cutoff = 4L, ...) {
+  if (length(x) == 0L) return(NextMethod())
   cl <- class(x)[1L]
   if (length(x) < 1L) return(character(0))
   n <- names(x)

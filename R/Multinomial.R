@@ -71,9 +71,9 @@
 #'
 #' # pdf(X, 2)
 #' # log_pdf(X, 2)
-Multinomial <- function(size, p) {
+Multinomial <- function(size = numeric(), p = numeric()) {
   # Ensure sum of probabilities is 1
-  p <- p / sum(p)
+  if (length(p) > 0L) p <- p / sum(p)
   d <- list(size = size, p = p)
   class(d) <- c("Multinomial", "multivariate", "distribution")
   d
@@ -81,6 +81,7 @@ Multinomial <- function(size, p) {
 
 #' @export
 print.Multinomial <- function(x, ...) {
+  if (length(x) == 0L) return(NextMethod())
   num_categories <- length(x$p)
 
   if (num_categories > 3) {
