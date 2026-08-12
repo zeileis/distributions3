@@ -4,7 +4,7 @@
 \alias{Tukey}
 \title{Create a Tukey distribution}
 \usage{
-Tukey(nmeans, df, nranges)
+Tukey(nmeans = numeric(), df = numeric(), nranges = numeric())
 }
 \arguments{
 \item{nmeans}{Sample size for each range.}

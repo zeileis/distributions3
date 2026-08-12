@@ -4,7 +4,7 @@
 \alias{Binomial}
 \title{Create a Binomial distribution}
 \usage{
-Binomial(size, p = 0.5)
+Binomial(size = numeric(), p = 0.5)
 }
 \arguments{
 \item{size}{The number of trials. Must be an integer greater than or equal

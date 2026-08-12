@@ -4,7 +4,7 @@
 \alias{HurdleNegativeBinomial}
 \title{Create a hurdle negative binomial distribution}
 \usage{
-HurdleNegativeBinomial(mu, theta, pi)
+HurdleNegativeBinomial(mu = numeric(), theta = numeric(), pi = numeric())
 }
 \arguments{
 \item{mu}{Location parameter of the negative binomial component of the distribution.
