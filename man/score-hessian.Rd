@@ -12,6 +12,8 @@
 \alias{hessian.Bernoulli}
 \alias{score.Binomial}
 \alias{hessian.Binomial}
+\alias{score.Uniform}
+\alias{hessian.Uniform}
 \title{Generic functions and methods for computing score and Hessian}
 \usage{
 score(d, ...)
@@ -43,6 +45,10 @@ hessian(d, ...)
 \method{score}{Binomial}(d, x, which = "p", drop = TRUE, ...)
 
 \method{hessian}{Binomial}(d, x, which = "p", drop = TRUE, expected = FALSE, ...)
+
+\method{score}{Uniform}(d, x, which = NULL, drop = TRUE, ...)
+
+\method{hessian}{Uniform}(d, x, which = NULL, drop = TRUE, expected = FALSE, ...)
 }
 \arguments{
 \item{d}{An object, typically a distribution object, e.g., as created by

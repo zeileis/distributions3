@@ -125,7 +125,7 @@ score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$d
 #' @exportS3Method
 hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, eps = .Machine$double.eps^(1/4), ...) {
   ## numeric differentiation yields observed hessian only
-  if (!identical(expected, FALSE)) stop("only the observed hessian is available")
+  if (!isFALSE(expected)) stop("only the observed hessian is available")
   ## sanity check
   n <- c(length(d), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
@@ -343,3 +343,68 @@ hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, .
   return(h)
 }
 
+
+#' @rdname score-hessian
+#' @exportS3Method
+## Uniform methods for score/hessian
+score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("a", "b")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "a" = +1 / (d$b - d$a),
+    "b" = -1 / (d$b - d$a))
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- setNames(scr(which), names(d))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(d), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @exportS3Method
+hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  ## numeric differentiation yields observed hessian only
+  if (!isFALSE(expected)) stop("only the observed hessian is available")
+
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("a" = "a", "b:a" = "a:b", "a:b" = "b:a", "b" = "b")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## function for computing Hessian elements (expected or observed)
+  hess_num <- 1 / (d$b - d$a)^2
+  hess <- function(w) switch(w, "a" = hess_num, "b" = hess_num, -hess_num)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- setNames(hess(w), names(d))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(d), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}
