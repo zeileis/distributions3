@@ -5,8 +5,8 @@
 #' score (first derivative of the log-likelihood with respect to the
 #' parameters) and Hessian (corresponding second derivative).
 #'
-#' @param d An object, typically a distribution object., e.g., as created by
-#'   \code{\link[distributions3]{Normal}} or \code{\link[distributions3]{Binomial}}.
+#' @param d An object, typically a distribution object, e.g., as created by
+#'   [Normal()] or [Binomial()].
 #' @param x A vector of elements whose score/Hessian should be determined given the
 #'   distribution `d`. Either `d` and `x` need to have the same length or length 1.
 #' @param which character or `NULL` (default). Character labels for the derivatives
@@ -21,7 +21,7 @@
 #'   the other option and defaults might differ.
 #' @param eps numeric. Tolerance when obtaining the score or Hessian via numeric
 #'   differentiation.
-#' @param ... Arguments passed to methods
+#' @param ... Arguments passed to methods.
 #'
 #' @details
 #' In the methods for dedicated distributions analytical results for computing
@@ -47,11 +47,17 @@
 
 #' @rdname score-hessian
 #' @export
-score <- function(d, ...) UseMethod("score")
+score <- function(d, ...) {
+    if (!length(d)) return(numeric())
+    UseMethod("score")
+}
 
 #' @rdname score-hessian
 #' @export
-hessian <- function(d, ...) UseMethod("hessian")
+hessian <- function(d, ...) {
+    if (!length(d)) return(numeric())
+    UseMethod("hessian")
+}
 
 #' @exportS3Method
 ## fallback methods based on numeric differentiation
@@ -171,7 +177,7 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   ## available and selected parameters/combinations and mappings for symmetries
   p <- c("mu" = "mu", "sigma:mu" = "mu:sigma", "mu:sigma" = "mu:sigma", "sigma" = "sigma")
   if (is.null(which)) which <- names(p)
-  
+
   ## which combinations need to be computed?
   which <- match.arg(which, names(p), several.ok = TRUE)
   w <- unique(p[which])
@@ -188,7 +194,7 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
       "sigma" = -3 * (x - d$mu)^2/(d$sigma^4) + 1/d$sigma^2,
       -2 * (x - d$mu)/d$sigma^3)
   }
-  
+
   ## if possible return single vector, otherwise collect in matrix
   if (drop && length(which) == 1L) {
     h <- setNames(hess(w), names(d))
@@ -305,3 +311,4 @@ hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, .
   if (!drop) h <- cbind("p" = h)
   return(h)
 }
+

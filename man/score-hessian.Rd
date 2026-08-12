@@ -45,10 +45,10 @@ hessian(d, ...)
 \method{hessian}{Binomial}(d, x, which = "p", drop = TRUE, expected = FALSE, ...)
 }
 \arguments{
-\item{d}{An object, typically a distribution object., e.g., as created by
-\code{\link[distributions3]{Normal}} or \code{\link[distributions3]{Binomial}}.}
+\item{d}{An object, typically a distribution object, e.g., as created by
+\code{\link[=Normal]{Normal()}} or \code{\link[=Binomial]{Binomial()}}.}
 
-\item{...}{Arguments passed to methods}
+\item{...}{Arguments passed to methods.}
 
 \item{x}{A vector of elements whose score/Hessian should be determined given the
 distribution \code{d}. Either \code{d} and \code{x} need to have the same length or length 1.}
