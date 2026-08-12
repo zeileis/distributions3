@@ -7,6 +7,13 @@ suppressPackageStartupMessages(library("scoringRules"))
 
 ns <- ls(getNamespace("distributions3"))
 
+
+
+
+# =======================================================
+# Testing generics
+# =======================================================
+
 test_that("score and hessian exist, are generics, and have correct arguments", {
     # score generic
     expect_true("score" %in% ns, info = "score not found in namespace")
@@ -21,12 +28,23 @@ test_that("score and hessian exist, are generics, and have correct arguments", {
     expect_true(any(grepl("^\\s+?UseMethod\\(\"hessian\"\\)", capture.output(FUN))),
             info = "not found UseMethod(\"hessian\") call in function 'hessian()'")
     expect_identical(formals(hessian), as.pairlist(alist(d =, ... =)))
+
+    # Ensure the generics return numeric() if the input has no length
+    # (e.g., if one uses a zero-length distributions object)
+    expect_identical(score(numeric()), numeric(),
+        info = "expected numeric() when the score generic is called with zero-length object")
+    expect_identical(hessian(numeric()), numeric(),
+        info = "expected numeric() when the hessian generic is called with zero-length object")
 })
 
 
-# -------------------------------------------------------
-# Testing score.distribution
-# -------------------------------------------------------
+
+
+# =======================================================
+# distribution: testing score and hessian
+# =======================================================
+
+# Starting with score.distribution
 test_that("score.distribution exists and has correct arguments/defaults", {
     expect_true("score.distribution" %in% ns, info = "score not found in namespace")
     expect_true(is.function(distributions3:::score.distribution))
@@ -91,10 +109,7 @@ test_that("score.distribution works", {
 })
 
 
-
-# -------------------------------------------------------
 # Testing hessian.distribution
-# -------------------------------------------------------
 test_that("hessian.distribution exists and has correct arguments/defaults", {
     expect_true("hessian.distribution" %in% ns)
     expect_true(is.function(distributions3:::hessian.distribution))
@@ -171,9 +186,10 @@ test_that("hessian.distribution works", {
 
 
 
-# -------------------------------------------------------
+
+# =======================================================
 # Normal: Testing analytic score and hessian
-# -------------------------------------------------------
+# =======================================================
 test_that("Normal.score works as expected", {
     expect_true("score.Normal" %in% ns, info = "score.Normal not found in namespace")
     expect_true(is.function(getS3method("score", "Normal")), "score.Normal is not a function")
@@ -184,13 +200,9 @@ test_that("Normal.score works as expected", {
 
     ## Testing for error when lenghts mismatch
     expect_error(score(Normal(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
-
-    ## Incorrect values for 'which' (handled by match.arg)
-    expect_error(score(Normal(), 1, which = 1))
-    expect_error(score(Normal(), 1, which = "foo"))
-
-    ## Drop must be logical
-    expect_error(score(Normal(), 1, drop = "foo"))
+    expect_error(score(Normal(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(score(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(score(Normal(), 1, drop = "foo"),     info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions
     expect_silent(s1 <- score(Normal(5:1), 1:5))
@@ -227,16 +239,12 @@ test_that("Normal.hessian works as expected", {
     expect_identical(formals(distributions3:::hessian.Normal),
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
-    ## Testing for error when lenghts mismatch
+    ## Testing for error when lenghts mismatch and  incorrect arguments
     expect_error(hessian(Normal(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
-
-    ## Incorrect values for 'which' (handled by match.arg)
-    expect_error(hessian(Normal(), 1, which = 1))
-    expect_error(hessian(Normal(), 1, which = "foo"))
-
-    ## drop and expected must be logical
-    expect_error(hessian(Normal(), 1, drop = "foo"))
-    expect_error(hessian(Normal(), 1, expected = "foo"))
+    expect_error(hessian(Normal(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Normal(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Normal(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(Normal(5:1), 1:5))
@@ -284,4 +292,73 @@ test_that("Normal.hessian works as expected", {
     ## Numeric values of expected hessian
     expect_identical(he, matrix(rep(c(-1, 0, 0, -2), each = 5), nrow = 5, dimnames = dimnames(he)))
 })
+
+
+
+# =======================================================
+# Poisson: Testing analytic score and hessian
+# =======================================================
+test_that("Poisson.score works as expected", {
+    expect_true("score.Poisson" %in% ns, info = "score.Poisson not found in namespace")
+    expect_true(is.function(getS3method("score", "Poisson")), "score.Poisson is not a function")
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Poisson),
+        as.pairlist(alist(d =, x =, which = "lambda", drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Poisson(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Poisson(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(score(Poisson(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(score(Poisson(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    tmp <- 1:5 / 5:1 - 1 # Score
+    expect_silent(s1 <- score(Poisson(5:1), 1:5))
+    expect_identical(s1, tmp)
+    expect_silent(s1 <- score(Poisson(5:1), 1:5, which = "lambda", drop = FALSE))
+    expect_identical(s1, cbind(lambda = tmp))
+
+    ## Compare to numerically calculated score
+    expect_equal(score(Poisson(5:1), 1:5),
+                 distributions3:::score.distribution(Poisson(5:1), 1:5),
+                 tolerance = 1e-7)
+})
+
+test_that("Poisson.hessian works as expected", {
+    expect_true("hessian.Poisson" %in% ns, info = "hessian.Poisson not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Poisson")), "hessian.Poisson is not a function")
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Poisson),
+        as.pairlist(alist(d =, x =, which = "lambda", drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Poisson(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Poisson(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Poisson(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Poisson(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Poisson(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+
+    ## Calculating observed hessian and check return
+    tmp_o <- -(1:5) / (5:1)^2 # Observed hessian
+    expect_identical(hessian(Poisson(5:1), 1:5, expected = FALSE), tmp_o, info = "incorrect observed hessian returned")
+    expect_identical(hessian(Poisson(5:1), 1:5, expected = FALSE, drop = FALSE), cbind(lambda = tmp_o))
+
+    ## Calculating expected hessian and check return
+    tmp_e <- -1 / 5:1 # Expected hessian
+    expect_identical(hessian(Poisson(5:1), 1:5, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
+    expect_identical(hessian(Poisson(5:1), 1:5, expected = TRUE, drop = FALSE),  cbind(lambda = tmp_e))
+
+    ## Compare to numerically calculated hessian (observed,
+    ## hessian.distribution only has expected = FALSE)
+    expect_equal(hessian(Poisson(5:1), 1:5, expected = FALSE),
+                 distributions3:::hessian.distribution(Poisson(5:1), 1:5),
+                 tolerance = 1e-7)
+})
+
+
+
+
+
 
