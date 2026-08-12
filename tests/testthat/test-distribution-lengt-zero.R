@@ -58,6 +58,8 @@ test_that("distribution objects on zero-length distribution object works", {
             info = paste0("expected NULL from log_pdf(<", dist, ">, 1) of zero-length object"))
         expect_identical(quantile(d, 0.5), numeric(),
             info = paste0("expected NULL from quantile(<", dist, ">, 0.5) of zero-length object"))
+        expect_identical(random(d), numeric(),
+            info = paste0("expected NULL from random(<", dist, ">) of zero-length object"))
     }
 })
 
