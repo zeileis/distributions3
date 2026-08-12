@@ -82,6 +82,7 @@ Gumbel <- function(mu = 0, sigma = 1) {
 #' @export
 mean.Gumbel <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$mu + x$sigma * -digamma(1)
   setNames(rval, names(x))
 }
@@ -224,6 +225,7 @@ cdf.Gumbel <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Gumbel <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) revdbayes::qgev(p = at, loc = d$mu, scale = d$sigma, shape = 0, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

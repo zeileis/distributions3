@@ -1,3 +1,9 @@
+
+test_that("ZTNegativeBinomial default arguments", {
+  expect_identical(formals(ZTNegativeBinomial),
+    as.pairlist(alist(mu = numeric(), theta = numeric())))
+})
+
 test_that("print.ZTNegativeBinomial works", {
   expect_output(print(ZTNegativeBinomial(1, 1)), regexp = "ZTNegativeBinomial")
 })

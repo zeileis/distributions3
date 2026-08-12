@@ -1,3 +1,9 @@
+
+test_that("GP default arguments", {
+  expect_identical(formals(GP),
+    as.pairlist(alist(mu = 0, sigma = 1, xi = 0)))
+})
+
 test_that("print.GP works", {
   expect_output(print(GP()), regexp = "GP")
 })

@@ -56,7 +56,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-Weibull <- function(shape, scale) {
+Weibull <- function(shape = numeric(), scale = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(scale) | length(shape) == 1 | length(scale) == 1
@@ -70,6 +70,7 @@ Weibull <- function(shape, scale) {
 #' @export
 mean.Weibull <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$scale * gamma(1 + 1 / x$shape)
   setNames(rval, names(x))
 }
@@ -227,6 +228,7 @@ cdf.Weibull <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Weibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qweibull(p = at, shape = d$shape, scale = d$scale, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -68,7 +68,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-HyperGeometric <- function(m, n, k) {
+HyperGeometric <- function(m = numeric(), n = numeric(), k = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(m) == length(n) & length(m) == length(k) |
@@ -110,6 +110,7 @@ HyperGeometric <- function(m, n, k) {
 #' @export
 mean.HyperGeometric <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   # Reformulating to match Wikipedia
   # N is the population size
   N <- x$n + x$m
@@ -288,6 +289,7 @@ cdf.HyperGeometric <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.HyperGeometric <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qhyper(p = at, m = d$m, n = d$n, k = d$k, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -1,5 +1,5 @@
 #' The zero-truncated Poisson distribution
-#' 
+#'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-truncated Poisson distribution with
 #' parameter \code{lambda}.
@@ -24,7 +24,7 @@
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
 #' @seealso \code{\link{ZTPoisson}}, \code{\link{dpois}}
-#' 
+#'
 #' @keywords distribution
 #'
 #' @examples
@@ -32,7 +32,7 @@
 #' x <- 0:8
 #' p <- dztpois(x, lambda = 2.5)
 #' plot(x, p, type = "h", lwd = 2)
-#' 
+#'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
 #' y <- rztpois(500, lambda = 2.5)
@@ -104,7 +104,7 @@ rztpois <- function(n, lambda) {
 #'
 #'   **Support**: \eqn{\{1, 2, 3, ...\}}{{1, 2, 3, ...}}
 #'
-#'   **Mean**: 
+#'   **Mean**:
 #'   \deqn{
 #'     \lambda \cdot \frac{1}{1 - e^{-\lambda}}
 #'   }{
@@ -162,7 +162,7 @@ rztpois <- function(n, lambda) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-ZTPoisson <- function(lambda) {
+ZTPoisson <- function(lambda = numeric()) {
   d <- data.frame(lambda = lambda)
   class(d) <- c("ZTPoisson", "distribution")
   return(d)
@@ -172,6 +172,7 @@ ZTPoisson <- function(lambda) {
 #' @export
 mean.ZTPoisson <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m, names(x))
@@ -324,6 +325,7 @@ cdf.ZTPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.ZTPoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qztpois(p = at, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

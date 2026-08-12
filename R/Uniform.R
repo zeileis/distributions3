@@ -45,6 +45,7 @@ Uniform <- function(a = 0, b = 1) {
 #' @export
 mean.Uniform <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- (x$a + x$b) / 2
   setNames(rval, names(x))
 }
@@ -213,6 +214,7 @@ cdf.Uniform <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Uniform <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) {
     qunif(
       p = at,

@@ -85,7 +85,8 @@
 #' Y
 #' cdf(Y, 50)
 #' quantile(Y, 0.7)
-NegativeBinomial <- function(size, p = 0.5, mu = size) {
+NegativeBinomial <- function(size = numeric(), p = 0.5, mu = size) {
+  if (identical(size, numeric())) p <- numeric()
   if(!missing(mu) && !missing(p)) stop("only one of the parameters 'p' or 'mu' must be specified")
   if(missing(mu)) {
     stopifnot("parameter 'size' must always be positive" = all(size > 0))
@@ -112,6 +113,7 @@ NegativeBinomial <- function(size, p = 0.5, mu = size) {
 #' @export
 mean.NegativeBinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- if("mu" %in% names(unclass(x))) {
     x$mu
   } else {
@@ -288,6 +290,7 @@ cdf.NegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.NegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- if("mu" %in% names(unclass(x))) {
     function(at, d) qnbinom(p = at, mu = d$mu, size = d$size, ...)
   } else {

@@ -33,7 +33,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-Tukey <- function(nmeans, df, nranges) {
+Tukey <- function(nmeans = numeric(), df = numeric(), nranges = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(nmeans) == length(df) & length(nmeans) == length(nranges) |
@@ -132,6 +132,7 @@ cdf.Tukey <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Tukey <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qtukey(p = at, nmeans = d$nmeans, df = d$df, nranges = d$nranges, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

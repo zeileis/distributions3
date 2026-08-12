@@ -37,7 +37,7 @@
 #'
 #' # same for quantiles. this also errors!
 #' # quantile(Y, 0.7)
-Categorical <- function(outcomes, p = NULL) {
+Categorical <- function(outcomes = numeric(), p = NULL) {
   if (!is.null(p) && length(outcomes) != length(p)) {
     stop("`outcomes` and `p` must be the same length.", call. = FALSE)
   }
@@ -55,30 +55,19 @@ Categorical <- function(outcomes, p = NULL) {
 
 #' @export
 print.Categorical <- function(x, ...) {
+  if (length(x) == 0L) return(NextMethod())
   num_categories <- length(x$outcomes)
 
   if (num_categories > 3) {
-    outcomes <- paste(
-      c(x$outcomes[1:2], "...", x$outcomes[num_categories]),
-      collapse = ", "
-    )
-
-    p <- paste(
-      c(round(x$p, 3)[1:2], "...", round(x$p, 3)[num_categories]),
-      collapse = ", "
-    )
+    outcomes <- paste(c(x$outcomes[1:2], "...", x$outcomes[num_categories]), collapse = ", ")
+    p <- paste(c(round(x$p, 3)[1:2], "...", round(x$p, 3)[num_categories]),  collapse = ", ")
   } else {
     outcomes <- paste(x$outcomes, collapse = ", ")
     p <- paste(round(x$p, 3), collapse = ", ")
   }
 
-  cat(
-    sprintf(
-      "Categorical distribution\n  outcomes = [%s]\n  p = [%s]",
-      outcomes, p
-    ),
-    "\n"
-  )
+  cat(sprintf("Categorical distribution\n  outcomes = [%s]\n  p = [%s]",
+      outcomes, p), "\n")
 }
 
 #' Draw a random sample from a Categorical distribution
@@ -138,9 +127,7 @@ log_pdf.Categorical <- function(d, x, ...) {
 #' @export
 #'
 cdf.Categorical <- function(d, x, ...) {
-  if (length(x) == 0) {
-    return(numeric(0))
-  }
+  if (length(x) == 0) return(numeric(0))
 
   if (!is.numeric(d$outcomes)) {
     stop(
@@ -169,6 +156,7 @@ cdf.Categorical <- function(d, x, ...) {
 #' @export
 quantile.Categorical <- function(x, probs, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   if (!is.numeric(x$outcomes)) {
     stop(
       "The sample space of `x` must be numeric to evaluate quantiles.",

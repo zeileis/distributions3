@@ -93,7 +93,7 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-ChiSquare <- function(df) {
+ChiSquare <- function(df = numeric()) {
   d <- data.frame(df = df)
   class(d) <- c("ChiSquare", "distribution")
   d
@@ -103,6 +103,7 @@ ChiSquare <- function(df) {
 #' @export
 mean.ChiSquare <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$df
   setNames(rval, names(x))
 }
@@ -245,6 +246,7 @@ cdf.ChiSquare <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.ChiSquare <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   # TODO: in the documentation, more information on return and
   # how quantiles are calculated
   FUN <- function(at, d) qchisq(at, df = d$df, ...)

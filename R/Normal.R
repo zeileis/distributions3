@@ -170,6 +170,7 @@ Normal <- function(mu = 0, sigma = 1) {
 #' @export
 mean.Normal <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   setNames(x$mu, names(x))
 }
 
@@ -330,6 +331,7 @@ cdf.Normal <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Normal <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qnorm(at, mean = d$mu, sd = d$sigma, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -4,7 +4,7 @@
 \alias{HurdlePoisson}
 \title{Create a hurdle Poisson distribution}
 \usage{
-HurdlePoisson(lambda, pi)
+HurdlePoisson(lambda = numeric(), pi = numeric())
 }
 \arguments{
 \item{lambda}{Parameter of the Poisson component of the distribution.

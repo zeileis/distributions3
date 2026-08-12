@@ -33,6 +33,7 @@
 #' @export
 is_discrete <- function(d, ...) {
   check_dots_used()
+  if (!length(d)) return(logical())
   UseMethod("is_discrete")
 }
 
@@ -41,5 +42,6 @@ is_discrete <- function(d, ...) {
 #' @export
 is_continuous <- function(d, ...) {
   check_dots_used()
+  if (!length(d)) return(logical())
   UseMethod("is_continuous")
 }

@@ -74,6 +74,7 @@ Geometric <- function(p = 0.5) {
 #' @export
 mean.Geometric <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- (1 - x$p) / x$p
   setNames(rval, names(x))
 }
@@ -228,6 +229,7 @@ cdf.Geometric <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Geometric <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qgeom(p = at, prob = d$p, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -4,7 +4,7 @@
 \alias{NegativeBinomial}
 \title{Create a negative binomial distribution}
 \usage{
-NegativeBinomial(size, p = 0.5, mu = size)
+NegativeBinomial(size = numeric(), p = 0.5, mu = size)
 }
 \arguments{
 \item{size}{The target number of successes (greater than \eqn{0})

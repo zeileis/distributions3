@@ -4,7 +4,7 @@
 \alias{StudentsT}
 \title{Create a Student's T distribution}
 \usage{
-StudentsT(df)
+StudentsT(df = numeric())
 }
 \arguments{
 \item{df}{Degrees of freedom. Can be any positive number. Often

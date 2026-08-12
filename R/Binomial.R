@@ -90,7 +90,8 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Binomial <- function(size, p = 0.5) {
+Binomial <- function(size = numeric(), p = 0.5) {
+  if (identical(size, numeric())) p <- numeric() # Ensure empty default
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(size) == length(p) | length(size) == 1 | length(p) == 1
@@ -105,6 +106,7 @@ Binomial <- function(size, p = 0.5) {
 #' @export
 mean.Binomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$size * x$p
   setNames(rval, names(x))
 }
@@ -252,6 +254,7 @@ cdf.Binomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Binomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qbinom(at, size = d$size, prob = d$p, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

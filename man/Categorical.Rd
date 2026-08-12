@@ -4,7 +4,7 @@
 \alias{Categorical}
 \title{Create a Categorical distribution}
 \usage{
-Categorical(outcomes, p = NULL)
+Categorical(outcomes = numeric(), p = NULL)
 }
 \arguments{
 \item{outcomes}{A vector specifying the elements in the sample

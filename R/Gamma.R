@@ -79,7 +79,8 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Gamma <- function(shape, rate = 1) {
+Gamma <- function(shape = numeric(), rate = 1) {
+  if (identical(shape, numeric())) rate <- numeric()
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1
@@ -93,6 +94,7 @@ Gamma <- function(shape, rate = 1) {
 #' @export
 mean.Gamma <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$shape / x$rate
   setNames(rval, names(x))
 }
@@ -234,6 +236,7 @@ cdf.Gamma <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Gamma <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qgamma(at, shape = d$shape, rate = d$rate, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

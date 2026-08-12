@@ -35,7 +35,8 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-FisherF <- function(df1, df2, lambda = 0) {
+FisherF <- function(df1 = numeric(), df2 = numeric(), lambda = 0) {
+  if (identical(df1, numeric()) && identical(df2, numeric())) lambda <- numeric()
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(df1) == length(df2) & length(df1) == length(lambda) |
@@ -53,6 +54,7 @@ FisherF <- function(df1, df2, lambda = 0) {
 #' @export
 mean.FisherF <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
 
   # The k-th moment of an F(df1, df2) distribution exists and
   # is finite only when 2k < d2
@@ -225,6 +227,7 @@ cdf.FisherF <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.FisherF <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qf(at, df1 = d$df1, df2 = d$df2, ncp = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

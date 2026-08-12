@@ -85,6 +85,7 @@ Logistic <- function(location = 0, scale = 1) {
 #' @export
 mean.Logistic <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$location
   setNames(rval, names(x))
 }
@@ -235,6 +236,7 @@ cdf.Logistic <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Logistic <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qlogis(p = at, location = d$location, scale = d$scale, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -114,6 +114,7 @@ GP <- function(mu = 0, sigma = 1, xi = 0) {
 #' @export
 mean.GP <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   mu <- x$mu
   sigma <- x$sigma
   xi <- x$xi
@@ -282,6 +283,7 @@ cdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.GP <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) revdbayes::qgp(p = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

@@ -73,6 +73,7 @@ LogNormal <- function(log_mu = 0, log_sigma = 1) {
 #' @export
 mean.LogNormal <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   mu <- x$log_mu
   sigma <- x$log_sigma
   rval <- exp(mu + sigma^2 / 2)
@@ -231,6 +232,7 @@ cdf.LogNormal <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.LogNormal <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qlnorm(p = at, meanlog = d$log_mu, sdlog = d$log_sigma, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

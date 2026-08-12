@@ -124,6 +124,7 @@ g <- function(d, k) gamma(1 - k * d$xi)
 #' @export
 mean.GEV <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   euler <- -digamma(1)
   rval <- ifelse(x$xi == 0,
     x$mu + x$sigma * euler,
@@ -307,6 +308,7 @@ cdf.GEV <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.GEV <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) revdbayes::qgev(p = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

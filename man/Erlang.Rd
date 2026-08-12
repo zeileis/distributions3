@@ -4,7 +4,7 @@
 \alias{Erlang}
 \title{Create an Erlang distribution}
 \usage{
-Erlang(k, lambda)
+Erlang(k = numeric(), lambda = numeric())
 }
 \arguments{
 \item{k}{The shape parameter. Can be any positive integer number.}

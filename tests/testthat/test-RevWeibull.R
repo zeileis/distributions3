@@ -1,3 +1,9 @@
+
+test_that("RevWeibull default arguments", {
+  expect_identical(formals(RevWeibull),
+    as.pairlist(alist(location = 0, scale = 1, shape = 1)))
+})
+
 test_that("print.RevWeibull works", {
   expect_output(print(RevWeibull()), regexp = "RevWeibull")
 })

@@ -320,6 +320,8 @@
 #' @rdname pdf.distribution
 #' @exportS3Method
 pdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, log = FALSE, applyfun = NULL, cores = NULL, ...) {
+    if (!length(d)) return(numeric())
+
     # To be able to numerically approximate the pdf the object must have
     # a cdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
@@ -507,6 +509,7 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
                                   upper = +1 / sqrt(.Machine$double.eps),
                                   tol   = .Machine$double.eps^0.5, maxit = 1e3, ...) {
     check_dots_used()
+    if (!length(x)) return(numeric())
 
     ## Check which S3 methods are available
     cls <- setdiff(class(x), "distribution")
@@ -715,6 +718,8 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
 #' @rdname pdf.distribution
 #' @exportS3Method
 cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail = TRUE, ...) {
+    if (!length(d)) return(numeric())
+
     # To be able to numerically approximate the cdf the object must have
     # a pdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
@@ -1075,6 +1080,7 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
 #' @exportS3Method
 #' @export random.distribution
 random.distribution <- function(x, n = 1L, drop = TRUE, ...) {
+  if (!length(x)) return(numeric())
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric(0L))
   FUN <- function(at, d) quantile(d, runif(n = at))
@@ -1180,6 +1186,7 @@ random.distribution <- function(x, n = 1L, drop = TRUE, ...) {
 #' @exportS3Method
 mean.distribution <- function(x, ...) {
     check_dots_used()
+    if (!length(x)) return(numeric())
     distribution_calculate_moments(x = x, what = 1L, ...)
 }
 
@@ -1187,6 +1194,7 @@ mean.distribution <- function(x, ...) {
 #' @rdname mean.distribution
 #' @exportS3Method
 variance.distribution <- function(x, ...) {
+    if (!length(x)) return(numeric())
     distribution_calculate_moments(x = x, what = 2L, ...)
 }
 
@@ -1194,6 +1202,7 @@ variance.distribution <- function(x, ...) {
 #' @rdname mean.distribution
 #' @exportS3Method
 skewness.distribution <- function(x, ...) {
+    if (!length(x)) return(numeric())
     distribution_calculate_moments(x = x, what = 3L, ...)
 }
 
@@ -1201,6 +1210,7 @@ skewness.distribution <- function(x, ...) {
 #' @rdname mean.distribution
 #' @exportS3Method
 kurtosis.distribution <- function(x, ...) {
+    if (!length(x)) return(numeric())
     distribution_calculate_moments(x = x, what = 4L, ...)
 }
 

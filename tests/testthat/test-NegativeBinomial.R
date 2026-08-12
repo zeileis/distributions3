@@ -1,3 +1,9 @@
+
+test_that("NegativeBinomial default arguments", {
+  expect_identical(formals(NegativeBinomial),
+    as.pairlist(alist(size = numeric(), p = 0.5, mu = size)))
+})
+
 test_that("print.NegativeBinomial works", {
   expect_output(print(NegativeBinomial(1, 1)), regexp = "NegativeBinomial")
 })

@@ -87,6 +87,7 @@ Cauchy <- function(location = 0, scale = 1) {
 #' @importFrom rlang check_dots_used
 #' @export
 mean.Cauchy <- function(x, ...) {
+  if (!length(x)) return(numeric())
   check_dots_used()
   rval <- rep(NaN, length(x))
   setNames(rval, names(x))
@@ -229,6 +230,7 @@ cdf.Cauchy <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Cauchy <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qcauchy(at, location = d$location, scale = d$scale, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

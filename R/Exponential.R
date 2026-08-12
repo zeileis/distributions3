@@ -80,6 +80,7 @@ Exponential <- function(rate = 1) {
 #' @export
 mean.Exponential <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$rate^-1
   setNames(rval, names(x))
 }
@@ -221,6 +222,7 @@ cdf.Exponential <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.Exponential <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qexp(at, rate = d$rate, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }

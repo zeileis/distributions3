@@ -99,6 +99,7 @@ RevWeibull <- function(location = 0, scale = 1, shape = 1) {
 #' @export
 mean.RevWeibull <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$location + x$scale * gamma(1 + 1 / x$shape)
   setNames(rval, names(x))
 }
@@ -254,6 +255,7 @@ cdf.RevWeibull <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.RevWeibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   # Convert to the GEV parameterisation
   FUN <- function(at, d) {
     loc <- d$location - d$scale

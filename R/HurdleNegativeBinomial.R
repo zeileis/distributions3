@@ -1,5 +1,5 @@
 #' The hurdle negative binomial distribution
-#' 
+#'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-hurdle negative binomial distribution with
 #' parameters \code{mu}, \code{theta} (or \code{size}), and \code{pi}.
@@ -10,7 +10,7 @@
 #' functions for the negative binomial distribution from base R internally.
 #'
 #' Note, however, that the precision of \code{qhnbinom} for very large
-#' probabilities (close to 1) is limited because the probabilities 
+#' probabilities (close to 1) is limited because the probabilities
 #' are internally handled in levels and not in logs (even if \code{log.p = TRUE}).
 #'
 #' @aliases dhnbinom phnbinom qhnbinom rhnbinom
@@ -27,7 +27,7 @@
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
 #' @seealso \code{\link{HurdleNegativeBinomial}}, \code{\link{dnbinom}}
-#' 
+#'
 #' @keywords distribution
 #'
 #' @examples
@@ -35,7 +35,7 @@
 #' x <- 0:8
 #' p <- dhnbinom(x, mu = 2.5, theta = 1, pi = 0.75)
 #' plot(x, p, type = "h", lwd = 2)
-#' 
+#'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
 #' y <- rhnbinom(500, mu = 2.5, theta = 1, pi = 0.75)
@@ -182,7 +182,7 @@ rhnbinom <- function(n, mu, theta, size, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-HurdleNegativeBinomial <- function(mu, theta, pi) {
+HurdleNegativeBinomial <- function(mu = numeric(), theta = numeric(), pi = numeric()) {
   d <- data.frame(mu = mu, theta = theta, pi = pi)
   class(d) <- c("HurdleNegativeBinomial", "distribution")
   return(d)
@@ -192,6 +192,7 @@ HurdleNegativeBinomial <- function(mu, theta, pi) {
 #' @export
 mean.HurdleNegativeBinomial <- function(x, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$mu * x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
   setNames(rval, names(x))
 }
@@ -345,6 +346,7 @@ cdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ..
 #' @export
 quantile.HurdleNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qhnbinom(p = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
