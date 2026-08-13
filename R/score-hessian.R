@@ -90,6 +90,11 @@ hessian <- function(d, ...) {
     UseMethod("hessian")
 }
 
+
+# ---------------------------------------------------------------------------
+# distribution: fallback methods for score/hessian (numeric approx)
+# ---------------------------------------------------------------------------
+
 #' @exportS3Method
 ## fallback methods based on numeric differentiation
 score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$double.eps^(1/3), ...) {
@@ -168,9 +173,12 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
 }
 
 
+# ---------------------------------------------------------------------------
+# Normal: methods for score/hessian
+# ---------------------------------------------------------------------------
+
 #' @rdname score-hessian
 #' @exportS3Method
-## Normal methods for score/hessian
 score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
   ## sanity check
   n <- c(length(d), length(x))
@@ -239,6 +247,11 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   return(h)
 }
 
+
+# ---------------------------------------------------------------------------
+# Poisson: methods for score/hessian
+# ---------------------------------------------------------------------------
+
 #' @rdname score-hessian
 #' @exportS3Method
 ## Poisson methods for score/hessian
@@ -273,9 +286,13 @@ hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALS
   return(h)
 }
 
+
+# ---------------------------------------------------------------------------
+# Bernoulli: methods for score/hessian
+# ---------------------------------------------------------------------------
+
 #' @rdname score-hessian
 #' @exportS3Method
-## Bernoulli methods for score/hessian
 score.Bernoulli <- function(d, x, which = "p", drop = TRUE, ...) {
   ## sanity check
   n <- c(length(d), length(x))
@@ -307,9 +324,13 @@ hessian.Bernoulli <- function(d, x, which = "p", drop = TRUE, expected = FALSE, 
   return(h)
 }
 
+
+# ---------------------------------------------------------------------------
+# Binomial: methods for score/hessian
+# ---------------------------------------------------------------------------
+
 #' @rdname score-hessian
 #' @exportS3Method
-## Binomial methods for score/hessian
 score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
   ## sanity check
   n <- c(length(d), length(x))
@@ -343,10 +364,12 @@ hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, .
   return(h)
 }
 
+# ---------------------------------------------------------------------------
+# Uniform: methods for score/hessian
+# ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
 #' @exportS3Method
-## Uniform methods for score/hessian
 score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
   ## sanity check
   n <- c(length(d), length(x))
@@ -376,6 +399,162 @@ score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @rdname score-hessian
 #' @exportS3Method
 hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  ## numeric differentiation yields observed hessian only
+  if (!isFALSE(expected)) stop("only the observed hessian is available")
+
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("a" = "a", "b:a" = "a:b", "a:b" = "b:a", "b" = "b")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## function for computing Hessian elements (expected or observed)
+  hess_num <- 1 / (d$b - d$a)^2
+  hess <- function(w) switch(w, "a" = hess_num, "b" = hess_num, -hess_num)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- setNames(hess(w), names(d))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(d), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}
+
+
+# ---------------------------------------------------------------------------
+# SHASH: methods for score/hessian
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @exportS3Method
+score.SHASH <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("mu", "sigma", "nu", "tau")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## TODO(R): Taken from gamlss.dist::SHASH. This
+  ##          Is a nice example where re-using certian vectors
+  ##          is benefitial if multiple scores are caclulated.
+  src_mu <-  function(y,mu,sigma,nu,tau) {
+      z                 <- (y - mu) / sigma
+      asinhz            <- asinh(z)
+      exp_tauasinhz     <- exp(tau * asinhz)
+      exp_minusnuasinhz <- exp(-nu * asinhz)
+
+      ## Performing a series of vector operations used multiple times below
+      z2       <- z^2
+      tau2     <- tau^2
+      nu2      <- nu^2
+      sigmainv <- 1 / sigma
+
+      r <- 0.5 * (exp_tauasinhz        - exp_minusnuasinhz)
+      c <- 0.5 * (exp_tauasinhz * tau  + exp_minusnuasinhz * nu)
+      h <- 0.5 * (exp_tauasinhz * tau2 - exp_minusnuasinhz * nu2)
+
+      dldz <- -z / (1 + z2)
+      dldr <- -r
+      dldc <- +1 / c
+      dcdz <- h * (1 + z2)^(-0.5)
+      drdz <- c * (1 + z2)^(-0.5)
+      dzdm <- -sigmainv
+
+      dldm <- sigmainv * ((1 + z2)^(-0.5)) * ((-h / c) + (r * c) + z * (1 + z2)^(-0.5))
+      return((dldr * drdz + dldc * dcdz + dldz) * dzdm)
+  }
+  src_sigma <- function(y,mu,sigma,nu,tau) {  
+      z                 <- (y - mu) / sigma
+      asinhz            <- asinh(z)
+      exp_tauasinhz     <- exp(tau * asinhz)
+      exp_minusnuasinhz <- exp(-nu * asinhz)
+
+      ## Performing a series of vector operations used multiple times below
+      z2       <- z^2
+      tau2     <- tau^2
+      nu2      <- nu^2
+      sigmainv <- 1 / sigma
+
+      r <- 0.5 * (exp_tauasinhz        - exp_minusnuasinhz)
+      c <- 0.5 * (exp_tauasinhz * tau  + exp_minusnuasinhz * nu)
+      h <- 0.5 * (exp_tauasinhz * tau2 - exp_minusnuasinhz * nu2)
+
+      dldz <- -z / (1 + z2)
+      dldr <- -r
+      dldc <- 1 / c
+      dcdz <- h * (1 + z2)^(-0.5)
+      drdz <- c * (1 + z2)^(-0.5)
+      dzdd <- -z * sigmainv
+      return((dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv)
+  }
+  src_nu <- function(y,mu,sigma,nu,tau) { 
+      z                 <- (y - mu) / sigma
+      asinhz            <- asinh(z)
+      exp_tauasinhz     <- exp(tau * asinhz)
+      exp_minusnuasinhz <- exp(-nu * asinhz)
+
+      r <- 0.5 * (exp_tauasinhz        - exp_minusnuasinhz)
+      c <- 0.5 * (exp_tauasinhz * tau  + exp_minusnuasinhz * nu)
+
+      dldr <- -r
+      dldc <- 1 / c
+      drdv <- 0.5 * asinhz * exp_minusnuasinhz
+      dcdv <- 0.5 * (1 - nu * asinhz) * exp_minusnuasinhz
+      return(dldr * drdv + dldc * dcdv)
+  }
+  src_tau <- function(y,mu,sigma,nu,tau) {
+      z                 <- (y - mu) / sigma
+      asinhz            <- asinh(z)
+      exp_tauasinhz     <- exp(tau * asinhz)
+      exp_minusnuasinhz <- exp(-nu * asinhz)
+
+      r <- 0.5 * (exp_tauasinhz        - exp_minusnuasinhz)
+      c <- 0.5 * (exp_tauasinhz * tau  + exp_minusnuasinhz * nu)
+
+      dldr <- -r
+      dldc <- 1/c
+      drdt <- 0.5 * asinhz * exp_tauasinhz
+      dcdt <- 0.5 * (1 + tau * asinhz) * exp_tauasinhz
+      return(dldr * drdt + dldc * dcdt)
+  }
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "mu"    = src_mu(x, d$mu, d$sigma, d$nu, d$tau),
+    "sigma" = src_sigma(x, d$mu, d$sigma, d$nu, d$tau),
+    "nu"    = src_nu(x, d$mu, d$sigma, d$nu, d$tau),
+     "tau"  = src_tau(x, d$mu, d$sigma, d$nu, d$tau))
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- setNames(scr(which), names(d))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(d), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @exportS3Method
+hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+stop('working on implementation')
   ## numeric differentiation yields observed hessian only
   if (!isFALSE(expected)) stop("only the observed hessian is available")
 
