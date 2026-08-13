@@ -184,18 +184,18 @@ SHASH_z_moment <- function(k, nu, tau, cores) {
 
 
 #' @export
-mean.SHASH <- function(x, ...) {
+mean.SHASH <- function(x, cores = NULL, ...) {
   rlang::check_dots_used()
-  fun <- function(i) x$mu[i] + x$sigma[i] * SHASH_z_moment(1, x$nu[i], x$tau[i])
+  fun <- function(i) x$mu[i] + x$sigma[i] * SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
   setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
 }
 
 
 #' @export
-variance.SHASH <- function(x, ...) {
+variance.SHASH <- function(x, cores = NULL, ...) {
   fun <- function(i) {
-    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i])
-    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i])
+    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i], cores = cores)
     return(x$sigma[i]^2 * (ez2 - ez1^2))
   }
   setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
@@ -203,11 +203,11 @@ variance.SHASH <- function(x, ...) {
 
 
 #' @export
-skewness.SHASH <- function(x, ...) {
+skewness.SHASH <- function(x, cores = NULL, ...) {
   fun <- function(i) {
-    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i])
-    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i])
-    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i])
+    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i], cores = cores)
+    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i], cores = cores)
 
     mu3_z <- ez3 - 3 * ez1 * ez2 + 2 * (ez1^3)
     var_z <- ez2 - ez1^2
@@ -219,12 +219,12 @@ skewness.SHASH <- function(x, ...) {
 
 
 #' @export
-kurtosis.SHASH <- function(x, ...) {
+kurtosis.SHASH <- function(x, cores = NULL, ...) {
   fun <- function(i) {
-    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i])
-    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i])
-    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i])
-    ez4 <- SHASH_z_moment(4, x$nu[i], x$tau[i])
+    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i], cores = cores)
+    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i], cores = cores)
+    ez4 <- SHASH_z_moment(4, x$nu[i], x$tau[i], cores = cores)
 
     var_z <- ez2 - ez1^2
     mu4_z <- ez4 - 4 * ez1 * ez3 + 6 * (ez1^2) * ez2 - 3 * (ez1^4)
