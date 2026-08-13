@@ -466,36 +466,36 @@ score.SHASH <- function(d, x, which = NULL, drop = TRUE, ...) {
   c <- 0.5 * (exp_tauasinhz * d$tau  + exp_minusnuasinhz * d$nu)
   h <- 0.5 * (exp_tauasinhz * tau2   - exp_minusnuasinhz * nu2)
 
-  src_mu <-  function() {
-      dldz <- -z / (1 + z2)
-      dldr <- -r
-      dldc <- +1 / c
-      dcdz <- h * (1 + z2)^(-0.5)
-      drdz <- c * (1 + z2)^(-0.5)
-      dzdm <- -sigmainv
+  ## Partial derivatives used everywhere
+  dldr <- -r
+  dldc <- 1 / c
 
-      dldm <- sigmainv * ((1 + z2)^(-0.5)) * ((-h / c) + (r * c) + z * (1 + z2)^(-0.5))
-      return((dldr * drdz + dldc * dcdz + dldz) * dzdm)
+  src_mu <-  function() {
+    z2p1sqrtinv <- 1 / sqrt(z2 + 1)
+
+    dldz <- -z / (1 + z2)
+    dcdz <- h * (1 + z2)^(-0.5)
+    drdz <- c * (1 + z2)^(-0.5)
+    dzdm <- -sigmainv
+
+    dldm <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+    return((dldr * drdz + dldc * dcdz + dldz) * dzdm)
   }
   src_sigma <- function() {
-      dldz <- -z / (1 + z2)
-      dldr <- -r
-      dldc <- 1 / c
-      dcdz <- h * (1 + z2)^(-0.5)
-      drdz <- c * (1 + z2)^(-0.5)
-      dzdd <- -z * sigmainv
-      return((dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv)
+    z2p1sqrtinv <- 1 / sqrt(z2 + 1)
+
+    dldz <- -z / (1 + z2)
+    dcdz <- h * z2p1sqrtinv
+    drdz <- c * z2p1sqrtinv
+    dzdd <- -z * sigmainv
+    return((dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv)
   }
   src_nu <- function() {
-      dldr <- -r
-      dldc <- 1 / c
       drdv <- 0.5 * asinhz * exp_minusnuasinhz
       dcdv <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
       return(dldr * drdv + dldc * dcdv)
   }
   src_tau <- function() {
-      dldr <- -r
-      dldc <- 1 / c
       drdt <- 0.5 * asinhz * exp_tauasinhz
       dcdt <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
       return(dldr * drdt + dldc * dcdt)
@@ -575,11 +575,13 @@ hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
   c <- 0.5 * (exp_tauasinhz * d$tau  + exp_minusnuasinhz * d$nu)
   h <- 0.5 * (exp_tauasinhz * tau2   - exp_minusnuasinhz * nu2)
 
+  ## Partial derivatives used everywhere
+  dldr <- -r
+  dldc <- 1 / c
+
   ## Corresponds to gamlss.dist::SHASH()$d2ldm2
   hess_mu2 <- function() {
     dldz   <- -z / z2p1
-    dldr   <- -r
-    dldc   <- 1 / c
     dcdz   <- h * z2p1sqrtinv
     drdz   <- c * z2p1sqrtinv
     dzdm   <- -sigmainv
@@ -592,8 +594,6 @@ hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
   ## Corresponds to gamlss.dist::SHASH()$d2ldd2
   hess_sigma2 <- function() {
     dldz   <- -z / z2p1
-    dldr   <- -r
-    dldc   <- 1 / c
     dcdz   <- h * z2p1sqrtinv
     drdz   <- c * z2p1sqrtinv
     dzdd   <- -z * sigmainv
@@ -604,8 +604,6 @@ hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
 
   ## Corresponds to gamlss.dist::SHASH()$d2ldv2
   hess_nu2 <- function() {
-    dldr   <- -r
-    dldc   <- 1 / c
     drdv   <- 0.5 * asinhz * exp_minusnuasinhz
     dcdv   <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
     dldv   <- dldr * drdv + dldc * dcdv
@@ -614,8 +612,6 @@ hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
 
   ## Corresponds to gamlss.dist::SHASH()$d2ldt2
   hess_tau2 <- function(y,mu,sigma,nu,tau) { 
-    dldr   <- -r
-    dldc   <- 1 / c
     drdt   <- 0.5 * asinhz * exp_tauasinhz
     dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
     dldt   <- dldr * drdt + dldc * dcdt
@@ -623,117 +619,87 @@ hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
   }
 
   ## Corresponds to gamlss.dist::SHASH()$d2ldmdd
-  hess_mu_sigma <- function(y,mu,sigma,nu,tau) {
-          z <- (y-mu)/sigma 
-          r <- (1/2)*(exp(tau*asinh(z))-exp(-nu*asinh(z)))
-          c <- (1/2)*(tau*exp(tau*asinh(z))+nu*exp(-nu*asinh(z)))
-          h <- (1/2)*((tau^2)*exp(tau*asinh(z))-(nu^2)*exp(-nu*asinh(z)))
-       dldz <- -z/(1+(z^2))
-       dldr <- -r
-       dldc <- 1/c
-       dcdz <- h*((1+(z^2))^(-1/2))
-       drdz <- c*((1+(z^2))^(-1/2))
-       dzdm <- -1/sigma
-       dldm <- (1/sigma)*((1+(z^2))^(-1/2))*((-h/c)+(r*c)+z*((1+(z^2))^(-1/2)))
-       dldm <- (dldr*drdz+dldc*dcdz+dldz)*dzdm     
-       dzdd <- -z/sigma
-       dldd <- (dldr*drdz+dldc*dcdz+dldz)*dzdd-1/sigma           
-    d2ldmdd <- -(dldm*dldd)
-    d2ldmdd
+  hess_mu_sigma <- function() {
+    dldz   <- -z / z2p1
+    dcdz   <- h * z2p1sqrtinv
+    drdz   <- c * z2p1sqrtinv
+    dzdm   <- -sigmainv
+    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+    dldm   <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
+    dzdd   <- -z * sigmainv
+    dldd   <- (dldr * drdz + dldc * dcdz + dldz) *dzdd - sigmainv
+    return(-dldm * dldd)
   }
+
   ## Corresponds to gamlss.dist::SHASH()$d2ldmdv
-  hess_mu_nu <- function(y,mu,sigma,nu,tau) {
-          z <- (y-mu)/sigma 
-          r <- (1/2)*(exp(tau*asinh(z))-exp(-nu*asinh(z)))
-          c <- (1/2)*(tau*exp(tau*asinh(z))+nu*exp(-nu*asinh(z)))
-          h <- (1/2)*((tau^2)*exp(tau*asinh(z))-(nu^2)*exp(-nu*asinh(z)))
-       dldz <- -z/(1+(z^2))
-       dldr <- -r
-       dldc <- 1/c
-       dcdz <- h*((1+(z^2))^(-1/2))
-       drdz <- c*((1+(z^2))^(-1/2))
-       dzdm <- -1/sigma
-       dldm <- (1/sigma)*((1+(z^2))^(-1/2))*((-h/c)+(r*c)+z*((1+(z^2))^(-1/2)))
-       dldm <- (dldr*drdz+dldc*dcdz+dldz)*dzdm                   
-       drdv <- (1/2)*asinh(z)*exp(-nu*asinh(z))
-       dcdv <- (1/2)*(1-nu*asinh(z))*exp(-nu*asinh(z))
-       dldv <- dldr*drdv+dldc*dcdv
-    d2ldmdv <- -(dldm*dldv)
-    d2ldmdv
+  hess_mu_nu <- function() {
+    dldz   <- -z / z2p1
+    dcdz   <- h * z2p1sqrtinv
+    drdz   <- c * z2p1sqrtinv
+    dzdm   <- -sigmainv
+    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+
+    drdv   <- 0.5 * asinhz * exp_minusnuasinhz
+    dcdv   <- 0.5 *(1 - d$nu * asinhz) * exp_minusnuasinhz
+    dldv   <- dldr * drdv + dldc * dcdv
+    return(-dldm * dldv)
   }
+
   ## Corresponds to gamlss.dist::SHASH()$d2ldmdt
-  hess_mu_tau <- function(y,mu,sigma,nu,tau) {
-              z <- (y-mu)/sigma 
-          r <- (1/2)*(exp(tau*asinh(z))-exp(-nu*asinh(z)))
-          c <- (1/2)*(tau*exp(tau*asinh(z))+nu*exp(-nu*asinh(z)))
-          h <- (1/2)*((tau^2)*exp(tau*asinh(z))-(nu^2)*exp(-nu*asinh(z)))
-       dldz <- -z/(1+(z^2))
-       dldr <- -r
-       dldc <- 1/c
-       dcdz <- h*((1+(z^2))^(-1/2))
-       drdz <- c*((1+(z^2))^(-1/2))
-       dzdm <- -1/sigma
-       dldm <- (1/sigma)*((1+(z^2))^(-1/2))*((-h/c)+(r*c)+z*((1+(z^2))^(-1/2)))
-       dldm <- (dldr*drdz+dldc*dcdz+dldz)*dzdm     
-       drdt <- (1/2)*asinh(z)*exp(tau*asinh(z))
-       dcdt <- (1/2)*(1+tau*asinh(z))*exp(tau*asinh(z))
-       dldt <- dldr*drdt+dldc*dcdt                          
-    d2ldmdt <- -(dldm*dldt)
-    d2ldmdt
+  hess_mu_tau <- function() {
+    dldz   <- -z / z2p1
+    dcdz   <- h * z2p1sqrtinv
+    drdz   <- c * z2p1sqrtinv
+    dzdm   <- -sigmainv
+    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+
+    dldm <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
+    drdt <- 0.5 * asinhz * exp_tauasinhz
+    dcdt <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+    dldt <- dldr * drdt + dldc * dcdt
+    return(-dldm * dldt)
   }
+
   ## Corresponds to gamlss.dist::SHASH()$d2ldddv
-  hess_sigma_nu <- function(y,mu,sigma,nu,tau) {
-          z <- (y-mu)/sigma 
-          r <- (1/2)*(exp(tau*asinh(z))-exp(-nu*asinh(z)))
-          c <- (1/2)*(tau*exp(tau*asinh(z))+nu*exp(-nu*asinh(z)))
-          h <- (1/2)*((tau^2)*exp(tau*asinh(z))-(nu^2)*exp(-nu*asinh(z)))
-       dldz <- -z/(1+(z^2))
-       dldr <- -r
-       dldc <- 1/c
-       dcdz <- h*((1+(z^2))^(-1/2))
-       drdz <- c*((1+(z^2))^(-1/2))
-       dzdd <- -z/sigma
-       dldd <- (dldr*drdz+dldc*dcdz+dldz)*dzdd-1/sigma       
-       drdv <- (1/2)*asinh(z)*exp(-nu*asinh(z))
-       dcdv <- (1/2)*(1-nu*asinh(z))*exp(-nu*asinh(z))
-       dldv <- dldr*drdv+dldc*dcdv
-    d2ldddv <- -(dldd*dldv)
-    d2ldddv 
+  hess_sigma_nu <- function() {
+    dldz   <- -z / z2p1
+    dcdz   <- h * z2p1sqrtinv
+    drdz   <- c * z2p1sqrtinv
+
+    dzdd <- -z * sigmainv
+    dldd <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
+    drdv <- 0.5 * asinhz * exp_minusnuasinhz
+    dcdv <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
+    dldv <- dldr * drdv + dldc * dcdv
+    return(-dldd * dldv)
   }
+
   ## Corresponds to gamlss.dist::SHASH()$d2ldddt
-  hess_sigma_tau <- function(y,mu,sigma,nu,tau) {
-         z <- (y-mu)/sigma 
-          r <- (1/2)*(exp(tau*asinh(z))-exp(-nu*asinh(z)))
-          c <- (1/2)*(tau*exp(tau*asinh(z))+nu*exp(-nu*asinh(z)))
-          h <- (1/2)*((tau^2)*exp(tau*asinh(z))-(nu^2)*exp(-nu*asinh(z)))
-       dldz <- -z/(1+(z^2))
-       dldr <- -r
-       dldc <- 1/c
-       dcdz <- h*((1+(z^2))^(-1/2))
-       drdz <- c*((1+(z^2))^(-1/2))
-       dzdd <- -z/sigma
-       dldd <- (dldr*drdz+dldc*dcdz+dldz)*dzdd-1/sigma   
-       drdt <- (1/2)*asinh(z)*exp(tau*asinh(z))
-       dcdt <- (1/2)*(1+tau*asinh(z))*exp(tau*asinh(z))
-       dldt <- dldr*drdt+dldc*dcdt   
-    d2ldddt <- -(dldd*dldt) 
-    d2ldddt 
+  hess_sigma_tau <- function() {
+    dldz   <- -z / z2p1
+    dcdz   <- h * z2p1sqrtinv
+    drdz   <- c * z2p1sqrtinv
+
+    dzdd   <- -z * sigmainv
+    dldd   <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
+
+    drdt   <- 0.5 * asinhz * exp_tauasinhz
+    dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+    dldt   <- dldr * drdt + dldc * dcdt
+    return(-dldd * dldt)
   }
+
   ## Corresponds to gamlss.dist::SHASH()$d2ldvdt
-  hess_nu_tau <- function(y,mu,sigma,nu,tau) {
-          z <- (y-mu)/sigma 
-          r <- (1/2)*(exp(tau*asinh(z))-exp(-nu*asinh(z)))
-          c <- (1/2)*(tau*exp(tau*asinh(z))+nu*exp(-nu*asinh(z)))
-       dldr <- -r
-       dldc <- 1/c
-       drdv <- (1/2)*asinh(z)*exp(-nu*asinh(z))
-       dcdv <- (1/2)*(1-nu*asinh(z))*exp(-nu*asinh(z))
-       dldv <- dldr*drdv+dldc*dcdv                         
-       drdt <- (1/2)*asinh(z)*exp(tau*asinh(z))
-       dcdt <- (1/2)*(1+tau*asinh(z))*exp(tau*asinh(z))
-       dldt <- dldr*drdt+dldc*dcdt             
-    d2ldvdt <- -(dldv*dldt) 
-    d2ldvdt 
+  hess_nu_tau <- function() {
+    dldr   <- -r
+    drdv   <- 0.5 * asinhz * exp_minusnuasinhz
+    dcdv   <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
+
+    dldv   <- dldr * drdv + dldc * dcdv
+    drdt   <- 0.5 * asinhz * exp_tauasinhz
+    dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+    dldt   <- dldr * drdt + dldc * dcdt
+    return(-dldv * dldt)
   }
 
   ##########################################################

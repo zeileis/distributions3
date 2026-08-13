@@ -7,16 +7,7 @@
 \alias{rshash}
 \title{The Sinh-Arcsinh (SHASH) distribution}
 \usage{
-dshash(
-  x,
-  mu = 0,
-  sigma = 1,
-  nu = 1,
-  tau = 1,
-  log = FALSE,
-  useC = FALSE,
-  cores = NULL
-)
+dshash(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = NULL)
 
 pshash(
   q,
@@ -26,7 +17,6 @@ pshash(
   tau = 1,
   lower.tail = TRUE,
   log.p = FALSE,
-  useC = FALSE,
   cores = NULL
 )
 

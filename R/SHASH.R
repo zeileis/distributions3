@@ -301,6 +301,8 @@ random.SHASH <- function(x, n = 1L, drop = TRUE, ...) {
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
+#' @param cores `NULL` or positive integer. TODO(R): Just a development option.
+#'   If not `NULL` we use the C code with `cores` threads.
 #' @param ... Arguments to be passed to \code{\link[stats]{dnorm}}.
 #'   Unevaluated arguments will generate a warning to catch mispellings or other
 #'   possible errors.
@@ -497,6 +499,8 @@ is_continuous.SHASH <- function(d, ...) {
 #' @param mu,sigma,nu,tau vector of (non-negative) SHASH parameters.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
+#' @param cores `NULL` or positive integer. TODO(R): Just a development option.
+#'   If not `NULL` we use the C code with `cores` threads.
 #'
 #'
 #' @keywords distribution
@@ -507,7 +511,7 @@ is_continuous.SHASH <- function(d, ...) {
 #' @family SHASH
 #' @rdname shash
 #' @export
-dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, useC = FALSE, cores = NULL) {
+dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = NULL) {
   nparam <- c(length(x), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -515,9 +519,9 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, useC = FA
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
-  cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
 
-  if (useC) {
+  if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
+    cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     ## Arguments are: n, x, mu, sigma, nu, tau, ret_log, ncores
     loglik <- .Call("c_dshash", max(nparam), x, mu, sigma, nu, tau,
                     as.logical(log)[1L], cores, PACKAGE = "distributions3")
@@ -554,7 +558,7 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, useC = FA
 #' @rdname shash
 #' @importFrom stats pnorm
 #' @export
-pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, useC = FALSE, cores = NULL) {
+pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
   nparam <- c(length(q), length(mu), length(sigma), length(nu), length(tau))
   stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
@@ -564,7 +568,8 @@ pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
-  if (useC) {
+  if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
+    cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     ## Arguments are: n, q, mu, sigma, nu, tau, lowertail, logp, ncores
     p <- .Call("c_pshash", max(nparam), q, mu, sigma, nu, tau,
                as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
@@ -601,7 +606,8 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   ##if (any(nu <= 0)) stop("nu must be positive")
   cores <- if (is.null(cores)) 1L else as.integer(cores)[1L]
 
-  if (useC) {
+  if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
+    cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     res <- .Call("c_qshash", max(nparam), p, mu, sigma, nu, tau,
                   as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
   } else {

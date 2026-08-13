@@ -24,6 +24,9 @@ done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 lengths match and otherwise \code{elementwise = FALSE} is used.}
 
+\item{cores}{\code{NULL} or positive integer. TODO(R): Just a development option.
+If not \code{NULL} we use the C code with \code{cores} threads.}
+
 \item{...}{Arguments to be passed to \code{\link[stats]{dnorm}}.
 Unevaluated arguments will generate a warning to catch mispellings or other
 possible errors.}
