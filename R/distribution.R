@@ -515,7 +515,7 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
     cls <- setdiff(class(x), "distribution")
     has <- list(cdf = hasS3method("cdf", cls), pdf = hasS3method("pdf", cls))
     if (!has$cdf && !has$pdf)
-        stop("no S3 method 'cdf' or 'quantile' found for object of class: ", paste(cls, collapse = ", "))
+        stop("no S3 method 'cdf' or 'pdf' found for object of class: ", paste(cls, collapse = ", "))
     if (!hasS3method("is_discrete", cls))
         stop("S3 method 'is_discrete' missing for object of class: ", paste(cls, collapse = ", "))
     if (!hasS3method("support", cls))
