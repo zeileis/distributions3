@@ -268,7 +268,7 @@ hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALS
   which <- match.arg(which, "lambda", several.ok = TRUE)
 
   ## compute hessian
-  h <- if (expected) rep_len(-1 / d$lambda, n) else -x / d$lambda^2
+  h <- if (expected) 0 * x - 1 / d$lambda else -x / d$lambda^2
   if (!drop) h <- cbind("lambda" = h)
   return(h)
 }
@@ -302,7 +302,7 @@ hessian.Bernoulli <- function(d, x, which = "p", drop = TRUE, expected = FALSE, 
   which <- match.arg(which, "p", several.ok = TRUE)
 
   ## compute hessian
-  h <- if (expected) rep_len(-1/(d$p * (1 - d$p)), n) else -x/d$p^2 - (1 - x)/(1 - d$p)^2
+  h <- if (expected) 0 * x - 1/(d$p * (1 - d$p)) else -x/d$p^2 - (1 - x)/(1 - d$p)^2
   if (!drop) h <- cbind("p" = h)
   return(h)
 }
@@ -331,14 +331,13 @@ hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, .
   ## sanity check
   n <- c(length(d), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
 
   ## only one parameter supported
   which <- match.arg(which, c("p", "size"), several.ok = TRUE)
   if (!identical(which, "p")) warning("only the scores with respect to 'p' are supported")
 
   ## compute hessian
-  h <- if (expected) rep_len(-d$size / (d$p * (1 - d$p)), n) else -x / d$p^2 - (d$size - x) / (1 - d$p)^2
+  h <- if (expected) 0 * x - d$size / (d$p * (1 - d$p)) else -x / d$p^2 - (d$size - x) / (1 - d$p)^2
   if (!drop) h <- cbind("p" = h)
   return(h)
 }
@@ -359,8 +358,8 @@ score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
 
   ## compute scores
   scr <- function(par) switch(par,
-    "a" = +1 / (d$b - d$a),
-    "b" = -1 / (d$b - d$a))
+    "a" = 0 * x + 1 / (d$b - d$a),
+    "b" = 0 * x - 1 / (d$b - d$a))
 
   ## if possible return single vector, otherwise collect in matrix
   if (drop && length(which) == 1L) {
@@ -382,7 +381,6 @@ hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
   ## sanity check
   n <- c(length(d), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
 
   ## available and selected parameters/combinations and mappings for symmetries
   p <- c("a" = "a", "b:a" = "a:b", "a:b" = "b:a", "b" = "b")
@@ -393,7 +391,7 @@ hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
   w <- unique(p[which])
 
   ## function for computing Hessian elements (expected or observed)
-  hess_num <- 1 / (d$b - d$a)^2
+  hess_num <- 0 * x + 1 / (d$b - d$a)^2
   hess <- function(w) switch(w, "a" = hess_num, "b" = hess_num, -hess_num)
 
   ## if possible return single vector, otherwise collect in matrix
