@@ -34,139 +34,87 @@ We recommend reading this documentation on
 \url{https://zeileis.github.io/distributions3/}, where the math
 will render with additional detail and much greater clarity.
 
-TODO(R): List details about the SHASH distribution as implemented.
-TODO(R): Check references on ?gamlss.dist::SHASH
-
 In the following, let \eqn{X} be a SHASH random variable with mean
 \code{mu} = \eqn{\mu}, \code{sigma} = \eqn{\sigma}, \code{nu} = \eqn{\nu}, and
 \code{tau} = \eqn{\tau}.
 
 \strong{Support}: \eqn{R}, the set of all real numbers
 
-\strong{Mean}: ...
-
-\strong{Variance}: ...
-
 \strong{Probability density function (p.d.f)}:
 
 \deqn{
-    f(x) = ...
+    f(t) = \frac{1}{\sigma \sqrt{1 + z^2}} \cdot \frac{1}{2}\left(\tau e^{\tau w} + \nu e^{-\nu w}\right) \cdot \phi\left( \frac{1}{2}\left(e^{\tau w} - e^{-\nu w}\right) \right)
   }{
-    f(x) = ...
+    f(t) = (1 / (sigma * sqrt(1 + z^2))) * 0.5 * (tau * exp(tau * w) + nu * exp(-nu * w)) * phi(0.5 * (exp(tau * w) - exp(-nu * w)))
+  }
+
+\deqn{
+    \text{where } z = \frac{t - \mu}{\sigma}, ~w = \operatorname{asinh}(z), ~\text{and } \phi() \text{ is the standard normal PDF.}
+  }{
+    where z = (x - mu) / sigma, w = asinh(z), and phi() is the standard normal PDF.
   }
 
 \strong{Cumulative distribution function (c.d.f)}:
 
-The cumulative distribution function has the form
-
 \deqn{
-    F(t) = ...
+    F(t) = \Phi\left( H\left(\operatorname{asinh}\left(\frac{t - \mu}{\sigma}\right)\right) \right)
   }{
-    F(t) = ...
+    F(t) = Phi(H(asinh((y - mu) / sigma)))
   }
 
-\strong{Moment generating function (m.g.f)}:
-
 \deqn{
-    ...
+    \text{where } H(w) = \frac{1}{2}\left(e^{\tau w} - e^{-\nu w}\right), ~\text{and } \Phi() \text{ the standard normal CDF.}
   }{
-    ...
+    where H(w) = 0.5 * (exp(tau * w) - exp(-nu * w)), and Phi() the standard normal CDF.
   }
 }
 \examples{
 
-## SHASH(), by default, uses nu = 1, tau = 1 which
+## SHASH() by default uses nu = 1, tau = 1 which
 ## results in the standard normal distribution
 set.seed(6020)
 X <- SHASH() # Uses mu = 1, sigma = 0, nu = 1, tau = 1)
 x <- random(X, 300)
 qqnorm(x); qqline(x, col = 2, lwd = 2)
+curve(pdf(X, x), xlim = c(-5, 5), main = paste(X, "density"))
+
+## Calculation of central moments is based on numeric integration,
+## thus not being identical to the standard normal distribution
 c(mean = mean(x), sd = sd(x))
 
-## TODO(R): Write examples
-## set.seed(27)
+## Skewed SHASH distribution
+X <- SHASH(mu = 7, sigma = 2, nu = c(0.7, 1, 0.7), tau = c(1, 0.7, 0.7))
+as.matrix(X)
 
-## X <- SHASH(5, 2)
-## X
+## Visualization of density functions using different parameters for nu/tau
+curve(pdf(X[1], x), xlim = c(0, 20), ylim = c(0, 0.2), main = "Density function")
+curve(pdf(X[2], x), xlim = c(0, 20), col = 2, add = TRUE)
+curve(pdf(X[3], x), xlim = c(0, 20), col = 4, add = TRUE)
 
-## mean(X)
-## variance(X)
-## skewness(X)
-## kurtosis(X)
+## Visualization of distribution function using different parameters for nu/tau
+curve(cdf(X[1], x), xlim = c(0, 20), ylim = 0:1, main = "Distribution function")
+curve(cdf(X[2], x), xlim = c(0, 20), col = 2, add = TRUE)
+curve(cdf(X[3], x), xlim = c(0, 20), col = 4, add = TRUE)
 
-## random(X, 10)
+## Central moments
+mean(X)
+variance(X)
+skewness(X)
+kurtosis(X)
 
-## pdf(X, 2)
-## log_pdf(X, 2)
+## Drawing random values
+random(X, 10)
 
-## cdf(X, 4)
-## quantile(X, 0.7)
+pdf(X, 2)
+log_pdf(X, 2)
 
-## ### example: calculating p-values for two-sided Z-test
+cdf(X, 4)
+quantile(X, 0.7)
 
-## # here the null hypothesis is H_0: mu = 3
-## # and we assume sigma = 2
-
-## # exactly the same as: Z <- SHASH(0, 1)
-## Z <- SHASH()
-
-## # data to test
-## x <- c(3, 7, 11, 0, 7, 0, 4, 5, 6, 2)
-## nx <- length(x)
-
-## # calculate the z-statistic
-## z_stat <- (mean(x) - 3) / (2 / sqrt(nx))
-## z_stat
-
-## # calculate the two-sided p-value
-## 1 - cdf(Z, abs(z_stat)) + cdf(Z, -abs(z_stat))
-
-## # exactly equivalent to the above
-## 2 * cdf(Z, -abs(z_stat))
-
-## # p-value for one-sided test
-## # H_0: mu <= 3   vs   H_A: mu > 3
-## 1 - cdf(Z, z_stat)
-
-## # p-value for one-sided test
-## # H_0: mu >= 3   vs   H_A: mu < 3
-## cdf(Z, z_stat)
-
-## ### example: calculating a 88 percent Z CI for a mean
-
-## # same `x` as before, still assume `sigma = 2`
-
-## # lower-bound
-## mean(x) - quantile(Z, 1 - 0.12 / 2) * 2 / sqrt(nx)
-
-## # upper-bound
-## mean(x) + quantile(Z, 1 - 0.12 / 2) * 2 / sqrt(nx)
-
-## # equivalent to
-## mean(x) + c(-1, 1) * quantile(Z, 1 - 0.12 / 2) * 2 / sqrt(nx)
-
-## # also equivalent to
-## mean(x) + quantile(Z, 0.12 / 2) * 2 / sqrt(nx)
-## mean(x) + quantile(Z, 1 - 0.12 / 2) * 2 / sqrt(nx)
-
-## ### generating random samples and plugging in ks.test()
-
-## set.seed(27)
-
-## # generate a random sample
-## ns <- random(SHASH(3, 7), 26)
-
-## # test if sample is SHASH(3, 7)
-## ks.test(ns, pnorm, mean = 3, sd = 7)
-
-## # test if sample is gamma(8, 3) using base R pgamma()
-## ks.test(ns, pgamma, shape = 8, rate = 3)
-
-## ### MISC
-
-## # note that the cdf() and quantile() functions are inverses
-## cdf(X, quantile(X, 0.7))
-## quantile(X, cdf(X, 7))
+# note that the cdf() and quantile() functions are inverses
+X <- SHASH(mu = 3, sigma = 2, nu = 0.9, tau = 1.2)
+cdf(X, quantile(X, 0.7))
+quantile(X, cdf(X, 7))
 
 }
 \seealso{

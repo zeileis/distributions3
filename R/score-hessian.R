@@ -521,9 +521,6 @@ score.SHASH <- function(d, x, which = NULL, drop = TRUE, ...) {
 hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   ## numeric differentiation yields observed hessian only
   if (!isFALSE(expected)) stop("only the observed hessian is available")
-  ## TODO(R): CHECK! When comparing approximated vs. analytic they do differ
-  ##          quite a bit, hessian.distribution returns observed, could it be this
-  ##          is the expected Hessian?
 
   ## sanity check
   n <- c(length(d), length(x))

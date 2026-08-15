@@ -64,7 +64,27 @@ normal distribution.
 All functions follow the usual conventions of d/p/q/r functions in base R.
 }
 \examples{
-## TODO(R): Add a couple of examples
+## theoretical probabilities for a SHASH distribution
+## with mu = 0, sigma = 1, nu = 1, tau = 1 (default) the SHASH distribution
+## corresponds to the standard normal distribution
+x <- seq(-5, 5, by = 0.1)
+p <- dshash(x)
+plot(x, p, type = "l", lwd = 2)
+lines(x, dnorm(x), col = 2, lty = 2, lwd = 2)
+
+## corresponding empirical frequencies from a simulated sample
+## with mu = 5, sigma = 3, nu = 0.7, tau = 0.7
+set.seed(0)
+y <- rshash(500, mu = 5, sigma = 3, nu = 1.1, tau = 0.7)
+hist(y)
+
+## the quantile function is the inverse of the distribution function
+pshash(qshash(0.7))
+qshash(pshash(3))
+
+## inversion using custom parameters mu = 5, sigma = 2, nu = 0.7, tau = 1.3
+pshash(qshash(0.7, 5, 2, 0.7, 1.3), 5, 2, 0.7, 1.3)
+qshash(pshash(3,  5, 2, 0.7, 1.3),  5, 2, 0.7, 1.3)
 
 }
 \concept{SHASH}
