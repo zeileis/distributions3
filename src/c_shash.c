@@ -60,7 +60,7 @@ SEXP c_pshash(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower
     int s_mu    = (LENGTH(mu) == 1)    ? 0 : 1;
     int s_sigma = (LENGTH(sigma) == 1) ? 0 : 1;
     int s_nu    = (LENGTH(nu) == 1)    ? 0 : 1;
-    int s_tau   = (LENGTH(tau))        ? 0 : 1;
+    int s_tau   = (LENGTH(tau) == 1)   ? 0 : 1;
 
     // Allocating vector for return
     SEXP rval; PROTECT(rval = allocVector(REALSXP, n));
@@ -74,6 +74,8 @@ SEXP c_pshash(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower
         z   = (qptr[i * s_q] - muptr[i * s_mu]) / sigmaptr[i * s_sigma];
         tmp = asinh(z);
         tmp = exp(tauptr[i * s_tau] * tmp) - exp(-nuptr[i * s_nu] * tmp);
+        ////Rprintf("      q = %.5f   mu = %.5f   sigma = %.5f   nu = %.5f   tau = %.5f\n",
+        ////        qptr[i * s_q], muptr[i * s_mu], sigmaptr[i * s_sigma], nuptr[i * s_nu], tauptr[i * s_tau]);
         rvalptr[i] = Rf_pnorm5(0.5 * tmp, 0., 1., lowertail, 0); // x, mean, sd, lower_tail, log_p = 0
         if (logp) rvalptr[i] = log(rvalptr[i]);
     }
@@ -131,7 +133,7 @@ SEXP c_dshash(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP ret_l
     int s_mu    = (LENGTH(mu) == 1)    ? 0 : 1;
     int s_sigma = (LENGTH(sigma) == 1) ? 0 : 1;
     int s_nu    = (LENGTH(nu) == 1)    ? 0 : 1;
-    int s_tau   = (LENGTH(tau))        ? 0 : 1;
+    int s_tau   = (LENGTH(tau) == 1)   ? 0 : 1;
 
     // Allocating vector for return
     SEXP rval; PROTECT(rval = allocVector(REALSXP, n));
@@ -299,7 +301,7 @@ SEXP c_qshash(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower
     int s_mu    = (LENGTH(mu) == 1)    ? 0 : 1;
     int s_sigma = (LENGTH(sigma) == 1) ? 0 : 1;
     int s_nu    = (LENGTH(nu) == 1)    ? 0 : 1;
-    int s_tau   = (LENGTH(tau))        ? 0 : 1;
+    int s_tau   = (LENGTH(tau) == 1)   ? 0 : 1;
 
     // Allocating vector for return
     SEXP rval; PROTECT(rval = allocVector(REALSXP, n));

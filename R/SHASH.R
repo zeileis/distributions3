@@ -168,9 +168,14 @@ SHASH <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
   n <- c(mu = length(mu), sigma = length(sigma), nu = length(nu), tau = length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      all(n == n[[1L]]) || all(n == max(n) | n == 1L)
+      all(n == n[[1L]]) || all(n == max(n) | n == 1L),
+    "argument 'mu' must be numeric"       = is.numeric(mu),
+    "argument 'sigma' sigmast be numeric" = is.numeric(sigma),
+    "argument 'nu' nust be numeric"       = is.numeric(nu),
+    "argument 'tau' taust be numeric"     = is.numeric(tau)
   )
-  d <- data.frame(mu = mu, sigma = sigma, nu = nu, tau = tau)
+  d <- data.frame(mu = as.double(mu), sigma = as.double(sigma),
+                  nu = as.double(nu), tau   = as.double(tau))
   class(d) <- c("SHASH", "distribution")
   d
 }
@@ -275,10 +280,10 @@ kurtosis.SHASH <- function(x, cores = NULL, ...) {
 #' (if `drop = FALSE`).
 #'
 #' @export
-random.SHASH <- function(x, n = 1L, drop = TRUE, ...) {
+random.SHASH <- function(x, n = 1L, drop = TRUE, cores = NULL, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric())
-  FUN <- function(at, d) rshash(n = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau)
+  FUN <- function(at, d) rshash(n = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
@@ -325,7 +330,7 @@ pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) 
 #' @export
 #'
 log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
-  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
+  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, log = TRUE, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -399,8 +404,8 @@ cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) 
 #'
 #' @family SHASH distribution
 #' @export
-quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) qshash(p = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, ...)
+quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) qshash(p = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
@@ -513,8 +518,16 @@ is_continuous.SHASH <- function(d, ...) {
 #' @export
 dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = NULL) {
   nparam <- c(length(x), length(mu), length(sigma), length(nu), length(tau))
-  stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
-      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L),
+    "argument 'x' must be numeric" = is.numeric(x),
+    "argument 'mu' must be numeric" = is.numeric(mu),
+    "argument 'sigma' sigmast be numeric" = is.numeric(sigma),
+    "argument 'nu' nust be numeric" = is.numeric(nu),
+    "argument 'tau' taust be numeric" = is.numeric(tau)
+  )
+
   ## TODO(R): Add it? Other functions do not have it
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
@@ -523,7 +536,8 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = N
   if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
     cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     ## Arguments are: n, x, mu, sigma, nu, tau, ret_log, ncores
-    loglik <- .Call("c_dshash", max(nparam), x, mu, sigma, nu, tau,
+    loglik <- .Call("c_dshash", max(nparam), as.double(x), as.double(mu),
+                    as.double(sigma), as.double(nu), as.double(tau),
                     as.logical(log)[1L], cores, PACKAGE = "distributions3")
   } else {
     z                 <- (x - mu) / sigma
@@ -560,10 +574,16 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = N
 #' @export
 pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
   nparam <- c(length(q), length(mu), length(sigma), length(nu), length(tau))
-  stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
-      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
-  cores <- if (is.null(cores)) 1L else as.integer(cores)[1L]
-  #cores <- if (is.null(cores)) 1L else pmax(1L, pmin(as.integer(cores)[[1L]], detectCores() - 2))
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L),
+    "argument 'q' must be numeric" = is.numeric(q),
+    "argument 'mu' must be numeric" = is.numeric(mu),
+    "argument 'sigma' sigmast be numeric" = is.numeric(sigma),
+    "argument 'nu' nust be numeric" = is.numeric(nu),
+    "argument 'tau' taust be numeric" = is.numeric(tau)
+  )
+
   ## TODO(R): Add it? Other functions do not have it
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
@@ -571,7 +591,8 @@ pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
     cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     ## Arguments are: n, q, mu, sigma, nu, tau, lowertail, logp, ncores
-    p <- .Call("c_pshash", max(nparam), q, mu, sigma, nu, tau,
+    p <- .Call("c_pshash", max(nparam), as.double(q), as.double(mu),
+               as.double(sigma), as.double(nu), as.double(tau),
                as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
   } else {
     z      <- (q - mu) / sigma
@@ -596,25 +617,33 @@ pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
 #' @rdname shash
 #' @importFrom stats uniroot
 #' @export
-qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL, useC = TRUE) {
+qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
   nparam <- c(length(p), length(mu), length(sigma), length(nu), length(tau))
-  stopifnot("parameter lengths do not match (only scalars are allowed to be recycled)" =
-      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L))
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      all(nparam == nparam[[1L]]) || all(nparam == max(nparam) | nparam == 1L),
+    "argument 'p' must be numeric" = is.numeric(p),
+    "argument 'mu' must be numeric" = is.numeric(mu),
+    "argument 'sigma' sigmast be numeric" = is.numeric(sigma),
+    "argument 'nu' nust be numeric" = is.numeric(nu),
+    "argument 'tau' taust be numeric" = is.numeric(tau)
+  )
+
   ## TODO(R): Add it? Other functions do not have it
   ##if (any(sigma <= 0)) stop("sigma must be positive")
   ##if (any(tau <= 0)) stop("tau must be positive")
   ##if (any(nu <= 0)) stop("nu must be positive")
-  cores <- if (is.null(cores)) 1L else as.integer(cores)[1L]
 
   if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
     cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
-    res <- .Call("c_qshash", max(nparam), p, mu, sigma, nu, tau,
-                  as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
+    res <- .Call("c_qshash", max(nparam), as.double(p), as.double(mu),
+                 as.double(sigma), as.double(nu), as.double(tau),
+                 as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
   } else {
     if (log.p)       p <- exp(p)
     if (!lower.tail) p <- 1 - p
 
-    nmax <- max(nparam)
+    nmax  <- max(nparam)
     p     <- rep(p,     length.out = nmax)
     sigma <- rep(sigma, length.out = nmax)
     mu    <- rep(mu,    length.out = nmax)
@@ -628,7 +657,7 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
     res <- suppressWarnings(qnorm(p))
     idx_valid <- which(is.finite(res))
 
-    fn1 <- function(x, mu, sigma, nu, tau) pshash(x, mu = mu, sigma = sigma, nu = nu, tau = tau)
+    fn1 <- function(x, mu, sigma, nu, tau) pshash(x, mu = mu, sigma = sigma, nu = nu, tau = tau, cores = cores)
     fn2 <- function(x, mu, sigma, nu, tau, p) fn1(x, mu, sigma, nu, tau) - p
 
     # Calculate quantile for valid probabilities (p \in (0, 1))
@@ -674,11 +703,12 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
 #' @rdname shash
 #' @importFrom stats runif
 #' @export
-rshash <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1) {
+rshash <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL) {
   ## TODO(R): Add it? Other functions do not have it
   ## if (any(sigma <= 0)) stop("sigma must be positive")
   ## if (any(tau <= 0)) stop("tau must be positive")
   ## if (any(nu <= 0)) stop("nu must be positive")
-  qshash(runif(n), mu = mu, sigma = sigma, nu = nu, tau = tau)
+  qshash(runif(n), mu = mu[[1L]], sigma = sigma[[1L]],
+         nu = nu[[1L]], tau = tau[[1L]], cores = cores)
 }
 

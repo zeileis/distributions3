@@ -28,11 +28,10 @@ qshash(
   tau = 1,
   lower.tail = TRUE,
   log.p = FALSE,
-  cores = NULL,
-  useC = TRUE
+  cores = NULL
 )
 
-rshash(n, mu = 0, sigma = 1, nu = 1, tau = 1)
+rshash(n, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL)
 }
 \arguments{
 \item{x}{vector of (non-negative integer) quantiles.}

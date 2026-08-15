@@ -4,7 +4,7 @@
 \alias{random.SHASH}
 \title{Draw a random sample from a SHASH distribution}
 \usage{
-\method{random}{SHASH}(x, n = 1L, drop = TRUE, ...)
+\method{random}{SHASH}(x, n = 1L, drop = TRUE, cores = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{SHASH} object created by a call to \code{\link[=SHASH]{SHASH()}}.}

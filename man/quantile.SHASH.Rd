@@ -4,7 +4,7 @@
 \alias{quantile.SHASH}
 \title{Determine quantiles of a SHASH distribution}
 \usage{
-\method{quantile}{SHASH}(x, probs, drop = TRUE, elementwise = NULL, ...)
+\method{quantile}{SHASH}(x, probs, drop = TRUE, elementwise = NULL, cores = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{SHASH} object created by a call to \code{\link[=SHASH]{SHASH()}}.}
