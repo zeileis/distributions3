@@ -555,9 +555,8 @@ test_that("Uniform.hessian works as expected", {
     expect_error(hessian(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
     expect_error(hessian(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
 
-    # For hessian.distribution only the observed (not the expected) hessian is available
-    expect_error(distributions3:::hessian.distribution(Uniform(1:2), 1:3, expected = TRUE),
-        regexp = "only the observed hessian is available")
+    # For hessian only the observed (not the expected) hessian is available
+    expect_error(hessian(Uniform(1:2), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(Uniform(a, b), 0.5))
@@ -596,3 +595,83 @@ test_that("Uniform.hessian works as expected", {
 
 
 
+# =======================================================
+# SHASH: Testing analytic score and hessian
+#
+# Not testing for numerical correctness as we test
+# score/hessian against gamsls.dist::SHASH in test-SHASH.R.
+# =======================================================
+test_that("SHASH.score works as expected", {
+    expect_true("score.SHASH" %in% ns, info = "score.SHASH not found in namespace")
+    expect_true(is.function(getS3method("score", "SHASH")), "score.SHASH is not a function")
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.SHASH),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch
+    expect_error(score(SHASH(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(SHASH(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(score(SHASH(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(score(SHASH(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions
+    expect_silent(s1 <- score(SHASH(5:1), 1:5))
+    expect_true(is.matrix(s1))
+    expect_identical(dimnames(s1), list(NULL, c("mu", "sigma", "nu", "tau")))
+
+    ## Checking changing order of whcih
+    expect_silent(s2 <- score(SHASH(5:1), 1:5, which = c("tau", "nu", "sigma", "mu")))
+    expect_identical(s1, s2[, 4:1]) # Reverse order
+
+    ## Calculating only mu and sigma, compare to full result 's1' from above
+    expect_silent(sm <- score(SHASH(1:5), 5:1, which = "m"))
+    expect_silent(ss <- score(SHASH(1:5), 5:1, which = "s"))
+    expect_silent(sn <- score(SHASH(1:5), 5:1, which = "n"))
+    expect_silent(st <- score(SHASH(1:5), 5:1, which = "t"))
+    expect_identical(s1[5:1, ], cbind(mu = sm, sigma = ss, nu = sn, tau = st)) # flipped upside down for testing
+
+    ## with drop = FALSE
+    expect_silent(sm <- score(SHASH(1:5), 5:1, which = "m", drop = FALSE))
+    expect_silent(ss <- score(SHASH(1:5), 5:1, which = "s", drop = FALSE))
+    expect_silent(sn <- score(SHASH(1:5), 5:1, which = "n", drop = FALSE))
+    expect_silent(st <- score(SHASH(1:5), 5:1, which = "t", drop = FALSE))
+    expect_identical(s1[5:1, ], cbind(sm, ss, sn, st)) # flipped upside down for testing
+
+    ## Check drop = TRUE/drop = FASE for single parameter
+    expect_identical(score(SHASH(5:1), 0, which = "mu", drop = FALSE),
+                     cbind(mu = score(SHASH(5:1), 0, which = "mu")))
+})
+
+test_that("SHASH.hessian works as expected", {
+    expect_true("hessian.SHASH" %in% ns, info = "hessian.SHASH not found in namespace")
+    expect_true(is.function(getS3method("hessian", "SHASH")), "hessian.SHASH is not a function")
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.SHASH),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(SHASH(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(SHASH(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(SHASH(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(SHASH(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(SHASH(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+
+    # For hessian only the observed (not the expected) hessian is available
+    expect_error(hessian(SHASH(), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
+
+    ## Calculating all hessians for 5 distributions
+    expect_silent(h1 <- hessian(SHASH(5:1), 1:5))
+    expect_identical(dimnames(h1), list(NULL, c("mu", "sigma:mu", "nu:mu", "tau:mu", "mu:sigma",
+                                                "sigma", "nu:sigma", "tau:sigma", "mu:nu",
+                                                "sigma:nu", "nu", "tau:nu", "mu:tau", "sigma:tau",
+                                                "nu:tau", "tau")))
+    ## Get only couple
+    expect_silent(h2 <- hessian(SHASH(5:1), 1, which = c("mu:tau", "sigma", "sigma:tau")))
+    expect_identical(dimnames(h2), list(NULL, c("mu:tau", "sigma", "sigma:tau")))
+
+    ## Check drop = TRUE/drop = FASE for single parameter
+    expect_identical(hessian(SHASH(5:1), 0, which = "nu:tau", drop = FALSE),
+                     cbind("nu:tau" = hessian(SHASH(5:1), 0, which = "nu:tau")))
+})
