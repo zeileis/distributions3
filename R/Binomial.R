@@ -327,6 +327,7 @@ is_continuous.Binomial <- function(d, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
@@ -345,6 +346,7 @@ score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {

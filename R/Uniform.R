@@ -258,6 +258,7 @@ is_continuous.Uniform <- function(d, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
@@ -287,6 +288,7 @@ score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {

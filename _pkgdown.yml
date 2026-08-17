@@ -23,6 +23,8 @@ reference:
       - skewness
       - kurtosis
       - support
+      - score
+      - hessian
       - is_continuous
       - is_discrete
       - suff_stat
@@ -295,6 +297,18 @@ reference:
       - quantile.RevWeibull
       - random.RevWeibull
       - support.RevWeibull
+  - title: "Sinh-Arcsinh distribution"
+    contents:
+      - dsinharcsinh
+      - psinharcsinh
+      - qsinharcsinh
+      - rsinharcsinh
+      - SinhArcsinh
+      - cdf.SinhArcsinh
+      - pdf.SinhArcsinh
+      - quantile.SinhArcsinh
+      - random.SinhArcsinh
+      - support.SinhArcsinh
   - title: "Student's T distribution"
     contents:
       - StudentsT

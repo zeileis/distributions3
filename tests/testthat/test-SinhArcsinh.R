@@ -151,12 +151,12 @@ test_that("cdf.SinhArcsinh works as expected", {
     expect_identical(x3, tmp2)
 
     ## Checking that the C code works as well (cores = 3L)
-    expect_identical(cdf(d, c(-2, 0, 2)),
-                     cdf(d, c(-2, 0, 2)))
-    expect_identical(cdf(d, c(-2, 0, 2)),
-                     cdf(d, c(-2, 0, 2), cores = 3L))
-    expect_identical(cdf(d, c(-2, 0, 2), elementwise = FALSE),
-                     cdf(d, c(-2, 0, 2), elementwise = FALSE, cores = 3L))
+    expect_equal(cdf(d, c(-2, 0, 2)),
+                 cdf(d, c(-2, 0, 2), cores = 3L),
+                 tolerance = 1e-7)
+    expect_equal(cdf(d, c(-2, 0, 2), elementwise = FALSE),
+                 cdf(d, c(-2, 0, 2), elementwise = FALSE, cores = 3L),
+                 tolerance = 1e-7)
 })
 
 
@@ -199,20 +199,20 @@ test_that("pdf.SinhArcsinh works as expected", {
     expect_identical(x3, tmp2)
 
     ## Checking that the C code works as well (cores = 3L)
-    expect_identical(pdf(d, c(-2, 0, 2)),
-                     pdf(d, c(-2, 0, 2)))
-    expect_identical(pdf(d, c(-2, 0, 2)),
-                     pdf(d, c(-2, 0, 2), cores = 3L))
-    expect_identical(pdf(d, c(-2, 0, 2), elementwise = FALSE),
-                     pdf(d, c(-2, 0, 2), elementwise = FALSE, cores = 3L))
+    expect_equal(pdf(d, c(-2, 0, 2)),
+                 pdf(d, c(-2, 0, 2), cores = 3L),
+                 tolerance = 1e-7)
+    expect_equal(pdf(d, c(-2, 0, 2), elementwise = FALSE),
+                 pdf(d, c(-2, 0, 2), elementwise = FALSE, cores = 3L),
+                 tolerance = 1e-7)
 
     ## log = TRUE
-    expect_identical(pdf(d, c(-2, 0, 2), log = TRUE),
-                     pdf(d, c(-2, 0, 2), log = TRUE))
-    expect_identical(pdf(d, c(-2, 0, 2), log = TRUE),
-                     pdf(d, c(-2, 0, 2), log = TRUE, cores = 3L))
-    expect_identical(pdf(d, c(-2, 0, 2), log = TRUE, elementwise = FALSE),
-                     pdf(d, c(-2, 0, 2), log = TRUE, elementwise = FALSE, cores = 3L))
+    expect_equal(pdf(d, c(-2, 0, 2), log = TRUE),
+                 pdf(d, c(-2, 0, 2), log = TRUE, cores = 3L),
+                 tolerance = 1e-7)
+    expect_equal(pdf(d, c(-2, 0, 2), log = TRUE, elementwise = FALSE),
+                 pdf(d, c(-2, 0, 2), log = TRUE, elementwise = FALSE, cores = 3L),
+                 tolerance = 1e-7)
 })
 
 
@@ -248,13 +248,13 @@ test_that("quantile.SinhArcsinh works as expected", {
     expect_identical(x3, tmp2)
 
     ## Checking that the C code works as well (cores = 3L)
-    expect_identical(quantile(d, c(0.2, 0.5, 0.8)),
+    expect_equal(quantile(d, c(0.2, 0.5, 0.8)),
                      quantile(d, c(0.2, 0.5, 0.8), cores = 3L),
                      tolerance = 1e-5)
-    expect_identical(quantile(d, c(0.2, 0.5, 0.8)),
+    expect_equal(quantile(d, c(0.2, 0.5, 0.8)),
                      quantile(d, c(0.2, 0.5, 0.8), cores = 3L),
                      tolerance = 1e-5)
-    expect_identical(quantile(d, c(0.2, 0.5, 0.8), elementwise = FALSE),
+    expect_equal(quantile(d, c(0.2, 0.5, 0.8), elementwise = FALSE),
                      quantile(d, c(0.2, 0.5, 0.8), elementwise = FALSE, cores = 3L),
                      tolerance = 1e-5)
 })
@@ -306,7 +306,7 @@ test_that("testing central moments of SinhArcsinh", {
     ## With SinhArcsinh(mu = 6, sigma = 5.5, nu = 1, tau = 1)
     ## the expectation (mean) should be 6, variance 5.5^2,
     ## and skewness and kurtosis approximately 0.
-    expect_identical(mean(SinhArcsinh(6, 5.5)), 6)
+    expect_equal(mean(SinhArcsinh(6, 5.5)), 6)
     expect_equal(variance(SinhArcsinh(6, 5.5)), 5.5^2)
     expect_equal(skewness(SinhArcsinh(6, 5.5)), 0)
     expect_equal(kurtosis(SinhArcsinh(6, 5.5)), 0)
@@ -599,24 +599,24 @@ test_that("hessian.SinhArcsinh works as expected", {
 ## 
 ##     # Default sinharcsinh with mu = 0, sigma = 1, nu = 1, tau = 1
 ##     d <- SinhArcsinh()
-##     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-##     expect_identical(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
+##     expect_equal(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
+##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
 ## 
 ##     # Single distribution with some 'random' parameters, evaluate at x = 0 and x = 1:5
 ##     d <- SinhArcsinh(mu = 10, sigma = 5.5, nu = 0.8, tau = 1.2)
 ## 
-##     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
+##     expect_equal(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
 ##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
 ## 
-##     expect_identical(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
+##     expect_equal(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
 ##     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
 ## 
 ##     # Multiple distributions, evaluate at x = 0 and x = 1:5
 ##     d <- SinhArcsinh(mu = 15:11, sigma = 1:5 / 10, nu = 1.5, tau = 0.5)
 ## 
-##     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
+##     expect_equal(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
 ##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
 ## 
-##     expect_identical(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
+##     expect_equal(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
 ##     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
 ## }

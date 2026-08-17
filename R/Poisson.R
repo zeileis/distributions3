@@ -288,6 +288,7 @@ is_continuous.Poisson <- function(d, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 ## Poisson methods for score/hessian
@@ -306,6 +307,7 @@ score.Poisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {

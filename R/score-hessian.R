@@ -80,6 +80,7 @@
 #'
 #'
 #' @rdname score-hessian
+#' @name score-hessian
 #' @export
 score <- function(d, ...) {
     if (!length(d)) return(numeric())
@@ -87,6 +88,7 @@ score <- function(d, ...) {
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @export
 hessian <- function(d, ...) {
     if (!length(d)) return(numeric())
@@ -99,6 +101,7 @@ hessian <- function(d, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @exportS3Method
 ## fallback methods based on numeric differentiation
 score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$double.eps^(1/3), ...) {
@@ -131,6 +134,7 @@ score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$d
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @exportS3Method
 hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, eps = .Machine$double.eps^(1/4), ...) {
   ## numeric differentiation yields observed hessian only
