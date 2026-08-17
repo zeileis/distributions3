@@ -1,43 +1,43 @@
 # -------------------------------------------------------
-# Checking SHASH distribution
+# Checking SinhArcsinh distribution
 # distributions3 implementation of gamlss.dist::SHASH
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
 suppressPackageStartupMessages(library("scoringRules"))
 
-test_that("SHASH exists and has correct defaults", {
-    expect_true(is.function(SHASH))
-    expect_identical(formals(SHASH),
+test_that("SinhArcsinh exists and has correct defaults", {
+    expect_true(is.function(SinhArcsinh))
+    expect_identical(formals(SinhArcsinh),
         as.pairlist(alist(mu = 0, sigma = 1, nu = 1, tau = 1)),
         info = "arguments or default arguments not as expected")
 })
 
 test_that("Empirical unexpected input", {
     # Testing length mismatch error (not all combinations are tested!)
-    expect_error(SHASH(mu = 1:2, sigma = 1:3),
+    expect_error(SinhArcsinh(mu = 1:2, sigma = 1:3),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
-    expect_error(SHASH(nu = 1:2, tau = 1:10),
+    expect_error(SinhArcsinh(nu = 1:2, tau = 1:10),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
 
-    expect_error(SHASH(mu    = TRUE), regexp = "argument 'mu' must be numeric")
-    expect_error(SHASH(sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
-    expect_error(SHASH(nu    = TRUE), regexp = "argument 'nu' nust be numeric")
-    expect_error(SHASH(tau   = TRUE), regexp = "argument 'tau' taust be numeric")
+    expect_error(SinhArcsinh(mu    = TRUE), regexp = "argument 'mu' must be numeric")
+    expect_error(SinhArcsinh(sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
+    expect_error(SinhArcsinh(nu    = TRUE), regexp = "argument 'nu' nust be numeric")
+    expect_error(SinhArcsinh(tau   = TRUE), regexp = "argument 'tau' taust be numeric")
 })
 
 test_that("Empirical construction works", {
 
     ## Using defaults
-    expect_silent(d <- SHASH())
-    expect_identical(class(d), c("SHASH", "distribution"))
+    expect_silent(d <- SinhArcsinh())
+    expect_identical(class(d), c("SinhArcsinh", "distribution"))
     expect_identical(length(d), 1L)
     expect_null(names(d))
     expect_identical(as.matrix(d), matrix(c(0, 1, 1, 1), nrow = 1,
         dimnames = list(NULL, c("mu", "sigma", "nu", "tau"))))
 
     # Default print
-    expect_output(print(d), regexp = "SHASH\\(mu = 0, sigma = 1, nu = 1, tau = 1\\)",)
+    expect_output(print(d), regexp = "SinhArcsinh\\(mu = 0, sigma = 1, nu = 1, tau = 1\\)",)
 
     ## Sampling parameters for testing
     set.seed(6020)
@@ -48,12 +48,12 @@ test_that("Empirical construction works", {
     tau   <- runif(N, 0.5, 1.5)
 
     ## Using vectors of length 5
-    expect_silent(d <- SHASH(mu, sigma, nu, tau))
+    expect_silent(d <- SinhArcsinh(mu, sigma, nu, tau))
     expect_identical(length(d), N)
     expect_identical(as.matrix(d), cbind(mu = mu, sigma = sigma, nu = nu, tau = tau))
 
     ## Testing one version of parameter recycling
-    expect_silent(d <- SHASH(mu = 5, sigma = sigma, nu = 0.8, tau = tau))
+    expect_silent(d <- SinhArcsinh(mu = 5, sigma = sigma, nu = 0.8, tau = tau))
     expect_identical(length(d), N)
     expect_identical(d$mu,    rep(5, N))
     expect_identical(d$sigma, sigma)
@@ -61,49 +61,49 @@ test_that("Empirical construction works", {
     expect_identical(d$tau,   tau)
 
     ## Named distributions
-    expect_silent(d <- setNames(SHASH(mu = 1:5), LETTERS[1:5]))
+    expect_silent(d <- setNames(SinhArcsinh(mu = 1:5), LETTERS[1:5]))
     expect_identical(names(d), LETTERS[1:5])
 })
 
 test_that("Empirical support method works", {
     # Checking defaults
-    expect_identical(formals(distributions3:::support.SHASH),
+    expect_identical(formals(distributions3:::support.SinhArcsinh),
         as.pairlist(alist(d =, drop = TRUE, ... =)))
 
     ## Length 1, unnamed, drop = TRUE/FALSE
-    expect_identical(support(SHASH()), c(min = -Inf, max = Inf))
-    expect_identical(support(SHASH(), drop = FALSE),
+    expect_identical(support(SinhArcsinh()), c(min = -Inf, max = Inf))
+    expect_identical(support(SinhArcsinh(), drop = FALSE),
         matrix(c(-Inf, Inf), nrow = 1, ncol = 2, dimnames = list(NULL, c("min", "max"))))
 
     ## Length 1, named, drop = TRUE/FALSE
-    expect_identical(support(setNames(SHASH(), "foo")), c(min = -Inf, max = Inf))
-    expect_identical(support(setNames(SHASH(), "foo"), drop = FALSE),
+    expect_identical(support(setNames(SinhArcsinh(), "foo")), c(min = -Inf, max = Inf))
+    expect_identical(support(setNames(SinhArcsinh(), "foo"), drop = FALSE),
         matrix(c(-Inf, Inf), nrow = 1, ncol = 2, dimnames = list("foo", c("min", "max"))))
 
     ## Length 2, named, drop = TRUE/FALSE
-    expect_identical(support(setNames(SHASH(1:3), LETTERS[1:3]), drop = TRUE),
+    expect_identical(support(setNames(SinhArcsinh(1:3), LETTERS[1:3]), drop = TRUE),
         matrix(c(-Inf, Inf), byrow = TRUE, nrow = 3, ncol = 2,
                dimnames = list(LETTERS[1:3], c("min", "max"))))
-    expect_identical(support(setNames(SHASH(1:3), LETTERS[1:3]), drop = FALSE),
+    expect_identical(support(setNames(SinhArcsinh(1:3), LETTERS[1:3]), drop = FALSE),
         matrix(c(-Inf, Inf), byrow = TRUE, nrow = 3, ncol = 2,
                dimnames = list(LETTERS[1:3], c("min", "max"))))
 })
 
 test_that("is_continuous/is_discrete methods both works", {
     # Checking defaults
-    expect_identical(formals(distributions3:::is_continuous.SHASH),
+    expect_identical(formals(distributions3:::is_continuous.SinhArcsinh),
         as.pairlist(alist(d =, ... =)))
 
     # id_discrete: named and unnamed
-    expect_silent(d <- is_discrete(SHASH(1:3)))
+    expect_silent(d <- is_discrete(SinhArcsinh(1:3)))
     expect_identical(d, rep(FALSE, 3L))
-    expect_silent(d <- is_discrete(SHASH(1:3) |> setNames(LETTERS[1:3])))
+    expect_silent(d <- is_discrete(SinhArcsinh(1:3) |> setNames(LETTERS[1:3])))
     expect_identical(d, rep(FALSE, 3L) |> setNames(LETTERS[1:3]))
 
     # id_discrete: named and unnamed
-    expect_silent(d <- is_continuous(SHASH(1:3)))
+    expect_silent(d <- is_continuous(SinhArcsinh(1:3)))
     expect_identical(d, rep(TRUE, 3L))
-    expect_silent(d <- is_continuous(SHASH(1:3) |> setNames(LETTERS[1:3])))
+    expect_silent(d <- is_continuous(SinhArcsinh(1:3) |> setNames(LETTERS[1:3])))
     expect_identical(d, rep(TRUE, 3L) |> setNames(LETTERS[1:3]))
 })
 
@@ -113,13 +113,13 @@ test_that("is_continuous/is_discrete methods both works", {
 # -------------------------------------------------------------------
 
 
-test_that("cdf.SHASH works as expected", {
-    d <- SHASH(mu = 1:3, sigma = c(2, 1, 0.5),
+test_that("cdf.SinhArcsinh works as expected", {
+    d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
 
     # Checking defaults
-    expect_identical(formals(distributions3:::cdf.SHASH),
+    expect_identical(formals(distributions3:::cdf.SinhArcsinh),
         as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, cores = NULL, ... =)))
 
     expect_silent(x <- cdf(d, 0))
@@ -160,13 +160,13 @@ test_that("cdf.SHASH works as expected", {
 })
 
 
-test_that("pdf.SHASH works as expected", {
-    d <- SHASH(mu = 1:3, sigma = c(2, 1, 0.5),
+test_that("pdf.SinhArcsinh works as expected", {
+    d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
 
     # Checking defaults
-    expect_identical(formals(distributions3:::pdf.SHASH),
+    expect_identical(formals(distributions3:::pdf.SinhArcsinh),
         as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, cores = NULL, ... =)))
 
     expect_silent(x <- pdf(d, 0))
@@ -216,13 +216,13 @@ test_that("pdf.SHASH works as expected", {
 })
 
 
-test_that("quantile.SHASH works as expected", {
-    d <- SHASH(mu = 1:3, sigma = c(2, 1, 0.5),
+test_that("quantile.SinhArcsinh works as expected", {
+    d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
 
     # Checking defaults
-    expect_identical(formals(distributions3:::quantile.SHASH),
+    expect_identical(formals(distributions3:::quantile.SinhArcsinh),
         as.pairlist(alist(x =, probs =, drop = TRUE, elementwise = NULL, cores = NULL, ... =)))
 
     expect_silent(x <- quantile(d, 0.5))
@@ -261,12 +261,12 @@ test_that("quantile.SHASH works as expected", {
 
 
 test_that("random.Empirical works as expected", {
-    d <- SHASH(mu = 1:3, sigma = c(2, 1, 0.5),
+    d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
 
     # Checking defaults
-    expect_identical(formals(distributions3:::random.SHASH),
+    expect_identical(formals(distributions3:::random.SinhArcsinh),
         as.pairlist(alist(x =, n = 1L, drop = TRUE, cores = NULL, ... =)))
 
     # n = 0
@@ -288,7 +288,7 @@ test_that("random.Empirical works as expected", {
     expect_identical(dimnames(x), list(names(d), paste0("r_", 1:10)))
     expect_true(all(is.finite(x)))
 
-    # n = 10 with cores = 3L, uses C code internally when calling qshash
+    # n = 10 with cores = 3L, uses C code internally when calling qsinharcsinh
     expect_silent(x <- random(d, n = 10L, cores = 3L))
     expect_type(x, "double")
     expect_true(is.matrix(x))
@@ -298,21 +298,21 @@ test_that("random.Empirical works as expected", {
 })
 
 
-test_that("testing central moments of SHASH", {
+test_that("testing central moments of SinhArcsinh", {
     # Checking defaults
     expect_identical(formals(distributions3:::mean.Empirical),
             as.pairlist(alist(x =, ... =)))
 
-    ## With SHASH(mu = 6, sigma = 5.5, nu = 1, tau = 1)
+    ## With SinhArcsinh(mu = 6, sigma = 5.5, nu = 1, tau = 1)
     ## the expectation (mean) should be 6, variance 5.5^2,
     ## and skewness and kurtosis approximately 0.
-    expect_identical(mean(SHASH(6, 5.5)), 6)
-    expect_equal(variance(SHASH(6, 5.5)), 5.5^2)
-    expect_equal(skewness(SHASH(6, 5.5)), 0)
-    expect_equal(kurtosis(SHASH(6, 5.5)), 0)
+    expect_identical(mean(SinhArcsinh(6, 5.5)), 6)
+    expect_equal(variance(SinhArcsinh(6, 5.5)), 5.5^2)
+    expect_equal(skewness(SinhArcsinh(6, 5.5)), 0)
+    expect_equal(kurtosis(SinhArcsinh(6, 5.5)), 0)
 
     ## For testing
-    d <- SHASH(mu = 1:3, sigma = c(2, 1, 0.5),
+    d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
 
@@ -345,150 +345,150 @@ test_that("testing central moments of SHASH", {
 # Additional tests for dedicated dpqr methods
 # -------------------------------------------------------------------
 
-# dshash
-test_that("dshash works as expected", {
-    expect_identical(formals(dshash),
+# dsinharcsinh
+test_that("dsinharcsinh works as expected", {
+    expect_identical(formals(dsinharcsinh),
         as.pairlist(alist(x =, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = NULL)))
 
     # Incorrect arguments
-    expect_error(dshash(x = 0, mu = 1:2, sigma = 1:3),
+    expect_error(dsinharcsinh(x = 0, mu = 1:2, sigma = 1:3),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
-    expect_error(dshash(x = 1:3, nu = 1:2),
+    expect_error(dsinharcsinh(x = 1:3, nu = 1:2),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
 
-    expect_error(dshash(x = TRUE),            regexp = "argument 'x' must be numeric")
-    expect_error(dshash(x = 0, mu    = TRUE), regexp = "argument 'mu' must be numeric")
-    expect_error(dshash(x = 0, sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
-    expect_error(dshash(x = 0, nu    = TRUE), regexp = "argument 'nu' nust be numeric")
-    expect_error(dshash(x = 0, tau   = TRUE), regexp = "argument 'tau' taust be numeric")
+    expect_error(dsinharcsinh(x = TRUE),            regexp = "argument 'x' must be numeric")
+    expect_error(dsinharcsinh(x = 0, mu    = TRUE), regexp = "argument 'mu' must be numeric")
+    expect_error(dsinharcsinh(x = 0, sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
+    expect_error(dsinharcsinh(x = 0, nu    = TRUE), regexp = "argument 'nu' nust be numeric")
+    expect_error(dsinharcsinh(x = 0, tau   = TRUE), regexp = "argument 'tau' taust be numeric")
 
     # For mu = 0, sigma = 1, nu = 1, tau = 1 -> dnorm()
-    expect_equal(dshash(0), dnorm(0))
+    expect_equal(dsinharcsinh(0), dnorm(0))
 
-    expect_equal(x <- dshash(x = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5),
-                 sapply(1:5, function(x) dshash(x, mu = x * 10, sigma = x / 10, nu = 0.5, tau = 0.5)))
-    expect_equal(dshash(x = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, log = TRUE), log(x))
+    expect_equal(x <- dsinharcsinh(x = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5),
+                 sapply(1:5, function(x) dsinharcsinh(x, mu = x * 10, sigma = x / 10, nu = 0.5, tau = 0.5)))
+    expect_equal(dsinharcsinh(x = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, log = TRUE), log(x))
 
     ## Check that we get the same result when C code is used by setting cores = 1L
-    expect_equal(dshash(x = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, cores = 1L), x)
+    expect_equal(dsinharcsinh(x = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, cores = 1L), x)
 })
 
 
 # pempirical
-test_that("pshash works as expected", {
-    expect_identical(formals(pshash),
+test_that("psinharcsinh works as expected", {
+    expect_identical(formals(psinharcsinh),
         as.pairlist(alist(q =, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL)))
 
     # Incorrect arguments
-    expect_error(pshash(q = 0, mu = 1:2, sigma = 1:3),
+    expect_error(psinharcsinh(q = 0, mu = 1:2, sigma = 1:3),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
-    expect_error(pshash(q = 1:3, nu = 1:2),
+    expect_error(psinharcsinh(q = 1:3, nu = 1:2),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
 
-    expect_error(pshash(q = TRUE),            regexp = "argument 'q' must be numeric")
-    expect_error(pshash(q = 0, mu    = TRUE), regexp = "argument 'mu' must be numeric")
-    expect_error(pshash(q = 0, sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
-    expect_error(pshash(q = 0, nu    = TRUE), regexp = "argument 'nu' nust be numeric")
-    expect_error(pshash(q = 0, tau   = TRUE), regexp = "argument 'tau' taust be numeric")
+    expect_error(psinharcsinh(q = TRUE),            regexp = "argument 'q' must be numeric")
+    expect_error(psinharcsinh(q = 0, mu    = TRUE), regexp = "argument 'mu' must be numeric")
+    expect_error(psinharcsinh(q = 0, sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
+    expect_error(psinharcsinh(q = 0, nu    = TRUE), regexp = "argument 'nu' nust be numeric")
+    expect_error(psinharcsinh(q = 0, tau   = TRUE), regexp = "argument 'tau' taust be numeric")
 
     # For mu = 0, sigma = 1, nu = 1, tau = 1 -> pnorm()
-    expect_equal(pshash(0), pnorm(0))
-    expect_equal(pshash(0, lower.tail = TRUE), pnorm(0, lower.tail = TRUE))
-    expect_equal(pshash(0, log = TRUE), pnorm(0, log = TRUE))
-    expect_equal(pshash(0, lower.tail = TRUE, log = TRUE), pnorm(0, lower.tail = TRUE, log = TRUE))
+    expect_equal(psinharcsinh(0), pnorm(0))
+    expect_equal(psinharcsinh(0, lower.tail = TRUE), pnorm(0, lower.tail = TRUE))
+    expect_equal(psinharcsinh(0, log = TRUE), pnorm(0, log = TRUE))
+    expect_equal(psinharcsinh(0, lower.tail = TRUE, log = TRUE), pnorm(0, lower.tail = TRUE, log = TRUE))
 
-    expect_equal(x <- pshash(q = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5),
-                 sapply(1:5, function(q) pshash(q, mu = q * 10, sigma = q / 10, nu = 0.5, tau = 0.5)))
-    expect_equal(pshash(q = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, log = TRUE), log(x))
+    expect_equal(x <- psinharcsinh(q = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5),
+                 sapply(1:5, function(q) psinharcsinh(q, mu = q * 10, sigma = q / 10, nu = 0.5, tau = 0.5)))
+    expect_equal(psinharcsinh(q = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, log = TRUE), log(x))
 
     ## Check that we get the same result when C code is used by setting cores = 1L
-    expect_equal(pshash(q = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, cores = 1L), x)
+    expect_equal(psinharcsinh(q = 1:5, mu = 1:5 * 10, sigma = 1:5 / 10, nu = 0.5, tau = 0.5, cores = 1L), x)
 })
 
 
 # qempirical
-test_that("qshash works as expected", {
-    expect_identical(formals(qshash),
+test_that("qsinharcsinh works as expected", {
+    expect_identical(formals(qsinharcsinh),
         as.pairlist(alist(p =, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL)))
 
     # Incorrect arguments
-    expect_error(qshash(p = 0.5, mu = 1:2, sigma = 1:3),
+    expect_error(qsinharcsinh(p = 0.5, mu = 1:2, sigma = 1:3),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
-    expect_error(qshash(p = 1:9 / 10, nu = 1:2),
+    expect_error(qsinharcsinh(p = 1:9 / 10, nu = 1:2),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
 
-    expect_error(qshash(p = TRUE),              regexp = "argument 'p' must be numeric")
-    expect_error(qshash(p = 0.5, mu    = TRUE), regexp = "argument 'mu' must be numeric")
-    expect_error(qshash(p = 0.5, sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
-    expect_error(qshash(p = 0.5, nu    = TRUE), regexp = "argument 'nu' nust be numeric")
-    expect_error(qshash(p = 0.5, tau   = TRUE), regexp = "argument 'tau' taust be numeric")
+    expect_error(qsinharcsinh(p = TRUE),              regexp = "argument 'p' must be numeric")
+    expect_error(qsinharcsinh(p = 0.5, mu    = TRUE), regexp = "argument 'mu' must be numeric")
+    expect_error(qsinharcsinh(p = 0.5, sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
+    expect_error(qsinharcsinh(p = 0.5, nu    = TRUE), regexp = "argument 'nu' nust be numeric")
+    expect_error(qsinharcsinh(p = 0.5, tau   = TRUE), regexp = "argument 'tau' taust be numeric")
 
     # For mu = 0, sigma = 1, nu = 1, tau = 1 -> qnorm9)
-    expect_equal(qshash(0), qnorm(0))
-    expect_equal(qshash(0, lower.tail = TRUE), qnorm(0, lower.tail = TRUE))
-    expect_equal(qshash(0, log = TRUE), qnorm(0, log = TRUE))
-    expect_equal(qshash(0, lower.tail = TRUE, log = TRUE), qnorm(0, lower.tail = TRUE, log = TRUE))
+    expect_equal(qsinharcsinh(0), qnorm(0))
+    expect_equal(qsinharcsinh(0, lower.tail = TRUE), qnorm(0, lower.tail = TRUE))
+    expect_equal(qsinharcsinh(0, log = TRUE), qnorm(0, log = TRUE))
+    expect_equal(qsinharcsinh(0, lower.tail = TRUE, log = TRUE), qnorm(0, lower.tail = TRUE, log = TRUE))
 
-    expect_equal(qshash(p = 1:5 / 10,      mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5),
-                 qshash(p = log(1:5 / 10), mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5, log = TRUE))
-    expect_equal(qshash(p = 1:5 / 10,  mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5),
-                 qshash(p = 1:5 / 10,  mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5, lower.tail = TRUE))
+    expect_equal(qsinharcsinh(p = 1:5 / 10,      mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5),
+                 qsinharcsinh(p = log(1:5 / 10), mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5, log = TRUE))
+    expect_equal(qsinharcsinh(p = 1:5 / 10,  mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5),
+                 qsinharcsinh(p = 1:5 / 10,  mu = 1:5 * 10, sigma = 1:5, nu = 0.5, tau = 0.5, lower.tail = TRUE))
 
     ## Check that we get the same result when C code is used by setting cores = 1L
-    expect_equal(qshash(p = 1:9 / 10, mu = 1:9), qshash(p = 1:9 / 10, mu = 1:9, cores = 1L), tolerance = 1e-5)
+    expect_equal(qsinharcsinh(p = 1:9 / 10, mu = 1:9), qsinharcsinh(p = 1:9 / 10, mu = 1:9, cores = 1L), tolerance = 1e-5)
 
     ## Test that lower.tail = FALSE is handled correctly (R)
-    expect_equal(qshash(0.8,     mu = 5, sigma = 3, nu = 0.7, tau = 0.7),
-                 qshash(1 - 0.8, mu = 5, sigma = 3, nu = 0.7, tau = 0.7, lower.tail = FALSE))
+    expect_equal(qsinharcsinh(0.8,     mu = 5, sigma = 3, nu = 0.7, tau = 0.7),
+                 qsinharcsinh(1 - 0.8, mu = 5, sigma = 3, nu = 0.7, tau = 0.7, lower.tail = FALSE))
 
     ## Test that lower.tail = FALSE is handled correctly (using C)
-    expect_equal(qshash(0.8,     mu = 5, sigma = 3, nu = 0.7, tau = 0.7, cores = 1L),
-                 qshash(1 - 0.8, mu = 5, sigma = 3, nu = 0.7, tau = 0.7, cores = 1L, lower.tail = FALSE))
+    expect_equal(qsinharcsinh(0.8,     mu = 5, sigma = 3, nu = 0.7, tau = 0.7, cores = 1L),
+                 qsinharcsinh(1 - 0.8, mu = 5, sigma = 3, nu = 0.7, tau = 0.7, cores = 1L, lower.tail = FALSE))
 })
 
 
 # rempirical
-test_that("rshash works as expected", {
-    expect_identical(formals(rshash),
+test_that("rsinharcsinh works as expected", {
+    expect_identical(formals(rsinharcsinh),
         as.pairlist(alist(n =, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL)))
 
     # Incorrect arguments
-    expect_error(rshash(), regexp = "argument \"n\" is missing, with no default")
+    expect_error(rsinharcsinh(), regexp = "argument \"n\" is missing, with no default")
 
     # N = 1 (double)
-    expect_silent(x <- rshash(1))
+    expect_silent(x <- rsinharcsinh(1))
     expect_type(x, "double")
     expect_identical(length(x), 1L)
     expect_true(is.finite(x))
 
     # N = 10L (integer)
-    expect_silent(x <- rshash(10L))
+    expect_silent(x <- rsinharcsinh(10L))
     expect_type(x, "double")
     expect_identical(length(x), 10L)
     expect_true(all(is.finite(x)))
 
     # N = 1 but length(mu) = 5 - > only first 'mu' is used.
     # i.e., one random number using mu = 1, one for mu = 2, ...)
-    expect_silent(x <- rshash(1L, mu = c(1, 1e6)))
+    expect_silent(x <- rsinharcsinh(1L, mu = c(1, 1e6)))
     expect_type(x, "double")
     expect_identical(length(x), 1L)
     expect_true(is.finite(x))
 
     # N = 100, should all be drawn from 'mu = 1' and thus all be < 100
     set.seed(6020)
-    expect_silent(x <- rshash(100, mu = c(1, 1e6)))
+    expect_silent(x <- rsinharcsinh(100, mu = c(1, 1e6)))
     expect_identical(length(x), 100L)
     expect_true(all(x < 100))
 })
 
 
 
-## We check if gamlss.dist is installed. If so, test distributions3::SHASH
+## We check if gamlss.dist is installed. If so, test distributions3::SinhArcsinh
 ## against gamlss.dist::SHASH.
 if (requireNamespace("gamlss.dist", quietly = TRUE)) {
 
     ## Helper function to return score based on gamlss.dist::SHASH to
-    ## test distributions3::score.SHASH()
+    ## test distributions3::score.SinhArcsinh()
     gamlssdist_score <- function(X, x) {
         fam <- getFromNamespace("SHASH", "gamlss.dist")()
         d <- cbind(x = x, as.data.frame(as.matrix(X)))
@@ -498,7 +498,7 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
               dldt = with(d, fam$dldt(x, mu, sigma, nu, tau)))
     }
     ## Helper function to return hessian based on gamlss.dist::SHASH to
-    ## test distributions3::hessian.SHASH()
+    ## test distributions3::hessian.SinhArcsinh()
     gamlssdist_hessian <- function(X, x) {
         fam <- getFromNamespace("SHASH", "gamlss.dist")()
         d <- cbind(x = x, as.data.frame(as.matrix(X)))
@@ -521,13 +521,13 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
     }
 
 
-    # Default shash with mu = 0, sigma = 1, nu = 1, tau = 1
-    d <- SHASH()
+    # Default sinharcsinh with mu = 0, sigma = 1, nu = 1, tau = 1
+    d <- SinhArcsinh()
     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
     expect_identical(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
 
     # Single distribution with some 'random' parameters, evaluate at x = 0 and x = 1:5
-    d <- SHASH(mu = 10, sigma = 5.5, nu = 0.8, tau = 1.2)
+    d <- SinhArcsinh(mu = 10, sigma = 5.5, nu = 0.8, tau = 1.2)
 
     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
@@ -536,7 +536,7 @@ if (requireNamespace("gamlss.dist", quietly = TRUE)) {
     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
 
     # Multiple distributions, evaluate at x = 0 and x = 1:5
-    d <- SHASH(mu = 15:11, sigma = 1:5 / 10, nu = 1.5, tau = 0.5)
+    d <- SinhArcsinh(mu = 15:11, sigma = 1:5 / 10, nu = 1.5, tau = 0.5)
 
     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)

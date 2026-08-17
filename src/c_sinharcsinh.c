@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-/* Distribution function of the SHASH distribution
+/* Distribution function of the Sinh-Arcsinh distribution
  *
  * - n: Integer, length of the result. This is, at the same
  *   time also the length of the next couple of vectors in case they
@@ -31,11 +31,11 @@
  * Return
  * ------
  * Returns a double (numeric) vector of length(n) with the probability
- * density of the shash distributions defined by mu, sigma, nu, tau.
+ * density of the sinharcsinh distributions defined by mu, sigma, nu, tau.
  *
  * Reto Stauffer, August 2026
  */
-SEXP c_pshash(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores) {
+SEXP c_psinharcsinh(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores) {
 
     int n = asInteger(N); // length of return vector
     int logp = asInteger(log_p);
@@ -84,7 +84,7 @@ SEXP c_pshash(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower
     return rval;
 }
 
-/* Probability density function of the SHASH distribution
+/* Probability density function of the Sinh-Arcsinh distribution
  *
  * - n: Integer, length of the result. This is, at the same
  *   time also the length of the next couple of vectors in case they
@@ -104,11 +104,11 @@ SEXP c_pshash(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower
  * Return
  * ------
  * Returns a double (numeric) vector of length(n) with the probability
- * density of the shash distributions defined by mu, sigma, nu, tau.
+ * density of the sinharcsinh distributions defined by mu, sigma, nu, tau.
  *
  * Reto Stauffer, August 2026
  */
-SEXP c_dshash(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP ret_log, SEXP ncores) {
+SEXP c_dsinharcsinh(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP ret_log, SEXP ncores) {
 
     int n = asInteger(N); // length of return vector
     int return_log = asInteger(ret_log);
@@ -163,15 +163,15 @@ SEXP c_dshash(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP ret_l
 
 
 
-struct qshash_args {
+struct qsinharcsinh_args {
     double r;
     double nu;
     double tau;
 };
 
 // Objective function for root-finding: 0.5 * (exp(tau*w) - exp(-nu*w)) - r = 0
-static double qshash_obj(double w, void *info) {
-    struct qshash_args *args = (struct qshash_args *)info;
+static double qsinharcsinh_obj(double w, void *info) {
+    struct qsinharcsinh_args *args = (struct qsinharcsinh_args *)info;
     return 0.5 * (exp(args->tau * w) - exp(-args->nu * w)) - args->r;
 }
 
@@ -256,7 +256,7 @@ static double local_zeroin(double ax, double bx, double (*f)(double x, void *inf
 }
 
 
-/* Quantile function for SHASH
+/* Quantile function for Sinh-Arcsinh
  *
  * - N: Integer, length of the result. This is, at the same
  *   time also the length of the next couple of vectors in case they
@@ -277,7 +277,7 @@ static double local_zeroin(double ax, double bx, double (*f)(double x, void *inf
  *
  * Reto Stauffer, August 2026
  */
-SEXP c_qshash(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores) {
+SEXP c_qsinharcsinh(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores) {
 
     int n         = asInteger(N); // length of return vector
     int lowertail = asInteger(lower_tail);
@@ -337,10 +337,10 @@ SEXP c_qshash(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower
             rvalptr[i] = muptr[i * s_mu] + sigmaptr[i * s_sigma] * sinh(w);
         } else {
             // General asymmetric case: root finding on transformed space w = asinh(z)
-            struct qshash_args args = { r, nuptr[i * s_nu], tauptr[i * s_tau] };
+            struct qsinharcsinh_args args = { r, nuptr[i * s_nu], tauptr[i * s_tau] };
 
             // R_zeroin2 is R's internal zeroin routine
-            w = local_zeroin(ax, bx, qshash_obj, (void *)&args, tol);
+            w = local_zeroin(ax, bx, qsinharcsinh_obj, (void *)&args, tol);
             rvalptr[i] = muptr[i * s_mu] + sigmaptr[i * s_sigma] * sinh(w);
         }
     }

@@ -14,8 +14,8 @@
 \alias{hessian.Binomial}
 \alias{score.Uniform}
 \alias{hessian.Uniform}
-\alias{score.SHASH}
-\alias{hessian.SHASH}
+\alias{score.SinhArcsinh}
+\alias{hessian.SinhArcsinh}
 \title{Generic functions and methods for computing score and Hessian}
 \usage{
 score(d, ...)
@@ -52,9 +52,9 @@ hessian(d, ...)
 
 \method{hessian}{Uniform}(d, x, which = NULL, drop = TRUE, expected = FALSE, ...)
 
-\method{score}{SHASH}(d, x, which = NULL, drop = TRUE, ...)
+\method{score}{SinhArcsinh}(d, x, which = NULL, drop = TRUE, ...)
 
-\method{hessian}{SHASH}(d, x, which = NULL, drop = TRUE, expected = FALSE, ...)
+\method{hessian}{SinhArcsinh}(d, x, which = NULL, drop = TRUE, expected = FALSE, ...)
 }
 \arguments{
 \item{d}{An object, typically a distribution object, e.g., as created by

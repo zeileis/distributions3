@@ -95,6 +95,7 @@ hessian <- function(d, ...) {
 # distribution: fallback methods for score/hessian (numeric approx)
 # ---------------------------------------------------------------------------
 
+#' @rdname score-hessian
 #' @exportS3Method
 ## fallback methods based on numeric differentiation
 score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$double.eps^(1/3), ...) {
@@ -432,12 +433,12 @@ hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
 
 
 # ---------------------------------------------------------------------------
-# SHASH: methods for score/hessian
+# SinhArcsinh: methods for score/hessian
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
 #' @exportS3Method
-score.SHASH <- function(d, x, which = NULL, drop = TRUE, ...) {
+score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
   ## sanity check
   n <- c(length(d), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
@@ -518,7 +519,7 @@ score.SHASH <- function(d, x, which = NULL, drop = TRUE, ...) {
 
 #' @rdname score-hessian
 #' @exportS3Method
-hessian.SHASH <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+hessian.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   ## numeric differentiation yields observed hessian only
   if (!isFALSE(expected)) stop("only the observed hessian is available")
 

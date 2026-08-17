@@ -16,7 +16,7 @@
 #' @param nu The skewness parameter \eqn{\nu}, defaults to `1`.
 #' @param tau The kurtosis parameter \eqn{\tau}, defaults to `1`.
 #'
-#' @return A `SHASH` object.
+#' @return A `SinhArcsinh` object.
 #'
 #' @details
 #'
@@ -24,7 +24,7 @@
 #'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail and much greater clarity.
 #'
-#'   In the following, let \eqn{X} be a SHASH random variable with mean
+#'   In the following, let \eqn{X} be a Sinh-Arcsinh random variable with mean
 #'   `mu` = \eqn{\mu}, `sigma` = \eqn{\sigma}, `nu` = \eqn{\nu}, and
 #'   `tau` = \eqn{\tau}.
 #'
@@ -60,10 +60,10 @@
 #'
 #' @examples
 #'
-#' ## SHASH() by default uses nu = 1, tau = 1 which
+#' ## SinhArcsinh() by default uses nu = 1, tau = 1 which
 #' ## results in the standard normal distribution
 #' set.seed(6020)
-#' X <- SHASH() # Uses mu = 1, sigma = 0, nu = 1, tau = 1)
+#' X <- SinhArcsinh() # Uses mu = 1, sigma = 0, nu = 1, tau = 1)
 #' x <- random(X, 300)
 #' qqnorm(x); qqline(x, col = 2, lwd = 2)
 #' curve(pdf(X, x), xlim = c(-5, 5), main = paste(X, "density"))
@@ -72,8 +72,8 @@
 #' ## thus not being identical to the standard normal distribution
 #' c(mean = mean(x), sd = sd(x))
 #'
-#' ## Skewed SHASH distribution
-#' X <- SHASH(mu = 7, sigma = 2, nu = c(0.7, 1, 0.7), tau = c(1, 0.7, 0.7))
+#' ## Skewed Sinh-Arcsinh distribution
+#' X <- SinhArcsinh(mu = 7, sigma = 2, nu = c(0.7, 1, 0.7), tau = c(1, 0.7, 0.7))
 #' as.matrix(X)
 #'
 #' ## Visualization of density functions using different parameters for nu/tau
@@ -102,13 +102,13 @@
 #' quantile(X, 0.7)
 #'
 #' # note that the cdf() and quantile() functions are inverses
-#' X <- SHASH(mu = 3, sigma = 2, nu = 0.9, tau = 1.2)
+#' X <- SinhArcsinh(mu = 3, sigma = 2, nu = 0.9, tau = 1.2)
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 #'
 #' @family continuous distributions
 #' @export
-SHASH <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
+SinhArcsinh <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
   n <- c(mu = length(mu), sigma = length(sigma), nu = length(nu), tau = length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
@@ -120,31 +120,32 @@ SHASH <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
   )
   d <- data.frame(mu = as.double(mu), sigma = as.double(sigma),
                   nu = as.double(nu), tau   = as.double(tau))
-  class(d) <- c("SHASH", "distribution")
+  class(d) <- c("SinhArcsinh", "distribution")
   d
 }
 
 
 # Helper function to compute raw central moments of Z = (X - mu) / sigma
-SHASH_z_moment <- function(k, nu, tau, cores) {
-  fun <- function(z) (z^k) * dshash(z, mu = 0, sigma = 1, nu = nu, tau = tau, cores = cores)
+SinhArcsinh_z_moment <- function(k, nu, tau, cores) {
+  fun <- function(z) (z^k) * dsinharcsinh(z, mu = 0, sigma = 1, nu = nu, tau = tau, cores = cores)
   stats::integrate(fun, lower = -Inf, upper = Inf)$value
 }
 
 
+#' @importFrom rlang check_dots_used
 #' @export
-mean.SHASH <- function(x, cores = NULL, ...) {
-  rlang::check_dots_used()
-  fun <- function(i) x$mu[i] + x$sigma[i] * SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+mean.SinhArcsinh <- function(x, cores = NULL, ...) {
+  check_dots_used()
+  fun <- function(i) x$mu[i] + x$sigma[i] * SinhArcsinh_z_moment(1, x$nu[i], x$tau[i], cores = cores)
   setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
 }
 
 
 #' @export
-variance.SHASH <- function(x, cores = NULL, ...) {
+variance.SinhArcsinh <- function(x, cores = NULL, ...) {
   fun <- function(i) {
-    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
-    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i], cores = cores)
+    ez1 <- SinhArcsinh_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+    ez2 <- SinhArcsinh_z_moment(2, x$nu[i], x$tau[i], cores = cores)
     return(x$sigma[i]^2 * (ez2 - ez1^2))
   }
   setNames(vapply(seq_along(x), fun, numeric(1)), names(x))
@@ -152,11 +153,11 @@ variance.SHASH <- function(x, cores = NULL, ...) {
 
 
 #' @export
-skewness.SHASH <- function(x, cores = NULL, ...) {
+skewness.SinhArcsinh <- function(x, cores = NULL, ...) {
   fun <- function(i) {
-    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
-    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i], cores = cores)
-    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i], cores = cores)
+    ez1 <- SinhArcsinh_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+    ez2 <- SinhArcsinh_z_moment(2, x$nu[i], x$tau[i], cores = cores)
+    ez3 <- SinhArcsinh_z_moment(3, x$nu[i], x$tau[i], cores = cores)
 
     mu3_z <- ez3 - 3 * ez1 * ez2 + 2 * (ez1^3)
     var_z <- ez2 - ez1^2
@@ -168,12 +169,12 @@ skewness.SHASH <- function(x, cores = NULL, ...) {
 
 
 #' @export
-kurtosis.SHASH <- function(x, cores = NULL, ...) {
+kurtosis.SinhArcsinh <- function(x, cores = NULL, ...) {
   fun <- function(i) {
-    ez1 <- SHASH_z_moment(1, x$nu[i], x$tau[i], cores = cores)
-    ez2 <- SHASH_z_moment(2, x$nu[i], x$tau[i], cores = cores)
-    ez3 <- SHASH_z_moment(3, x$nu[i], x$tau[i], cores = cores)
-    ez4 <- SHASH_z_moment(4, x$nu[i], x$tau[i], cores = cores)
+    ez1 <- SinhArcsinh_z_moment(1, x$nu[i], x$tau[i], cores = cores)
+    ez2 <- SinhArcsinh_z_moment(2, x$nu[i], x$tau[i], cores = cores)
+    ez3 <- SinhArcsinh_z_moment(3, x$nu[i], x$tau[i], cores = cores)
+    ez4 <- SinhArcsinh_z_moment(4, x$nu[i], x$tau[i], cores = cores)
 
     var_z <- ez2 - ez1^2
     mu4_z <- ez4 - 4 * ez1 * ez3 + 6 * (ez1^2) * ez2 - 3 * (ez1^4)
@@ -185,13 +186,13 @@ kurtosis.SHASH <- function(x, cores = NULL, ...) {
 }
 
 
-#' Draw a random sample from a SHASH distribution
+#' Draw a random sample from a Sinh-Arcsinh distribution
 #'
-#' Please see the documentation of [SHASH()] for some properties
-#' of the SHASH distribution, as well as extensive examples
+#' Please see the documentation of [SinhArcsinh()] for some properties
+#' of the Sinh-Arcsinh distribution, as well as extensive examples
 #' showing to how calculate p-values and confidence intervals.
 #'
-#' @param x A `SHASH` object created by a call to [SHASH()].
+#' @param x A `SinhArcsinh` object created by a call to [SinhArcsinh()].
 #' @param n The number of samples to draw. Defaults to `1L`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param cores `NULL` or positive integer. TODO(R): Just a development option.
@@ -199,30 +200,30 @@ kurtosis.SHASH <- function(x, cores = NULL, ...) {
 #' @param ... Unused. Unevaluated arguments will generate a warning to
 #'   catch mispellings or other possible errors.
 #'
-#' @inherit SHASH examples
+#' @inherit SinhArcsinh examples
 #'
 #' @return In case of a single distribution object or `n = 1`, either a numeric
 #' vector of length `n` (if `drop = TRUE`, default) or a `matrix` with `n` columns
 #' (if `drop = FALSE`).
 #'
 #' @export
-random.SHASH <- function(x, n = 1L, drop = TRUE, cores = NULL, ...) {
+random.SinhArcsinh <- function(x, n = 1L, drop = TRUE, cores = NULL, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric())
-  FUN <- function(at, d) rshash(n = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores)
+  FUN <- function(at, d) rsinharcsinh(n = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
 
-#' Evaluate the probability mass function of a SHASH distribution
+#' Evaluate the probability mass function of a Sinh-Arcsinh distribution
 #'
-#' Please see the documentation of [SHASH()] for some properties
-#' of the SHASH distribution, as well as extensive examples
+#' Please see the documentation of [SinhArcsinh()] for some properties
+#' of the Sinh-Arcsinh distribution, as well as extensive examples
 #' showing to how calculate p-values and confidence intervals.
 #'
-#' @inherit SHASH examples
+#' @inherit SinhArcsinh examples
 #'
-#' @param d A `SHASH` object created by a call to [SHASH()].
+#' @param d A `SinhArcsinh` object created by a call to [SinhArcsinh()].
 #' @param x A vector of elements whose probabilities you would like to
 #'   determine given the distribution `d`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -238,7 +239,7 @@ random.SHASH <- function(x, n = 1L, drop = TRUE, cores = NULL, ...) {
 #'   Unevaluated arguments will generate a warning to catch mispellings or other
 #'   possible errors.
 #'
-#' @family SHASH distribution
+#' @family SinhArcsinh distribution
 #'
 #' @return In case of a single distribution object, either a numeric
 #'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
@@ -246,26 +247,26 @@ random.SHASH <- function(x, n = 1L, drop = TRUE, cores = NULL, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
 #' @export
-pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
-  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
+pdf.SinhArcsinh <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) dsinharcsinh(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
 
-#' @rdname pdf.SHASH
+#' @rdname pdf.SinhArcsinh
 #' @export
 #'
-log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
-  FUN <- function(at, d) dshash(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, log = TRUE, cores = cores, ...)
+log_pdf.SinhArcsinh <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) dsinharcsinh(x = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, log = TRUE, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
 
-#' Evaluate the cumulative distribution function of a SHASH distribution
+#' Evaluate the cumulative distribution function of a Sinh-Arcsinh distribution
 #'
-#' @inherit SHASH examples
+#' @inherit SinhArcsinh examples
 #'
-#' @param d A `SHASH` object created by a call to [SHASH()].
+#' @param d A `SinhArcsinh` object created by a call to [SinhArcsinh()].
 #' @param x A vector of elements whose cumulative probabilities you would
 #'   like to determine given the distribution `d`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -275,12 +276,12 @@ log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, .
 #'   done element by element (\code{elementwise = TRUE}, yielding a vector)? The
 #'   default of \code{NULL} means that \code{elementwise = TRUE} is used if the
 #'   lengths match and otherwise \code{elementwise = FALSE} is used.
-#' @param cores `NULL` or integer. Number of cores/threads to use when calling [pshash()].
+#' @param cores `NULL` or integer. Number of cores/threads to use when calling [psinharcsinh()].
 #' @param ... Arguments to be passed to \code{\link[stats]{pnorm}}.
 #'   Unevaluated arguments will generate a warning to catch mispellings or other
 #'   possible errors.
 #'
-#' @family SHASH distribution
+#' @family SinhArcsinh distribution
 #'
 #' @return In case of a single distribution object, either a numeric
 #'   vector of length `probs` (if `drop = TRUE`, default) or a `matrix` with
@@ -288,26 +289,26 @@ log_pdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, .
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #'
 #' @export
-cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
-  FUN <- function(at, d) pshash(q = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
+cdf.SinhArcsinh <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  FUN <- function(at, d) psinharcsinh(q = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
 
-#' Determine quantiles of a SHASH distribution
+#' Determine quantiles of a Sinh-Arcsinh distribution
 #'
-#' Please see the documentation of [SHASH()] for some properties
-#' of the SHASH distribution, as well as extensive examples
+#' Please see the documentation of [SinhArcsinh()] for some properties
+#' of the SinhArcsinh distribution, as well as extensive examples
 #' showing to how calculate p-values and confidence intervals.
 #' `quantile()`
 #'
 #' This function returns the same values that you get from a Z-table. Note
-#' `quantile()` is the inverse of `cdf()`. Please see the documentation of [SHASH()] for some properties
-#' of the SHASH distribution, as well as extensive examples
+#' `quantile()` is the inverse of `cdf()`. Please see the documentation of [SinhArcsinh()] for some properties
+#' of the Sinh-Arcsinh distribution, as well as extensive examples
 #' showing to how calculate p-values and confidence intervals.
 #'
-#' @inherit SHASH examples
-#' @inheritParams random.SHASH
+#' @inherit SinhArcsinh examples
+#' @inheritParams random.SinhArcsinh
 #'
 #' @param probs A vector of probabilities.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -330,17 +331,18 @@ cdf.SHASH <- function(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...) 
 #'   possible combinations.
 #' @export
 #'
-#' @family SHASH distribution
+#' @importFrom rlang check_dots_used
+#' @family SinhArcsinh distribution
 #' @export
-quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
-  FUN <- function(at, d) qshash(p = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
+quantile.SinhArcsinh <- function(x, probs, drop = TRUE, elementwise = NULL, cores = NULL, ...) {
+  check_dots_used()
+  FUN <- function(at, d) qsinharcsinh(p = at, mu = d$mu, sigma = d$sigma, nu = d$nu, tau = d$tau, cores = cores, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
-
-#' Return the support of the SHASH distribution
+#' Return the support of the Sinh-Arcsinh distribution
 #'
-#' @param d An `SHASH` object created by a call to [SHASH()].
+#' @param d An `SinhArcsinh` object created by a call to [SinhArcsinh()].
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... Currently not used.
 #'
@@ -350,7 +352,7 @@ quantile.SHASH <- function(x, probs, drop = TRUE, elementwise = NULL, cores = NU
 #' matrix with 2 columns containing all minima and maxima.
 #'
 #' @export
-support.SHASH <- function(d, drop = TRUE, ...) {
+support.SinhArcsinh <- function(d, drop = TRUE, ...) {
   rlang::check_dots_used()
   min <- rep(-Inf, length(d))
   max <- rep(Inf, length(d))
@@ -358,13 +360,13 @@ support.SHASH <- function(d, drop = TRUE, ...) {
 }
 
 #' @exportS3Method
-is_discrete.SHASH <- function(d, ...) {
+is_discrete.SinhArcsinh <- function(d, ...) {
   rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
-is_continuous.SHASH <- function(d, ...) {
+is_continuous.SinhArcsinh <- function(d, ...) {
   rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
@@ -372,7 +374,7 @@ is_continuous.SHASH <- function(d, ...) {
 
 
 # --------------------------------------------------------------------------
-# ------------------- the d/p/q/r methods for SHASH ------------------------
+# ------------------- the d/p/q/r methods for Sinh-Arcsinh -----------------
 # --------------------------------------------------------------------------
 
 #' The Sinh-Arcsinh (SHASH) distribution
@@ -392,7 +394,7 @@ is_continuous.SHASH <- function(d, ...) {
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
-#' @param mu,sigma,nu,tau vector of (non-negative) SHASH parameters.
+#' @param mu,sigma,nu,tau vector of (non-negative) parameters.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #' @param cores `NULL` or positive integer. TODO(R): Just a development option.
@@ -402,32 +404,32 @@ is_continuous.SHASH <- function(d, ...) {
 #' @keywords distribution
 #'
 #' @examples
-#' ## theoretical probabilities for a SHASH distribution
-#' ## with mu = 0, sigma = 1, nu = 1, tau = 1 (default) the SHASH distribution
+#' ## theoretical probabilities for a Sinh-Arcsinh distribution
+#' ## with mu = 0, sigma = 1, nu = 1, tau = 1 (default) the Sinh-Arcsinh distribution
 #' ## corresponds to the standard normal distribution
 #' x <- seq(-5, 5, by = 0.1)
-#' p <- dshash(x)
+#' p <- dsinharcsinh(x)
 #' plot(x, p, type = "l", lwd = 2)
 #' lines(x, dnorm(x), col = 2, lty = 2, lwd = 2)
 #'
 #' ## corresponding empirical frequencies from a simulated sample
 #' ## with mu = 5, sigma = 3, nu = 0.7, tau = 0.7
 #' set.seed(0)
-#' y <- rshash(500, mu = 5, sigma = 3, nu = 1.1, tau = 0.7)
+#' y <- rsinharcsinh(500, mu = 5, sigma = 3, nu = 1.1, tau = 0.7)
 #' hist(y)
 #'
 #' ## the quantile function is the inverse of the distribution function
-#' pshash(qshash(0.7))
-#' qshash(pshash(3))
+#' psinharcsinh(qsinharcsinh(0.7))
+#' qsinharcsinh(psinharcsinh(3))
 #'
 #' ## inversion using custom parameters mu = 5, sigma = 2, nu = 0.7, tau = 1.3
-#' pshash(qshash(0.7, 5, 2, 0.7, 1.3), 5, 2, 0.7, 1.3)
-#' qshash(pshash(3,  5, 2, 0.7, 1.3),  5, 2, 0.7, 1.3)
+#' psinharcsinh(qsinharcsinh(0.7, 5, 2, 0.7, 1.3), 5, 2, 0.7, 1.3)
+#' qsinharcsinh(psinharcsinh(3,  5, 2, 0.7, 1.3),  5, 2, 0.7, 1.3)
 #'
-#' @family SHASH
-#' @rdname dshash
+#' @family SinhArcsinh
+#' @rdname dsinharcsinh
 #' @export
-dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = NULL) {
+dsinharcsinh <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = NULL) {
   nparam <- c(length(x), length(mu), length(sigma), length(nu), length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
@@ -442,7 +444,7 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = N
   if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
     cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     ## Arguments are: n, x, mu, sigma, nu, tau, ret_log, ncores
-    loglik <- .Call("c_dshash", max(nparam), as.double(x), as.double(mu),
+    loglik <- .Call("c_dsinharcsinh", max(nparam), as.double(x), as.double(mu),
                     as.double(sigma), as.double(nu), as.double(tau),
                     as.logical(log)[1L], cores, PACKAGE = "distributions3")
   } else {
@@ -465,10 +467,10 @@ dshash <- function(x, mu = 0, sigma = 1, nu = 1, tau = 1, log = FALSE, cores = N
 #'
 #' @importFrom parallel detectCores
 #' @useDynLib distributions3, .registration = TRUE
-#' @rdname dshash
+#' @rdname dsinharcsinh
 #' @importFrom stats pnorm
 #' @export
-pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
+psinharcsinh <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
   nparam <- c(length(q), length(mu), length(sigma), length(nu), length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
@@ -483,7 +485,7 @@ pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
     cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
     ## Arguments are: n, q, mu, sigma, nu, tau, lowertail, logp, ncores
-    p <- .Call("c_pshash", max(nparam), as.double(q), as.double(mu),
+    p <- .Call("c_psinharcsinh", max(nparam), as.double(q), as.double(mu),
                as.double(sigma), as.double(nu), as.double(tau),
                as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
   } else {
@@ -496,10 +498,10 @@ pshash <- function(q, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   return(p)
 }
 
-#' @rdname dshash
+#' @rdname dsinharcsinh
 #' @importFrom stats uniroot
 #' @export
-qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
+qsinharcsinh <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log.p = FALSE, cores = NULL) {
   nparam <- c(length(p), length(mu), length(sigma), length(nu), length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
@@ -513,7 +515,7 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
 
   if (is.numeric(cores) && length(cores) > 0 && cores[[1L]] >= 1L) {
     cores <- if (is.null(cores)) 1L else as.integer(cores)[[1L]]
-    res <- .Call("c_qshash", max(nparam), as.double(p), as.double(mu),
+    res <- .Call("c_qsinharcsinh", max(nparam), as.double(p), as.double(mu),
                  as.double(sigma), as.double(nu), as.double(tau),
                  as.logical(lower.tail)[1L], as.logical(log.p)[1L], cores, PACKAGE = "distributions3")
   } else {
@@ -534,7 +536,7 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
     res <- suppressWarnings(qnorm(p))
     idx_valid <- which(is.finite(res))
 
-    fn1 <- function(x, mu, sigma, nu, tau) pshash(x, mu = mu, sigma = sigma, nu = nu, tau = tau, cores = cores)
+    fn1 <- function(x, mu, sigma, nu, tau) psinharcsinh(x, mu = mu, sigma = sigma, nu = nu, tau = tau, cores = cores)
     fn2 <- function(x, mu, sigma, nu, tau, p) fn1(x, mu, sigma, nu, tau) - p
 
     # Calculate quantile for valid probabilities (p \in (0, 1))
@@ -563,11 +565,11 @@ qshash <- function(p, mu = 0, sigma = 1, nu = 1, tau = 1, lower.tail = TRUE, log
   return(res)
 }
 
-#' @rdname dshash
+#' @rdname dsinharcsinh
 #' @importFrom stats runif
 #' @export
-rshash <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL) {
-  qshash(runif(n), mu = mu[[1L]], sigma = sigma[[1L]],
+rsinharcsinh <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL) {
+  qsinharcsinh(runif(n), mu = mu[[1L]], sigma = sigma[[1L]],
          nu = nu[[1L]], tau = tau[[1L]], cores = cores)
 }
 

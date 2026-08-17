@@ -62,7 +62,7 @@
   a warning, by default (#100).
 - The `prodist()` methods for various count regression objects now distinguish between computations
   for the classic [pscl](https://CRAN.R-project.org/package=pscl) package and the newer
-  [countreg](https://R-Forge.R-project.org/projects/countreg/) package (currently on R-Forge, soon
+  [countreg](https://codeberg.org/zeileis/countreg/) package (currently on Codeberg, soon
   to be released to CRAN).
 - The `simulate()` method for `distribution` objects is now better aligned with `simulate.lm()`
   in base R: It now always returns a `data.frame` with `seed` attribute.
