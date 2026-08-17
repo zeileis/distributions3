@@ -73,17 +73,17 @@ test_that("pdf.distributions sanity checks/incorrect use", {
 
 
 test_that("pdf.distributions missing methods", {
-    d <- 3 |> structure(class = c("mockup", "distribution")) # Mockup object
+    d <- 3 |> structure(class = c("test_mockup1", "distribution")) # Mockup object
 
     # Missing S3 method cdf
     expect_error(distributions3:::pdf.distribution(d, 1),
         regexp = "S3 method 'cdf' missing for object of class")
-    registerS3method("cdf", "mockup", identity) # Mockup
+    registerS3method("cdf", "test_mockup1", identity) # Mockup
 
     # Missing S3 method is_discrete
     expect_error(distributions3:::pdf.distribution(d, 1),
         regexp = "S3 method 'is_discrete' missing for object of class")
-    registerS3method("is_discrete", "mockup", identity) # Mockup
+    registerS3method("is_discrete", "test_mockup1", identity) # Mockup
 
     # Missing S3 method support
     expect_error(distributions3:::pdf.distribution(d, 1),
@@ -267,17 +267,17 @@ test_that("cdf.distributions sanity checks/incorrect use", {
 
 
 test_that("cdf.distributions missing methods", {
-    d <- 3 |> structure(class = c("mockup2", "distribution")) # Mockup object
+    d <- 3 |> structure(class = c("test_mockup2", "distribution")) # Mockup object
 
     # Missing S3 method cdf
     expect_error(distributions3:::cdf.distribution(d, 1),
         regexp = "S3 method 'pdf' missing for object of class")
-    registerS3method("pdf", "mockup2", identity) # Mockup
+    registerS3method("pdf", "test_mockup2", identity) # Mockup
 
     # Missing S3 method is_discrete
     expect_error(distributions3:::cdf.distribution(d, 1),
         regexp = "S3 method 'is_discrete' missing for object of class")
-    registerS3method("is_discrete", "mockup2", identity) # Mockup
+    registerS3method("is_discrete", "test_mockup2", identity) # Mockup
 
     # Missing S3 method support
     expect_error(distributions3:::cdf.distribution(d, 1),
@@ -472,17 +472,17 @@ test_that("quantile.distributions invalid arguments", {
 
 
 test_that("quantile.distributions missing methods", {
-    d <- 3 |> structure(class = c("mockup3", "distribution")) # Mockup object
+    d <- 3 |> structure(class = c("test_mockup3", "distribution")) # Mockup object
 
     # Missing S3 method cdf
     expect_error(distributions3:::quantile.distribution(d, 1),
-        regexp = "no S3 method 'cdf' or 'quantile' found for object of class")
-    registerS3method("pdf", "mockup3", identity) # Mockup
+        regexp = "no S3 method 'cdf' or 'pdf' found for object of class")
+    registerS3method("pdf", "test_mockup3", identity) # Mockup
 
     # Missing S3 method is_discrete
     expect_error(distributions3:::quantile.distribution(d, 1),
         regexp = "S3 method 'is_discrete' missing for object of class")
-    registerS3method("is_discrete", "mockup3", identity) # Mockup
+    registerS3method("is_discrete", "test_mockup3", identity) # Mockup
 
     # Missing S3 method support
     expect_error(distributions3:::quantile.distribution(d, 1),

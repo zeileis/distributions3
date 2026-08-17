@@ -56,7 +56,7 @@
 #'
 #' cdf(X, 4)
 #' quantile(X, 0.7)
-Weibull <- function(shape, scale) {
+Weibull <- function(shape = numeric(), scale = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(scale) | length(shape) == 1 | length(scale) == 1
@@ -66,9 +66,11 @@ Weibull <- function(shape, scale) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Weibull <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$scale * gamma(1 + 1 / x$shape)
   setNames(rval, names(x))
 }
@@ -219,11 +221,14 @@ cdf.Weibull <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family Weibull distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Weibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qweibull(p = at, shape = d$shape, scale = d$scale, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -239,7 +244,6 @@ quantile.Weibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.Weibull <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -247,12 +251,10 @@ support.Weibull <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Weibull <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Weibull <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

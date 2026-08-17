@@ -48,4 +48,5 @@ pmf(X, c(1, 2, 3, 4, 5))
 ## log-density
 pdf(X, c(1, 2, 3, 4, 5), log = TRUE)
 log_pdf(X, c(1, 2, 3, 4, 5))
+
 }

@@ -1,3 +1,9 @@
+
+test_that("Frechet default arguments", {
+  expect_identical(formals(Frechet),
+    as.pairlist(alist(location = 0, scale = 1, shape = 1)))
+})
+
 test_that("print.Frechet works", {
   expect_output(print(Frechet()), regexp = "Frechet")
 })

@@ -95,9 +95,11 @@ RevWeibull <- function(location = 0, scale = 1, shape = 1) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.RevWeibull <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$location + x$scale * gamma(1 + 1 / x$shape)
   setNames(rval, names(x))
 }
@@ -248,9 +250,12 @@ cdf.RevWeibull <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.RevWeibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   # Convert to the GEV parameterisation
   FUN <- function(at, d) {
     loc <- d$location - d$scale
@@ -271,7 +276,6 @@ quantile.RevWeibull <- function(x, probs, drop = TRUE, elementwise = NULL, ...) 
 #'
 #' @export
 support.RevWeibull <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(-Inf, length(d))
   max <- d$location
   make_support(min, max, d, drop = drop)
@@ -279,12 +283,10 @@ support.RevWeibull <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.RevWeibull <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.RevWeibull <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

@@ -1,3 +1,9 @@
+
+test_that("Tukey default arguments", {
+  expect_identical(formals(Tukey),
+    as.pairlist(alist(nmeans = numeric(), df = numeric(), nranges = numeric())))
+})
+
 test_that("print.Tukey works", {
   expect_output(print(Tukey(1, 2, 2)), regexp = "Tukey")
 })

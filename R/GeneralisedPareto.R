@@ -110,9 +110,11 @@ GP <- function(mu = 0, sigma = 1, xi = 0) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.GP <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   mu <- x$mu
   sigma <- x$sigma
   xi <- x$xi
@@ -276,9 +278,12 @@ cdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.GP <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) revdbayes::qgp(p = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -296,7 +301,6 @@ quantile.GP <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.GP <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- d$mu
   max <- rep(Inf, length(d))
   max[d$xi < 0] <- d$mu[d$xi < 0] - d$sigma[d$xi < 0]/d$xi[d$xi < 0]
@@ -305,12 +309,10 @@ support.GP <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.GP <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.GP <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

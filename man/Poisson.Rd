@@ -4,7 +4,7 @@
 \alias{Poisson}
 \title{Create a Poisson distribution}
 \usage{
-Poisson(lambda)
+Poisson(lambda = numeric())
 }
 \arguments{
 \item{lambda}{The shape parameter, which is also the mean and the

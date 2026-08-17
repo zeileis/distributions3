@@ -209,7 +209,7 @@ apply_dpqr <- function(d,
   }
 
   ## "at" names (if not dropped)
-  anam <- if ((k == 1L || n == 1L) && drop) {
+  anam <- if (elementwise || ((k == 1L || n == 1L) && drop)) {
     NULL
   } else if(type == "random") {
     seq_len(k)
@@ -234,7 +234,7 @@ apply_dpqr <- function(d,
   ## columns names (if not dropped)
   cnam <- if ((k == 1L || n == 1L) && drop) {
     NULL
-  } else if (length(anam) > k) {
+  } else if (elementwise || length(anam) > k) {
     type
   } else {
     paste(substr(type, 1L, 1L), anam, sep = "_")

@@ -1,3 +1,9 @@
+
+test_that("ChiSquare default arguments", {
+  expect_identical(formals(ChiSquare),
+    as.pairlist(alist(df = numeric())))
+})
+
 test_that("print.ChiSquare works", {
   expect_output(print(ChiSquare(df = 1)), regexp = "ChiSquare")
 })

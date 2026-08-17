@@ -1,3 +1,9 @@
+
+test_that("ZTPoisson default arguments", {
+  expect_identical(formals(ZTPoisson),
+    as.pairlist(alist(lambda = numeric())))
+})
+
 test_that("print.ZTPoisson works", {
   expect_output(print(ZTPoisson(1)), regexp = "ZTPoisson")
 })

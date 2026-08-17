@@ -1,3 +1,9 @@
+
+test_that("PoissonBinomial default arguments", {
+  expect_identical(formals(PoissonBinomial),
+    as.pairlist(alist(... =)))
+})
+
 test_that("print.PoissonBinomial works", {
   expect_output(print(PoissonBinomial(0.5, 0.3, 0.8)), regexp = "PoissonBinomial")
 })

@@ -51,4 +51,5 @@ calls the \code{random} method internally.
 X <- Normal()
 ## 10 random samples
 random(X, 10)
+
 }

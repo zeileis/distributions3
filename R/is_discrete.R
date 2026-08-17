@@ -28,13 +28,20 @@
 #' Y <- Binomial(size = 10, p = c(0.2, 0.5, 0.8))
 #' is_discrete(Y)
 #' is_continuous(Y)
+#'
+#' @importFrom rlang check_dots_used
 #' @export
 is_discrete <- function(d, ...) {
+  check_dots_used()
+  if (!length(d)) return(logical())
   UseMethod("is_discrete")
 }
 
 #' @rdname is_discrete
+#' @importFrom rlang check_dots_used
 #' @export
 is_continuous <- function(d, ...) {
+  check_dots_used()
+  if (!length(d)) return(logical())
   UseMethod("is_continuous")
 }

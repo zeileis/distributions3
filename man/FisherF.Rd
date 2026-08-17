@@ -4,7 +4,7 @@
 \alias{FisherF}
 \title{Create an F distribution}
 \usage{
-FisherF(df1, df2, lambda = 0)
+FisherF(df1 = numeric(), df2 = numeric(), lambda = 0)
 }
 \arguments{
 \item{df1}{Numerator degrees of freedom. Can be any positive number.}

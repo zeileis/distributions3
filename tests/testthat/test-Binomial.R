@@ -1,5 +1,11 @@
+
+test_that("Binomial default arguments", {
+  expect_identical(formals(Binomial),
+    as.pairlist(alist(size = numeric(), p = 0.5)))
+})
+
 test_that("print.Binomial works", {
-  expect_output(print(Binomial(1)), regexp = "Binomial")
+  expect_output(print(Binomial()), regexp = "Binomial")
 })
 
 test_that("fit_mle.Binomial works correctly", {

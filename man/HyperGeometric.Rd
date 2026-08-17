@@ -4,7 +4,7 @@
 \alias{HyperGeometric}
 \title{Create a HyperGeometric distribution}
 \usage{
-HyperGeometric(m, n, k)
+HyperGeometric(m = numeric(), n = numeric(), k = numeric())
 }
 \arguments{
 \item{m}{The number of type I elements available.}

@@ -41,9 +41,11 @@ Uniform <- function(a = 0, b = 1) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Uniform <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- (x$a + x$b) / 2
   setNames(rval, names(x))
 }
@@ -207,9 +209,12 @@ cdf.Uniform <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Uniform <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) {
     qunif(
       p = at,
@@ -232,7 +237,6 @@ quantile.Uniform <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.Uniform <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- d$a
   max <- d$b
   make_support(min, max, d, drop = drop)
@@ -240,12 +244,10 @@ support.Uniform <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Uniform <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Uniform <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

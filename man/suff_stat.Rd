@@ -25,4 +25,5 @@ a distribution based on empirical data.
 \examples{
 X <- Normal()
 suff_stat(X, c(-1, 0, 0, 0, 3))
+
 }

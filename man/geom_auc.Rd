@@ -154,7 +154,11 @@ give the stat as \code{"count"}.
 Fill out area under the curve for a plotted PDF
 }
 \examples{
-
+\dontshow{ if(!requireNamespace("ggplot2")) {
+  if(interactive() || is.na(Sys.getenv("_R_CHECK_PACKAGE_NAME_", NA))) {
+    stop("not all packages required for the example are installed")
+  } else q() }
+}
 N1 <- Normal()
 plot_pdf(N1) + geom_auc(to = -0.645)
 plot_pdf(N1) + geom_auc(from = -0.645, to = 0.1, annotate = TRUE)

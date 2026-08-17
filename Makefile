@@ -36,7 +36,7 @@ documentation:
 
 
 .PHONY: test
-test: clean install
+test: document
 	Rscript -e "testthat::test_local()"
 
 .PHONY: coverage

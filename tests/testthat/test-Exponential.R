@@ -1,3 +1,9 @@
+
+test_that("Exponential default arguments", {
+  expect_identical(formals(Exponential),
+    as.pairlist(alist(rate = 1)))
+})
+
 test_that("fit_mle.Exponential works correctly", {
   expect_equal(fit_mle(Exponential(), 1), Exponential(1))
 

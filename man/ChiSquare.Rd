@@ -4,7 +4,7 @@
 \alias{ChiSquare}
 \title{Create a Chi-Square distribution}
 \usage{
-ChiSquare(df)
+ChiSquare(df = numeric())
 }
 \arguments{
 \item{df}{Degrees of freedom. Must be positive.}

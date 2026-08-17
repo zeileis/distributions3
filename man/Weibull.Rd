@@ -4,7 +4,7 @@
 \alias{Weibull}
 \title{Create a Weibull distribution}
 \usage{
-Weibull(shape, scale)
+Weibull(shape = numeric(), scale = numeric())
 }
 \arguments{
 \item{shape}{The shape parameter \eqn{k}. Can be any positive real number.}

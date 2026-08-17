@@ -1,3 +1,9 @@
+
+test_that("Geometric default arguments", {
+  expect_identical(formals(Geometric),
+    as.pairlist(alist(p = 0.5)))
+})
+
 test_that("print.Geometric works", {
   expect_output(print(Geometric()), regexp = "Geometric")
 })

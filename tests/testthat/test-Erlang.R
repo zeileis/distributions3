@@ -2,6 +2,12 @@
 #
 # The Erlang distribution is a special case of the gamma distribution wherein
 # the shape (k) of the distribution is discretised.
+
+test_that("Erlang default arguments", {
+  expect_identical(formals(Erlang),
+    as.pairlist(alist(k = numeric(), lambda = numeric())))
+})
+
 e <- Erlang(k = 3, lambda = 0.5)
 
 test_that("Erlang constructor works", {

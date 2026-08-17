@@ -120,9 +120,11 @@ GEV <- function(mu = 0, sigma = 1, xi = 0) {
 # don't export
 g <- function(d, k) gamma(1 - k * d$xi)
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.GEV <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   euler <- -digamma(1)
   rval <- ifelse(x$xi == 0,
     x$mu + x$sigma * euler,
@@ -301,9 +303,12 @@ cdf.GEV <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.GEV <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) revdbayes::qgev(p = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -321,7 +326,6 @@ quantile.GEV <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.GEV <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(-Inf, length(d))
   min[d$xi > 0] <- d$mu[d$xi > 0] - d$sigma[d$xi > 0]/d$xi[d$xi > 0]
   max <- rep(Inf, length(d))
@@ -331,12 +335,10 @@ support.GEV <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.GEV <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.GEV <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

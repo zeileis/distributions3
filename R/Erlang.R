@@ -32,7 +32,7 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Erlang <- function(k, lambda) {
+Erlang <- function(k = numeric(), lambda = numeric()) {
   stopifnot("'k' must be an integer" = all(abs(k - as.integer(k)) == 0))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
@@ -157,9 +157,12 @@ cdf.Erlang <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Erlang <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qgamma(p = at, shape = d$k, rate = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -175,7 +178,6 @@ quantile.Erlang <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.Erlang <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -183,12 +185,10 @@ support.Erlang <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Erlang <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Erlang <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

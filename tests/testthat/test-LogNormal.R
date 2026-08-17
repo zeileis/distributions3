@@ -1,3 +1,9 @@
+
+test_that("LogNormal default arguments", {
+  expect_identical(formals(LogNormal),
+    as.pairlist(alist(log_mu = 0, log_sigma = 1)))
+})
+
 test_that("print.LogNormal works", {
   expect_output(print(LogNormal()), regexp = "LogNormal")
 })
