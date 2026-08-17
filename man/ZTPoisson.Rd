@@ -4,7 +4,7 @@
 \alias{ZTPoisson}
 \title{Create a zero-truncated Poisson distribution}
 \usage{
-ZTPoisson(lambda)
+ZTPoisson(lambda = numeric())
 }
 \arguments{
 \item{lambda}{Parameter of the underlying untruncated Poisson distribution.

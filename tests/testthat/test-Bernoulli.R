@@ -1,3 +1,9 @@
+
+test_that("Bernoulli default arguments", {
+  expect_identical(formals(Bernoulli),
+    as.pairlist(alist(p = 0.5)))
+})
+
 test_that("print.Bernoulli works", {
   expect_output(print(Bernoulli()), regexp = "Bernoulli")
 })

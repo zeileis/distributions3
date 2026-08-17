@@ -1,3 +1,9 @@
+
+test_that("Gamma default arguments", {
+  expect_identical(formals(Gamma),
+    as.pairlist(alist(shape = numeric(), rate = 1)))
+})
+
 test_that("print.Gamma works", {
   expect_output(print(Gamma(1, 1)), regexp = "Gamma")
 })

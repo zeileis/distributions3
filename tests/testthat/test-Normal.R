@@ -1,3 +1,9 @@
+
+test_that("Normal default arguments", {
+  expect_identical(formals(Normal),
+    as.pairlist(alist(mu = 0, sigma = 1)))
+})
+
 test_that("print.Normal works", {
   expect_output(print(Normal()), regexp = "Normal")
 })

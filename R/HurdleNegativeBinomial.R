@@ -1,5 +1,5 @@
 #' The hurdle negative binomial distribution
-#' 
+#'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-hurdle negative binomial distribution with
 #' parameters \code{mu}, \code{theta} (or \code{size}), and \code{pi}.
@@ -10,7 +10,7 @@
 #' functions for the negative binomial distribution from base R internally.
 #'
 #' Note, however, that the precision of \code{qhnbinom} for very large
-#' probabilities (close to 1) is limited because the probabilities 
+#' probabilities (close to 1) is limited because the probabilities
 #' are internally handled in levels and not in logs (even if \code{log.p = TRUE}).
 #'
 #' @aliases dhnbinom phnbinom qhnbinom rhnbinom
@@ -27,7 +27,7 @@
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
 #' @seealso \code{\link{HurdleNegativeBinomial}}, \code{\link{dnbinom}}
-#' 
+#'
 #' @keywords distribution
 #'
 #' @examples
@@ -35,7 +35,7 @@
 #' x <- 0:8
 #' p <- dhnbinom(x, mu = 2.5, theta = 1, pi = 0.75)
 #' plot(x, p, type = "h", lwd = 2)
-#' 
+#'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
 #' y <- rhnbinom(500, mu = 2.5, theta = 1, pi = 0.75)
@@ -182,22 +182,23 @@ rhnbinom <- function(n, mu, theta, size, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-HurdleNegativeBinomial <- function(mu, theta, pi) {
+HurdleNegativeBinomial <- function(mu = numeric(), theta = numeric(), pi = numeric()) {
   d <- data.frame(mu = mu, theta = theta, pi = pi)
   class(d) <- c("HurdleNegativeBinomial", "distribution")
   return(d)
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.HurdleNegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$mu * x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
   setNames(rval, names(x))
 }
 
 #' @export
 variance.HurdleNegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
   m <- x$mu * x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
   rval <- m * (1 + x$mu/x$theta + x$mu - m)
   setNames(rval, names(x))
@@ -206,7 +207,6 @@ variance.HurdleNegativeBinomial <- function(x, ...) {
 #' @export
 skewness.HurdleNegativeBinomial <- function(x, ...) {
   stop("not implemented yet")
-  rlang::check_dots_used()
   f <- x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
   m <- x$mu * f
   s <- sqrt(m * (1 + x$mu/x$theta + x$mu - m))
@@ -218,7 +218,6 @@ skewness.HurdleNegativeBinomial <- function(x, ...) {
 #' @export
 kurtosis.HurdleNegativeBinomial <- function(x, ...) {
   stop("not implemented yet")
-  rlang::check_dots_used()
   f <- x$pi / (1 - exp(-x$mu))
   m <- x$mu * f
   s2 <- m * (x$mu + 1 - m)
@@ -342,9 +341,12 @@ cdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ..
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.HurdleNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qhnbinom(p = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -359,7 +361,6 @@ quantile.HurdleNegativeBinomial <- function(x, probs, drop = TRUE, elementwise =
 #'
 #' @export
 support.HurdleNegativeBinomial <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -367,13 +368,11 @@ support.HurdleNegativeBinomial <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.HurdleNegativeBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.HurdleNegativeBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 

@@ -8,7 +8,7 @@
 \alias{kurtosis.Empirical}
 \title{Create an Empirical distribution}
 \usage{
-Empirical(sample)
+Empirical(sample = numeric())
 
 \method{mean}{Empirical}(x, ...)
 

@@ -104,18 +104,22 @@
 
 #' @export
 PoissonBinomial <- function(...) {
-  d <- list(...)
-  if (length(d) == 1L && is.null(dim(d))) d[[1L]] <- rbind(d[[1L]])
-  d <- do.call("cbind", d)
-  if(any(d < 0) || any(d > 1)) stop("all probabilities must be in [0, 1]")
-  d <- as.data.frame(d)
-  names(d) <- paste0("p", seq_along(d))
+  if (length(d <- list(...)) == 0L) {
+    d <- data.frame(p = numeric())
+  } else {
+    if (length(d) == 1L && is.null(dim(d))) d[[1L]] <- rbind(d[[1L]])
+    d <- do.call("cbind", d)
+    if(any(d < 0) || any(d > 1)) stop("all probabilities must be in [0, 1]")
+    d <- as.data.frame(d)
+    names(d) <- paste0("p", seq_along(d))
+  }
   class(d) <- c("PoissonBinomial", "distribution")
   d
 }
 
 #' @export
 format.PoissonBinomial <- function(x, digits = pmax(3L, getOption("digits") - 3L), cutoff = 4L, ...) {
+  if (length(x) == 0L) return(NextMethod())
   cl <- class(x)[1L]
   if (length(x) < 1L) return(character(0))
   n <- names(x)
@@ -134,8 +138,11 @@ format.PoissonBinomial <- function(x, digits = pmax(3L, getOption("digits") - 3L
 }
 
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.PoissonBinomial <- function(x, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   n <- names(x)
   rval <- rowSums(as.matrix(x), na.rm = TRUE)
   setNames(rval, n)
@@ -143,6 +150,7 @@ mean.PoissonBinomial <- function(x, ...) {
 
 #' @export
 variance.PoissonBinomial <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   n <- names(x)
   x <- as.matrix(x)
   rval <- rowSums(x * (1 - x), na.rm = TRUE)
@@ -151,6 +159,7 @@ variance.PoissonBinomial <- function(x, ...) {
 
 #' @export
 skewness.PoissonBinomial <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   n <- names(x)
   x <- as.matrix(x)
   v <- rowSums(x * (1 - x), na.rm = TRUE)
@@ -160,6 +169,7 @@ skewness.PoissonBinomial <- function(x, ...) {
 
 #' @export
 kurtosis.PoissonBinomial <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   n <- names(x)
   x <- as.matrix(x)
   v <- rowSums(x * (1 - x), na.rm = TRUE)
@@ -376,21 +386,24 @@ cdf.PoissonBinomial <- function(d, x, drop = TRUE, elementwise = NULL, lower.tai
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.PoissonBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, lower.tail = TRUE, log.p = FALSE, verbose = TRUE, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   n <- length(x)
   k <- length(probs)
   if(n > 0L && k > 0L && requireNamespace("PoissonBinomial", quietly = TRUE)) {
     ## basic properties
     rnam <- names(x)
-    
+
     ## elementwise evaluation?
     if(is.null(elementwise)) elementwise <- k > 1L && k == n && is.null(dim(probs))
     if(elementwise && k > 1L && k != n) stop(
       sprintf("lengths of distribution 'x' and argument 'probs' do not match: %s != %s", n, k))
-    
-    ## apply ppbinom to each row of the parameter matrix    
+
+    ## apply ppbinom to each row of the parameter matrix
     p <- as.matrix(x)
     if (elementwise) {
       rval <- vapply(1L:n, function(i) PoissonBinomial::qpbinom(probs[i], probs = p[i,], lower.tail = lower.tail, log.p = log.p, ...), numeric(1L))
@@ -429,7 +442,6 @@ quantile.PoissonBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, 
 #'
 #' @export
 support.PoissonBinomial <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep.int(0L, length(d))
   p <- d
   class(p) <- "data.frame"
@@ -440,12 +452,10 @@ support.PoissonBinomial <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.PoissonBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.PoissonBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }

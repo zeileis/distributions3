@@ -85,7 +85,8 @@
 #' Y
 #' cdf(Y, 50)
 #' quantile(Y, 0.7)
-NegativeBinomial <- function(size, p = 0.5, mu = size) {
+NegativeBinomial <- function(size = numeric(), p = 0.5, mu = size) {
+  if (identical(size, numeric())) p <- numeric()
   if(!missing(mu) && !missing(p)) stop("only one of the parameters 'p' or 'mu' must be specified")
   if(missing(mu)) {
     stopifnot("parameter 'size' must always be positive" = all(size > 0))
@@ -108,9 +109,11 @@ NegativeBinomial <- function(size, p = 0.5, mu = size) {
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.NegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- if("mu" %in% names(unclass(x))) {
     x$mu
   } else {
@@ -121,7 +124,6 @@ mean.NegativeBinomial <- function(x, ...) {
 
 #' @export
 variance.NegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
   rval <- if("mu" %in% names(unclass(x))) {
     x$mu + 1/x$size * x$mu^2
   } else {
@@ -132,7 +134,6 @@ variance.NegativeBinomial <- function(x, ...) {
 
 #' @export
 skewness.NegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
   if("mu" %in% names(unclass(x))) x$p <- x$size/(x$size + x$mu)
   rval <- (2 - x$p) / sqrt((1 - x$p) * x$size)
   setNames(rval, names(x))
@@ -140,7 +141,6 @@ skewness.NegativeBinomial <- function(x, ...) {
 
 #' @export
 kurtosis.NegativeBinomial <- function(x, ...) {
-  rlang::check_dots_used()
   if("mu" %in% names(unclass(x))) x$p <- x$size/(x$size + x$mu)
   rval <- 6/x$size + x$p^2 / (x$size * (1 - x$p))
   setNames(rval, names(x))
@@ -283,11 +283,14 @@ cdf.NegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family NegativeBinomial distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.NegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- if("mu" %in% names(unclass(x))) {
     function(at, d) qnbinom(p = at, mu = d$mu, size = d$size, ...)
   } else {
@@ -307,7 +310,6 @@ quantile.NegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL,
 #'
 #' @export
 support.NegativeBinomial <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -315,12 +317,10 @@ support.NegativeBinomial <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.NegativeBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.NegativeBinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }

@@ -1,3 +1,9 @@
+
+test_that("Poisson default arguments", {
+  expect_identical(formals(Poisson),
+    as.pairlist(alist(lambda = numeric())))
+})
+
 test_that("print.Poisson works", {
   expect_output(print(Poisson(1)), regexp = "Poisson")
 })

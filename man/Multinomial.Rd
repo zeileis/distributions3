@@ -4,7 +4,7 @@
 \alias{Multinomial}
 \title{Create a Multinomial distribution}
 \usage{
-Multinomial(size, p)
+Multinomial(size = numeric(), p = numeric())
 }
 \arguments{
 \item{size}{The number of trials. Must be an integer greater than or equal

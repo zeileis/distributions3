@@ -112,15 +112,17 @@
 #' # also equivalent to
 #' mean(x) + quantile(T, 0.12 / 2) * sd(x) / sqrt(nx)
 #' mean(x) + quantile(T, 1 - 0.12 / 2) * sd(x) / sqrt(nx)
-StudentsT <- function(df) {
+StudentsT <- function(df = numeric()) {
   d <- data.frame(df = df)
   class(d) <- c("StudentsT", "distribution")
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.StudentsT <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- ifelse(x$df > 1,
     0,
     NaN
@@ -130,6 +132,7 @@ mean.StudentsT <- function(x, ...) {
 
 #' @export
 variance.StudentsT <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   rval <- ifelse(x$df > 2,
     x$df / (x$df - 2),
     ifelse(x$df > 1,
@@ -142,6 +145,7 @@ variance.StudentsT <- function(x, ...) {
 
 #' @export
 skewness.StudentsT <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   rval <- ifelse(x$df > 3,
     0,
     NaN
@@ -151,6 +155,7 @@ skewness.StudentsT <- function(x, ...) {
 
 #' @export
 kurtosis.StudentsT <- function(x, ...) {
+  if (length(x) == 0L) return(numeric())
   rval <- ifelse(x$df > 4,
     6 / (x$df - 4),
     ifelse(x$df > 2,
@@ -298,11 +303,14 @@ cdf.StudentsT <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
 #' @family StudentsT distribution
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.StudentsT <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qt(p = at, df = d$df, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -318,7 +326,6 @@ quantile.StudentsT <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.StudentsT <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(-Inf, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -326,12 +333,10 @@ support.StudentsT <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.StudentsT <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.StudentsT <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }

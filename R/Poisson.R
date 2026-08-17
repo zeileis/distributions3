@@ -68,36 +68,35 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Poisson <- function(lambda) {
+Poisson <- function(lambda = numeric()) {
   d <- data.frame(lambda = lambda)
   class(d) <- c("Poisson", "distribution")
   d
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Poisson <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   rval <- x$lambda
   setNames(rval, names(x))
 }
 
 #' @export
 variance.Poisson <- function(x, ...) {
-  rlang::check_dots_used()
   rval <- x$lambda
   setNames(rval, names(x))
 }
 
 #' @export
 skewness.Poisson <- function(x, ...) {
-  rlang::check_dots_used()
   rval <- 1 / sqrt(x$lambda)
   setNames(rval, names(x))
 }
 
 #' @export
 kurtosis.Poisson <- function(x, ...) {
-  rlang::check_dots_used()
   rval <- 1 / x$lambda
   setNames(rval, names(x))
 }
@@ -119,9 +118,7 @@ kurtosis.Poisson <- function(x, ...) {
 #'
 random.Poisson <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
-  if (n == 0L) {
-    return(numeric(0L))
-  }
+  if (n == 0L) return(numeric())
   FUN <- function(at, d) rpois(n = at, lambda = d$lambda)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
@@ -216,9 +213,12 @@ cdf.Poisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   `length(probs)` columns (if `drop = FALSE`). In case of a vectorized
 #'   distribution object, a matrix with `length(probs)` columns containing all
 #'   possible combinations.
-#' @export
 #'
+#' @importFrom rlang check_dots_used
+#' @export
 quantile.Poisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qpois(p = at, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -267,7 +267,6 @@ suff_stat.Poisson <- function(d, x, ...) {
 #'
 #' @export
 support.Poisson <- function(d, drop = TRUE, ...) {
-  rlang::check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -275,12 +274,10 @@ support.Poisson <- function(d, drop = TRUE, ...) {
 
 #' @exportS3Method
 is_discrete.Poisson <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Poisson <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }

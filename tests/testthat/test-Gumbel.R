@@ -1,3 +1,9 @@
+
+test_that("Gumbel default arguments", {
+  expect_identical(formals(Gumbel),
+    as.pairlist(alist(mu = 0, sigma = 1)))
+})
+
 test_that("print.Gumbel works", {
   expect_output(print(Gumbel()), regexp = "Gumbel")
 })

@@ -4,7 +4,7 @@
 \alias{Gamma}
 \title{Create a Gamma distribution}
 \usage{
-Gamma(shape, rate = 1)
+Gamma(shape = numeric(), rate = 1)
 }
 \arguments{
 \item{shape}{The shape parameter. Can be any positive number.}

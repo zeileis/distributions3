@@ -26,4 +26,5 @@ a distribution based on empirical data.
 \examples{
 X <- Normal()
 fit_mle(X, c(-1, 0, 0, 0, 3))
+
 }

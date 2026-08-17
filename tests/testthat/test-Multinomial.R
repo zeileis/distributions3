@@ -1,3 +1,9 @@
+
+test_that("Multinomial default arguments", {
+  expect_identical(formals(Multinomial),
+    as.pairlist(alist(size = numeric(), p = numeric())))
+})
+
 test_that("print.Multinomial works", {
   expect_output(print(Multinomial(1, 0.5)), regexp = "Multinomial")
 })

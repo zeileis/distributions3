@@ -1,3 +1,9 @@
+
+test_that("GEV default arguments", {
+  expect_identical(formals(GEV),
+    as.pairlist(alist(mu = 0, sigma = 1, xi = 0)))
+})
+
 test_that("print.GEV works", {
   expect_output(print(GEV()), regexp = "GEV")
 })

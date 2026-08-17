@@ -30,4 +30,5 @@ on the cumulative distribution function (CDF).
 X <- Normal()
 ## probabilities from CDF
 cdf(X, c(1, 2, 3, 4, 5))
+
 }

@@ -1,7 +1,41 @@
 # distributions3 0.2.4.99
 
-- Start working on new development version with additions by Reto @retostauffer
-  especially for numerical approximations of various distribution functions.
+- New `Empirical()` distribution based on a random `sample`. This is particularly
+  useful when forecasts are represented by samples rather than by parametric
+  distributions (#98 and #120 by Reto Stauffer).
+  
+- Fallback methods for all standard `distributions3` methods such as `cdf()`,
+  `pdf()`, `quantile()`, `random()`, and moments such as `mean()`, `variance()`,
+  `skewness()`, and `kurtosis()`. These leverage those methods that are available
+  but fill the gaps using numerical integration/differentiation (#120 by Reto
+  Stauffer).
+  
+- All distribution constructor functions such as `Poisson()` and `Binomial()` now
+  have default arguments for all distribution parameters. Typically, these new
+  defaults are empty so that for example `Poisson()` yields a Poisson distribution
+  of length zero. Only those distributions which already previously had a default
+  such as `Normal(mu = 0, sigma = 1)` yield a distribution of length one (#26
+  and #129 by Reto Stauffer).
+
+- Methods for `crps()` function from the
+  [scoringRules](https://CRAN.R-project.org/package=scoringRules) package for
+  computing the (continuous) ranked probabiity score of a distribution. This is
+  a useful proper scoring rule as an alternative to the log-likelihood. A numerical
+  fallback method is provided as well (#88 and #120 by Reto Stauffer and Achim Zeileis).
+
+- Streamline the `apply_dpqr()` workhorse function to avoid unnecessary computations
+  more carefully (#123 and #125 by Achim Zeileis).
+
+- Reduce the hard dependencies: `ggplot2` is now a "Suggests" dependency and the
+  usage of `glue` is replaced by base R function `sprintf()` (#126 and #125 by
+  Achim Zeileis).
+
+- Avoid using `rlang::check_dots_used()` multiple times when calling a single method.
+  For generic functions from `distributions3`, such as `cdf()` and `variance()` etc.,
+  the call to `rlang::check_dots_used()` is directly in the generic. For generic
+  functions defined elsewhere, namely `quantile()` and `mean()` from base R and
+  `crps()` from `scoringRules`, all methods call `rlang::check_dots_used()` themselves
+  (#127 by Reto Stauffer).
 
 
 # distributions3 0.2.4

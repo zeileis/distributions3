@@ -4,7 +4,7 @@
 \alias{ZTNegativeBinomial}
 \title{Create a zero-truncated negative binomial distribution}
 \usage{
-ZTNegativeBinomial(mu, theta)
+ZTNegativeBinomial(mu = numeric(), theta = numeric())
 }
 \arguments{
 \item{mu}{Location parameter of the negative binomial component of the distribution.

@@ -71,9 +71,9 @@
 #'
 #' # pdf(X, 2)
 #' # log_pdf(X, 2)
-Multinomial <- function(size, p) {
+Multinomial <- function(size = numeric(), p = numeric()) {
   # Ensure sum of probabilities is 1
-  p <- p / sum(p)
+  if (length(p) > 0L) p <- p / sum(p)
   d <- list(size = size, p = p)
   class(d) <- c("Multinomial", "multivariate", "distribution")
   d
@@ -81,6 +81,7 @@ Multinomial <- function(size, p) {
 
 #' @export
 print.Multinomial <- function(x, ...) {
+  if (length(x) == 0L) return(NextMethod())
   num_categories <- length(x$p)
 
   if (num_categories > 3) {
@@ -91,12 +92,14 @@ print.Multinomial <- function(x, ...) {
   } else {
     p <- paste(round(x$p, 3), collapse = ", ")
   }
-  cat(glue("Multinomial distribution (size = {x$size}, p = [{p}])"), "\n")
+  cat(sprintf("Multinomial distribution (size = %s, p = [%s])", x$size, p), "\n")
 }
 
+#' @importFrom rlang check_dots_used
 #' @export
 mean.Multinomial <- function(x, ...) {
-  rlang::check_dots_used()
+  check_dots_used()
+  if (!length(x)) return(numeric())
   x$size * x$p
 }
 
@@ -152,12 +155,10 @@ log_pdf.Multinomial <- function(d, x, ...) {
 
 #' @exportS3Method
 is_discrete.Multinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
 #' @exportS3Method
 is_continuous.Multinomial <- function(d, ...) {
-  rlang::check_dots_used()
   setNames(rep.int(FALSE, length(d)), names(d))
 }
