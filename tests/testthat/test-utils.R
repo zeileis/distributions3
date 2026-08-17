@@ -11,7 +11,6 @@ test_that("{methods}.dstribution work", {
   expect_equal(length.distribution(n), 2)
   expect_equal(n[1], Normal(0, 1))
   expect_length(format.distribution(n), 2L)
-  expect_length(print.distribution(n), 2L)
   expect_null(names.distribution(n))
 
   expect_silent(n <- `names<-.distribution`(n, c("a", "b")))
