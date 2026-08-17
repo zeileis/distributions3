@@ -5,7 +5,7 @@
 
 
 // Fast element lookup by name for standard named R lists
-static SEXP getListElement(SEXP list, const char *str) {
+SEXP getListElement(SEXP list, const char *str) {
     if (list == R_NilValue || !isNewList(list)) {
         return R_NilValue;
     }
@@ -45,11 +45,17 @@ typedef struct {
 //}
 static inline InputVector make_input_var(SEXP sexp, const char *name, int expected_N) {
     InputVector var = {NULL, 0};
+
+    if (sexp == R_NilValue) {
+        return var;
+    }
+
     SEXP elt = sexp;
 
     // If a name is provided, extract the element from the list
     if (name != NULL) {
         elt = getListElement(sexp, name);
+        if (elt == R_NilValue) return var;
     }
 
     // Process target SEXP object
@@ -199,7 +205,7 @@ static inline ParameterFlags get_score_flags(SEXP x, bool hessian) {
         if (getListElement(x, "sigma:tau")   != R_NilValue) req |= (PARAM_SIGMA | PARAM_TAU | PARAM_SIGMA_TAU);
         if (getListElement(x, "nu:nu")       != R_NilValue) req |= (PARAM_NU | PARAM_NU_NU);
         if (getListElement(x, "nu:tau")      != R_NilValue) req |= (PARAM_NU | PARAM_TAU | PARAM_NU_TAU);
-        if (getListElement(x, "tau:tau")     != R_NilValue) req |= (PARAM_TAU | PARAM_TAU);
+        if (getListElement(x, "tau:tau")     != R_NilValue) req |= (PARAM_TAU | PARAM_TAU_TAU);
     }
 
     return req;
@@ -217,6 +223,12 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     InputVector sigma_var = make_input_var(params_sexp, "sigma", N);
     InputVector nu_var    = make_input_var(params_sexp, "nu",    N);
 
+    SEXP s_mu    = getListElement(score_sexp, "mu");
+    SEXP s_sigma = getListElement(score_sexp, "sigma");
+    return R_NilValue;
+    SEXP s_nu    = getListElement(score_sexp, "nu");
+    SEXP s_tau   = getListElement(score_sexp, "tau");
+
     int i;
     for (i = 0; i < N; i++) {
         Rprintf(" ---- i = %d\n", i);
@@ -226,6 +238,8 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
         Rprintf("      x[%d] = %.5f\n", i, get_val(&x_var, i));
         Rprintf("      sigma.stride = %d\n", sigma_var.stride);
         Rprintf("      sigma[%d] = %.5f\n", i, get_val(&sigma_var, i));
+        s_mu[i] = i;
+        s_tau[i] = i / 10;
     }
 
     // 2. Setup Score Outputs & Active Flags
