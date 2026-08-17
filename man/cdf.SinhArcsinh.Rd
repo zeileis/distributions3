@@ -2,7 +2,7 @@
 % Please edit documentation in R/SinhArcsinh.R
 \name{cdf.SinhArcsinh}
 \alias{cdf.SinhArcsinh}
-\title{Evaluate the cumulative distribution function of a SinhArcsinh distribution}
+\title{Evaluate the cumulative distribution function of a Sinh-Arcsinh distribution}
 \usage{
 \method{cdf}{SinhArcsinh}(d, x, drop = TRUE, elementwise = NULL, cores = NULL, ...)
 }

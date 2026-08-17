@@ -481,68 +481,142 @@ test_that("rsinharcsinh works as expected", {
     expect_true(all(x < 100))
 })
 
+test_that("score.SinhArcsinh works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.SinhArcsinh" %in% ns, info = "score.SinhArcsinh not found in namespace")
+    expect_true(is.function(getS3method("score", "SinhArcsinh")), "score.SinhArcsinh is not a function")
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.SinhArcsinh),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch
+    expect_error(score(SinhArcsinh(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(SinhArcsinh(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(score(SinhArcsinh(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(score(SinhArcsinh(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions
+    expect_silent(s1 <- score(SinhArcsinh(5:1), 1:5))
+    expect_true(is.matrix(s1))
+    expect_identical(dimnames(s1), list(NULL, c("mu", "sigma", "nu", "tau")))
+
+    ## Checking changing order of whcih
+    expect_silent(s2 <- score(SinhArcsinh(5:1), 1:5, which = c("tau", "nu", "sigma", "mu")))
+    expect_identical(s1, s2[, 4:1]) # Reverse order
+
+    ## Calculating only mu and sigma, compare to full result 's1' from above
+    expect_silent(sm <- score(SinhArcsinh(1:5), 5:1, which = "m"))
+    expect_silent(ss <- score(SinhArcsinh(1:5), 5:1, which = "s"))
+    expect_silent(sn <- score(SinhArcsinh(1:5), 5:1, which = "n"))
+    expect_silent(st <- score(SinhArcsinh(1:5), 5:1, which = "t"))
+    expect_identical(s1[5:1, ], cbind(mu = sm, sigma = ss, nu = sn, tau = st)) # flipped upside down for testing
+
+    ## with drop = FALSE
+    expect_silent(sm <- score(SinhArcsinh(1:5), 5:1, which = "m", drop = FALSE))
+    expect_silent(ss <- score(SinhArcsinh(1:5), 5:1, which = "s", drop = FALSE))
+    expect_silent(sn <- score(SinhArcsinh(1:5), 5:1, which = "n", drop = FALSE))
+    expect_silent(st <- score(SinhArcsinh(1:5), 5:1, which = "t", drop = FALSE))
+    expect_identical(s1[5:1, ], cbind(sm, ss, sn, st)) # flipped upside down for testing
+
+    ## Check drop = TRUE/drop = FASE for single parameter
+    expect_identical(score(SinhArcsinh(5:1), 0, which = "mu", drop = FALSE),
+                     cbind(mu = score(SinhArcsinh(5:1), 0, which = "mu")))
+})
+
+test_that("hessian.SinhArcsinh works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.SinhArcsinh" %in% ns, info = "hessian.SinhArcsinh not found in namespace")
+    expect_true(is.function(getS3method("hessian", "SinhArcsinh")), "hessian.SinhArcsinh is not a function")
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.SinhArcsinh),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(SinhArcsinh(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(SinhArcsinh(), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(SinhArcsinh(), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(SinhArcsinh(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(SinhArcsinh(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+
+    # For hessian only the observed (not the expected) hessian is available
+    expect_error(hessian(SinhArcsinh(), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
+
+    ## Calculating all hessians for 5 distributions
+    expect_silent(h1 <- hessian(SinhArcsinh(5:1), 1:5))
+    expect_identical(dimnames(h1), list(NULL, c("mu", "sigma:mu", "nu:mu", "tau:mu", "mu:sigma",
+                                                "sigma", "nu:sigma", "tau:sigma", "mu:nu",
+                                                "sigma:nu", "nu", "tau:nu", "mu:tau", "sigma:tau",
+                                                "nu:tau", "tau")))
+    ## Get only couple
+    expect_silent(h2 <- hessian(SinhArcsinh(5:1), 1, which = c("mu:tau", "sigma", "sigma:tau")))
+    expect_identical(dimnames(h2), list(NULL, c("mu:tau", "sigma", "sigma:tau")))
+
+    ## Check drop = TRUE/drop = FASE for single parameter
+    expect_identical(hessian(SinhArcsinh(5:1), 0, which = "nu:tau", drop = FALSE),
+                     cbind("nu:tau" = hessian(SinhArcsinh(5:1), 0, which = "nu:tau")))
+})
 
 
-## We check if gamlss.dist is installed. If so, test distributions3::SinhArcsinh
-## against gamlss.dist::SHASH.
-if (requireNamespace("gamlss.dist", quietly = TRUE)) {
-
-    ## Helper function to return score based on gamlss.dist::SHASH to
-    ## test distributions3::score.SinhArcsinh()
-    gamlssdist_score <- function(X, x) {
-        fam <- getFromNamespace("SHASH", "gamlss.dist")()
-        d <- cbind(x = x, as.data.frame(as.matrix(X)))
-        cbind(dldm = with(d, fam$dldm(x, mu, sigma, nu, tau)),
-              dldd = with(d, fam$dldd(x, mu, sigma, nu, tau)),
-              dldv = with(d, fam$dldv(x, mu, sigma, nu, tau)),
-              dldt = with(d, fam$dldt(x, mu, sigma, nu, tau)))
-    }
-    ## Helper function to return hessian based on gamlss.dist::SHASH to
-    ## test distributions3::hessian.SinhArcsinh()
-    gamlssdist_hessian <- function(X, x) {
-        fam <- getFromNamespace("SHASH", "gamlss.dist")()
-        d <- cbind(x = x, as.data.frame(as.matrix(X)))
-        cbind(d2ldm2  = with(d, fam$d2ldm2(x, mu, sigma, nu, tau)),
-              d2ldddm = with(d, fam$d2ldmdd(x, mu, sigma, nu, tau)),
-              d2ldvdm = with(d, fam$d2ldmdv(x, mu, sigma, nu, tau)),
-              d2ldtdm = with(d, fam$d2ldmdt(x, mu, sigma, nu, tau)),
-              d2ldmdd = with(d, fam$d2ldmdd(x, mu, sigma, nu, tau)),
-              d2ldd2  = with(d, fam$d2ldd2(x, mu, sigma, nu, tau)),
-              d2ldvdd = with(d, fam$d2ldddv(x, mu, sigma, nu, tau)),
-              d2ldtdd = with(d, fam$d2ldddt(x, mu, sigma, nu, tau)),
-              d2ldmdv = with(d, fam$d2ldmdv(x, mu, sigma, nu, tau)),
-              d2ldddv = with(d, fam$d2ldddv(x, mu, sigma, nu, tau)),
-              d2ldv2  = with(d, fam$d2ldv2(x, mu, sigma, nu, tau)),
-              d2ldtdv = with(d, fam$d2ldvdt(x, mu, sigma, nu, tau)),
-              d2ldmdt = with(d, fam$d2ldmdt(x, mu, sigma, nu, tau)),
-              d2ldddt = with(d, fam$d2ldddt(x, mu, sigma, nu, tau)),
-              d2ldvdt = with(d, fam$d2ldvdt(x, mu, sigma, nu, tau)),
-              d2ldt2  = with(d, fam$d2ldt2(x, mu, sigma, nu, tau)))
-    }
-
-
-    # Default sinharcsinh with mu = 0, sigma = 1, nu = 1, tau = 1
-    d <- SinhArcsinh()
-    expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-    expect_identical(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
-
-    # Single distribution with some 'random' parameters, evaluate at x = 0 and x = 1:5
-    d <- SinhArcsinh(mu = 10, sigma = 5.5, nu = 0.8, tau = 1.2)
-
-    expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-    expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
-
-    expect_identical(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
-    expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
-
-    # Multiple distributions, evaluate at x = 0 and x = 1:5
-    d <- SinhArcsinh(mu = 15:11, sigma = 1:5 / 10, nu = 1.5, tau = 0.5)
-
-    expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-    expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
-
-    expect_identical(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
-    expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
-}
-
-
+## ## We check if gamlss.dist is installed. If so, test distributions3::SinhArcsinh
+## ## against gamlss.dist::SHASH.
+## if (requireNamespace("gamlss.dist", quietly = TRUE)) {
+## 
+##     ## Helper function to return score based on gamlss.dist::SHASH to
+##     ## test distributions3::score.SinhArcsinh()
+##     gamlssdist_score <- function(X, x) {
+##         fam <- getFromNamespace("SHASH", "gamlss.dist")()
+##         d <- cbind(x = x, as.data.frame(as.matrix(X)))
+##         cbind(dldm = with(d, fam$dldm(x, mu, sigma, nu, tau)),
+##               dldd = with(d, fam$dldd(x, mu, sigma, nu, tau)),
+##               dldv = with(d, fam$dldv(x, mu, sigma, nu, tau)),
+##               dldt = with(d, fam$dldt(x, mu, sigma, nu, tau)))
+##     }
+##     ## Helper function to return hessian based on gamlss.dist::SHASH to
+##     ## test distributions3::hessian.SinhArcsinh()
+##     gamlssdist_hessian <- function(X, x) {
+##         fam <- getFromNamespace("SHASH", "gamlss.dist")()
+##         d <- cbind(x = x, as.data.frame(as.matrix(X)))
+##         cbind(d2ldm2  = with(d, fam$d2ldm2(x, mu, sigma, nu, tau)),
+##               d2ldddm = with(d, fam$d2ldmdd(x, mu, sigma, nu, tau)),
+##               d2ldvdm = with(d, fam$d2ldmdv(x, mu, sigma, nu, tau)),
+##               d2ldtdm = with(d, fam$d2ldmdt(x, mu, sigma, nu, tau)),
+##               d2ldmdd = with(d, fam$d2ldmdd(x, mu, sigma, nu, tau)),
+##               d2ldd2  = with(d, fam$d2ldd2(x, mu, sigma, nu, tau)),
+##               d2ldvdd = with(d, fam$d2ldddv(x, mu, sigma, nu, tau)),
+##               d2ldtdd = with(d, fam$d2ldddt(x, mu, sigma, nu, tau)),
+##               d2ldmdv = with(d, fam$d2ldmdv(x, mu, sigma, nu, tau)),
+##               d2ldddv = with(d, fam$d2ldddv(x, mu, sigma, nu, tau)),
+##               d2ldv2  = with(d, fam$d2ldv2(x, mu, sigma, nu, tau)),
+##               d2ldtdv = with(d, fam$d2ldvdt(x, mu, sigma, nu, tau)),
+##               d2ldmdt = with(d, fam$d2ldmdt(x, mu, sigma, nu, tau)),
+##               d2ldddt = with(d, fam$d2ldddt(x, mu, sigma, nu, tau)),
+##               d2ldvdt = with(d, fam$d2ldvdt(x, mu, sigma, nu, tau)),
+##               d2ldt2  = with(d, fam$d2ldt2(x, mu, sigma, nu, tau)))
+##     }
+## 
+## 
+##     # Default sinharcsinh with mu = 0, sigma = 1, nu = 1, tau = 1
+##     d <- SinhArcsinh()
+##     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
+##     expect_identical(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
+## 
+##     # Single distribution with some 'random' parameters, evaluate at x = 0 and x = 1:5
+##     d <- SinhArcsinh(mu = 10, sigma = 5.5, nu = 0.8, tau = 1.2)
+## 
+##     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
+##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
+## 
+##     expect_identical(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
+##     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
+## 
+##     # Multiple distributions, evaluate at x = 0 and x = 1:5
+##     d <- SinhArcsinh(mu = 15:11, sigma = 1:5 / 10, nu = 1.5, tau = 0.5)
+## 
+##     expect_identical(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
+##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
+## 
+##     expect_identical(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
+##     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
+## }

@@ -3,13 +3,27 @@
 - New `Empirical()` distribution based on a random `sample`. This is particularly
   useful when forecasts are represented by samples rather than by parametric
   distributions (#98 and #120 by Reto Stauffer).
-  
+
+- New `SinhArcsinh()` distribution implementing the Sinh-Arcsinh distribution
+  from [Jones and Pewsey (2009, Biometrika)](https://doi.org/10.1093/biomet/asp053)
+  (#128 by Reto Stauffer).
+
 - Fallback methods for all standard `distributions3` methods such as `cdf()`,
   `pdf()`, `quantile()`, `random()`, and moments such as `mean()`, `variance()`,
   `skewness()`, and `kurtosis()`. These leverage those methods that are available
   but fill the gaps using numerical integration/differentiation (#120 by Reto
   Stauffer).
-  
+
+- New generic functions `score()` and `hessian()` to compute the score (first
+  derivative of the log-likelihood with respect to the parameters) and Hessian
+  (corresponding second derivative). There are numeric fallback methods for
+  general distribution objects and analytic methods for a few distributions.
+  The `hessian()` methods should typically have an argument `expected` which
+  allows to select whether the observed (`expected = FALSE`) or expected
+  (`expected = TRUE`) Hessian should be computed. Some methods may only support
+  one or the other specification and throw an error message otherwise
+  (#124 and #128 by Reto Stauffer and Achim Zeileis).
+
 - All distribution constructor functions such as `Poisson()` and `Binomial()` now
   have default arguments for all distribution parameters. Typically, these new
   defaults are empty so that for example `Poisson()` yields a Poisson distribution

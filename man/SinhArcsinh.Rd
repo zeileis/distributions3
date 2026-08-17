@@ -117,6 +117,11 @@ cdf(X, quantile(X, 0.7))
 quantile(X, cdf(X, 7))
 
 }
+\references{
+Jones MC, Pewsey A (2009). \dQuote{Sinh-Arcsinh Distributions},
+\emph{Journal of Statistical Software}, \bold{96}(4), 761--780.
+\doi{10.1093/biomet/asp053}
+}
 \seealso{
 Other continuous distributions:
 \code{\link[=Beta]{Beta()}},

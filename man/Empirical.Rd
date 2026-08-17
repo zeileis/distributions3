@@ -165,7 +165,7 @@ quantile(d, cdf(d, 4.0))
 
 }
 \references{
-Joanes DN and Gill CA (1998). \dQuote{Comparing Measures of
+Joanes DN, Gill CA (1998). \dQuote{Comparing Measures of
 Sample Skewness and Kurtosis.} \emph{Journal of the Royal Statistical
 Society D}, \bold{47}(1), 183--189. \doi{10.1111/1467-9884.00122}
 }

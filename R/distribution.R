@@ -56,8 +56,6 @@
 #' ## ------------- custom Normal distribution (MyNormal1) ---------------
 #' ## -------------------------- using cdf -------------------------------
 #'
-#' library("scoringRules")
-#'
 #' ## Constructor function for new 'MyNormal1' distribution
 #' MyNormal1 <- function(mu, sigma) {
 #'     d <- data.frame(mu = mu, sigma = sigma)
@@ -102,10 +100,9 @@
 #' qn3    <- quantile(n3,  probs = probs2) ## Analytic solution
 #' range(qmn3 - qn3) ## Range of pairwise differences/precision
 #'
-#' ## Central moments and CRPS
+#' ## Central moments
 #' cbind(mean     = mean(mn3),     variance = variance(mn3),
 #'       skewness = skewness(mn3), kurtosis = kurtosis(mn3))
-#' crps(mn3, 3)
 #'
 #' ## Visual comparison: density
 #' x    <- seq(-3, 5, by = 0.1)
@@ -184,7 +181,8 @@
 #' quantile(mn3, 0.5)
 #' cbind(mean     = mean(mn3),     variance = variance(mn3),
 #'       skewness = skewness(mn3), kurtosis = kurtosis(mn3))
-#' crps(mn3, 0.5)
+#'
+#' \donttest{
 #'
 #' ## ------------ custom Poisson distribution (MyPoisson1) --------------
 #' ## -------------------------- using pdf -------------------------------
@@ -234,10 +232,9 @@
 #' qp3    <- quantile(p3,  probs = probs2) ## Analytic solution
 #' range(qmp3 - qp3) ## Range of pairwise differences/precision
 #'
-#' ## Central moments and CRPS
+#' ## Central moments
 #' cbind(mean     = mean(mp3),     variance = variance(mp3),
 #'       skewness = skewness(mp3), kurtosis = kurtosis(mp3))
-#' crps(mp3, 3)
 #'
 #' ## Visual comparison: distribution function
 #' x    <- seq(-5, 20, by = 1)
@@ -315,7 +312,8 @@
 #' quantile(p3, 0.5)
 #' cbind(mean     = mean(p3),     variance = variance(p3),
 #'       skewness = skewness(p3), kurtosis = kurtosis(p3))
-#' crps(mp3, 3)
+#'
+#' }
 #'
 #' @rdname pdf.distribution
 #' @exportS3Method
