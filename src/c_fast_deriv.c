@@ -5,7 +5,7 @@
 
 
 // Fast element lookup by name for standard named R lists
-SEXP getListElement(SEXP list, const char *str) {
+static inline double* getListElement(SEXP list, const char *str) {
     if (list == R_NilValue || !isNewList(list)) {
         return R_NilValue;
     }
