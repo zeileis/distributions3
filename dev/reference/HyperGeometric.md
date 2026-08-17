@@ -13,7 +13,7 @@ that are defective will be given by the HyperGeometric distribution
 ## Usage
 
 ``` r
-HyperGeometric(m, n, k)
+HyperGeometric(m = numeric(), n = numeric(), k = numeric())
 ```
 
 ## Arguments

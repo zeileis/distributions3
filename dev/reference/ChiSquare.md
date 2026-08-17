@@ -7,7 +7,7 @@ likelihood estimation settings.
 ## Usage
 
 ``` r
-ChiSquare(df)
+ChiSquare(df = numeric())
 ```
 
 ## Arguments

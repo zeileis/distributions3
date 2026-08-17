@@ -14,7 +14,7 @@ methods. More about the Gamma distribution will be added soon.
 ## Usage
 
 ``` r
-Gamma(shape, rate = 1)
+Gamma(shape = numeric(), rate = 1)
 ```
 
 ## Arguments

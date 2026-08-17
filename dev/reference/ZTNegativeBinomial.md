@@ -6,7 +6,7 @@ model counts where zero observations cannot occur or have been excluded.
 ## Usage
 
 ``` r
-ZTNegativeBinomial(mu, theta)
+ZTNegativeBinomial(mu = numeric(), theta = numeric())
 ```
 
 ## Arguments

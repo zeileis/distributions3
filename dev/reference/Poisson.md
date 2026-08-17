@@ -5,7 +5,7 @@ Poisson distributions are frequently used to model counts.
 ## Usage
 
 ``` r
-Poisson(lambda)
+Poisson(lambda = numeric())
 ```
 
 ## Arguments

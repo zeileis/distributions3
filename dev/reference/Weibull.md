@@ -6,7 +6,7 @@ time-to-event analyses.
 ## Usage
 
 ``` r
-Weibull(shape, scale)
+Weibull(shape = numeric(), scale = numeric())
 ```
 
 ## Arguments

@@ -12,7 +12,7 @@ distribution. We then extend repeat the Categorical experiment several
 ## Usage
 
 ``` r
-Multinomial(size, p)
+Multinomial(size = numeric(), p = numeric())
 ```
 
 ## Arguments

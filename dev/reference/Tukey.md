@@ -6,7 +6,7 @@ significant differences test in ANOVA.
 ## Usage
 
 ``` r
-Tukey(nmeans, df, nranges)
+Tukey(nmeans = numeric(), df = numeric(), nranges = numeric())
 ```
 
 ## Arguments

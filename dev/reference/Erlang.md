@@ -11,7 +11,7 @@ is a special case of the gamma distribution. It corresponds to a sum of
 ## Usage
 
 ``` r
-Erlang(k, lambda)
+Erlang(k = numeric(), lambda = numeric())
 ```
 
 ## Arguments

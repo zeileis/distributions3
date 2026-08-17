@@ -5,7 +5,7 @@ An empirical distribution based on a random `sample`.
 ## Usage
 
 ``` r
-Empirical(sample)
+Empirical(sample = numeric())
 
 # S3 method for class 'Empirical'
 mean(x, ...)

@@ -5,7 +5,7 @@ Create an F distribution
 ## Usage
 
 ``` r
-FisherF(df1, df2, lambda = 0)
+FisherF(df1 = numeric(), df2 = numeric(), lambda = 0)
 ```
 
 ## Arguments

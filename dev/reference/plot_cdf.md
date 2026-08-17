@@ -35,7 +35,6 @@ plot_cdf(d, limits = NULL, p = 0.001, plot_theme = NULL)
 ## Examples
 
 ``` r
-
 N1 <- Normal()
 plot_cdf(N1)
 

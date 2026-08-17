@@ -10,7 +10,7 @@ comparing group means.
 ## Usage
 
 ``` r
-StudentsT(df)
+StudentsT(df = numeric())
 ```
 
 ## Arguments
