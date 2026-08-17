@@ -404,6 +404,7 @@ is_continuous.Normal <- function(d, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
@@ -433,6 +434,7 @@ score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {

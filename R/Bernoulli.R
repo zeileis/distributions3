@@ -307,6 +307,7 @@ is_continuous.Bernoulli <- function(d, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 score.Bernoulli <- function(d, x, which = "p", drop = TRUE, ...) {

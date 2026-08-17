@@ -583,6 +583,7 @@ rsinharcsinh <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL) {
 # ---------------------------------------------------------------------------
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
@@ -665,6 +666,7 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
 }
 
 #' @rdname score-hessian
+#' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
 hessian.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
