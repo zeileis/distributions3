@@ -51,7 +51,7 @@
 #'   * Type 2 (only defined for four or more finite values): \deqn{K_2 = \frac{((N + 1) \cdot K_1 + 6) \cdot (N - 1)}{(N - 2) \cdot (N - 3)}}{K2 = ((N + 1) * K_1 + 6) * (N - 1)) / ((N - 2) * (N - 3))}
 #'   * Type 3 (default): \deqn{K_3 = \big(1 - \frac{1}{N}\big)^2 \cdot (K_1 + 3) - 3}{K3 = (1 - 1 / N)^2 * (K1 + 3) - 3}
 #'
-#' @references Joanes DN and Gill CA (1998). \dQuote{Comparing Measures of
+#' @references Joanes DN, Gill CA (1998). \dQuote{Comparing Measures of
 #' Sample Skewness and Kurtosis.} \emph{Journal of the Royal Statistical
 #' Society D}, \bold{47}(1), 183--189. \doi{10.1111/1467-9884.00122}
 #'

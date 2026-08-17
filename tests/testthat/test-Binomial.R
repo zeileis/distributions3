@@ -195,3 +195,77 @@ test_that("crps method for Binomial returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+test_that("score.Binomial works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Binomial" %in% ns, info = "score.Binomial not found in namespace")
+    expect_true(is.function(getS3method("score", "Binomial")), "score.Binomial is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Binomial),
+        as.pairlist(alist(d =, x =, which = "p", drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Binomial(30, p = c(0.2, 0.3, 0.5)), x), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Binomial(30), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(Binomial(30), 1, which = "foo"),        info = "unknown which must should throw error")
+    expect_error(score(Binomial(30), 1, drop = "foo"),         info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    tmp <- (x - 30 * 0.5) / 0.5^2 # Score for size = 30, p = 0.5
+    expect_silent(s1 <- score(Binomial(30, 0.5), x))
+    expect_identical(s1, tmp)
+    expect_silent(s1 <- score(Binomial(30, 0.5), x, which = "p", drop = FALSE))
+    expect_identical(s1, cbind(p = tmp))
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Binomial(30, 0.5), x)[, "p"]),
+            info = "numeric approximation differs from analytic solution")
+
+    ## Scores only supported for parameter p (not size), when which = 'size'
+    ## we expect a warning, and 'p' is returned.
+    expect_warning(s2 <- score(Binomial(size = 30, p = 0.5), x, which = "size"),
+        regexp = "only the scores with respect to 'p' are supported")
+    expect_identical(s2, score(Binomial(size = 30, p = 0.5), x))
+})
+
+test_that("hessian.Binomial works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Binomial" %in% ns, info = "hessian.Binomial not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Binomial")), "hessian.Binomial is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Binomial),
+        as.pairlist(alist(d =, x =, which = "p", drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Binomial(30, c(0.2, 0.3, 0.5)), x),   regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Binomial(30, ), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Binomial(30, ), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Binomial(30, ), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Binomial(30, ), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+
+    ## Calculating observed hessian and check return
+    tmp_o <- -x / 0.5^2 - (30 - x) / 0.5^2 # Observed hessian for size = 30, p = 0.5
+    expect_identical(hessian(Binomial(30, 0.5), x, expected = FALSE), tmp_o, info = "incorrect observed hessian returned")
+    expect_identical(hessian(Binomial(30, 0.5), x, expected = FALSE, drop = FALSE), cbind(p = tmp_o))
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp_o, suppressWarnings(distributions3:::hessian.distribution(Binomial(30, 0.5), x)[, "p"]),
+            tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## Calculating expected hessian and check return
+    tmp_e <- rep(-30 / 0.5^2, 5L) # Expected hessian for score = 30, p = 0.5
+    expect_identical(hessian(Binomial(30, 0.5), x, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
+    expect_identical(hessian(Binomial(30, 0.5), x, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+
+    ## Hessian only supported for parameter p (not size), when which = 'size'
+    ## we expect a warning, and 'p' is returned.
+    expect_warning(s2 <- hessian(Binomial(size = 30, p = 0.5), x, which = "size"),
+        regexp = "only the scores with respect to 'p' are supported")
+    expect_identical(s2, hessian(Binomial(size = 30, p = 0.5), x))
+})

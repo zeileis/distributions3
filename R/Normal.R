@@ -397,3 +397,80 @@ is_discrete.Normal <- function(d, ...) {
 is_continuous.Normal <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# Normal: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("mu", "sigma")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "mu"    = (x - d$mu)/(d$sigma^2),
+    "sigma" = (x - d$mu)^2/(d$sigma^3) - 1/d$sigma)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- setNames(scr(which), names(d))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(d), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("mu" = "mu", "sigma:mu" = "mu:sigma", "mu:sigma" = "mu:sigma", "sigma" = "sigma")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## function for computing Hessian elements (expected or observed)
+  hess <- if (expected) {
+    function(par) switch(par,
+      "mu"    = rep_len(-1 / d$sigma^2, n),
+      "sigma" = rep_len(-2 / d$sigma^2, n),
+      rep.int(0, n))
+  } else {
+    function(par) switch(par,
+      "mu"    = rep_len(-1 / d$sigma^2, n),
+      "sigma" = -3 * (x - d$mu)^2 / d$sigma^4 + 1/d$sigma^2,
+      -2 * (x - d$mu) / d$sigma^3)
+  }
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- setNames(hess(w), names(d))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(d), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}

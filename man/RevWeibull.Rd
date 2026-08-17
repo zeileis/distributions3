@@ -98,6 +98,7 @@ Other continuous distributions:
 \code{\link[=LogNormal]{LogNormal()}},
 \code{\link[=Logistic]{Logistic()}},
 \code{\link[=Normal]{Normal()}},
+\code{\link[=SinhArcsinh]{SinhArcsinh()}},
 \code{\link[=StudentsT]{StudentsT()}},
 \code{\link[=Tukey]{Tukey()}},
 \code{\link[=Uniform]{Uniform()}},

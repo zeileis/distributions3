@@ -18,9 +18,18 @@ SEXP c_moments_numeric(SEXP p, SEXP q, SEXP dim, SEXP discrete, SEXP whatint);
 double c_moments_calculate_trapezoidal(int i, double* p, double* q, int* dim, int what);
 double c_moments_calculate_discrete(int i,    double* p, double* q, int* dim, int what);
 
-const R_CallMethodDef CallEntries[] = {
+/* dpq functions for the sinharcsinh distribution */
+SEXP c_psinharcsinh(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP ncores);
+SEXP c_dsinharcsinh(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP ret_log, SEXP ncores);
+SEXP c_qsinharcsinh(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP cores);
+double local_zeroin(double ax, double bx, double (*f)(double x, void *info), void *info, double tol);
+
+static R_CallMethodDef CallEntries[] = {
   {"c_CRPS_numeric", (DL_FUNC) &c_CRPS_numeric, 5},
   {"c_moments_numeric", (DL_FUNC) &c_moments_numeric, 5},
+  {"c_psinharcsinh", (DL_FUNC) &c_psinharcsinh, 9},
+  {"c_dsinharcsinh", (DL_FUNC) &c_dsinharcsinh, 8},
+  {"c_qsinharcsinh", (DL_FUNC) &c_qsinharcsinh, 9},
   {NULL, NULL, 0}
 };
 

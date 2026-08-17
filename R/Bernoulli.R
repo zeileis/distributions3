@@ -300,3 +300,43 @@ is_discrete.Bernoulli <- function(d, ...) {
 is_continuous.Bernoulli <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# Bernoulli: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Bernoulli <- function(d, x, which = "p", drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## only one parameter
+  which <- match.arg(which, "p", several.ok = TRUE)
+
+  ## compute score
+  s <- (x - d$p)/(d$p * (1 - d$p))
+  if (!drop) s <- cbind("p" = s)
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Bernoulli <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## only one parameter
+  which <- match.arg(which, "p", several.ok = TRUE)
+
+  ## compute hessian
+  h <- if (expected) 0 * x - 1/(d$p * (1 - d$p)) else -x/d$p^2 - (1 - x)/(1 - d$p)^2
+  if (!drop) h <- cbind("p" = h)
+  return(h)
+}

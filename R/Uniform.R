@@ -251,3 +251,73 @@ is_discrete.Uniform <- function(d, ...) {
 is_continuous.Uniform <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# Uniform: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("a", "b")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "a" = 0 * x + 1 / (d$b - d$a),
+    "b" = 0 * x - 1 / (d$b - d$a))
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- setNames(scr(which), names(d))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(d), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  ## numeric differentiation yields observed hessian only
+  if (!isFALSE(expected)) stop("only the observed hessian is available")
+
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("a" = "a", "b:a" = "a:b", "a:b" = "b:a", "b" = "b")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## function for computing Hessian elements (expected or observed)
+  hess_num <- 0 * x + 1 / (d$b - d$a)^2
+  hess <- function(w) switch(w, "a" = hess_num, "b" = hess_num, -hess_num)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- setNames(hess(w), names(d))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(d), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}

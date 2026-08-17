@@ -281,3 +281,44 @@ is_discrete.Poisson <- function(d, ...) {
 is_continuous.Poisson <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# Poisson: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+## Poisson methods for score/hessian
+score.Poisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## only one parameter
+  which <- match.arg(which, "lambda", several.ok = TRUE)
+
+  ## compute score
+  s <- x/d$lambda - 1
+  if (!drop) s <- cbind("lambda" = s)
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {
+  ## sanity check
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## only one parameter
+  which <- match.arg(which, "lambda", several.ok = TRUE)
+
+  ## compute hessian
+  h <- if (expected) 0 * x - 1 / d$lambda else -x / d$lambda^2
+  if (!drop) h <- cbind("lambda" = h)
+  return(h)
+}
