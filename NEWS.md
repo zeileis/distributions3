@@ -1,4 +1,4 @@
-# distributions3 0.2.4.99
+# distributions3 0.3.0
 
 - New `Empirical()` distribution based on a random `sample`. This is particularly
   useful when forecasts are represented by samples rather than by parametric
