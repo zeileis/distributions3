@@ -136,14 +136,35 @@ int validate_lengths(SEXP x, SEXP params) {
 }
 
 
-// Bitwise flags for evaluated parameters to enable/disable fast branching
+/* Bitwise Flags for Required Parameters
+ *
+ * Used to store which elements of a score/hessian are required.
+ * Bitwise flags which allow for |/& operations. Note that
+ * this 'only' allows a 32-bit shift, i.3., `1U << 31` is the
+ * absolute maximum. If Other parameters are required write
+ * a different type definition (different enum type).
+ */
 typedef enum {
     PARAM_NONE  = 0,
-    PARAM_MU    = 1 << 0,
-    PARAM_SIGMA = 1 << 1,
-    PARAM_NU    = 1 << 2,
-    PARAM_TAU   = 1 << 3
-} ParamFlags;
+
+    // First derivative/main parameters
+    PARAM_MU    = 1U << 0,
+    PARAM_SIGMA = 1U << 1,
+    PARAM_NU    = 1U << 2,
+    PARAM_TAU   = 1U << 3,
+
+    // Cross-derivatives
+    PARAM_MU_MU         = 1U << 10,
+    PARAM_MU_SIGMA      = 1U << 11,
+    PARAM_MU_TAU        = 1U << 12,
+    PARAM_MU_NU         = 1U << 13,
+    PARAM_SIGMA_SIGMA   = 1U << 14,
+    PARAM_SIGMA_NU      = 1U << 15,
+    PARAM_SIGMA_TAU     = 1U << 16,
+    PARAM_NU_NU         = 1U << 17,
+    PARAM_NU_TAU        = 1U << 18,
+    PARAM_TAU_TAU       = 1U << 19
+} ParameterFlagsMuSigmaNuTau;
 
 SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp) {
 
@@ -169,7 +190,7 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     }
 
     // 2. Setup Score Outputs & Active Flags
-    ParamFlags req_scores = PARAM_NONE;
+    ParameterFlagsMuSigmaNuTau req_scores = PARAM_NONE;
     double *s_mu = NULL, *s_sigma = NULL, *s_nu = NULL;
 
     SEXP s_mu_sexp = getListElement(score_sexp, "mu");
@@ -182,13 +203,14 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     if (s_nu_sexp != R_NilValue) { s_nu = REAL(s_nu_sexp); req_scores |= PARAM_NU; }
 
     // 3. Setup Hessian Outputs & Active Flags
-    ParamFlags req_hessian = PARAM_NONE;
+    ParameterFlagsMuSigmaNuTau req_hessian = PARAM_NONE;
     double *h_mu_sigma = NULL, *h_nu_sigma = NULL;
 
     SEXP h_mu_sigma_sexp = getListElement(hessian_sexp, "mu:sigma");
     if (h_mu_sigma_sexp != R_NilValue) {
         h_mu_sigma = REAL(h_mu_sigma_sexp);
         req_hessian |= (PARAM_MU | PARAM_SIGMA);
+        req_hessian |= PARAM_MU_SIGMA;
     }
 
     SEXP h_nu_sigma_sexp = getListElement(hessian_sexp, "nu:sigma");
@@ -205,6 +227,9 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     }
     if (req_hessian & PARAM_SIGMA) {
         Rprintf(" ---- hessian  requires sigma\n");
+    }
+    if (req_hessian & PARAM_MU_SIGMA) {
+        Rprintf(" ---- hessian  requires mu:sigma\n");
     }
 
     return R_NilValue;
