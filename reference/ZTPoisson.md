@@ -6,7 +6,7 @@ where zero observations cannot occur or have been excluded.
 ## Usage
 
 ``` r
-ZTPoisson(lambda)
+ZTPoisson(lambda = numeric())
 ```
 
 ## Arguments

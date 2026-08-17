@@ -24,6 +24,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/Categorical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/Cauchy.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/ChiSquare.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/Empirical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/Erlang.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/Exponential.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/FIFA2018.html</loc></url>
@@ -45,6 +46,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/PoissonBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/RevWeibull.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/SinhArcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/StudentsT.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/Tukey.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/Uniform.html</loc></url>
@@ -60,6 +62,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Categorical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Cauchy.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.ChiSquare.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/cdf.Empirical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Erlang.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Exponential.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.FisherF.html</loc></url>
@@ -79,6 +82,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.PoissonBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.RevWeibull.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/cdf.SinhArcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.StudentsT.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Tukey.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.Uniform.html</loc></url>
@@ -88,7 +92,11 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.ZTNegativeBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.ZTPoisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/cdf.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/crps.distribution.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/dempirical.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/distribution_calculate_moments.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/distributions3-package.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/dsinharcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/fit_mle.Bernoulli.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/fit_mle.Binomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/fit_mle.Exponential.html</loc></url>
@@ -99,18 +107,21 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/fit_mle.Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/fit_mle.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/geom_auc.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/hasS3method.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/hnbinom.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/hpois.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/index.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/is_discrete.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/is_distribution.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/log_likelihood.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/mean.distribution.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Bernoulli.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Beta.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Binomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Categorical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Cauchy.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.ChiSquare.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/pdf.Empirical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Erlang.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Exponential.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.FisherF.html</loc></url>
@@ -131,6 +142,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.PoissonBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.RevWeibull.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/pdf.SinhArcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.StudentsT.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Uniform.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.Weibull.html</loc></url>
@@ -138,6 +150,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.ZIPoisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.ZTNegativeBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.ZTPoisson.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/pdf.distribution.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/pdf.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/plot.distribution.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/plot_cdf.html</loc></url>
@@ -149,6 +162,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Categorical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Cauchy.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.ChiSquare.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/quantile.Empirical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Erlang.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Exponential.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.FisherF.html</loc></url>
@@ -168,6 +182,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.PoissonBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.RevWeibull.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/quantile.SinhArcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.StudentsT.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Tukey.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/quantile.Uniform.html</loc></url>
@@ -182,6 +197,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Categorical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Cauchy.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.ChiSquare.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/random.Empirical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Erlang.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Exponential.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.FisherF.html</loc></url>
@@ -202,6 +218,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.PoissonBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.RevWeibull.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/random.SinhArcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.StudentsT.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Tukey.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.Uniform.html</loc></url>
@@ -210,7 +227,9 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/random.ZIPoisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.ZTNegativeBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.ZTPoisson.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/random.distribution.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/random.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/score-hessian.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/simulate.default.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/suff_stat.Bernoulli.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/suff_stat.Binomial.html</loc></url>
@@ -226,6 +245,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Binomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Cauchy.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.ChiSquare.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/support.Empirical.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Erlang.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Exponential.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.FisherF.html</loc></url>
@@ -245,6 +265,7 @@
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Poisson.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.PoissonBinomial.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.RevWeibull.html</loc></url>
+<url><loc>https://zeileis.github.io/distributions3/reference/support.SinhArcsinh.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.StudentsT.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Tukey.html</loc></url>
 <url><loc>https://zeileis.github.io/distributions3/reference/support.Uniform.html</loc></url>

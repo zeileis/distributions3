@@ -11,7 +11,7 @@ is a special case of the gamma distribution. It corresponds to a sum of
 ## Usage
 
 ``` r
-Erlang(k, lambda)
+Erlang(k = numeric(), lambda = numeric())
 ```
 
 ## Arguments
@@ -45,6 +45,7 @@ Other continuous distributions:
 [`Logistic()`](https://zeileis.github.io/distributions3/reference/Logistic.md),
 [`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md),
 [`RevWeibull()`](https://zeileis.github.io/distributions3/reference/RevWeibull.md),
+[`SinhArcsinh()`](https://zeileis.github.io/distributions3/reference/SinhArcsinh.md),
 [`StudentsT()`](https://zeileis.github.io/distributions3/reference/StudentsT.md),
 [`Tukey()`](https://zeileis.github.io/distributions3/reference/Tukey.md),
 [`Uniform()`](https://zeileis.github.io/distributions3/reference/Uniform.md),

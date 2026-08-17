@@ -7,7 +7,7 @@ target number (\\r\\) of successes occurs.
 ## Usage
 
 ``` r
-NegativeBinomial(size, p = 0.5, mu = size)
+NegativeBinomial(size = numeric(), p = 0.5, mu = size)
 ```
 
 ## Arguments

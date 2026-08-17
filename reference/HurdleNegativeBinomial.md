@@ -6,7 +6,7 @@ counts with overdispersion and many zero observations.
 ## Usage
 
 ``` r
-HurdleNegativeBinomial(mu, theta, pi)
+HurdleNegativeBinomial(mu = numeric(), theta = numeric(), pi = numeric())
 ```
 
 ## Arguments

@@ -86,6 +86,7 @@ Other continuous distributions:
 [`LogNormal()`](https://zeileis.github.io/distributions3/reference/LogNormal.md),
 [`Logistic()`](https://zeileis.github.io/distributions3/reference/Logistic.md),
 [`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md),
+[`SinhArcsinh()`](https://zeileis.github.io/distributions3/reference/SinhArcsinh.md),
 [`StudentsT()`](https://zeileis.github.io/distributions3/reference/StudentsT.md),
 [`Tukey()`](https://zeileis.github.io/distributions3/reference/Tukey.md),
 [`Uniform()`](https://zeileis.github.io/distributions3/reference/Uniform.md),

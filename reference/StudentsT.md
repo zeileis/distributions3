@@ -10,7 +10,7 @@ comparing group means.
 ## Usage
 
 ``` r
-StudentsT(df)
+StudentsT(df = numeric())
 ```
 
 ## Arguments
@@ -75,6 +75,7 @@ Other continuous distributions:
 [`Logistic()`](https://zeileis.github.io/distributions3/reference/Logistic.md),
 [`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md),
 [`RevWeibull()`](https://zeileis.github.io/distributions3/reference/RevWeibull.md),
+[`SinhArcsinh()`](https://zeileis.github.io/distributions3/reference/SinhArcsinh.md),
 [`Tukey()`](https://zeileis.github.io/distributions3/reference/Tukey.md),
 [`Uniform()`](https://zeileis.github.io/distributions3/reference/Uniform.md),
 [`Weibull()`](https://zeileis.github.io/distributions3/reference/Weibull.md)

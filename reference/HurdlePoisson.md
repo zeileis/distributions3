@@ -6,7 +6,7 @@ many zero observations.
 ## Usage
 
 ``` r
-HurdlePoisson(lambda, pi)
+HurdlePoisson(lambda = numeric(), pi = numeric())
 ```
 
 ## Arguments

@@ -5,7 +5,7 @@ Create a Categorical distribution
 ## Usage
 
 ``` r
-Categorical(outcomes, p = NULL)
+Categorical(outcomes = numeric(), p = NULL)
 ```
 
 ## Arguments

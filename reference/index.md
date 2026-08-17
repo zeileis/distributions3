@@ -18,6 +18,9 @@
   : Compute the moments of a probability distribution
 - [`support()`](https://zeileis.github.io/distributions3/reference/support.md)
   : Return the support of a distribution
+- [`score()`](https://zeileis.github.io/distributions3/reference/score-hessian.md)
+  [`hessian()`](https://zeileis.github.io/distributions3/reference/score-hessian.md)
+  : Generic functions and methods for computing score and Hessian
 - [`is_discrete()`](https://zeileis.github.io/distributions3/reference/is_discrete.md)
   [`is_continuous()`](https://zeileis.github.io/distributions3/reference/is_discrete.md)
   : Determine whether a distribution is discrete or continuous
@@ -31,6 +34,45 @@
   : Extracting fitted or predicted probability distributions from models
 - [`simulate(`*`<default>`*`)`](https://zeileis.github.io/distributions3/reference/simulate.default.md)
   : Simulate responses from fitted model objects
+
+## Default methods based on numerical approximations
+
+- [`crps.distribution()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Beta()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Bernoulli()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Binomial()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Erlang()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Exponential()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Gamma()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.GEV()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Geometric()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Gumbel()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.HyperGeometric()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Logistic()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.LogNormal()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.NegativeBinomial()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Normal()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Poisson()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.StudentsT()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Uniform()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.XBetaX()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.GAMLSS()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.BAMLSS()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  : Method for numerically evaluating the CRPS of probability
+  distributions
+- [`pdf(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.distribution.md)
+  [`log_pdf(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.distribution.md)
+  [`quantile(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.distribution.md)
+  [`cdf(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.distribution.md)
+  : Methods for numerically approximating distribution functions
+- [`random(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/random.distribution.md)
+  : Inverse transform sampling for random number generation
+- [`mean(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/mean.distribution.md)
+  [`variance(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/mean.distribution.md)
+  [`skewness(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/mean.distribution.md)
+  [`kurtosis(`*`<distribution>`*`)`](https://zeileis.github.io/distributions3/reference/mean.distribution.md)
+  : Methods for numerically calculating central moments of probability
+  distributions
 
 ## Utilities, tools, and data
 
@@ -170,6 +212,32 @@
   : Draw a random sample from a chi square distribution
 - [`support(`*`<ChiSquare>`*`)`](https://zeileis.github.io/distributions3/reference/support.ChiSquare.md)
   : Return the support of the ChiSquare distribution
+
+## Empirical distribution
+
+- [`dempirical()`](https://zeileis.github.io/distributions3/reference/dempirical.md)
+  [`pempirical()`](https://zeileis.github.io/distributions3/reference/dempirical.md)
+  [`qempirical()`](https://zeileis.github.io/distributions3/reference/dempirical.md)
+  [`rempirical()`](https://zeileis.github.io/distributions3/reference/dempirical.md)
+  : The Empirical distribution
+- [`Empirical()`](https://zeileis.github.io/distributions3/reference/Empirical.md)
+  [`mean(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/Empirical.md)
+  [`variance(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/Empirical.md)
+  [`skewness(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/Empirical.md)
+  [`kurtosis(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/Empirical.md)
+  : Create an Empirical distribution
+- [`cdf(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.Empirical.md)
+  : Evaluate the cumulative distribution function of an Empirical
+  distribution
+- [`pdf(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.Empirical.md)
+  [`log_pdf(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.Empirical.md)
+  : Evaluate the probability mass function of an Empirical distribution
+- [`quantile(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/quantile.Empirical.md)
+  : Determine quantiles of an Empirical distribution
+- [`random(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/random.Empirical.md)
+  : Draw a random sample from an Empirical distribution
+- [`support(`*`<Empirical>`*`)`](https://zeileis.github.io/distributions3/reference/support.Empirical.md)
+  : Return the support of the Empirical distribution
 
 ## Erlang distribution
 
@@ -545,6 +613,29 @@
   : Draw a random sample from an RevWeibull distribution
 - [`support(`*`<RevWeibull>`*`)`](https://zeileis.github.io/distributions3/reference/support.RevWeibull.md)
   : Return the support of the RevWeibull distribution
+
+## Sinh-Arcsinh distribution
+
+- [`dsinharcsinh()`](https://zeileis.github.io/distributions3/reference/dsinharcsinh.md)
+  [`psinharcsinh()`](https://zeileis.github.io/distributions3/reference/dsinharcsinh.md)
+  [`qsinharcsinh()`](https://zeileis.github.io/distributions3/reference/dsinharcsinh.md)
+  [`rsinharcsinh()`](https://zeileis.github.io/distributions3/reference/dsinharcsinh.md)
+  : The Sinh-Arcsinh (SHASH) distribution
+- [`SinhArcsinh()`](https://zeileis.github.io/distributions3/reference/SinhArcsinh.md)
+  : Create a Sinh-Arcsinh (SHASH) distribution
+- [`cdf(`*`<SinhArcsinh>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.SinhArcsinh.md)
+  : Evaluate the cumulative distribution function of a Sinh-Arcsinh
+  distribution
+- [`pdf(`*`<SinhArcsinh>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.SinhArcsinh.md)
+  [`log_pdf(`*`<SinhArcsinh>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.SinhArcsinh.md)
+  : Evaluate the probability mass function of a Sinh-Arcsinh
+  distribution
+- [`quantile(`*`<SinhArcsinh>`*`)`](https://zeileis.github.io/distributions3/reference/quantile.SinhArcsinh.md)
+  : Determine quantiles of a Sinh-Arcsinh distribution
+- [`random(`*`<SinhArcsinh>`*`)`](https://zeileis.github.io/distributions3/reference/random.SinhArcsinh.md)
+  : Draw a random sample from a Sinh-Arcsinh distribution
+- [`support(`*`<SinhArcsinh>`*`)`](https://zeileis.github.io/distributions3/reference/support.SinhArcsinh.md)
+  : Return the support of the Sinh-Arcsinh distribution
 
 ## Student’s T distribution
 

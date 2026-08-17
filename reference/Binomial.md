@@ -14,7 +14,7 @@ Bernoulli distribution.
 ## Usage
 
 ``` r
-Binomial(size, p = 0.5)
+Binomial(size = numeric(), p = 0.5)
 ```
 
 ## Arguments

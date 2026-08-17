@@ -104,7 +104,6 @@ kurtosis(X)
 #> [1] -0.4505723
 
 random(X, 10)
-#> Loading required namespace: PoissonBinomial
 #>  [1] 0 2 3 2 2 2 2 2 2 2
 
 pdf(X, 2)

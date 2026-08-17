@@ -202,8 +202,9 @@ random(Y, 3)
 ## For further analogous methods see the "Normal" distribution provided
 ## in distributions3.
 methods(class = "Normal")
-#>  [1] cdf           fit_mle       is_continuous is_discrete   kurtosis     
-#>  [6] log_pdf       mean          pdf           quantile      random       
-#> [11] skewness      suff_stat     support       variance     
+#>  [1] cdf           fit_mle       hessian       is_continuous is_discrete  
+#>  [6] kurtosis      log_pdf       mean          pdf           quantile     
+#> [11] random        score         skewness      suff_stat     support      
+#> [16] variance     
 #> see '?methods' for accessing help and source code
 ```

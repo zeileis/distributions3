@@ -200,7 +200,6 @@ geom_auc(
 ## Examples
 
 ``` r
-
 N1 <- Normal()
 plot_pdf(N1) + geom_auc(to = -0.645)
 

@@ -1,14 +1,15 @@
 # Create a Generalised Extreme Value (GEV) distribution
 
 The GEV distribution arises from the Extremal Types Theorem, which is
-rather like the Central Limit Theorem (see `\link{Normal}`) but it
-relates to the *maximum* of \\n\\ i.i.d. random variables rather than to
-the sum. If, after a suitable linear rescaling, the distribution of this
-maximum tends to a non-degenerate limit as \\n\\ tends to infinity then
-this limit must be a GEV distribution. The requirement that the
-variables are independent can be relaxed substantially. Therefore, the
-GEV distribution is often used to model the maximum of a large number of
-random variables.
+rather like the Central Limit Theorem (see
+[`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md))
+but it relates to the *maximum* of \\n\\ i.i.d. random variables rather
+than to the sum. If, after a suitable linear rescaling, the distribution
+of this maximum tends to a non-degenerate limit as \\n\\ tends to
+infinity then this limit must be a GEV distribution. The requirement
+that the variables are independent can be relaxed substantially.
+Therefore, the GEV distribution is often used to model the maximum of a
+large number of random variables.
 
 ## Usage
 
@@ -101,6 +102,7 @@ Other continuous distributions:
 [`Logistic()`](https://zeileis.github.io/distributions3/reference/Logistic.md),
 [`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md),
 [`RevWeibull()`](https://zeileis.github.io/distributions3/reference/RevWeibull.md),
+[`SinhArcsinh()`](https://zeileis.github.io/distributions3/reference/SinhArcsinh.md),
 [`StudentsT()`](https://zeileis.github.io/distributions3/reference/StudentsT.md),
 [`Tukey()`](https://zeileis.github.io/distributions3/reference/Tukey.md),
 [`Uniform()`](https://zeileis.github.io/distributions3/reference/Uniform.md),

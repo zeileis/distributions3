@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">distributions3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,55 +71,97 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="distributions3">distributions3<a class="anchor" aria-label="anchor" href="#distributions3"></a>
+<div class="page-header"><h1 id="distributions3-probability-distributions-as-s3-objects">distributions3: Probability Distributions as S3 Objects<a class="anchor" aria-label="anchor" href="#distributions3-probability-distributions-as-s3-objects"></a>
 </h1></div>
 <!-- badges: start -->
 
-<p><code>distributions3</code>, inspired by the <a href="https://github.com/JuliaStats/Distributions.jl" class="external-link">eponymous Julia package</a>, provides a generic function interface to probability distributions. <code>distributions3</code> has two goals:</p>
-<ol style="list-style-type: decimal">
-<li><p>Replace the <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm()</a></code>, etc, family of functions with S3 methods for distribution objects</p></li>
-<li><p>Be extremely well documented and friendly for students in intro stat classes.</p></li>
-</ol>
-<p>The main generics are:</p>
+<p><code>distributions3</code> provides a comprehensive and object-oriented toolbox for probability distributions.</p>
+<p><strong>Features:</strong></p>
 <ul>
-<li>
-<code><a href="reference/random.html">random()</a></code>: Draw samples from a distribution.</li>
-<li>
-<code><a href="reference/pdf.html">pdf()</a></code>: Evaluate the probability density (or mass) at a point.</li>
-<li>
-<code><a href="reference/cdf.html">cdf()</a></code>: Evaluate the cumulative probability up to a point.</li>
-<li>
-<code><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile()</a></code>: Determine the quantile for a given probability. Inverse of <code><a href="reference/cdf.html">cdf()</a></code>.</li>
+<li><p>Distributions are provided as S3 objects. Essentially, these are represented as data frames of parameters but with a dedicated class, e.g., <code>"Normal"</code>, inheriting from <code>"distribution"</code>.</p></li>
+<li><p>Methods <code><a href="reference/pdf.html">pdf()</a></code> (probability density function or probability mass function), <code><a href="reference/cdf.html">cdf()</a></code> (cumulative distribution function), <code><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile()</a></code> (quantile function, inverse of <code><a href="reference/cdf.html">cdf()</a></code>), and <code><a href="reference/random.html">random()</a></code> (random samples) replace the d/p/q/r functions provided in base R and many other packages such as <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm()</a></code> for the normal distribution.</p></li>
+<li><p>Methods for computing central moments via <code><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean()</a></code>, <code><a href="reference/variance.html">variance()</a></code>, <code><a href="reference/variance.html">skewness()</a></code>, and <code><a href="reference/variance.html">kurtosis()</a></code>.</p></li>
+<li><p>Methods for extracting the <code><a href="reference/score-hessian.html">score()</a></code> (first derivative of the log-likelihood with respect to the parameters) and <code><a href="reference/score-hessian.html">hessian()</a></code> (corresponding second derivative.</p></li>
+<li><p>Numerical fallback implementations for most of these methods in case no dedicated method is available for a certain distribution.</p></li>
+</ul>
+<p><strong>Goals:</strong></p>
+<ul>
+<li><p>User-friendly interface for illustrations in introductory statistics classes and also advanced probabilistic modeling and regression courses.</p></li>
+<li><p>Developer-friendly interface for fitting and assessing probabilistic models, e.g., via <a href="https://gamlss-dev.github.io/gamlss2/" class="external-link">gamlss2</a> and <a href="https://zeileis.codeberg.page/topmodels/" class="external-link">topmodels</a>.</p></li>
 </ul>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install <code>distributions3</code> with:</p>
+<p>The stable version of <code>distributions3</code> is available from <a href="https://CRAN.R-project.org/package=distributions3" class="external-link">CRAN</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"distributions3"</span><span class="op">)</span></span></code></pre></div>
-<p>You can install the development version with:</p>
+<p>The latest development version can be installed from <a href="https://zeileis.R-universe.dev/distributions3" class="external-link">R-universe</a>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"distributions3"</span>, repos <span class="op">=</span> <span class="st">"https://zeileis.R-universe.dev"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+<h2 id="basic-usage">Basic usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
 </h2>
 <p>The basic usage of <code>distributions3</code> looks like:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/zeileis/distributions3" class="external-link">"distributions3"</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/Bernoulli.html">Bernoulli</a></span><span class="op">(</span><span class="fl">0.1</span><span class="op">)</span></span>
+<span><span class="co">## Normal "IQ" distribution</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/Normal.html">Normal</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">X</span></span>
+<span><span class="co">#&gt; [1] "Normal(mu = 100, sigma = 15)"</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/random.html">random</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  [1] 0 0 0 0 1 0 0 1 0 0</span></span>
-<span><span class="fu"><a href="reference/pdf.html">pdf</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.1</span></span>
+<span><span class="fu"><a href="reference/random.html">random</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 118.94  95.11 119.95 119.09 106.22</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/cdf.html">cdf</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.9</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">0.5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
-<p>Note that <code><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile()</a></code> <strong>always</strong> returns lower tail probabilities. If you aren’t sure what this means, please read the last several paragraphs of <code><a href="articles/one-sample-z-confidence-interval.html">vignette("one-sample-z-confidence-interval")</a></code> and have a gander at the plot.</p>
+<span><span class="fu"><a href="reference/pdf.html">pdf</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">85</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.01613</span></span>
+<span><span class="fu"><a href="reference/cdf.html">cdf</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">85</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.1587</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">0.159</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 85.02</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 100</span></span>
+<span><span class="fu"><a href="reference/variance.html">variance</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 225</span></span>
+<span><span class="fu"><a href="reference/variance.html">skewness</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span></span>
+<span><span class="co">## Vector of Poisson "soccer goals" distributions</span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/Poisson.html">Poisson</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">1.2</span>, <span class="fl">1.9</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">Y</span></span>
+<span><span class="co">#&gt; [1] "Poisson(lambda = 0.8)" "Poisson(lambda = 1.2)" "Poisson(lambda = 1.9)"</span></span>
+<span><span class="co">#&gt; [4] "Poisson(lambda = 0.5)"</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/random.html">random</a></span><span class="op">(</span><span class="va">Y</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      r_1 r_2 r_3 r_4 r_5</span></span>
+<span><span class="co">#&gt; [1,]   0   0   4   0   0</span></span>
+<span><span class="co">#&gt; [2,]   0   2   1   1   0</span></span>
+<span><span class="co">#&gt; [3,]   1   2   3   0   1</span></span>
+<span><span class="co">#&gt; [4,]   1   1   2   0   1</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/pdf.html">pdf</a></span><span class="op">(</span><span class="va">Y</span>, <span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt;         d_0    d_1     d_2     d_3      d_4      d_5</span></span>
+<span><span class="co">#&gt; [1,] 0.4493 0.3595 0.14379 0.03834 0.007669 0.001227</span></span>
+<span><span class="co">#&gt; [2,] 0.3012 0.3614 0.21686 0.08674 0.026023 0.006246</span></span>
+<span><span class="co">#&gt; [3,] 0.1496 0.2842 0.26997 0.17098 0.081216 0.030862</span></span>
+<span><span class="co">#&gt; [4,] 0.6065 0.3033 0.07582 0.01264 0.001580 0.000158</span></span>
+<span><span class="fu"><a href="reference/cdf.html">cdf</a></span><span class="op">(</span><span class="va">Y</span>, <span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt;         p_0    p_1    p_2    p_3    p_4    p_5</span></span>
+<span><span class="co">#&gt; [1,] 0.4493 0.8088 0.9526 0.9909 0.9986 0.9998</span></span>
+<span><span class="co">#&gt; [2,] 0.3012 0.6626 0.8795 0.9662 0.9923 0.9985</span></span>
+<span><span class="co">#&gt; [3,] 0.1496 0.4337 0.7037 0.8747 0.9559 0.9868</span></span>
+<span><span class="co">#&gt; [4,] 0.6065 0.9098 0.9856 0.9982 0.9998 1.0000</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">Y</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1 1 2 0</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.8 1.2 1.9 0.5</span></span>
+<span><span class="fu"><a href="reference/variance.html">variance</a></span><span class="op">(</span><span class="va">Y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.8 1.2 1.9 0.5</span></span>
+<span><span class="fu"><a href="reference/variance.html">skewness</a></span><span class="op">(</span><span class="va">Y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1.1180 0.9129 0.7255 1.4142</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
@@ -130,16 +172,16 @@
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
 </h2>
-<p>For a comprehensive overview of the many packages providing various distribution related functionality see the <a href="https://cran.r-project.org/view=Distributions" class="external-link">CRAN Task View</a>.</p>
+<p>For a comprehensive overview of the many packages providing various distribution related functionality see the <a href="https://CRAN.R-project.org/view=Distributions" class="external-link">CRAN Task View</a>.</p>
 <ul>
 <li>
-<a href="https://cran.r-project.org/package=distributional" class="external-link"><code>distributional</code></a> provides distribution objects as vectorized S3 objects</li>
+<a href="https://CRAN.R-project.org/package=distributional" class="external-link"><code>distributional</code></a> provides distribution objects as S3 <code>vctr</code> objects.</li>
 <li>
-<a href="https://cran.r-project.org/package=distr6" class="external-link"><code>distr6</code></a> builds on <code>distr</code>, but uses R6 objects</li>
+<a href="https://CRAN.R-project.org/package=distr6" class="external-link"><code>distr6</code></a> builds on <code>distr</code>, but uses R6 objects</li>
 <li>
-<a href="https://cran.r-project.org/package=distr" class="external-link"><code>distr</code></a> is quite similar to <code>distributions</code>, but uses S4 objects and is less focused on documentation.</li>
+<a href="https://CRAN.R-project.org/package=distr" class="external-link"><code>distr</code></a> is similar in spirit to <code>distributions3</code>, but is not vectorized, uses S4 objects, and is less focused on documentation.</li>
 <li>
-<a href="https://cran.r-project.org/package=fitdistrplus" class="external-link"><code>fitdistrplus</code></a> provides extensive functionality for fitting various distributions but does not treat distributions themselves as objects</li>
+<a href="https://CRAN.R-project.org/package=fitdistrplus" class="external-link"><code>fitdistrplus</code></a> provides extensive functionality for fitting various distributions but does not treat distributions themselves as objects</li>
 </ul>
 </div>
 </div>
@@ -183,6 +225,7 @@
 <li>Daniel Jordan <br><small class="roles"> Author </small>   </li>
 <li>Paul Northrop <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-1992-4882" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Moritz N. Lang <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-2533-9903" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Reto Stauffer <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-3798-5507" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Achim Zeileis <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-0918-3766" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
@@ -195,7 +238,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Alex Hayes, Ralph Moller-Trane, Daniel Jordan, Paul Northrop, Moritz N. Lang, Achim Zeileis.</p>
+  <p>Developed by Alex Hayes, Ralph Moller-Trane, Daniel Jordan, Paul Northrop, Moritz N. Lang, Reto Stauffer, Achim Zeileis.</p>
 </div>
 
 <div class="pkgdown-footer-right">

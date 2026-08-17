@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">distributions3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,6 +97,13 @@
 
         <dt>
 
+          <code><a href="score-hessian.html">score()</a></code> <code><a href="score-hessian.html">hessian()</a></code>
+
+        </dt>
+        <dd>Generic functions and methods for computing score and Hessian</dd>
+
+        <dt>
+
           <code><a href="is_discrete.html">is_discrete()</a></code> <code><a href="is_discrete.html">is_continuous()</a></code>
 
         </dt>
@@ -136,6 +143,43 @@
 
         </dt>
         <dd>Simulate responses from fitted model objects</dd>
+      </dl></div><div class="section level2">
+      <h2 id="default-methods-based-on-numerical-approximations">Default methods based on numerical approximations<a class="anchor" aria-label="anchor" href="#default-methods-based-on-numerical-approximations"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="crps.distribution.html">crps.distribution()</a></code> <code><a href="crps.distribution.html">crps.Beta()</a></code> <code><a href="crps.distribution.html">crps.Bernoulli()</a></code> <code><a href="crps.distribution.html">crps.Binomial()</a></code> <code><a href="crps.distribution.html">crps.Erlang()</a></code> <code><a href="crps.distribution.html">crps.Exponential()</a></code> <code><a href="crps.distribution.html">crps.Gamma()</a></code> <code><a href="crps.distribution.html">crps.GEV()</a></code> <code><a href="crps.distribution.html">crps.Geometric()</a></code> <code><a href="crps.distribution.html">crps.Gumbel()</a></code> <code><a href="crps.distribution.html">crps.HyperGeometric()</a></code> <code><a href="crps.distribution.html">crps.Logistic()</a></code> <code><a href="crps.distribution.html">crps.LogNormal()</a></code> <code><a href="crps.distribution.html">crps.NegativeBinomial()</a></code> <code><a href="crps.distribution.html">crps.Normal()</a></code> <code><a href="crps.distribution.html">crps.Poisson()</a></code> <code><a href="crps.distribution.html">crps.StudentsT()</a></code> <code><a href="crps.distribution.html">crps.Uniform()</a></code> <code><a href="crps.distribution.html">crps.XBetaX()</a></code> <code><a href="crps.distribution.html">crps.GAMLSS()</a></code> <code><a href="crps.distribution.html">crps.BAMLSS()</a></code>
+
+        </dt>
+        <dd>Method for numerically evaluating the CRPS of probability distributions</dd>
+
+        <dt>
+
+          <code><a href="pdf.distribution.html">pdf(<i>&lt;distribution&gt;</i>)</a></code> <code><a href="pdf.distribution.html">log_pdf(<i>&lt;distribution&gt;</i>)</a></code> <code><a href="pdf.distribution.html">quantile(<i>&lt;distribution&gt;</i>)</a></code> <code><a href="pdf.distribution.html">cdf(<i>&lt;distribution&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Methods for numerically approximating distribution functions</dd>
+
+        <dt>
+
+          <code><a href="random.distribution.html">random(<i>&lt;distribution&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Inverse transform sampling for random number generation</dd>
+
+        <dt>
+
+          <code><a href="mean.distribution.html">mean(<i>&lt;distribution&gt;</i>)</a></code> <code><a href="mean.distribution.html">variance(<i>&lt;distribution&gt;</i>)</a></code> <code><a href="mean.distribution.html">skewness(<i>&lt;distribution&gt;</i>)</a></code> <code><a href="mean.distribution.html">kurtosis(<i>&lt;distribution&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Methods for numerically calculating central moments of probability distributions</dd>
       </dl></div><div class="section level2">
       <h2 id="utilities-tools-and-data">Utilities, tools, and data<a class="anchor" aria-label="anchor" href="#utilities-tools-and-data"></a></h2>
 
@@ -530,6 +574,64 @@
 
         </dt>
         <dd>Return the support of the ChiSquare distribution</dd>
+      </dl></div><div class="section level2">
+      <h2 id="empirical-distribution">Empirical distribution<a class="anchor" aria-label="anchor" href="#empirical-distribution"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="dempirical.html">dempirical()</a></code> <code><a href="dempirical.html">pempirical()</a></code> <code><a href="dempirical.html">qempirical()</a></code> <code><a href="dempirical.html">rempirical()</a></code>
+
+        </dt>
+        <dd>The Empirical distribution</dd>
+
+        <dt>
+
+          <code><a href="Empirical.html">Empirical()</a></code> <code><a href="Empirical.html">mean(<i>&lt;Empirical&gt;</i>)</a></code> <code><a href="Empirical.html">variance(<i>&lt;Empirical&gt;</i>)</a></code> <code><a href="Empirical.html">skewness(<i>&lt;Empirical&gt;</i>)</a></code> <code><a href="Empirical.html">kurtosis(<i>&lt;Empirical&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Create an Empirical distribution</dd>
+
+        <dt>
+
+          <code><a href="cdf.Empirical.html">cdf(<i>&lt;Empirical&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Evaluate the cumulative distribution function of an Empirical distribution</dd>
+
+        <dt>
+
+          <code><a href="pdf.Empirical.html">pdf(<i>&lt;Empirical&gt;</i>)</a></code> <code><a href="pdf.Empirical.html">log_pdf(<i>&lt;Empirical&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Evaluate the probability mass function of an Empirical distribution</dd>
+
+        <dt>
+
+          <code><a href="quantile.Empirical.html">quantile(<i>&lt;Empirical&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Determine quantiles of an Empirical distribution</dd>
+
+        <dt>
+
+          <code><a href="random.Empirical.html">random(<i>&lt;Empirical&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Draw a random sample from an Empirical distribution</dd>
+
+        <dt>
+
+          <code><a href="support.Empirical.html">support(<i>&lt;Empirical&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Return the support of the Empirical distribution</dd>
       </dl></div><div class="section level2">
       <h2 id="erlang-distribution">Erlang distribution<a class="anchor" aria-label="anchor" href="#erlang-distribution"></a></h2>
 
@@ -1628,6 +1730,64 @@
         </dt>
         <dd>Return the support of the RevWeibull distribution</dd>
       </dl></div><div class="section level2">
+      <h2 id="sinh-arcsinh-distribution">Sinh-Arcsinh distribution<a class="anchor" aria-label="anchor" href="#sinh-arcsinh-distribution"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="dsinharcsinh.html">dsinharcsinh()</a></code> <code><a href="dsinharcsinh.html">psinharcsinh()</a></code> <code><a href="dsinharcsinh.html">qsinharcsinh()</a></code> <code><a href="dsinharcsinh.html">rsinharcsinh()</a></code>
+
+        </dt>
+        <dd>The Sinh-Arcsinh (SHASH) distribution</dd>
+
+        <dt>
+
+          <code><a href="SinhArcsinh.html">SinhArcsinh()</a></code>
+
+        </dt>
+        <dd>Create a Sinh-Arcsinh (SHASH) distribution</dd>
+
+        <dt>
+
+          <code><a href="cdf.SinhArcsinh.html">cdf(<i>&lt;SinhArcsinh&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Evaluate the cumulative distribution function of a Sinh-Arcsinh distribution</dd>
+
+        <dt>
+
+          <code><a href="pdf.SinhArcsinh.html">pdf(<i>&lt;SinhArcsinh&gt;</i>)</a></code> <code><a href="pdf.SinhArcsinh.html">log_pdf(<i>&lt;SinhArcsinh&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Evaluate the probability mass function of a Sinh-Arcsinh distribution</dd>
+
+        <dt>
+
+          <code><a href="quantile.SinhArcsinh.html">quantile(<i>&lt;SinhArcsinh&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Determine quantiles of a Sinh-Arcsinh distribution</dd>
+
+        <dt>
+
+          <code><a href="random.SinhArcsinh.html">random(<i>&lt;SinhArcsinh&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Draw a random sample from a Sinh-Arcsinh distribution</dd>
+
+        <dt>
+
+          <code><a href="support.SinhArcsinh.html">support(<i>&lt;SinhArcsinh&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Return the support of the Sinh-Arcsinh distribution</dd>
+      </dl></div><div class="section level2">
       <h2 id="student-s-t-distribution">Student’s T distribution<a class="anchor" aria-label="anchor" href="#student-s-t-distribution"></a></h2>
 
 
@@ -2062,7 +2222,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Alex Hayes, Ralph Moller-Trane, Daniel Jordan, Paul Northrop, Moritz N. Lang, Achim Zeileis.</p>
+  <p>Developed by Alex Hayes, Ralph Moller-Trane, Daniel Jordan, Paul Northrop, Moritz N. Lang, Reto Stauffer, Achim Zeileis.</p>
 </div>
 
 <div class="pkgdown-footer-right">
