@@ -143,6 +143,9 @@ int validate_lengths(SEXP x, SEXP params) {
  * this 'only' allows a 32-bit shift, i.3., `1U << 31` is the
  * absolute maximum. If Other parameters are required write
  * a different type definition (different enum type).
+ *
+ * In other words, this only allows for up to a maximum of
+ * 7 parameters as (N^2 - N) / 2 + N) with N = 7 results in 28.
  */
 typedef enum {
     PARAM_NONE  = 0,
@@ -152,19 +155,55 @@ typedef enum {
     PARAM_SIGMA = 1U << 1,
     PARAM_NU    = 1U << 2,
     PARAM_TAU   = 1U << 3,
+    // .. up to 1U << 6 (N = 7)
 
     // Cross-derivatives
-    PARAM_MU_MU         = 1U << 10,
-    PARAM_MU_SIGMA      = 1U << 11,
-    PARAM_MU_TAU        = 1U << 12,
-    PARAM_MU_NU         = 1U << 13,
-    PARAM_SIGMA_SIGMA   = 1U << 14,
-    PARAM_SIGMA_NU      = 1U << 15,
-    PARAM_SIGMA_TAU     = 1U << 16,
-    PARAM_NU_NU         = 1U << 17,
-    PARAM_NU_TAU        = 1U << 18,
-    PARAM_TAU_TAU       = 1U << 19
-} ParameterFlagsMuSigmaNuTau;
+    PARAM_MU_MU         = 1U << 7,
+    PARAM_MU_SIGMA      = 1U << 8,
+    PARAM_MU_TAU        = 1U << 9,
+    PARAM_MU_NU         = 1U << 10,
+    PARAM_SIGMA_SIGMA   = 1U << 11,
+    PARAM_SIGMA_NU      = 1U << 12,
+    PARAM_SIGMA_TAU     = 1U << 13,
+    PARAM_NU_NU         = 1U << 14,
+    PARAM_NU_TAU        = 1U << 15,
+    PARAM_TAU_TAU       = 1U << 16
+    // .. up to 1U << 27 (N = 7 plus all cross-derivatives)
+} ParameterFlags;
+
+/* Setting Required Parameter Flags
+ *
+ * @param x a named list where the names define which score or hessian
+ *        is required.
+ * @param hessian set false for score, and true for hessian.
+ *
+ * Returns an enum object used to check which derivatives are needed.
+ */
+static inline ParameterFlags get_score_flags(SEXP x, bool hessian) {
+    ParameterFlags req = PARAM_NONE;
+
+    // Score
+    if (!hessian) {
+        if (getListElement(x, "mu")    != R_NilValue) req |= PARAM_MU;
+        if (getListElement(x, "sigma") != R_NilValue) req |= PARAM_SIGMA;
+        if (getListElement(x, "nu")    != R_NilValue) req |= PARAM_NU;
+        if (getListElement(x, "tau")   != R_NilValue) req |= PARAM_TAU;
+    // Hessian
+    } else {
+        if (getListElement(x, "mu:mu")       != R_NilValue) req |= (PARAM_MU | PARAM_MU_MU);
+        if (getListElement(x, "mu:sigma")    != R_NilValue) req |= (PARAM_MU | PARAM_SIGMA | PARAM_MU_SIGMA);
+        if (getListElement(x, "mu:tau")      != R_NilValue) req |= (PARAM_MU | PARAM_TAU | PARAM_MU_TAU);
+        if (getListElement(x, "mu:nu")       != R_NilValue) req |= (PARAM_MU | PARAM_NU | PARAM_MU_NU);
+        if (getListElement(x, "sigma:sigma") != R_NilValue) req |= (PARAM_SIGMA | PARAM_SIGMA_SIGMA);
+        if (getListElement(x, "sigma:nu")    != R_NilValue) req |= (PARAM_SIGMA | PARAM_NU | PARAM_SIGMA_NU);
+        if (getListElement(x, "sigma:tau")   != R_NilValue) req |= (PARAM_SIGMA | PARAM_TAU | PARAM_SIGMA_TAU);
+        if (getListElement(x, "nu:nu")       != R_NilValue) req |= (PARAM_NU | PARAM_NU_NU);
+        if (getListElement(x, "nu:tau")      != R_NilValue) req |= (PARAM_NU | PARAM_TAU | PARAM_NU_TAU);
+        if (getListElement(x, "tau:tau")     != R_NilValue) req |= (PARAM_TAU | PARAM_TAU);
+    }
+
+    return req;
+}
 
 SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp) {
 
@@ -172,7 +211,7 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     int N = validate_lengths(x_sexp, params_sexp);
 
     // 1. Setup Input Parameters (Pointers + Strides)
-    // Add additional parameters as needed
+    //    Add additional parameters as needed
     InputVector x_var     = make_input_var(x_sexp, NULL, N);
     InputVector mu_var    = make_input_var(params_sexp, "mu",    N);
     InputVector sigma_var = make_input_var(params_sexp, "sigma", N);
@@ -190,34 +229,9 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     }
 
     // 2. Setup Score Outputs & Active Flags
-    ParameterFlagsMuSigmaNuTau req_scores = PARAM_NONE;
-    double *s_mu = NULL, *s_sigma = NULL, *s_nu = NULL;
+    ParameterFlags req_scores  = get_score_flags(score_sexp, false);
+    ParameterFlags req_hessian = get_score_flags(hessian_sexp, true);
 
-    SEXP s_mu_sexp = getListElement(score_sexp, "mu");
-    if (s_mu_sexp != R_NilValue) { s_mu = REAL(s_mu_sexp); req_scores |= PARAM_MU; }
-
-    SEXP s_sigma_sexp = getListElement(score_sexp, "sigma");
-    if (s_sigma_sexp != R_NilValue) { s_sigma = REAL(s_sigma_sexp); req_scores |= PARAM_SIGMA; }
-
-    SEXP s_nu_sexp = getListElement(score_sexp, "nu");
-    if (s_nu_sexp != R_NilValue) { s_nu = REAL(s_nu_sexp); req_scores |= PARAM_NU; }
-
-    // 3. Setup Hessian Outputs & Active Flags
-    ParameterFlagsMuSigmaNuTau req_hessian = PARAM_NONE;
-    double *h_mu_sigma = NULL, *h_nu_sigma = NULL;
-
-    SEXP h_mu_sigma_sexp = getListElement(hessian_sexp, "mu:sigma");
-    if (h_mu_sigma_sexp != R_NilValue) {
-        h_mu_sigma = REAL(h_mu_sigma_sexp);
-        req_hessian |= (PARAM_MU | PARAM_SIGMA);
-        req_hessian |= PARAM_MU_SIGMA;
-    }
-
-    SEXP h_nu_sigma_sexp = getListElement(hessian_sexp, "nu:sigma");
-    if (h_nu_sigma_sexp != R_NilValue) {
-        h_nu_sigma = REAL(h_nu_sigma_sexp);
-        req_hessian |= (PARAM_NU | PARAM_SIGMA);
-    }
 
     if (req_scores & PARAM_MU) {
         Rprintf(" ---- score requires mu\n");
@@ -231,46 +245,49 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     if (req_hessian & PARAM_MU_SIGMA) {
         Rprintf(" ---- hessian  requires mu:sigma\n");
     }
-
-    return R_NilValue;
-
-    // Pre-calculate composite flags for fast branch pruning inside loop
-    bool calc_sigma = (req_scores & PARAM_SIGMA) || (req_hessian & PARAM_SIGMA);
-    bool calc_mu    = (req_scores & PARAM_MU)    || (req_hessian & PARAM_MU);
-    bool calc_nu    = (req_scores & PARAM_NU)    || (req_hessian & PARAM_NU);
-
-    // 4. Main Execution Loop
-    for (int i = 0; i < N; i++) {
-        double x_i = get_val(&x_var, i);
-        
-        // Extract inputs cleanly via stride multiply
-        double mu_i    = get_val(&mu_var, i);
-        double sigma_i = get_val(&sigma_var, i);
-        double nu_i    = get_val(&nu_var, i);
-
-        // Pre-allocate intermediate scalar derivatives
-        double d_mu = 0.0, d_sigma = 0.0, d_nu = 0.0;
-
-        // Compute base derivatives conditionally
-        if (calc_mu) {
-            d_mu = (x_i - mu_i) / (sigma_i * sigma_i); // Example intermediate
-        }
-        if (calc_sigma) {
-            d_sigma = -1.0 / sigma_i + ((x_i - mu_i) * (x_i - mu_i)) / (sigma_i * sigma_i * sigma_i);
-        }
-        if (calc_nu) {
-            d_nu = nu_i * x_i; // Example intermediate
-        }
-
-        // Fill Scores
-        if (s_mu)    s_mu[i]    = d_mu;
-        if (s_sigma) s_sigma[i] = d_sigma;
-        if (s_nu)    s_nu[i]    = d_nu;
-
-        // Fill Hessians
-        if (h_mu_sigma) h_mu_sigma[i] = -2.0 * (x_i - mu_i) / (sigma_i * sigma_i * sigma_i);
-        if (h_nu_sigma) h_nu_sigma[i] = d_nu * d_sigma;
+    if (req_hessian & PARAM_MU_MU) {
+        Rprintf(" ---- hessian  requires mu:mu\n");
     }
 
     return R_NilValue;
+
+////    // Pre-calculate composite flags for fast branch pruning inside loop
+////    bool calc_sigma = (req_scores & PARAM_SIGMA) || (req_hessian & PARAM_SIGMA);
+////    bool calc_mu    = (req_scores & PARAM_MU)    || (req_hessian & PARAM_MU);
+////    bool calc_nu    = (req_scores & PARAM_NU)    || (req_hessian & PARAM_NU);
+////
+////    // 4. Main Execution Loop
+////    for (int i = 0; i < N; i++) {
+////        double x_i = get_val(&x_var, i);
+////        
+////        // Extract inputs cleanly via stride multiply
+////        double mu_i    = get_val(&mu_var, i);
+////        double sigma_i = get_val(&sigma_var, i);
+////        double nu_i    = get_val(&nu_var, i);
+////
+////        // Pre-allocate intermediate scalar derivatives
+////        double d_mu = 0.0, d_sigma = 0.0, d_nu = 0.0;
+////
+////        // Compute base derivatives conditionally
+////        if (calc_mu) {
+////            d_mu = (x_i - mu_i) / (sigma_i * sigma_i); // Example intermediate
+////        }
+////        if (calc_sigma) {
+////            d_sigma = -1.0 / sigma_i + ((x_i - mu_i) * (x_i - mu_i)) / (sigma_i * sigma_i * sigma_i);
+////        }
+////        if (calc_nu) {
+////            d_nu = nu_i * x_i; // Example intermediate
+////        }
+////
+////        // Fill Scores
+////        if (s_mu)    s_mu[i]    = d_mu;
+////        if (s_sigma) s_sigma[i] = d_sigma;
+////        if (s_nu)    s_nu[i]    = d_nu;
+////
+////        // Fill Hessians
+////        if (h_mu_sigma) h_mu_sigma[i] = -2.0 * (x_i - mu_i) / (sigma_i * sigma_i * sigma_i);
+////        if (h_nu_sigma) h_nu_sigma[i] = d_nu * d_sigma;
+////    }
+////
+////    return R_NilValue;
 }
