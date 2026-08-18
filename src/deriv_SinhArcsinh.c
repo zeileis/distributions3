@@ -77,7 +77,7 @@ static inline ParameterFlags get_flags(SEXP x, bool hessian) {
 }
 
 
-SEXP c_deriv_sinharcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP ncores) {
+SEXP c_deriv_SinhArcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP ncores) {
 
     #if _OPENMP
     int nthreads = asInteger(ncores); // Number of threads
@@ -150,6 +150,7 @@ SEXP c_deriv_sinharcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP he
 
     // Main loop
     #if _OPENMP
+    //Rprintf("number of threads: %d\n", nthreads);
     #pragma omp parallel for num_threads(nthreads)
     #endif
     for (int i = 0; i < N; i++) {
@@ -159,6 +160,26 @@ SEXP c_deriv_sinharcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP he
         double sigma = get_val(&sigma_vec, i);
         double nu    = get_val(&nu_vec, i);
         double tau   = get_val(&tau_vec, i);
+
+        if (ISNA(x) || ISNA(mu) || ISNA(sigma) || ISNA(nu) || ISNA(tau)) {
+            if (req_scores & PARAM_MU)           s_mu[i] = NA_REAL;
+            if (req_scores & PARAM_SIGMA)        s_sigma[i] = NA_REAL;
+            if (req_scores & PARAM_NU)           s_nu[i] = NA_REAL;
+            if (req_scores & PARAM_TAU)          s_tau[i] = NA_REAL;
+
+            if (req_hessian & PARAM_MU_MU)       h_mu_mu[i] = NA_REAL;
+            if (req_hessian & PARAM_MU_SIGMA)    h_mu_sigma[i] = NA_REAL;
+            if (req_hessian & PARAM_MU_TAU)      h_mu_tau[i] = NA_REAL;
+            if (req_hessian & PARAM_MU_NU)       h_mu_nu[i] = NA_REAL;
+            if (req_hessian & PARAM_SIGMA_SIGMA) h_sigma_sigma[i] = NA_REAL;
+            if (req_hessian & PARAM_SIGMA_NU)    h_sigma_nu[i] = NA_REAL;
+            if (req_hessian & PARAM_SIGMA_TAU)   h_sigma_tau[i] = NA_REAL;
+            if (req_hessian & PARAM_NU_NU)       h_nu_nu[i] = NA_REAL;
+            if (req_hessian & PARAM_NU_TAU)      h_nu_tau[i] = NA_REAL;
+            if (req_hessian & PARAM_TAU_TAU)     h_tau_tau[i] = NA_REAL;
+
+            continue;
+        }
 
         // Calculating elements required multiple times for
         // the calculation of the derivatives (score/hessian)

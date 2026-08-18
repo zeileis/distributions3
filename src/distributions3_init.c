@@ -25,8 +25,9 @@ SEXP c_qsinharcsinh(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP
 double local_zeroin(double ax, double bx, double (*f)(double x, void *info), void *info, double tol);
 
 
-
-SEXP c_deriv_sinharcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP ncores);
+/* deriv2: combines score and hessian function */
+SEXP c_deriv_SinhArcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP ncores);
+SEXP c_deriv_Normal(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP expected, SEXP ncores);
 
 static R_CallMethodDef CallEntries[] = {
   {"c_CRPS_numeric", (DL_FUNC) &c_CRPS_numeric, 5},
@@ -35,7 +36,8 @@ static R_CallMethodDef CallEntries[] = {
   {"c_dsinharcsinh", (DL_FUNC) &c_dsinharcsinh, 8},
   {"c_qsinharcsinh", (DL_FUNC) &c_qsinharcsinh, 9},
 
-  {"c_deriv_sinharcsinh", (DL_FUNC) &c_deriv_sinharcsinh, 5},
+  {"c_deriv_SinhArcsinh", (DL_FUNC) &c_deriv_SinhArcsinh, 5},
+  {"c_deriv_Normal", (DL_FUNC) &c_deriv_Normal, 6},
   {NULL, NULL, 0}
 };
 

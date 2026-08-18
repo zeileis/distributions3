@@ -130,7 +130,7 @@ static int get_max_N(SEXP x, SEXP params) {
  * Returns the maximum length of 'x' and all vectors in
  * the list 'params'.
  */
-int validate_lengths(SEXP x, SEXP params) {
+static inline int validate_lengths(SEXP x, SEXP params) {
     int N = get_max_N(x, params);
 
     // Check x, just be of length 1 or N
