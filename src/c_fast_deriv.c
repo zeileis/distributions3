@@ -5,26 +5,29 @@
 
 
 // Fast element lookup by name for standard named R lists
-static inline double* getListElement(SEXP list, const char *str) {
-    if (list == R_NilValue || !isNewList(list)) {
-        return R_NilValue;
-    }
+static inline SEXP getListElementSEXP(SEXP list, const char *str) {
+    if (list == R_NilValue || !isNewList(list)) return R_NilValue;
 
     SEXP names = getAttrib(list, R_NamesSymbol);
-    if (names == R_NilValue) {
-        return R_NilValue;
-    }
+    if (names == R_NilValue) return R_NilValue;
 
     int n = LENGTH(list);
     for (int i = 0; i < n; i++) {
-        const char *name = CHAR(STRING_ELT(names, i));
-        if (strcmp(name, str) == 0) {
+        SEXP name_elt = STRING_ELT(names, i);
+        if (name_elt != R_NilValue && strcmp(CHAR(name_elt), str) == 0) {
             return VECTOR_ELT(list, i);
         }
     }
 
     return R_NilValue;
 }
+
+static inline double* getListElement(SEXP list, const char *str) {
+    SEXP elt = getListElementSEXP(list, str);
+    if (elt != R_NilValue && TYPEOF(elt) == REALSXP) return REAL(elt);
+    return NULL;
+}
+
 
 // Struct to hold vector pointers and indexing strides (0 for scalar/length 1, 1 for vector/length N)
 typedef struct {
@@ -46,21 +49,20 @@ typedef struct {
 static inline InputVector make_input_var(SEXP sexp, const char *name, int expected_N) {
     InputVector var = {NULL, 0};
 
-    if (sexp == R_NilValue) {
-        return var;
-    }
+    if (sexp == R_NilValue) return var;
 
+    // The sexp vector is our result if name == NULL (sexp is already vector)
     SEXP elt = sexp;
 
     // If a name is provided, extract the element from the list
     if (name != NULL) {
-        elt = getListElement(sexp, name);
+        elt = getListElementSEXP(sexp, name);
         if (elt == R_NilValue) return var;
     }
 
     // Process target SEXP object
     if (elt != R_NilValue && (isNumeric(elt) || isInteger(elt))) {
-        var.ptr = REAL(elt);
+        var.ptr    = REAL(elt);
         var.stride = (LENGTH(elt) == expected_N) ? 1 : 0;
     }
 
@@ -185,27 +187,27 @@ typedef enum {
  *
  * Returns an enum object used to check which derivatives are needed.
  */
-static inline ParameterFlags get_score_flags(SEXP x, bool hessian) {
+static inline ParameterFlags get_flags_msnt(SEXP x, bool hessian) {
     ParameterFlags req = PARAM_NONE;
 
     // Score
     if (!hessian) {
-        if (getListElement(x, "mu")    != R_NilValue) req |= PARAM_MU;
-        if (getListElement(x, "sigma") != R_NilValue) req |= PARAM_SIGMA;
-        if (getListElement(x, "nu")    != R_NilValue) req |= PARAM_NU;
-        if (getListElement(x, "tau")   != R_NilValue) req |= PARAM_TAU;
+        if (getListElementSEXP(x, "mu")    != R_NilValue) req |= PARAM_MU;
+        if (getListElementSEXP(x, "sigma") != R_NilValue) req |= PARAM_SIGMA;
+        if (getListElementSEXP(x, "nu")    != R_NilValue) req |= PARAM_NU;
+        if (getListElementSEXP(x, "tau")   != R_NilValue) req |= PARAM_TAU;
     // Hessian
     } else {
-        if (getListElement(x, "mu:mu")       != R_NilValue) req |= (PARAM_MU | PARAM_MU_MU);
-        if (getListElement(x, "mu:sigma")    != R_NilValue) req |= (PARAM_MU | PARAM_SIGMA | PARAM_MU_SIGMA);
-        if (getListElement(x, "mu:tau")      != R_NilValue) req |= (PARAM_MU | PARAM_TAU | PARAM_MU_TAU);
-        if (getListElement(x, "mu:nu")       != R_NilValue) req |= (PARAM_MU | PARAM_NU | PARAM_MU_NU);
-        if (getListElement(x, "sigma:sigma") != R_NilValue) req |= (PARAM_SIGMA | PARAM_SIGMA_SIGMA);
-        if (getListElement(x, "sigma:nu")    != R_NilValue) req |= (PARAM_SIGMA | PARAM_NU | PARAM_SIGMA_NU);
-        if (getListElement(x, "sigma:tau")   != R_NilValue) req |= (PARAM_SIGMA | PARAM_TAU | PARAM_SIGMA_TAU);
-        if (getListElement(x, "nu:nu")       != R_NilValue) req |= (PARAM_NU | PARAM_NU_NU);
-        if (getListElement(x, "nu:tau")      != R_NilValue) req |= (PARAM_NU | PARAM_TAU | PARAM_NU_TAU);
-        if (getListElement(x, "tau:tau")     != R_NilValue) req |= (PARAM_TAU | PARAM_TAU_TAU);
+        if (getListElementSEXP(x, "mu:mu")       != R_NilValue) req |= (PARAM_MU | PARAM_MU_MU);
+        if (getListElementSEXP(x, "mu:sigma")    != R_NilValue) req |= (PARAM_MU | PARAM_SIGMA | PARAM_MU_SIGMA);
+        if (getListElementSEXP(x, "mu:tau")      != R_NilValue) req |= (PARAM_MU | PARAM_TAU | PARAM_MU_TAU);
+        if (getListElementSEXP(x, "mu:nu")       != R_NilValue) req |= (PARAM_MU | PARAM_NU | PARAM_MU_NU);
+        if (getListElementSEXP(x, "sigma:sigma") != R_NilValue) req |= (PARAM_SIGMA | PARAM_SIGMA_SIGMA);
+        if (getListElementSEXP(x, "sigma:nu")    != R_NilValue) req |= (PARAM_SIGMA | PARAM_NU | PARAM_SIGMA_NU);
+        if (getListElementSEXP(x, "sigma:tau")   != R_NilValue) req |= (PARAM_SIGMA | PARAM_TAU | PARAM_SIGMA_TAU);
+        if (getListElementSEXP(x, "nu:nu")       != R_NilValue) req |= (PARAM_NU | PARAM_NU_NU);
+        if (getListElementSEXP(x, "nu:tau")      != R_NilValue) req |= (PARAM_NU | PARAM_TAU | PARAM_NU_TAU);
+        if (getListElementSEXP(x, "tau:tau")     != R_NilValue) req |= (PARAM_TAU | PARAM_TAU_TAU);
     }
 
     return req;
@@ -216,35 +218,48 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
     // Validate vector lengths, returns maximum length
     int N = validate_lengths(x_sexp, params_sexp);
 
-    // 1. Setup Input Parameters (Pointers + Strides)
-    //    Add additional parameters as needed
+    // Setup Input Parameters (pointers + strides) for all parameters of the distribution.
     InputVector x_var     = make_input_var(x_sexp, NULL, N);
     InputVector mu_var    = make_input_var(params_sexp, "mu",    N);
     InputVector sigma_var = make_input_var(params_sexp, "sigma", N);
     InputVector nu_var    = make_input_var(params_sexp, "nu",    N);
 
-    SEXP s_mu    = getListElement(score_sexp, "mu");
-    SEXP s_sigma = getListElement(score_sexp, "sigma");
-    return R_NilValue;
-    SEXP s_nu    = getListElement(score_sexp, "nu");
-    SEXP s_tau   = getListElement(score_sexp, "tau");
+    // Setting up flags for score and hessian; used for fast bitwise operations
+    // to see what needs to be calculated.
+    ParameterFlags req_scores  = get_flags_msnt(score_sexp, false);
+    ParameterFlags req_hessian = get_flags_msnt(hessian_sexp, true);
 
-    int i;
-    for (i = 0; i < N; i++) {
+    // Initialize empty 'score' double pointers
+    double* s_mu    = NULL;
+    double* s_sigma = NULL;
+    double* s_tau   = NULL;
+    double* s_nu    = NULL;
+
+    // If score for mu, sigma, nu, or tau is requested: Initialize double
+    // pointer for the corresponding `score_sexp` list element to be modified
+    // and returned to R.
+    if (req_scores & PARAM_MU)    s_mu    = getListElement(score_sexp, "mu");
+    if (req_scores & PARAM_SIGMA) s_sigma = getListElement(score_sexp, "sigma");
+    if (req_scores & PARAM_NU)    s_nu    = getListElement(score_sexp, "nu");
+    if (req_scores & PARAM_TAU)   s_tau   = getListElement(score_sexp, "tau");
+
+
+    ///double* s_mu    = REAL(s_mu_sexp);
+    ///double* s_sigma = REAL(s_sigma_sexp);
+
+    ///SEXP s_sigma_sexp = getListElement(score_sexp, "sigma");
+    ///double* s_sigma = REAL(s_sigma_sexp);
+
+    for (int i = 0; i < N; i++) {
         Rprintf(" ---- i = %d\n", i);
         Rprintf("      mu.stride = %d\n", mu_var.stride);
         Rprintf("      mu[%d] = %.5f\n", i, get_val(&mu_var, i));
-        Rprintf("      x.stride = %d\n", x_var.stride);
-        Rprintf("      x[%d] = %.5f\n", i, get_val(&x_var, i));
-        Rprintf("      sigma.stride = %d\n", sigma_var.stride);
-        Rprintf("      sigma[%d] = %.5f\n", i, get_val(&sigma_var, i));
-        s_mu[i] = i;
-        s_tau[i] = i / 10;
+        Rprintf("      s_mu[%d] = %.5f\n", i, s_mu[i]);
+        s_mu[i] = 100. / i;
+        if (s_sigma != NULL) {
+            s_sigma[i] = 500. / i;
+        }
     }
-
-    // 2. Setup Score Outputs & Active Flags
-    ParameterFlags req_scores  = get_score_flags(score_sexp, false);
-    ParameterFlags req_hessian = get_score_flags(hessian_sexp, true);
 
 
     if (req_scores & PARAM_MU) {
@@ -269,39 +284,4 @@ SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hes
 ////    bool calc_sigma = (req_scores & PARAM_SIGMA) || (req_hessian & PARAM_SIGMA);
 ////    bool calc_mu    = (req_scores & PARAM_MU)    || (req_hessian & PARAM_MU);
 ////    bool calc_nu    = (req_scores & PARAM_NU)    || (req_hessian & PARAM_NU);
-////
-////    // 4. Main Execution Loop
-////    for (int i = 0; i < N; i++) {
-////        double x_i = get_val(&x_var, i);
-////        
-////        // Extract inputs cleanly via stride multiply
-////        double mu_i    = get_val(&mu_var, i);
-////        double sigma_i = get_val(&sigma_var, i);
-////        double nu_i    = get_val(&nu_var, i);
-////
-////        // Pre-allocate intermediate scalar derivatives
-////        double d_mu = 0.0, d_sigma = 0.0, d_nu = 0.0;
-////
-////        // Compute base derivatives conditionally
-////        if (calc_mu) {
-////            d_mu = (x_i - mu_i) / (sigma_i * sigma_i); // Example intermediate
-////        }
-////        if (calc_sigma) {
-////            d_sigma = -1.0 / sigma_i + ((x_i - mu_i) * (x_i - mu_i)) / (sigma_i * sigma_i * sigma_i);
-////        }
-////        if (calc_nu) {
-////            d_nu = nu_i * x_i; // Example intermediate
-////        }
-////
-////        // Fill Scores
-////        if (s_mu)    s_mu[i]    = d_mu;
-////        if (s_sigma) s_sigma[i] = d_sigma;
-////        if (s_nu)    s_nu[i]    = d_nu;
-////
-////        // Fill Hessians
-////        if (h_mu_sigma) h_mu_sigma[i] = -2.0 * (x_i - mu_i) / (sigma_i * sigma_i * sigma_i);
-////        if (h_nu_sigma) h_nu_sigma[i] = d_nu * d_sigma;
-////    }
-////
-////    return R_NilValue;
 }
