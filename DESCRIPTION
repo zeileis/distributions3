@@ -1,6 +1,6 @@
 Package: distributions3
 Title: Probability Distributions as S3 Objects
-Version: 0.3.0
+Version: 0.3.99
 Authors@R: c(
     person(given = "Alex", family = "Hayes", email = "alexpghayes@gmail.com", role = "aut", comment = c(ORCID = "0000-0002-4985-5160")),
     person(given = "Ralph", family = "Moller-Trane", role = "aut", comment = c(ORCID = "0000-0001-7824-1785")),

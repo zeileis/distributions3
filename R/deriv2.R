@@ -38,10 +38,10 @@
 #'
 #' x <- c(-5, 10, 0.3)
 #'
-#' ## Calculate all scores and full Hessian
+#' ## Calculate all scores and full hessian
 #' deriv2(X, x)
 #'
-#' ## Only scores/only hessian
+#' ## Only score/only hessian
 #' deriv2(X, x, which.hessian = NA)
 #' deriv2(X, x, which.score = NA)
 #'
@@ -112,22 +112,22 @@ deriv2.SinhArcsinh <- function(d, x, which.score = NULL, which.hessian = NULL, d
       if (isTRUE(is.na(x))) return(NULL)
       setNames(lapply(seq_along(x), function(n, ...) numeric(n), n = n), x)
   }
-  scores  <- fn(ws, n = n)
+  score   <- fn(ws, n = n)
   hessian <- fn(wh, n = n)
 
   ## Note that .Call has no named arguments, they are only for orientation
   .Call("c_deriv_SinhArcsinh", x_sexp = x, params_sexp = lapply(d, as.double), # <- ensure double
-        scores_sexp = scores, hessian_sexp = hessian, ncores = as.integer(cores))
+        score_sexp = score, hessian_sexp = hessian, ncores = as.integer(cores))
 
   ## Preparing return
-  if (!is.null(scores)) {
+  if (!is.null(score)) {
     if (drop && length(which.score) == 1L) {
-      scores <- setNames(scores[[1]], names(d))
+      score <- setNames(score[[1]], names(d))
     } else {
-      scores <- do.call("cbind", scores)
-      dimnames(scores) <- list(names(d), ws)
-      if (!identical(ws, which.score)) scores <- scores[, pscore[which.score], drop = FALSE]
-      colnames(scores) <- which.score
+      score <- do.call("cbind", score)
+      dimnames(score) <- list(names(d), ws)
+      if (!identical(ws, which.score)) score <- score[, pscore[which.score], drop = FALSE]
+      colnames(score) <- which.score
     }
   }
 
@@ -142,7 +142,7 @@ deriv2.SinhArcsinh <- function(d, x, which.score = NULL, which.hessian = NULL, d
     }
   }
 
-  return(list(scores = scores, hessian = hessian))
+  return(list(score = score, hessian = hessian))
 }
 
 
@@ -185,23 +185,23 @@ deriv2.Normal <- function(d, x, which.score = NULL, which.hessian = NULL, drop =
       if (isTRUE(is.na(x))) return(NULL)
       setNames(lapply(seq_along(x), function(n, ...) numeric(n), n = n), x)
   }
-  scores  <- fn(ws, n = n)
+  score   <- fn(ws, n = n)
   hessian <- fn(wh, n = n)
 
   ## Note that .Call has no named arguments, they are only for orientation
   .Call("c_deriv_Normal", x_sexp = x, params_sexp = lapply(d, as.double), # <- ensure double
-        scores_sexp = scores, hessian_sexp = hessian,
+        score_sexp = score, hessian_sexp = hessian,
         expected = as.logical(expected), ncores = as.integer(cores))
 
   ## Preparing return
-  if (!is.null(scores)) {
+  if (!is.null(score)) {
     if (drop && length(which.score) == 1L) {
-      scores <- setNames(scores[[1]], names(d))
+      score <- setNames(score[[1]], names(d))
     } else {
-      scores <- do.call("cbind", scores)
-      dimnames(scores) <- list(names(d), ws)
-      if (!identical(ws, which.score)) scores <- scores[, pscore[which.score], drop = FALSE]
-      colnames(scores) <- which.score
+      score <- do.call("cbind", score)
+      dimnames(score) <- list(names(d), ws)
+      if (!identical(ws, which.score)) score <- score[, pscore[which.score], drop = FALSE]
+      colnames(score) <- which.score
     }
   }
 
@@ -216,7 +216,7 @@ deriv2.Normal <- function(d, x, which.score = NULL, which.hessian = NULL, drop =
     }
   }
 
-  return(list(scores = scores, hessian = hessian))
+  return(list(score = score, hessian = hessian))
 }
 
 

@@ -79,10 +79,10 @@ X
 
 x <- c(-5, 10, 0.3)
 
-## Calculate all scores and full Hessian
+## Calculate all scores and full hessian
 deriv2(X, x)
 
-## Only scores/only hessian
+## Only score/only hessian
 deriv2(X, x, which.hessian = NA)
 deriv2(X, x, which.score = NA)
 
