@@ -26,7 +26,7 @@ double local_zeroin(double ax, double bx, double (*f)(double x, void *info), voi
 
 
 
-SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp);
+SEXP c_deriv_sinharcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp);
 
 static R_CallMethodDef CallEntries[] = {
   {"c_CRPS_numeric", (DL_FUNC) &c_CRPS_numeric, 5},
@@ -35,7 +35,7 @@ static R_CallMethodDef CallEntries[] = {
   {"c_dsinharcsinh", (DL_FUNC) &c_dsinharcsinh, 8},
   {"c_qsinharcsinh", (DL_FUNC) &c_qsinharcsinh, 9},
 
-  {"c_fast_derivatives", (DL_FUNC) &c_fast_derivatives, 4},
+  {"c_deriv_sinharcsinh", (DL_FUNC) &c_deriv_sinharcsinh, 4},
   {NULL, NULL, 0}
 };
 

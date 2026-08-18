@@ -1,8 +1,10 @@
+// Ensure the header file is only included once during compilation
+#pragma once
+
 #include <R.h>
 #include <Rinternals.h>
 #include <stdbool.h>
 #include <string.h>
-
 
 // Fast element lookup by name for standard named R lists
 static inline SEXP getListElementSEXP(SEXP list, const char *str) {
@@ -35,17 +37,29 @@ typedef struct {
     int stride;
 } InputVector;
 
-//// Helper to extract a double vector and compute stride
-//static inline InputVector make_input_var(SEXP list, const char *name, int expected_N) {
-//    InputVector var = {NULL, 0};
-//    SEXP elt = PROTECT(getListElement(list, name)); // assumes standard R getListElement or manual loop
-//    if (elt != R_NilValue && (isNumeric(elt) || isInteger(elt))) {
-//        var.ptr = REAL(elt);
-//        var.stride = (LENGTH(elt) == expected_N) ? 1 : 0;
-//    }
-//    UNPROTECT(1);
-//    return var;
-//}
+/*
+ * Create Input Vector
+ *
+ * Helper function/type to create easy-to-use input vectors and strides.
+ * The strides are used to allow all vectors to either be of length 1 or N.
+ * If the length of the vector is 1, the stride equals 0 (int) used to always
+ * access the 0-th element in the for loops. Else (length is equal to the
+ * 'expected_N') the stride is set 1 (int).
+ *
+ * Params
+ * ------
+ * sexp:        a vector (typically for x, q, p) or a named list of double vectors
+ *              containing the parameters of the distribution.
+ * name:        Null (if sexp is a vector) or name of the list element to be returned.
+ * expected_N:  The expected length if the double vector is not of length 1.
+ *
+ * Return
+ * ------
+ * Returns an object of class InputVector which consists of a double pointer (.ptr)
+ * and an integer (.stride). Function `get_val(&x, i)` is used to extract the i-th
+ * element of the input vector which returns element 0 (if the vector is of length 1)
+ * or the i-th element if the length is N.
+ */
 static inline InputVector make_input_var(SEXP sexp, const char *name, int expected_N) {
     InputVector var = {NULL, 0};
 
@@ -213,75 +227,3 @@ static inline ParameterFlags get_flags_msnt(SEXP x, bool hessian) {
     return req;
 }
 
-SEXP c_fast_derivatives(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp) {
-
-    // Validate vector lengths, returns maximum length
-    int N = validate_lengths(x_sexp, params_sexp);
-
-    // Setup Input Parameters (pointers + strides) for all parameters of the distribution.
-    InputVector x_var     = make_input_var(x_sexp, NULL, N);
-    InputVector mu_var    = make_input_var(params_sexp, "mu",    N);
-    InputVector sigma_var = make_input_var(params_sexp, "sigma", N);
-    InputVector nu_var    = make_input_var(params_sexp, "nu",    N);
-
-    // Setting up flags for score and hessian; used for fast bitwise operations
-    // to see what needs to be calculated.
-    ParameterFlags req_scores  = get_flags_msnt(score_sexp, false);
-    ParameterFlags req_hessian = get_flags_msnt(hessian_sexp, true);
-
-    // Initialize empty 'score' double pointers
-    double* s_mu    = NULL;
-    double* s_sigma = NULL;
-    double* s_tau   = NULL;
-    double* s_nu    = NULL;
-
-    // If score for mu, sigma, nu, or tau is requested: Initialize double
-    // pointer for the corresponding `score_sexp` list element to be modified
-    // and returned to R.
-    if (req_scores & PARAM_MU)    s_mu    = getListElement(score_sexp, "mu");
-    if (req_scores & PARAM_SIGMA) s_sigma = getListElement(score_sexp, "sigma");
-    if (req_scores & PARAM_NU)    s_nu    = getListElement(score_sexp, "nu");
-    if (req_scores & PARAM_TAU)   s_tau   = getListElement(score_sexp, "tau");
-
-
-    ///double* s_mu    = REAL(s_mu_sexp);
-    ///double* s_sigma = REAL(s_sigma_sexp);
-
-    ///SEXP s_sigma_sexp = getListElement(score_sexp, "sigma");
-    ///double* s_sigma = REAL(s_sigma_sexp);
-
-    for (int i = 0; i < N; i++) {
-        Rprintf(" ---- i = %d\n", i);
-        Rprintf("      mu.stride = %d\n", mu_var.stride);
-        Rprintf("      mu[%d] = %.5f\n", i, get_val(&mu_var, i));
-        Rprintf("      s_mu[%d] = %.5f\n", i, s_mu[i]);
-        s_mu[i] = 100. / i;
-        if (s_sigma != NULL) {
-            s_sigma[i] = 500. / i;
-        }
-    }
-
-
-    if (req_scores & PARAM_MU) {
-        Rprintf(" ---- score requires mu\n");
-    }
-    if (req_hessian & PARAM_MU) {
-        Rprintf(" ---- hessian  requires mu\n");
-    }
-    if (req_hessian & PARAM_SIGMA) {
-        Rprintf(" ---- hessian  requires sigma\n");
-    }
-    if (req_hessian & PARAM_MU_SIGMA) {
-        Rprintf(" ---- hessian  requires mu:sigma\n");
-    }
-    if (req_hessian & PARAM_MU_MU) {
-        Rprintf(" ---- hessian  requires mu:mu\n");
-    }
-
-    return R_NilValue;
-
-////    // Pre-calculate composite flags for fast branch pruning inside loop
-////    bool calc_sigma = (req_scores & PARAM_SIGMA) || (req_hessian & PARAM_SIGMA);
-////    bool calc_mu    = (req_scores & PARAM_MU)    || (req_hessian & PARAM_MU);
-////    bool calc_nu    = (req_scores & PARAM_NU)    || (req_hessian & PARAM_NU);
-}
