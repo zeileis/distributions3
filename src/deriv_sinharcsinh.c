@@ -40,68 +40,89 @@ SEXP c_deriv_sinharcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP he
 
 
 
-    // Must be private for OMP
-    double x, mu, sigma, nu, tau;
-    double z, asinhz, exp_tauasinhz, exp_minusnuasinhz, z2p1sqrtinv;
-    double z2, nu2, tau2, sigmainv, r, c, h;
-    double dldr, dldc, dldz, dcdz, drdz, dzdm, dldm;
     // Main loop
     for (int i = 0; i < N; i++) {
         // Extracting numeric elements
-        x     = get_val(&x_vec, i);
-        mu    = get_val(&mu_vec, i);
-        sigma = get_val(&sigma_vec, i);
-        nu    = get_val(&nu_vec, i);
-        tau   = get_val(&tau_vec, i);
+        double x     = get_val(&x_vec, i);
+        double mu    = get_val(&mu_vec, i);
+        double sigma = get_val(&sigma_vec, i);
+        double nu    = get_val(&nu_vec, i);
+        double tau   = get_val(&tau_vec, i);
 
-        z                 = (x - mu) / sigma;
-        asinhz            = asinh(z);
-        exp_tauasinhz     = exp( tau * asinhz);
-        exp_minusnuasinhz = exp(-nu  * asinhz);
+        double z                 = (x - mu) / sigma;
+        double z2       = z * z;
+        double tau2     = tau * tau;
+        double nu2      = nu * nu;
+
+        //double asinhz            = asinh(z);
+        double z2p1sqrt          = sqrt(z2 + 1.0);
+        double z2p1sqrtinv       = 1.0 / z2p1sqrt;
+        double asinhz            = log(z + z2p1sqrt); // faster than asinh(z)
+        double exp_tauasinhz     = exp( tau * asinhz);
+        double exp_minusnuasinhz = exp(-nu  * asinhz);
 
         // Performing a series of vector operations used multiple times below
-        z2       = z * z;
-        tau2     = tau * tau;
-        nu2      = nu * nu;
-        sigmainv = 1.0 / sigma;
+        double sigmainv = 1.0 / sigma;
 
-        r = 0.5 * (exp_tauasinhz        - exp_minusnuasinhz);
-        c = 0.5 * (exp_tauasinhz * tau  + exp_minusnuasinhz * nu);
-        h = 0.5 * (exp_tauasinhz * tau2 - exp_minusnuasinhz * nu2);
+        double r = 0.5 * (exp_tauasinhz        - exp_minusnuasinhz);
+        double c = 0.5 * (exp_tauasinhz * tau  + exp_minusnuasinhz * nu);
+        double h = 0.5 * (exp_tauasinhz * tau2 - exp_minusnuasinhz * nu2);
 
         // Partial derivatives used everywhere
-        dldr = -r;
-        dldc = 1 / c;
+        double dldr = -r;
+        double dldc = 1 / c;
 
+        // Execute if score 'mu' or 'sigma' or both are requested
+        double dldz, dcdz, drdz;
+        if (req_scores & (PARAM_MU | PARAM_SIGMA)) {
+            dldz = -z / (1.0 + z2);
+            dcdz = h * z2p1sqrtinv;
+            drdz = c * z2p1sqrtinv;
+        }
+        // If score 'mu'
         if (req_scores & PARAM_MU) {
-            z2p1sqrtinv = 1.0 / sqrt(z2 + 1.0);
-
-            dldz        = -z / (1.0 + z2);
-            dcdz        = h * pow(1.0 + z2, -0.5);
-            drdz        = c * pow(1.0 + z2, -0.5);
-            dzdm        = -sigmainv;
-            dldm        = sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv);
-
+            double dzdm = -sigmainv;
+            double dldm = sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv);
             s_mu[i] = (dldr * drdz + dldc * dcdz + dldz) * dzdm;
+        }
+
+        // If score 'sigma' is requested
+        if (req_scores & PARAM_SIGMA) {
+            double dzdd = -z * sigmainv;
+            s_sigma[i] = (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv;
+        }
+
+        // If score 'nu' is requested
+        if (req_scores & PARAM_NU) {
+            double drdv = 0.5 * asinhz * exp_minusnuasinhz;
+            double dcdv = 0.5 * (1.0 - nu * asinhz) * exp_minusnuasinhz;
+            s_nu[i] = dldr * drdv + dldc * dcdv;
+        }
+
+        // If score 'tau' is requested
+        if (req_scores & PARAM_TAU) {
+            double drdt = 0.5 * asinhz * exp_tauasinhz;
+            double dcdt = 0.5 * (1.0 + tau * asinhz) * exp_tauasinhz;
+            s_tau[i] = dldr * drdt + dldc * dcdt;
         }
     }
 
 
-    if (req_scores & PARAM_MU) {
-        Rprintf(" ---- score requires mu\n");
-    }
-    if (req_hessian & PARAM_MU) {
-        Rprintf(" ---- hessian  requires mu\n");
-    }
-    if (req_hessian & PARAM_SIGMA) {
-        Rprintf(" ---- hessian  requires sigma\n");
-    }
-    if (req_hessian & PARAM_MU_SIGMA) {
-        Rprintf(" ---- hessian  requires mu:sigma\n");
-    }
-    if (req_hessian & PARAM_MU_MU) {
-        Rprintf(" ---- hessian  requires mu:mu\n");
-    }
+    ///if (req_scores & PARAM_MU) {
+    ///    Rprintf(" ---- score requires mu\n");
+    ///}
+    ///if (req_hessian & PARAM_MU) {
+    ///    Rprintf(" ---- hessian  requires mu\n");
+    ///}
+    ///if (req_hessian & PARAM_SIGMA) {
+    ///    Rprintf(" ---- hessian  requires sigma\n");
+    ///}
+    ///if (req_hessian & PARAM_MU_SIGMA) {
+    ///    Rprintf(" ---- hessian  requires mu:sigma\n");
+    ///}
+    ///if (req_hessian & PARAM_MU_MU) {
+    ///    Rprintf(" ---- hessian  requires mu:mu\n");
+    ///}
     // R //   ## Calculating a series of vectors used over and over again
     // R //   ## when calculating the score(s).
     // R //   z                 <- (x - d$mu) / d$sigma
