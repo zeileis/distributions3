@@ -227,3 +227,7 @@ static inline ParameterFlags get_flags_msnt(SEXP x, bool hessian) {
     return req;
 }
 
+/* Mininum: Helper function mimiking pmin(a, b) in R for single doubles! */
+static inline double pmin_double(double a, double b) {
+    return (a < b) ? a : b;
+}
