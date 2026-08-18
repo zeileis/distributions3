@@ -158,76 +158,11 @@ int validate_lengths(SEXP x, SEXP params) {
 }
 
 
-/* Bitwise Flags for Required Parameters
- *
- * Used to store which elements of a score/hessian are required.
- * Bitwise flags which allow for |/& operations. Note that
- * this 'only' allows a 32-bit shift, i.3., `1U << 31` is the
- * absolute maximum. If Other parameters are required write
- * a different type definition (different enum type).
- *
- * In other words, this only allows for up to a maximum of
- * 7 parameters as (N^2 - N) / 2 + N) with N = 7 results in 28.
- */
-typedef enum {
-    PARAM_NONE  = 0,
-
-    // First derivative/main parameters
-    PARAM_MU    = 1U << 0,
-    PARAM_SIGMA = 1U << 1,
-    PARAM_NU    = 1U << 2,
-    PARAM_TAU   = 1U << 3,
-    // .. up to 1U << 6 (N = 7)
-
-    // Cross-derivatives
-    PARAM_MU_MU         = 1U << 7,
-    PARAM_MU_SIGMA      = 1U << 8,
-    PARAM_MU_TAU        = 1U << 9,
-    PARAM_MU_NU         = 1U << 10,
-    PARAM_SIGMA_SIGMA   = 1U << 11,
-    PARAM_SIGMA_NU      = 1U << 12,
-    PARAM_SIGMA_TAU     = 1U << 13,
-    PARAM_NU_NU         = 1U << 14,
-    PARAM_NU_TAU        = 1U << 15,
-    PARAM_TAU_TAU       = 1U << 16
-    // .. up to 1U << 27 (N = 7 plus all cross-derivatives)
-} ParameterFlags;
-
-/* Setting Required Parameter Flags
- *
- * @param x a named list where the names define which score or hessian
- *        is required.
- * @param hessian set false for score, and true for hessian.
- *
- * Returns an enum object used to check which derivatives are needed.
- */
-static inline ParameterFlags get_flags_msnt(SEXP x, bool hessian) {
-    ParameterFlags req = PARAM_NONE;
-
-    // Score
-    if (!hessian) {
-        if (getListElementSEXP(x, "mu")    != R_NilValue) req |= PARAM_MU;
-        if (getListElementSEXP(x, "sigma") != R_NilValue) req |= PARAM_SIGMA;
-        if (getListElementSEXP(x, "nu")    != R_NilValue) req |= PARAM_NU;
-        if (getListElementSEXP(x, "tau")   != R_NilValue) req |= PARAM_TAU;
-    // Hessian
-    } else {
-        if (getListElementSEXP(x, "mu:mu")       != R_NilValue) req |= (PARAM_MU | PARAM_MU_MU);
-        if (getListElementSEXP(x, "mu:sigma")    != R_NilValue) req |= (PARAM_MU | PARAM_SIGMA | PARAM_MU_SIGMA);
-        if (getListElementSEXP(x, "mu:tau")      != R_NilValue) req |= (PARAM_MU | PARAM_TAU | PARAM_MU_TAU);
-        if (getListElementSEXP(x, "mu:nu")       != R_NilValue) req |= (PARAM_MU | PARAM_NU | PARAM_MU_NU);
-        if (getListElementSEXP(x, "sigma:sigma") != R_NilValue) req |= (PARAM_SIGMA | PARAM_SIGMA_SIGMA);
-        if (getListElementSEXP(x, "sigma:nu")    != R_NilValue) req |= (PARAM_SIGMA | PARAM_NU | PARAM_SIGMA_NU);
-        if (getListElementSEXP(x, "sigma:tau")   != R_NilValue) req |= (PARAM_SIGMA | PARAM_TAU | PARAM_SIGMA_TAU);
-        if (getListElementSEXP(x, "nu:nu")       != R_NilValue) req |= (PARAM_NU | PARAM_NU_NU);
-        if (getListElementSEXP(x, "nu:tau")      != R_NilValue) req |= (PARAM_NU | PARAM_TAU | PARAM_NU_TAU);
-        if (getListElementSEXP(x, "tau:tau")     != R_NilValue) req |= (PARAM_TAU | PARAM_TAU_TAU);
-    }
-
-    return req;
-}
-
 /* Mininum: Helper function mimiking pmin(a, b) in R for single doubles! */
 static inline double pmin_double(double a, double b) {
     return (a < b) ? a : b;
+}
+/* Maximum: Helper function mimiking pmin(a, b) in R for single doubles! */
+static inline double pmax_double(double a, double b) {
+    return (a > b) ? a : b;
 }

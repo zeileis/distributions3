@@ -606,20 +606,26 @@ export(variance)
 import(stats)
 importFrom(graphics,hist)
 importFrom(parallel,detectCores)
-importFrom(rlang,.data)
-importFrom(rlang,check_dots_used)
-importFrom(stats,dnbinom)
-importFrom(stats,dpois)
-importFrom(stats,pnbinom)
-importFrom(stats,pnorm)
-importFrom(stats,ppois)
-importFrom(stats,qnbinom)
-importFrom(stats,qpois)
-importFrom(stats,rnbinom)
-importFrom(stats,rpois)
-importFrom(stats,runif)
-importFrom(stats,simulate)
-importFrom(stats,uniroot)
-importFrom(utils,getS3method)
-importFrom(utils,head)
+importFrom(rlang,
+  .data,
+  check_dots_used
+)
+importFrom(stats,
+  dnbinom,
+  dpois,
+  pnbinom,
+  pnorm,
+  ppois,
+  qnbinom,
+  qpois,
+  rnbinom,
+  rpois,
+  runif,
+  simulate,
+  uniroot
+)
+importFrom(utils,
+  getS3method,
+  head
+)
 useDynLib(distributions3, .registration = TRUE)
