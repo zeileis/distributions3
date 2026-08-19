@@ -210,9 +210,10 @@ SEXP c_deriv_SinhArcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP he
 
         // Calculate scores (dldm, dldd, dlds, dldm) in case they
         // are requested as scores, or are required to calculate the hessian
-        // elements requested by the user.
-        double dldz, dcdz, drdz, dzdm, dldm;
-        if (calc_mu) {
+        // elements requested by the user. Initialize with NAN to spot potential
+        // problems, i.e., if we forget to calculate one though required.
+        double dldz = NAN, dcdz = NAN, drdz = NAN, dzdm = NAN, dldm = NAN;
+        if (calc_mu || calc_sigma) {
             dldz = -z / (1.0 + z2);
             dcdz = h * z2p1sqrtinv;
             drdz = c * z2p1sqrtinv;
@@ -220,7 +221,7 @@ SEXP c_deriv_SinhArcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP he
             dldm = (dldr * drdz + dldc * dcdz + dldz) * dzdm;
         }
 
-        double dzdd, dldd;
+        double dzdd = NAN, dldd = NAN;
         if (calc_sigma) {
             dzdd = -z * sigmainv;
             dldd = (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv;
