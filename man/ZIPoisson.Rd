@@ -99,6 +99,7 @@ Other discrete distributions:
 \code{\link[=PoissonBinomial]{PoissonBinomial()}},
 \code{\link[=ZINegativeBinomial]{ZINegativeBinomial()}},
 \code{\link[=ZTNegativeBinomial]{ZTNegativeBinomial()}},
-\code{\link[=ZTPoisson]{ZTPoisson()}}
+\code{\link[=ZTPoisson]{ZTPoisson()}},
+\code{\link[=ZeroAdjustedNegbin]{ZeroAdjustedNegbin()}}
 }
 \concept{discrete distributions}

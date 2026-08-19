@@ -24,6 +24,10 @@ SEXP c_dsinharcsinh(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP
 SEXP c_qsinharcsinh(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP cores);
 double local_zeroin(double ax, double bx, double (*f)(double x, void *info), void *info, double tol);
 
+/* dpq for zero adjusted negative binomial */
+SEXP c_dZeroAdjustedNegbin(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP ret_log, SEXP ncores);
+SEXP c_pZeroAdjustedNegbin(SEXP N, SEXP q, SEXP mu, SEXP sigma, SEXP nu, SEXP lower_tail, SEXP log_p, SEXP ncores);
+SEXP c_qZeroAdjustedNegbin(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP lower_tail, SEXP log_p, SEXP ncores);
 
 /* deriv2: combines score and hessian function */
 SEXP c_deriv_SinhArcsinh(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP ncores);
@@ -32,9 +36,14 @@ SEXP c_deriv_Normal(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian
 static R_CallMethodDef CallEntries[] = {
   {"c_CRPS_numeric", (DL_FUNC) &c_CRPS_numeric, 5},
   {"c_moments_numeric", (DL_FUNC) &c_moments_numeric, 5},
+
   {"c_psinharcsinh", (DL_FUNC) &c_psinharcsinh, 9},
   {"c_dsinharcsinh", (DL_FUNC) &c_dsinharcsinh, 8},
   {"c_qsinharcsinh", (DL_FUNC) &c_qsinharcsinh, 9},
+
+  {"c_dZeroAdjustedNegbin", (DL_FUNC) &c_dZeroAdjustedNegbin, 7},
+  {"c_pZeroAdjustedNegbin", (DL_FUNC) &c_pZeroAdjustedNegbin, 8},
+  {"c_qZeroAdjustedNegbin", (DL_FUNC) &c_qZeroAdjustedNegbin, 8},
 
   {"c_deriv_SinhArcsinh", (DL_FUNC) &c_deriv_SinhArcsinh, 5},
   {"c_deriv_Normal", (DL_FUNC) &c_deriv_Normal, 6},
