@@ -43,6 +43,8 @@ S3method(cdf,ZIPoisson)
 S3method(cdf,ZTNegativeBinomial)
 S3method(cdf,ZTPoisson)
 S3method(cdf,distribution)
+S3method(deriv2,Normal)
+S3method(deriv2,SinhArcsinh)
 S3method(dim,distribution)
 S3method(dimnames,distribution)
 S3method(duplicated,distribution)
@@ -545,6 +547,7 @@ export(apply_dpqr)
 export(cdf)
 export(crps.distribution)
 export(dempirical)
+export(deriv2)
 export(dhnbinom)
 export(dhpois)
 export(distribution_calculate_moments)
@@ -606,20 +609,26 @@ export(variance)
 import(stats)
 importFrom(graphics,hist)
 importFrom(parallel,detectCores)
-importFrom(rlang,.data)
-importFrom(rlang,check_dots_used)
-importFrom(stats,dnbinom)
-importFrom(stats,dpois)
-importFrom(stats,pnbinom)
-importFrom(stats,pnorm)
-importFrom(stats,ppois)
-importFrom(stats,qnbinom)
-importFrom(stats,qpois)
-importFrom(stats,rnbinom)
-importFrom(stats,rpois)
-importFrom(stats,runif)
-importFrom(stats,simulate)
-importFrom(stats,uniroot)
-importFrom(utils,getS3method)
-importFrom(utils,head)
+importFrom(rlang,
+  .data,
+  check_dots_used
+)
+importFrom(stats,
+  dnbinom,
+  dpois,
+  pnbinom,
+  pnorm,
+  ppois,
+  qnbinom,
+  qpois,
+  rnbinom,
+  rpois,
+  runif,
+  simulate,
+  uniroot
+)
+importFrom(utils,
+  getS3method,
+  head
+)
 useDynLib(distributions3, .registration = TRUE)
