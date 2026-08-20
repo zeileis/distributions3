@@ -30,7 +30,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/zeileis/distributions3/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/zeileis/distributions3/blob/v0.3.0/DESCRIPTION)
 
 Hayes A, Moller-Trane R, Jordan D, Northrop P, Lang MN, Stauffer R,
 Zeileis A (2026). *distributions3: Probability Distributions as S3
