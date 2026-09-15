@@ -178,6 +178,10 @@ test_that("named return values for Normal distribution work correctly", {
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Normal works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Normal" %in% ns, info = "score.Normal not found in namespace")

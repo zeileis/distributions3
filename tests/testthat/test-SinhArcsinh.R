@@ -481,6 +481,10 @@ test_that("rsinharcsinh works as expected", {
     expect_true(all(x < 100))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.SinhArcsinh works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.SinhArcsinh" %in% ns, info = "score.SinhArcsinh not found in namespace")
