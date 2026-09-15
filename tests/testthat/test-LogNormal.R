@@ -195,6 +195,7 @@ test_that("score.LogNormal works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(LogNormal(5, 2:3), 1:5),                   regexp = "'d' and 'x' must have length 1 or the same length")
     expect_error(score(LogNormal(5, 3), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(LogNormal(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
     expect_error(score(LogNormal(5, 3), 1, drop = "foo"),         info = "non-logical drop should throw error")
@@ -243,6 +244,9 @@ test_that("hessian.LogNormal works as expected", {
     ## Comparing to numeric approximation; throws warnings (due to param score)
     expect_equal(hessian(LogNormal(2, 0.5), x),
                  suppressWarnings(distributions3:::hessian.distribution(LogNormal(2, 0.5), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+    expect_equal(hessian(LogNormal(2, 0.5), x, which = "log_mu"),
+                 suppressWarnings(distributions3:::hessian.distribution(LogNormal(2, 0.5), x, which = "log_mu")),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
     ## Calculating expected hessian and check return (scale = 3; independent on location)

@@ -188,6 +188,7 @@ test_that("score.Weibull works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Weibull(2:3, 0.5), 1:5),                   regexp = "'d' and 'x' must have length 1 or the same length")
     expect_error(score(Weibull(2, 0.5), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(Weibull(2, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
     expect_error(score(Weibull(2, 0.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
