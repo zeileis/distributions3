@@ -179,3 +179,34 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
   }
   return(h)
 }
+
+
+
+
+## Evaluate which score/hessian elements to be calculated and returned
+score_hessian_get_which <- function(p, which) {
+  if (is.null(which)) which <- p
+  match.arg(which, p, several.ok = TRUE)
+}
+
+## Checks if length of 'd' (distributions object) and 'x'
+## are matching. If all is fine, an integer is returned (max length),
+## else a logical FALSE used to throw an error.
+score_hessian_check_length <- function(d, x) {
+  n <- c(length(d), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) FALSE else max(n)
+}
+
+## Auxilary function used to calculate and prepare the return
+## of the score and hessian methods.
+drop_or_bind_deriv <- function(FUN, args, names = NULL, drop = TRUE) {
+  if (drop && length(args) == 1L) {
+    d <- FUN(args)
+    if (!is.null(names)) d <- setNames(d, names)
+  } else {
+    d <- lapply(args, FUN)
+    d <- do.call("cbind", d)
+    dimnames(d) <- list(names, args)
+  }
+  return(d)
+}

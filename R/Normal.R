@@ -408,29 +408,21 @@ is_continuous.Normal <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  ## sanity check & calculate max length
+  if (isFALSE(n <- score_hessian_check_length(d, x)))
+    stop("'d' and 'x' must have length 1 or the same length")
 
   ## available and selected parameters
   p <- c("mu", "sigma")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
+  which <- score_hessian_get_which(p, which)
 
   ## compute scores
   scr <- function(par) switch(par,
     "mu"    = (x - d$mu)/(d$sigma^2),
     "sigma" = (x - d$mu)^2/(d$sigma^3) - 1/d$sigma)
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- setNames(scr(which), names(d))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(d), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(drop_or_bind_deriv(scr, which, names = names(d), drop = drop))
 }
 
 #' @rdname score-hessian
@@ -438,18 +430,15 @@ score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
+  ## sanity check & calculate max length
+  if (isFALSE(n <- score_hessian_check_length(d, x)))
+    stop("'d' and 'x' must have length 1 or the same length")
 
   ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("mu" = "mu", "sigma:mu" = "mu:sigma", "mu:sigma" = "mu:sigma", "sigma" = "sigma")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
+  p     <- c("mu" = "mu", "sigma:mu" = "mu:sigma",
+             "mu:sigma" = "mu:sigma", "sigma" = "sigma")
+  which <- score_hessian_get_which(names(p), which)
+  w     <- unique(p[which])
 
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
@@ -464,15 +453,7 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
       -2 * (x - d$mu) / d$sigma^3)
   }
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- setNames(hess(w), names(d))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(d), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
-  }
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(drop_or_bind_deriv(hess, which, names = names(d), drop = drop))
 }
+
