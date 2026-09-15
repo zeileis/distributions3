@@ -182,11 +182,37 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
 
 
 
+#' Get Parameter Names for Derivatives
+#'
+#' @param p character vector with the names of the parameters
+#'        of the distribution.
+#' @param which `NULL` or character vector. If not `NULL`
+#'        (used for input sanity check) match.arg is used
+#'        to return parameter names requested by the users.
+#' @param expand logical, defaults to `FALSE`. If set `TRUE`,
+#'        cross-derivative parameters are calculated.
+#'        The score method uses `expand = FALSE`, the hessian
+#'        uses `expand = TRUE`.
+#'
+#' @return Named vector. If `which = NULL` a named vector
+#' with all potential parameters is returned, including
+#' parameters for cross-derivatives if `expand = TRUE`.
+get_deriv_params <- function(p, which = NULL, expand = FALSE) {
+    p <- if (!expand) {
+        structure(p, names = p)
+    } else {
+        ## Calculate names of cross-derivatives
+        tmp <- outer(p, p, paste, sep = ":")
+        diag(tmp) <- p # Modifying diagonal
+        args <- names <- tmp
+        names[lower.tri(names)] <- names[upper.tri(names)]
+        structure(as.character(args), names = as.character(names))
+    }
 
-## Evaluate which score/hessian elements to be calculated and returned
-score_hessian_get_which <- function(p, which) {
-  if (is.null(which)) which <- p
-  match.arg(which, p, several.ok = TRUE)
+    ## If which is NULL reutrn all parameters, else
+    ## evaluate which parameters are requested by the user
+    if (is.null(which)) return(p)
+    return(match.arg(which, p, several.ok = TRUE))
 }
 
 ## Checks if length of 'd' (distributions object) and 'x'
@@ -194,19 +220,25 @@ score_hessian_get_which <- function(p, which) {
 ## else a logical FALSE used to throw an error.
 score_hessian_check_length <- function(d, x) {
   n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) FALSE else max(n)
+  if (n[1L] != n[2L] && all(n > 1L))
+    stop("'d' and 'x' must have length 1 or the same length")
+  return(max(n))
 }
 
 ## Auxilary function used to calculate and prepare the return
 ## of the score and hessian methods.
-drop_or_bind_deriv <- function(FUN, args, names = NULL, drop = TRUE) {
-  if (drop && length(args) == 1L) {
-    d <- FUN(args)
+drop_or_bind_deriv <- function(FUN, params, expand, which, names = NULL, drop = TRUE) {
+  params <- get_deriv_params(params, which = NULL, expand = expand)
+
+  if (drop && length(which) == 1L) {
+    d <- FUN(which)
     if (!is.null(names)) d <- setNames(d, names)
   } else {
-    d <- lapply(args, FUN)
-    d <- do.call("cbind", d)
-    dimnames(d) <- list(names, args)
+    tmp <- unique(names(which))
+    d <- structure(lapply(tmp, FUN), names = tmp)
+    d <- do.call("cbind", d[names(which)])
+    dimnames(d) <- list(names, unname(which))
   }
+
   return(d)
 }

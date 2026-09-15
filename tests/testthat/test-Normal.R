@@ -1,3 +1,9 @@
+# -------------------------------------------------------
+# Checking Normal distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("Normal default arguments", {
   expect_identical(formals(Normal),

@@ -409,20 +409,20 @@ is_continuous.Normal <- function(d, ...) {
 #' @exportS3Method
 score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
   ## sanity check & calculate max length
-  if (isFALSE(n <- score_hessian_check_length(d, x)))
-    stop("'d' and 'x' must have length 1 or the same length")
-
-  ## available and selected parameters
-  p <- c("mu", "sigma")
-  which <- score_hessian_get_which(p, which)
+  n <- score_hessian_check_length(d, x)
+  ## parameter names
+  params <- names(unlist(d[1L]))
+  ## evaluate available/requested parameters
+  which  <- get_deriv_params(params, which = which, expand = FALSE)
 
   ## compute scores
   scr <- function(par) switch(par,
-    "mu"    = (x - d$mu)/(d$sigma^2),
-    "sigma" = (x - d$mu)^2/(d$sigma^3) - 1/d$sigma)
+    "mu"    = (x - d$mu) / (d$sigma^2),
+    "sigma" = (x - d$mu)^2 / (d$sigma^3) - 1 / d$sigma)
 
   ## Calculate derivatives, prepare return object
-  return(drop_or_bind_deriv(scr, which, names = names(d), drop = drop))
+  return(drop_or_bind_deriv(scr, params, expand = FALSE,
+                            which = which, names = names(d), drop = drop))
 }
 
 #' @rdname score-hessian
@@ -431,14 +431,11 @@ score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   ## sanity check & calculate max length
-  if (isFALSE(n <- score_hessian_check_length(d, x)))
-    stop("'d' and 'x' must have length 1 or the same length")
-
-  ## available and selected parameters/combinations and mappings for symmetries
-  p     <- c("mu" = "mu", "sigma:mu" = "mu:sigma",
-             "mu:sigma" = "mu:sigma", "sigma" = "sigma")
-  which <- score_hessian_get_which(names(p), which)
-  w     <- unique(p[which])
+  n <- score_hessian_check_length(d, x)
+  ## parameter names
+  params <- names(unlist(d[1L]))
+  ## evaluate available/requested parameters
+  which  <- get_deriv_params(params, which = which, expand = TRUE)
 
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
@@ -454,6 +451,7 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   }
 
   ## Calculate derivatives, prepare return object
-  return(drop_or_bind_deriv(hess, which, names = names(d), drop = drop))
+  return(drop_or_bind_deriv(hess, params, expand = TRUE,
+                            which = which, names = names(d), drop = drop))
 }
 
