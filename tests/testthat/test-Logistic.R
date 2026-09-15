@@ -178,3 +178,80 @@ test_that("crps method for Logistic returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.Logistic works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Logistic" %in% ns, info = "score.Logistic not found in namespace")
+    expect_true(is.function(getS3method("score", "Logistic")), "score.Logistic is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Logistic),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Logistic(5, 3), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(Logistic(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
+    expect_error(score(Logistic(5, 3), 1, drop = "foo"),         info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    z <- (x - 5) / 3
+    tmp <- cbind(location = (1 - 2 * exp(-z) / (1 + exp(-z))) / 3,
+                 scale    = (z - 1 - 2 * z * exp(-z) / (1 + exp(-z))) / 3)
+    expect_silent(s1 <- score(Logistic(5, 3), x))
+    expect_identical(s1, tmp)
+
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "location"))
+    expect_identical(s1, tmp[, "location"])
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "scale"))
+    expect_identical(s1, tmp[, "scale"])
+
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "location", drop = FALSE))
+    expect_identical(s1, tmp[, "location", drop = FALSE])
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "scale", drop = FALSE))
+    expect_identical(s1, tmp[, "scale", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Logistic(5, 3), x)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.Logistic works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Logistic" %in% ns, info = "hessian.Logistic not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Logistic")), "hessian.Logistic is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Logistic),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Logistic(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Logistic(5, 3), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Logistic(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Logistic(5, 3), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Logistic(5, 3), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(Logistic(5, 3), x),
+                 suppressWarnings(distributions3:::hessian.distribution(Logistic(5, 3), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## Calculating expected hessian and check return (scale = 3; independent on location)
+    n <- length(x)
+    tmp_e <- cbind("location"       = rep(-1 / (3 * 3^2), n),
+                   "scale:location" = rep(0, n),
+                   "location:scale" = rep(0, n),
+                   "scale"          = rep(-1 / (3 * 3^2), n) )
+
+    expect_identical(hessian(Logistic(5, 3), x, expected = TRUE), tmp_e, info = "expected hessian incorrect")
+})
+

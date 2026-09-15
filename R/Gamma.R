@@ -349,10 +349,12 @@ hessian.Gamma <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
 
   ## For Gamma with shape/rate parametrization, all second derivatives are constant w.r.t. x,
   ## so the observed Hessian equals the expected Hessian. Use the same formulas for both.
-  hess <- function(par) switch(par,
-    "shape"      = rep_len(-trigamma(d$shape), n),
-    "rate"       = rep_len(-d$shape / d$rate^2, n),
-    "shape:rate" = rep_len(1 / d$rate, n))
+  hess <- function(par) {
+    switch(par,
+           "shape"      = rep_len(-trigamma(d$shape), n),
+           "rate"       = rep_len(-d$shape / d$rate^2, n),
+           rep_len(1 / d$rate, n))
+  }
 
   ## if possible return single vector, otherwise collect in matrix
   if (drop && length(which) == 1L) {

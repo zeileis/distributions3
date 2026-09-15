@@ -178,3 +178,81 @@ test_that("crps method for LogNormal returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.LogNormal works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.LogNormal" %in% ns, info = "score.LogNormal not found in namespace")
+    expect_true(is.function(getS3method("score", "LogNormal")), "score.LogNormal is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.LogNormal),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(LogNormal(5, 3), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(LogNormal(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
+    expect_error(score(LogNormal(5, 3), 1, drop = "foo"),         info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    ## Using log_mu = 2, log_sigma = 0.5
+    tmp <- cbind(log_mu    = (log(x) - 2) / 0.5^2,
+                 log_sigma = (log(x) - 2)^2 / 0.5^3 - 1 / 0.5)
+    expect_silent(s1 <- score(LogNormal(2, 0.5), x))
+    expect_identical(s1, tmp)
+
+    expect_silent(s1 <- score(LogNormal(2, 0.5), x, which = "log_mu"))
+    expect_identical(s1, tmp[, "log_mu"])
+    expect_silent(s1 <- score(LogNormal(2, 0.5), x, which = "log_sigma"))
+    expect_identical(s1, tmp[, "log_sigma"])
+
+    expect_silent(s1 <- score(LogNormal(2, 0.5), x, which = "log_mu", drop = FALSE))
+    expect_identical(s1, tmp[, "log_mu", drop = FALSE])
+    expect_silent(s1 <- score(LogNormal(2, 0.5), x, which = "log_sigma", drop = FALSE))
+    expect_identical(s1, tmp[, "log_sigma", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(LogNormal(2, 0.5), x)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.LogNormal works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.LogNormal" %in% ns, info = "hessian.LogNormal not found in namespace")
+    expect_true(is.function(getS3method("hessian", "LogNormal")), "hessian.LogNormal is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.LogNormal),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(LogNormal(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(LogNormal(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(LogNormal(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(LogNormal(2, 0.5), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(LogNormal(2, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(LogNormal(2, 0.5), x),
+                 suppressWarnings(distributions3:::hessian.distribution(LogNormal(2, 0.5), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## Calculating expected hessian and check return (scale = 3; independent on location)
+    ## Using log_mu = 2, log_sigma = 0.5
+    n <- length(x)
+    tmp_e <- cbind("log_mu"           = rep(-1 / 0.5^2, n),
+                   "log_sigma:log_mu" = rep(0, n),
+                   "log_mu:log_sigma" = rep(0, n),
+                   "log_sigma"        = rep(-2 / 0.5^2, n))
+
+    expect_identical(hessian(LogNormal(2, 0.5), x, expected = TRUE), tmp_e, info = "expected hessian incorrect")
+})
+

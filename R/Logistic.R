@@ -311,8 +311,6 @@ score.Logistic <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  if (!isFALSE(expected)) stop("only the observed hessian is available")
-
   ## sanity check
   n <- c(length(d[[1]]), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
@@ -335,14 +333,14 @@ hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, 
   ## function for computing Hessian elements
   hess <- if (expected) {
     function(par) switch(par,
-      "location"      = rep_len(-1 / (3 * d$scale^2), n),
-      "scale"         = rep_len(-1 / (3 * d$scale^2), n),
-      "location:scale" = rep.int(0, n))
+      "location"       = rep_len(-1 / (3 * d$scale^2), n),
+      "scale"          = rep_len(-1 / (3 * d$scale^2), n),
+      rep.int(0, n))
   } else {
     function(par) switch(par,
-      "location"      = pmin(-2 * p_z * (1 - p_z) / d$scale^2, -1e-15),
-      "scale"         = pmin(-(2 * p_z * (1 - p_z) * (z - 1) + (1 - p_z)^2 - p_z^2) / d$scale^2, -1e-15),
-      "location:scale" = -2 * p_z * (1 - p_z) * (z - 1) / d$scale^2)
+      "location"       = pmin(-2 * p_z * (1 - p_z) / d$scale^2, -1e-15),
+      "scale"          = (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / d$scale^2,
+      (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / d$scale^2)
   }
 
   ## if possible return single vector, otherwise collect in matrix

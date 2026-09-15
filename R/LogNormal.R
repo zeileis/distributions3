@@ -341,8 +341,6 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  if (!isFALSE(expected)) stop("only the observed hessian is available")
-
   ## sanity check
   n <- c(length(d[[1]]), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
@@ -363,14 +361,14 @@ hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
   ## function for computing Hessian elements
   hess <- if (expected) {
     function(par) switch(par,
-      "log_mu"       = rep_len(-1 / d$log_sigma^2, n),
-      "log_sigma"    = rep_len(-2 / d$log_sigma^2, n),
-      "log_mu:log_sigma" = rep.int(0, n))
+      "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
+      "log_sigma"        = rep_len(-2 / d$log_sigma^2, n),
+      rep.int(0, n))
   } else {
     function(par) switch(par,
-      "log_mu"       = rep_len(-1 / d$log_sigma^2, n),
-      "log_sigma"    = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
-      "log_mu:log_sigma" = -2 * z / d$log_sigma^3)
+      "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
+      "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
+      -2 * z / d$log_sigma^3)
   }
 
   ## if possible return single vector, otherwise collect in matrix

@@ -323,14 +323,14 @@ hessian.Weibull <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
   ## function for computing Hessian elements
   hess <- if (expected) {
     function(par) switch(par,
-      "shape"      = rep_len(-1 / d$shape^2 - pi^2 / 6, n),
-      "scale"      = rep_len(-d$shape / d$scale^2 - (d$shape + 1) / d$scale^2, n),
-      "shape:scale" = rep_len(1 / d$scale + (d$shape - 1) / (d$shape * d$scale), n))
+      "shape"       = rep_len(-1 / d$shape^2 - pi^2 / 6, n),
+      "scale"       = rep_len(-d$shape / d$scale^2 - (d$shape + 1) / d$scale^2, n),
+      rep_len(1 / d$scale + (d$shape - 1) / (d$shape * d$scale), n))
   } else {
     function(par) switch(par,
       "shape"       = pmin(-1 / d$shape^2 - z * log_z^2, -1e-15),
-      "scale"       = pmin(-d$shape * (d$shape + 1) * z / d$scale^2, -1e-15),
-      "shape:scale" = -(d$shape * z / d$scale + (1 - z) / d$scale))
+      "scale"       = pmin(d$shape * (1 - z * (d$shape + 1)) / d$scale^2, -1e-15),
+      (z - 1 + d$shape * z * log_z) / d$scale)
   }
 
   ## if possible return single vector, otherwise collect in matrix

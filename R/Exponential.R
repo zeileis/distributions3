@@ -293,7 +293,7 @@ is_continuous.Exponential <- function(d, ...) {
 #' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
-score.Exponential <- function(d, x, which = NULL, drop = TRUE, ...) {
+score.Exponential <- function(d, x, which = "rate", drop = TRUE, ...) {
   ## sanity check
   n <- c(length(d[[1]]), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
@@ -323,7 +323,10 @@ score.Exponential <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
-hessian.Exponential <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+hessian.Exponential <- function(d, x, which = "rate", drop = TRUE, expected = FALSE, ...) {
+  expected <- as.logical(expected)[[1L]]
+  stopifnot("argument 'expected' must evaluate to TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+
   ## sanity check
   n <- c(length(d[[1]]), length(x))
   if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
@@ -341,7 +344,7 @@ hessian.Exponential <- function(d, x, which = NULL, drop = TRUE, expected = FALS
 
   ## For Exponential with rate parametrization, the second derivative is constant w.r.t. x,
   ## so the observed Hessian equals the expected Hessian.
-  hess <- function(par) -1 / d$rate^2
+  hess <- function(par) rep_len(-1 / d$rate^2, n)
 
   ## if possible return single vector, otherwise collect in matrix
   ## TODO(R): Can also be simplified
