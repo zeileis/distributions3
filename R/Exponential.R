@@ -284,3 +284,75 @@ is_discrete.Exponential <- function(d, ...) {
 is_continuous.Exponential <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Exponential: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Exponential <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("rate")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "rate" = 1 / d$rate - x)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- scr(which)
+    if (!is.null(names(x))) s <- setNames(s, names(x))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(x), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Exponential <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters
+  p <- c("rate" = "rate")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  ## TODO(R): Obsolete here as we only have one parameter.
+  ##          I think we should simplify this and remove 'which'? Or just ignore?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## For Exponential with rate parametrization, the second derivative is constant w.r.t. x,
+  ## so the observed Hessian equals the expected Hessian.
+  hess <- function(par) -1 / d$rate^2
+
+  ## if possible return single vector, otherwise collect in matrix
+  ## TODO(R): Can also be simplified
+  if (drop && length(which) == 1L) {
+    h <- hess(w)
+    if (!is.null(names(x))) h <- setNames(h, names(x))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(x), w)
+  }
+
+  return(h)
+}
