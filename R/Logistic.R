@@ -265,3 +265,96 @@ is_discrete.Logistic <- function(d, ...) {
 is_continuous.Logistic <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Logistic: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Logistic <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("location", "scale")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## pre-compute z and sigmoid
+  z <- (x - d$location) / d$scale
+  exp_neg_z <- exp(-z)
+  one_plus_exp_neg_z <- 1 + exp_neg_z
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "location" = (1 - 2 * exp_neg_z / one_plus_exp_neg_z) / d$scale,
+    "scale"    = (z - 1 - 2 * z * exp_neg_z / one_plus_exp_neg_z) / d$scale)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- scr(which)
+    if (!is.null(names(x))) s <- setNames(s, names(x))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(x), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  if (!isFALSE(expected)) stop("only the observed hessian is available")
+
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("location" = "location", "scale:location" = "location:scale", "location:scale" = "location:scale", "scale" = "scale")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## pre-compute z and sigmoid terms
+  z <- (x - d$location) / d$scale
+  exp_neg_z <- exp(-z)
+  one_plus_exp_neg_z <- 1 + exp_neg_z
+  p_z <- exp_neg_z / one_plus_exp_neg_z  ## sigmoid derivative term
+
+  ## function for computing Hessian elements
+  hess <- if (expected) {
+    function(par) switch(par,
+      "location"      = rep_len(-1 / (3 * d$scale^2), n),
+      "scale"         = rep_len(-1 / (3 * d$scale^2), n),
+      "location:scale" = rep.int(0, n))
+  } else {
+    function(par) switch(par,
+      "location"      = pmin(-2 * p_z * (1 - p_z) / d$scale^2, -1e-15),
+      "scale"         = pmin(-(2 * p_z * (1 - p_z) * (z - 1) + (1 - p_z)^2 - p_z^2) / d$scale^2, -1e-15),
+      "location:scale" = -2 * p_z * (1 - p_z) * (z - 1) / d$scale^2)
+  }
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- hess(w)
+    if (!is.null(names(x))) h <- setNames(h, names(x))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(x), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}
