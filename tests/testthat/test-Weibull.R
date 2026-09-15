@@ -171,3 +171,81 @@ test_that("named return values for Weibull distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.Weibull works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Weibull" %in% ns, info = "score.Weibull not found in namespace")
+    expect_true(is.function(getS3method("score", "Weibull")), "score.Weibull is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Weibull),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Weibull(2:3, 0.5), 1:5),                   regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Weibull(2, 0.5), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(Weibull(2, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
+    expect_error(score(Weibull(2, 0.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    tmp <- cbind(shape = 1 / 2 + log(x / 0.5) * (1 - (x / 0.5)^2),
+                 scale = 2 * ((x / 0.5)^2 - 1) / 0.5)
+    expect_silent(s1 <- score(Weibull(2, 0.5), x))
+    expect_identical(s1, tmp)
+
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "shape"))
+    expect_identical(s1, tmp[, "shape"])
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "scale"))
+    expect_identical(s1, tmp[, "scale"])
+
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "shape", drop = FALSE))
+    expect_identical(s1, tmp[, "shape", drop = FALSE])
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "scale", drop = FALSE))
+    expect_identical(s1, tmp[, "scale", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Weibull(2, 0.5), x)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.Weibull works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Weibull" %in% ns, info = "hessian.Weibull not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Weibull")), "hessian.Weibull is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Weibull),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Weibull(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Weibull(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Weibull(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Weibull(2, 0.5), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Weibull(2, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(Weibull(2, 0.5), x),
+                 suppressWarnings(distributions3:::hessian.distribution(Weibull(2, 0.5), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## Calculating expected hessian and check return
+    n     <- length(x)
+    shape <- 2.0
+    scale <- 0.5
+    tmp_e <- cbind("shape"       = rep(-1 / shape^2 - pi^2 / 6, n),
+                   "scale:shape" = rep(1 / scale + (shape - 1) / (shape * scale), n),
+                   "shape:scale" = rep(1 / scale + (shape - 1) / (shape * scale), n),
+                   "scale"       = rep(-shape / scale^2 - (shape + 1) / scale^2, n))
+    expect_identical(hessian(Weibull(2, 0.5), x, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
+})
+

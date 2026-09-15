@@ -1,7 +1,13 @@
+# -------------------------------------------------------
+# Checking ChiSquare distribution
+#
 # Compare: https://en.wikipedia.org/wiki/Erlang_distribution
 #
 # The Erlang distribution is a special case of the gamma distribution wherein
 # the shape (k) of the distribution is discretised.
+# -------------------------------------------------------
+if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("Erlang default arguments", {
   expect_identical(formals(Erlang),
@@ -166,4 +172,74 @@ test_that("crps method for Binomial returns correct object", {
   expect_type(crps, "double")
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
+})
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.Erlang works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Erlang" %in% ns, info = "score.Erlang not found in namespace")
+    expect_true(is.function(getS3method("score", "Erlang")), "score.Erlang is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Erlang),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Erlang(3, 0.5), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(Erlang(3, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
+    expect_error(score(Erlang(3, 0.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    ## Using k = 3 and lambda = 0.5
+    tmp <- cbind(k      = log(0.5) + log(x) - digamma(3),
+                 lambda = 3 / 0.5 - x)
+    expect_silent(s1 <- score(Erlang(3, 0.5), x))
+    expect_equal(s1, tmp)
+
+    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "k"))
+    expect_equal(s1, tmp[, "k"])
+    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "lambda"))
+    expect_equal(s1, tmp[, "lambda"])
+
+    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "k", drop = FALSE))
+    expect_equal(s1, tmp[, "k", drop = FALSE])
+    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "lambda", drop = FALSE))
+    expect_equal(s1, tmp[, "lambda", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Erlang(3, 0.5), x, drop = FALSE)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.Erlang works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Erlang" %in% ns, info = "hessian.Erlang not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Erlang")), "hessian.Erlang is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Erlang),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Erlang(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Erlang(3, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Erlang(3, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Erlang(3, 0.5), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Erlang(3, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(Erlang(3, 0.5), x),
+                 suppressWarnings(distributions3:::hessian.distribution(Erlang(3, 0.5), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## Calculating expected hessian and check return
+    expect_error(hessian(Erlang(3, 0.5), 1, expected = TRUE), regexp = "only the observed hessian is available")
 })

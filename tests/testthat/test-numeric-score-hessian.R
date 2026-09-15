@@ -1,5 +1,5 @@
 # -------------------------------------------------------
-# Testing methods for calculating score and Hessian
+# Testing methods for numerically calculating score and Hessian
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }

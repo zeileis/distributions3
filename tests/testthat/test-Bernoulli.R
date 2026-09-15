@@ -195,6 +195,10 @@ test_that("crps method for Bernoulli returns correct object", {
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Bernoulli works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Bernoulli" %in% ns, info = "score.Bernoulli not found in namespace")

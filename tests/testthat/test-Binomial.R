@@ -196,6 +196,10 @@ test_that("crps method for Binomial returns correct object", {
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Binomial works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Binomial" %in% ns, info = "score.Binomial not found in namespace")

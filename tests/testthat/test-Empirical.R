@@ -459,7 +459,3 @@ test_that("rempirical works as expected", {
     expect_true(all(x %in% 1:2))
 })
 
-
-
-
-

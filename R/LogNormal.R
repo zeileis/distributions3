@@ -296,3 +296,91 @@ is_discrete.LogNormal <- function(d, ...) {
 is_continuous.LogNormal <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# LogNormal: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("log_mu", "log_sigma")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## pre-compute log(x)
+  log_x <- log(x)
+  z <- log_x - d$log_mu
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "log_mu"    = z / d$log_sigma^2,
+    "log_sigma" = z^2 / d$log_sigma^3 - 1 / d$log_sigma)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- scr(which)
+    if (!is.null(names(x))) s <- setNames(s, names(x))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(x), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("log_mu" = "log_mu", "log_sigma:log_mu" = "log_mu:log_sigma", "log_mu:log_sigma" = "log_mu:log_sigma", "log_sigma" = "log_sigma")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## pre-compute log(x)
+  log_x <- log(x)
+  z <- log_x - d$log_mu
+
+  ## function for computing Hessian elements
+  hess <- if (expected) {
+    function(par) switch(par,
+      "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
+      "log_sigma"        = rep_len(-2 / d$log_sigma^2, n),
+      rep.int(0, n))
+  } else {
+    function(par) switch(par,
+      "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
+      "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
+      -2 * z / d$log_sigma^3)
+  }
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- hess(w)
+    if (!is.null(names(x))) h <- setNames(h, names(x))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(x), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}

@@ -291,3 +291,81 @@ is_discrete.Gamma <- function(d, ...) {
 is_continuous.Gamma <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Gamma: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Gamma <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("shape", "rate")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## compute scores
+  scr <- function(par) switch(par,
+    "shape" = log(x) + log(d$rate) - digamma(d$shape),
+    "rate"  = d$shape / d$rate - x)
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- scr(which)
+    if (!is.null(names(x))) s <- setNames(s, names(x))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(x), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Gamma <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  if (!isFALSE(expected)) stop("only the observed hessian is available")
+
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters/combinations and mappings for symmetries
+  p <- c("shape" = "shape", "rate:shape" = "shape:rate", "shape:rate" = "shape:rate", "rate" = "rate")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## For Gamma with shape/rate parametrization, all second derivatives are constant w.r.t. x,
+  ## so the observed Hessian equals the expected Hessian. Use the same formulas for both.
+  hess <- function(par) {
+    switch(par,
+           "shape"      = rep_len(-trigamma(d$shape), n),
+           "rate"       = rep_len(-d$shape / d$rate^2, n),
+           rep_len(1 / d$rate, n))
+  }
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- hess(w)
+    if (!is.null(names(x))) h <- setNames(h, names(x))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(x), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}

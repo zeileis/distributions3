@@ -188,6 +188,10 @@ test_that("crps method for Uniform returns correct object", {
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Uniform works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Uniform" %in% ns, info = "score.Uniform not found in namespace")

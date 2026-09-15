@@ -187,6 +187,10 @@ test_that("named return values for Poisson distribution work correctly", {
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Poisson works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Poisson" %in% ns, info = "score.Poisson not found in namespace")

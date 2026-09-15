@@ -1,3 +1,9 @@
+# -------------------------------------------------------
+# Checking Normal distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("Normal default arguments", {
   expect_identical(formals(Normal),
@@ -177,6 +183,10 @@ test_that("named return values for Normal distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
 
 test_that("score.Normal works as expected", {
     ns <- ls(getNamespace("distributions3"))

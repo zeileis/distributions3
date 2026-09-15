@@ -278,3 +278,77 @@ is_discrete.ChiSquare <- function(d, ...) {
 is_continuous.ChiSquare <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# ChiSquare: methods for score/hessian
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ChiSquare <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+
+  ## available and selected parameters
+  p <- c("df")
+  if (is.null(which)) which <- p
+  which <- match.arg(which, p, several.ok = TRUE)
+
+  ## compute scores (only one parameter: df)
+  scr <- function(par) switch(par,
+    "df" = 0.5 * log(x) - 0.5 * log(2) - 0.5 * digamma(d$df / 2))
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    s <- setNames(scr(which), names(d))
+  } else {
+    s <- lapply(which, scr)
+    s <- do.call("cbind", s)
+    dimnames(s) <- list(names(d), which)
+  }
+  return(s)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ChiSquare <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot(
+    "only the observed hessian is available" = isFALSE(expected),
+    "argument 'expected' must evaluate to TRUE or FALSE" = isTRUE(expected) || isFALSE(expected)
+  )
+
+  ## sanity check
+  n <- c(length(d[[1]]), length(x))
+  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  n <- max(n)
+
+  ## available and selected parameters
+  p <- c("df" = "df")
+  if (is.null(which)) which <- names(p)
+
+  ## which combinations need to be computed?
+  which <- match.arg(which, names(p), several.ok = TRUE)
+  w <- unique(p[which])
+
+  ## For chi-square, the hessian is constant w.r.t. x
+  hess <- function(par) switch(par,
+    "df" = rep_len(-0.25 * trigamma(d$df / 2), n))
+
+  ## if possible return single vector, otherwise collect in matrix
+  if (drop && length(which) == 1L) {
+    h <- hess(w)
+    if (!is.null(names(x))) h <- setNames(h, names(x))
+  } else {
+    h <- lapply(w, hess)
+    h <- do.call("cbind", h)
+    dimnames(h) <- list(names(x), w)
+    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
+    colnames(h) <- which
+  }
+  return(h)
+}
