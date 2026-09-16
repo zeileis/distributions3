@@ -198,6 +198,9 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
 #' with all potential parameters is returned, including
 #' parameters for cross-derivatives if `expand = TRUE`.
 get_deriv_params <- function(p, which = NULL, expand = FALSE) {
+    if (!is.null(which) && all(which %in% p))
+        return(structure(which, names = which))
+
     p <- if (!expand) {
         structure(p, names = p)
     } else {
