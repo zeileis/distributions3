@@ -1,8 +1,13 @@
+# -------------------------------------------------------
+# Testing utils: auxiliary/helper functions and methods
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+
 test_that("is_distribution() works", {
   expect_true(is_distribution(Normal()))
   expect_false(is_distribution(123))
 })
-
 
 test_that("{methods}.dstribution work", {
   n <- Normal(c(0, 10), c(1, 1))
@@ -385,3 +390,137 @@ test_that("apply_dpqr() applied to 'pdf', 'log_pdf' and 'cdf' works", {
   expect_equal(colnames(cdf(N_named, c(0.2, 0.5), drop = FALSE)), c("p_0.2", "p_0.5"))
   expect_equal(colnames(quantile(N_named, c(0.2, 0.5), drop = FALSE)), c("q_0.2", "q_0.5"))
 })
+
+##get_deriv_names(p, which = NULL, expand = FALSE)
+test_that("get_deriv_names() works as expected", {
+
+  ## Default arguments
+  expect_identical(formals(get_deriv_names),
+    as.pairlist(alist(p =, which = NULL, expand = FALSE, check = TRUE)),
+    info = "arguments/defaults not as expected")
+
+  ## Testing incorrect use
+  expect_error(get_deriv_names(p = TRUE),
+    regex = "argument 'p' must be a character vector of length > 1L")
+  expect_error(get_deriv_names(p = character()),
+    regex = "argument 'p' must be a character vector of length > 1L")
+  expect_error(get_deriv_names(p = ""),
+    regex = "argument 'p' must be a character vector of length > 1L")
+
+  expect_error(get_deriv_names("mu", which = TRUE),
+    regex = "argument 'which' must be NULL or a character vector of length > 1L")
+  expect_error(get_deriv_names("mu", which = character()),
+    regex = "argument 'which' must be NULL or a character vector of length > 1L")
+  expect_error(get_deriv_names("mu", which = ""),
+    regex = "argument 'which' must be NULL or a character vector of length > 1L")
+
+  expect_error(get_deriv_names("mu", expand = 'foo'),
+    regex = "invalid argument type")
+
+  ## Setting p, which = NULL, no expansion
+  expect_silent(x <- get_deriv_names(letters[1:3]))
+  expect_identical(x, setNames(letters[1:3], letters[1:3]))
+
+  expect_silent(x <- get_deriv_names(letters[1:3], check = FALSE))
+  expect_identical(x, setNames(letters[1:3], letters[1:3]))
+
+  ## Setting p + which, checking return type/order
+  expect_silent(x <- get_deriv_names(letters[1:3], which = "b"))
+  expect_identical(x, c(b = "b"))
+  expect_silent(x <- get_deriv_names(letters[1:3], which = c("c", "a")))
+  expect_identical(x, c(c = "c", a = "a"))
+
+  ## Checking 'expand = TRUE'
+  expect_silent(x <- get_deriv_names(letters[1:3], expand = TRUE))
+  tmp <- c("a" = "a", "a:b" = "b:a", "a:c" = "c:a", "a:b" = "a:b",
+           "b" = "b", "b:c" = "c:b", "a:c" = "a:c", "b:c" = "b:c", "c" = "c")
+  expect_identical(x, tmp)
+
+  ## Checking 'expand = TRUE' with additional 'which' argument (& correct order)
+  expect_silent(x <- get_deriv_names(letters[1:3], which = c("b", "b:c", "c:b", "a", "b"), expand = TRUE))
+  expect_identical(x, c("b" = "b", "b:c" = "b:c", "b:c" = "c:b", "a" = "a", "b" = "b"))
+
+  ## If which == p it should be returned as a named version of itself (testing shortcut)
+  expect_silent(x <- get_deriv_names(letters[1:3], which = letters[1:3]))
+  expect_identical(x, setNames(letters[1:3], letters[1:3]))
+
+  ## Ensure it respects the order of 'which'
+  expect_silent(x <- get_deriv_names(letters[1:3], which = letters[3:1]))
+  expect_identical(x, setNames(letters[3:1], letters[3:1]))
+
+})
+
+
+##max_length(..., check = TRUE)
+test_that("max_length() works as expected", {
+
+  ## Default arguments
+  expect_identical(formals(max_length),
+    as.pairlist(alist(... =, check = TRUE)),
+    info = "arguments/defaults not as expected")
+
+  ## No non-negative input arguments: expecting warning (from max()) and -Inf as return
+  expect_warning(x <- max_length())
+  expect_identical(x, -Inf)
+  expect_warning(x <- max_length(check = FALSE))
+  expect_identical(x, -Inf)
+
+  ## All inputs of length 1: all fine
+  expect_identical(expect_silent(max_length(1, 2, 3, 4)), 1L)
+  expect_identical(expect_silent(max_length(1, 2, 3, 4, check = FALSE)), 1L)
+  expect_identical(expect_silent(max_length(a = 1, b = 2, c = 3, d = 4)), 1L)
+  expect_identical(expect_silent(max_length(a = 1, b = 2, c = 3, d = 4, check = FALSE)), 1L)
+
+  ## All length 5, all fine
+  x <- 1:5
+  expect_identical(expect_silent(max_length(x, x, x, x)), 5L)
+  expect_identical(expect_silent(max_length(x, x, x, x, check = FALSE)), 5L)
+  expect_identical(expect_silent(max_length(a = x, b = x, c = x, d = x)), 5L)
+  expect_identical(expect_silent(max_length(a = x, x, c = x, x)), 5L) # mixed named/unnamed
+  expect_identical(expect_silent(max_length(a = x, b = x, c = x, d = x, check = FALSE)), 5L)
+  expect_identical(expect_silent(max_length(x, b = x, c = x, x, check = FALSE)), 5L) # mixed named/unnamed
+
+  ## Mixed length, but check = FALSE (should run silently, returning max length)
+  expect_identical(expect_silent(max_length(1:10, 1:3, 1:6, check = FALSE)), 10L)
+  expect_identical(expect_silent(max_length(a = 1:10, b = 1:3, c = 1:6, check = FALSE)), 10L)
+  expect_identical(expect_silent(max_length(a = 1:10, 1:3, 1:6, check = FALSE)), 10L) # mixed named/unnamed
+
+  ## Check = TRUE but lengths not matching (i.e., not all of length L or N),
+  ## expecting error and appropriate error message
+  expect_error(max_length(1:10, 1:3),
+    regex = "parameter lengths do not match.*got lengths\\: 1:10 = 10, 1\\:3 = 3") # unnamed
+  expect_error(max_length(foo = 1:10, bar = 1:3),
+    regex = "parameter lengths do not match.*got lengths\\: foo = 10, bar = 3") # named
+  expect_error(max_length(foo = 1:10, 1:3),
+    regex = "parameter lengths do not match.*got lengths\\: foo = 10, 1\\:3 = 3") # mixed named/unnamed
+
+})
+
+
+devtools::load_all("../")
+d <- Normal(1:3) |> setNames(letters[1:3])
+testfun <- function(x, d) switch(x, "mu" = rep(1, length(x), "sigma" = rep(2, length(x)), rep(3, length(x))))
+apply_deriv(d, testfun, "mu")
+
+devtools::load_all("../")
+apply_deriv(d, testfun, c("mu"= "mu"))
+apply_deriv(d, testfun, c("sigma"= "mu"))
+apply_deriv(d, testfun, c("mu" = "fooo"), drop = FALSE)
+
+devtools::load_all("../")
+apply_deriv(unname(d), testfun, c("mu"= "mu"))
+apply_deriv(unname(d), testfun, c("sigma" = "mu"))
+apply_deriv(unname(d), testfun, c("mu" = "fooo"), drop = FALSE)
+
+apply_deriv(d, testfun, c("foo"= "mu"), drop = FALSE) # ERR
+
+testfun('mu')
+
+devtools::load_all("../")
+apply_deriv(d, testfun, c("mu"= "mu", "sigma" = "sigma"))
+apply_deriv(d, testfun, c("mu" = "foo", "sigma" = "bar"))
+apply_deriv(d, testfun, c("mu" = "foo", "sigma" = "bar"), drop = FALSE) # No effect
+
+
+
+

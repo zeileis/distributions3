@@ -272,6 +272,123 @@ apply_dpqr <- function(d,
   return(rval)
 }
 
+#' Get Parameter Names of/for Derivatives
+#'
+#' @param p character vector with the names of the parameters of a
+#'        distribution.
+#' @param which `NULL` or character vector. If not `NULL`
+#'        all possible derivative names are returned (see also `expand`).
+#' @param expand logical. If set `TRUE`, the names of cross-derivatives
+#'        are returned (if `which = NULL`) or checked (if `which` is set).
+#' @param check logical. If set `FALSE` a series of sanity checks are bypassed.
+#'
+#' @return Named character vector. If `which = NULL` a named vector
+#' with all potential parameters is returned, including
+#' parameters for cross-derivatives if `expand = TRUE`.
+#'
+#' @rdname apply_dpqr
+#' @export
+get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
+    ## If which only contains main parameters (i.e., no cross-derivatives,
+    ## and all spelled correctly) we can shortcut function execution
+    ## and skip expansion/match.arg.
+    if (!is.null(which) && (length(which) > 0L && all(which %in% p)))
+        return(structure(which, names = which))
+
+    ## explicitly check 'p' and which
+    if (isTRUE(as.logical(check[1L]))) {
+      stopifnot(
+        "argument 'p' must be a character vector of length > 1L" =
+          is.character(p) && length(p) > 0L && all(nchar(p) > 0),
+        "argument 'which' must be NULL or a character vector of length > 1L" =
+          is.null(which) || (is.character(which) && length(which) > 0L && all(nchar(which) > 0))
+      )
+    }
+
+    ## If expand is TRUE calculate names of cross-derivatives and
+    ## prepare named character vector used for apply_deriv().
+    p <- if (!expand) {
+        structure(p, names = p)
+    } else {
+        ## Calculate names of cross-derivatives
+        tmp <- outer(p, p, paste, sep = ":")
+        diag(tmp) <- p # Modifying diagonal
+        args <- names <- tmp
+        names[lower.tri(names)] <- names[upper.tri(names)]
+        structure(as.character(args), names = as.character(names))
+    }
+
+    ## If which is NULL reutrn all parameters, else
+    ## evaluate which parameters are requested by the user
+    if (is.null(which)) return(p)
+    return(match.arg(which, p, several.ok = TRUE))
+}
+
+#' @param check logical. If set `FALSE` the maximum length is returned
+#'        without checking that all objects on `...` are recyclable.
+#' @rdname apply_dpqr
+#' @export
+max_length <- function(..., check = TRUE) {
+  dots <- list(...)
+  n <- vapply(dots, length, integer(1L))
+  m <- max(n)
+  if (check && !all(n %in% c(1L, m))) {
+    txt <- vapply(match.call(), deparse, character(1L))[-1L]
+    if (!is.null(names(txt))) {
+      names(txt)[nchar(names(txt)) == 0L] <- txt[nchar(names(txt)) == 0L]
+      txt <- setdiff(names(txt), "check")
+    }
+    txt <- paste(txt, "=", n, collapse = ", ")
+    stop("parameter lengths do not match ",
+         "(only scalars are allowed to be recycled), got lengths: ", txt)
+  }
+  return(m)
+}
+
+## Auxilary function used to calculate and prepare the return
+## of the score and hessian methods.
+## TODO(R): I think I can get rid of params/which
+## - params: if named vector, we assume it is the 'which'
+## - params: unnamed vector: assum eit is only the parameters
+##           we return exactly these,
+## - get rid of expand and get_deriv_names() (
+
+#' @param FUN function to be applied (typically score, hessian).
+#' @param which named character vector with the names of the derivatives to be returned.
+#' @param ... forwarded to `FUN`.
+apply_deriv <- function(d, FUN, which, drop = TRUE, check = TRUE, ..) {
+  check  <- as.logical(check)[[1L]]
+  drop   <- as.logical(drop)[[1L]]
+
+  if (isTRUE(check)) {
+    if (is.character(which) && is.null(names(which))) which <- setNames(which, which)
+    stopifnot(
+      "argument 'd' must be of class 'distribution'"   = inherits(d, "distribution"),
+      "argument 'FUN' must be a function"              = is.function(FUN),
+      "argument 'which' must be a named character vector" =
+          is.character(which) && length(which) > 0L && !is.null(names(which)) && all(nchar(which) > 0L),
+      "argument 'drop' must evaluate to TRUE or FALSE" = isTRUE(drop) || isFALSE(drop)
+    )
+  }
+
+  names <- names(d)
+  if (drop && length(which) == 1L) {
+    res <- FUN(d, which)
+    if (!is.null(names)) res <- setNames(res, names)
+  } else {
+    tmp <- unique(names(which))
+    res <- structure(lapply(tmp, FUN, d = d), names = tmp)
+    str(res)
+    res <- do.call("cbind", res[names(which)])
+    print('here')
+    print(names)
+    print(unname(which))
+    print(dim(res))
+    dimnames(res) <- list(names, unname(which))
+  }
+
+  return(res)
+}
 
 # -------------------------------------------------------------------
 # METHODS FOR DISTRIBUTION OBJECTS
