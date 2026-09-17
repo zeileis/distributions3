@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Gamma distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Gamma default arguments", {
   expect_identical(formals(Gamma),
@@ -195,9 +200,8 @@ test_that("score.Gamma works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Gamma(2, 0.5), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(Gamma(2:3, 0.5), 1:5),                   regexp = "parameter lengths do not match")
     expect_error(score(Gamma(2, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
-    expect_error(score(Gamma(2, 0.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- cbind(shape = log(x) + log(0.5) - digamma(2),
@@ -233,18 +237,21 @@ test_that("hessian.Gamma works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Gamma(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Gamma(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
     expect_error(hessian(Gamma(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Gamma(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Gamma(2, 0.5), 1, drop = "foo"),     info = "non-logical drop should throw error")
-    expect_error(hessian(Gamma(2, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
     ## Comparing to numeric approximation; throws warnings (due to param score)
     expect_equal(hessian(Gamma(2, 0.5), x),
                  suppressWarnings(distributions3:::hessian.distribution(Gamma(2, 0.5), x)),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
-    ## Calculating expected hessian and check return
-    expect_error(hessian(Gamma(2, 0.5), expected = TRUE), regexp = "only the observed hessian is available")
+    ## The observed hessian is identical to the observed hessian. I.e., it does
+    ## not matter what expected is
+    expect_identical(hessian(Gamma(2, 0.5), 1, expected = TRUE),
+                     hessian(Gamma(2, 0.5), 1, expected = FALSE),
+                     info = "observed hessian not identical to expected hessian")
+    expect_identical(hessian(Gamma(2, 0.5), 1),
+                     hessian(Gamma(2, 0.5), 1, expected = "foo"))
 })
 

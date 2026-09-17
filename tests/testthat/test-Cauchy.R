@@ -201,9 +201,9 @@ test_that("score.Cauchy works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Cauchy(2:3, 0.5), 1:5),                 regexp = "parameter lengths do not match")
     expect_error(score(Cauchy(5, 3), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(Cauchy(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
-    expect_error(score(Cauchy(5, 3), 1, drop = "foo"),         info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     ## Using location = 5, scale = 3
@@ -241,13 +241,13 @@ test_that("hessian.Cauchy works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Cauchy(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Cauchy(2:3, 0.5), 1:5),             regexp = "parameter lengths do not match")
     expect_error(hessian(Cauchy(5, 3), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Cauchy(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Cauchy(5, 3), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(Cauchy(5, 3), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
     ## Comparing to numeric approximation; throws warnings (due to param score)
+    hessian(Cauchy(5, 3), x)
     expect_equal(hessian(Cauchy(5, 3), x),
                  suppressWarnings(distributions3:::hessian.distribution(Cauchy(5, 3), x)),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")

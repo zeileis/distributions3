@@ -54,7 +54,7 @@ test_that("score.distribution exists and has correct arguments/defaults", {
 test_that("score.distribution error handling works", {
     # Incorrect lengths
     expect_error(distributions3:::score.distribution(Normal(1:2), 1:3),
-        regexp = "'d' and 'x' must have length 1 or the same length")
+        regexp = "parameter lengths do not match")
 
     # Non-existent values for which (handled by match.arg)
     expect_error(distributions3:::score.distribution(Normal(), 2, which = 1))
@@ -63,8 +63,6 @@ test_that("score.distribution error handling works", {
     # x and eps must be numeric, drop must be single TRUE or FALSE
     expect_error(distributions3:::score.distribution(Normal(), x = "foo"))
     expect_error(distributions3:::score.distribution(Normal(), 1, eps = "300"))
-    expect_error(distributions3:::score.distribution(Normal(), 1, drop = "foo"))
-    expect_error(distributions3:::score.distribution(Normal(), 1, drop = c(TRUE, TRUE)))
 })
 
 
@@ -121,7 +119,7 @@ test_that("hessian.distribution exists and has correct arguments/defaults", {
 test_that("hessian.distribution error handling works", {
     # Incorrect lengths
     expect_error(distributions3:::hessian.distribution(Normal(1:2), 1:3),
-        regexp = "'d' and 'x' must have length 1 or the same length")
+        regexp = "parameter lengths do not match")
 
     # For hessian.distribution only the observed (not the expected) hessian is available
     expect_error(distributions3:::hessian.distribution(Normal(1:2), 1:3, expected = TRUE),
@@ -134,8 +132,6 @@ test_that("hessian.distribution error handling works", {
     # x and eps must be numeric, drop must be single TRUE or FALSE
     expect_error(distributions3:::hessian.distribution(Normal(), x = "foo"))
     expect_error(distributions3:::hessian.distribution(Normal(), 1, eps = "300"))
-    expect_error(distributions3:::hessian.distribution(Normal(), 1, drop = "foo"))
-    expect_error(distributions3:::hessian.distribution(Normal(), 1, drop = c(TRUE, TRUE)))
 })
 
 

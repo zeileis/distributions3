@@ -293,17 +293,17 @@ is_continuous.Poisson <- function(d, ...) {
 #' @exportS3Method
 ## Poisson methods for score/hessian
 score.Poisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-
-  ## only one parameter
-  which <- match.arg(which, "lambda", several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## compute score
-  s <- x/d$lambda - 1
-  if (!drop) s <- cbind("lambda" = s)
-  return(s)
+  scr <- function(par, d, x)  x/d$lambda - 1
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -311,16 +311,19 @@ score.Poisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
-
-  ## only one parameter
-  which <- match.arg(which, "lambda", several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## compute hessian
-  h <- if (expected) 0 * x - 1 / d$lambda else -x / d$lambda^2
-  if (!drop) h <- cbind("lambda" = h)
-  return(h)
+  hess <- if (expected) {
+    function(par, d, x) 0 * x - 1 / d$lambda
+  } else {
+    function(par, d, x) -x / d$lambda^2
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

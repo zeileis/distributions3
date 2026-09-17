@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Poisson distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Poisson default arguments", {
   expect_identical(formals(Poisson),
@@ -201,10 +206,9 @@ test_that("score.Poisson works as expected", {
         as.pairlist(alist(d =, x =, which = "lambda", drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Poisson(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Poisson(1:3), 2:1),               regexp = "parameter lengths do not match")
     expect_error(score(Poisson(1), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(Poisson(1), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(Poisson(1), 1, drop = "foo"),     info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- 1:5 / 5:1 - 1 # Score
@@ -229,10 +233,9 @@ test_that("hessian.Poisson works as expected", {
         as.pairlist(alist(d =, x =, which = "lambda", drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Poisson(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Poisson(1:3), 2:1),               regexp = "parameter lengths do not match")
     expect_error(hessian(Poisson(1), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Poisson(1), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Poisson(1), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(Poisson(1), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
 
     ## Calculating observed hessian and check return

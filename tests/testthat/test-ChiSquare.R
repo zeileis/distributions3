@@ -3,7 +3,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("ChiSquare default arguments", {
   expect_identical(formals(ChiSquare),
@@ -193,9 +192,9 @@ test_that("score.ChiSquare works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(ChiSquare(2:3), 1:5),                   regexp = "parameter lengths do not match")
     expect_error(score(ChiSquare(7), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(ChiSquare(7), 1, which = "foo"),        info = "unknown which must should throw error")
-    expect_error(score(ChiSquare(7), 1, drop = "foo"),         info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     ## Using df = 7
@@ -227,10 +226,9 @@ test_that("hessian.ChiSquare works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(ChiSquare(2:3), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(ChiSquare(2:3), 1:5),               regexp = "parameter lengths do not match")
     expect_error(hessian(ChiSquare(7), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(ChiSquare(7), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(ChiSquare(7), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(ChiSquare(7), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
     ## Comparing to numeric approximation; throws warnings (due to param score)

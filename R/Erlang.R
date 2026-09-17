@@ -202,30 +202,19 @@ is_continuous.Erlang <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Erlang <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-
-  ## available and selected parameters
-  p <- c("k", "lambda")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## compute scores
-  scr <- function(par) switch(par,
+  scr <- function(par, d, x) switch(par,
     "k"      = log(d$lambda) + log(x) - digamma(d$k),
     "lambda" = d$k / d$lambda - x)
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- scr(which)
-    if (!is.null(names(x))) s <- setNames(s, names(x))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(x), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -234,40 +223,24 @@ score.Erlang <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Erlang <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot(
-    "only the observed hessian is available" = isFALSE(expected),
-    "argument 'expected' must evaluate to TRUE or FALSE" = isTRUE(expected) || isFALSE(expected)
+    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected),
+    "only the observed hessian is available" = isFALSE(expected)
   )
 
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
-
-  ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("k" = "k", "lambda:k" = "k:lambda", "k:lambda" = "k:lambda", "lambda" = "lambda")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## All hessian elements are constant w.r.t. x for Erlang
-  hess <- function(par) switch(par,
+  hess <- function(par, d, x) switch(par,
     "k"        = rep_len(-trigamma(d$k), n),
     "lambda"   = rep_len(-d$k / d$lambda^2, n),
     "k:lambda" = rep_len(1 / d$lambda, n))
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- hess(w)
-    if (!is.null(names(x))) h <- setNames(h, names(x))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(x), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
-  }
-  return(h)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
 

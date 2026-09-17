@@ -306,34 +306,23 @@ is_continuous.LogNormal <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
-  ## available and selected parameters
-  p <- c("log_mu", "log_sigma")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
-
-  ## pre-compute log(x)
+  ## pre-compute log(x)/z, scoped in 'scr' function!
   log_x <- log(x)
   z <- log_x - d$log_mu
 
   ## compute scores
-  scr <- function(par) switch(par,
+  scr <- function(par, d, x) switch(par,
     "log_mu"    = z / d$log_sigma^2,
     "log_sigma" = z^2 / d$log_sigma^3 - 1 / d$log_sigma)
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- scr(which)
-    if (!is.null(names(x))) s <- setNames(s, names(x))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(x), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -341,46 +330,29 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("log_mu" = "log_mu", "log_sigma:log_mu" = "log_mu:log_sigma", "log_mu:log_sigma" = "log_mu:log_sigma", "log_sigma" = "log_sigma")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
-
-  ## pre-compute log(x)
+  ## pre-compute log(x)/z, scoped in 'hess' functions!
   log_x <- log(x)
   z <- log_x - d$log_mu
 
   ## function for computing Hessian elements
   hess <- if (expected) {
-    function(par) switch(par,
+    function(par, d, x) switch(par,
       "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
       "log_sigma"        = rep_len(-2 / d$log_sigma^2, n),
       rep.int(0, n))
   } else {
-    function(par) switch(par,
+    function(par, d, x) switch(par,
       "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
       "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
       -2 * z / d$log_sigma^3)
   }
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- hess(w)
-    if (!is.null(names(x))) h <- setNames(h, names(x))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(x), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
-  }
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

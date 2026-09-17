@@ -311,33 +311,36 @@ is_continuous.Bernoulli <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Bernoulli <- function(d, x, which = "p", drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-
-  ## only one parameter
-  which <- match.arg(which, "p", several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## compute score
-  s <- (x - d$p)/(d$p * (1 - d$p))
-  if (!drop) s <- cbind("p" = s)
-  return(s)
+  scr <- function(par, d, x) (x - d$p)/(d$p * (1 - d$p))
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
 #' @usage NULL
 #' @exportS3Method
 hessian.Bernoulli <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## only one parameter
-  which <- match.arg(which, "p", several.ok = TRUE)
+  ## function for computing Hessian elements (expected or observed)
+  hess <- if (expected) {
+      function(par, d, x) 0 * x - 1/(d$p * (1 - d$p))
+  } else {
+      function(par, d, x) -x/d$p^2 - (1 - x)/(1 - d$p)^2
+  }
 
-  ## compute hessian
-  h <- if (expected) 0 * x - 1/(d$p * (1 - d$p)) else -x/d$p^2 - (1 - x)/(1 - d$p)^2
-  if (!drop) h <- cbind("p" = h)
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

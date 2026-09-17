@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Exponential distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Exponential default arguments", {
   expect_identical(formals(Exponential),
@@ -203,7 +208,7 @@ test_that("score.Exponential works as expected", {
         as.pairlist(alist(d =, x =, which = "rate", drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Exponential(2:3), 1:5),                     regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Exponential(2:3), 1:5),                     regexp = "parameter lengths do not match")
     expect_error(score(Exponential(2.5), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(Exponential(2.5), 1, which = "foo"),        info = "unknown which must should throw error")
     expect_error(score(Exponential(2.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
@@ -233,10 +238,9 @@ test_that("hessian.Exponential works as expected", {
         as.pairlist(alist(d =, x =, which = "rate", drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Exponential(2:3), 1:5),                 regexp = "parameter lengths do not match")
     expect_error(hessian(Exponential(0.5), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Exponential(0.5), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Exponential(0.5), 1, drop = "foo"),     info = "non-logical drop should throw error")
-    expect_error(hessian(Exponential(0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
     ## Calculating observed hessian and check return
     tmp_o <- rep_len(-1 / 2.5^2, length(x)) ## For rate = 2.5, not dependent on x
@@ -251,5 +255,11 @@ test_that("hessian.Exponential works as expected", {
     tmp_e <- rep_len(-1 / 2.5^2, length(x)) # Expected hessian for rate = 2.5, identical to observed hessian
     expect_identical(hessian(Exponential(2.5), x, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
     expect_identical(hessian(Exponential(2.5), x, expected = TRUE, drop = FALSE), cbind(rate = tmp_e))
+
+    ## Expected = Observed, and it the argument 'expected' is completely ignored.
+    expect_identical(hessian(Exponential(2.5), x, expected = TRUE),
+                     hessian(Exponential(2.5), x, expected = FALSE))
+    expect_identical(hessian(Exponential(2.5), x),
+                     hessian(Exponential(2.5), x, expected = "FOOO"))
 })
 

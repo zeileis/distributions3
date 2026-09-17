@@ -294,29 +294,17 @@ is_continuous.Exponential <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Exponential <- function(d, x, which = "rate", drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-
-  ## available and selected parameters
-  p <- c("rate")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## compute scores
-  scr <- function(par) switch(par,
-    "rate" = 1 / d$rate - x)
+  scr <- function(par, d, x) 1 / d$rate - x
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- scr(which)
-    if (!is.null(names(x))) s <- setNames(s, names(x))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(x), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -324,38 +312,20 @@ score.Exponential <- function(d, x, which = "rate", drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Exponential <- function(d, x, which = "rate", drop = TRUE, expected = FALSE, ...) {
-  expected <- as.logical(expected)[[1L]]
-  stopifnot("argument 'expected' must evaluate to TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  ## Note that 'expected' is never evaluated/used as the expected hessian
+  ## is identical to the observed hessian. Thus, also no sanity check as it does
+  ## not matter anyways.
 
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
-
-  ## available and selected parameters
-  p <- c("rate" = "rate")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  ## TODO(R): Obsolete here as we only have one parameter.
-  ##          I think we should simplify this and remove 'which'? Or just ignore?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## For Exponential with rate parametrization, the second derivative is constant w.r.t. x,
   ## so the observed Hessian equals the expected Hessian.
-  hess <- function(par) rep_len(-1 / d$rate^2, n)
+  hess <- function(par, d, x) rep_len(-1 / d$rate^2, n)
 
-  ## if possible return single vector, otherwise collect in matrix
-  ## TODO(R): Can also be simplified
-  if (drop && length(which) == 1L) {
-    h <- hess(w)
-    if (!is.null(names(x))) h <- setNames(h, names(x))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(x), w)
-  }
-
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

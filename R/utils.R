@@ -49,28 +49,43 @@ hasS3method <- function(method, classes) {
 #' the distribution of interest.
 #'
 #' @param d A `distributions3` object.
-#' @param FUN Function to be computed. Function should be of type \code{FUN(at, d)}, where
-#' \code{at} is the argument at which the function should be evaluated (e.g., a quantile,
-#' probability, or sample size) and \code{d} is a \code{distributions3} object.
+#' @param FUN Function to be computed. `apply_dpqr()`: Function should be of type \code{FUN(at, d)}, where
+#'        \code{at} is the argument at which the function should be evaluated (e.g., a quantile,
+#'        probability, or sample size) and \code{d} is a \code{distributions} object.
+#'        `apply_deriv()`: Function to calculate the derivatives, should be of type
+#'        `FUN(par, d, x, ...)` where 'par' is character of length one which defines the deriative
+#'        to be calculated, 'd' a `distribution` object, and `x` a numeric vector where the
+#'        function should be evaluated.
 #' @param at Specification of values at which `FUN` should be evaluated, typically a
-#' numeric vector (e.g., of quantiles, probabilities, etc.) but possibly also a matrix or data
-#' frame.
+#'        numeric vector (e.g., of quantiles, probabilities, etc.) but possibly also a matrix or data
+#'        frame.
 #' @param elementwise logical. Should each element of \code{d} only be evaluated at the
-#' corresponding element of \code{at} (\code{elementwise = TRUE}) or at all elements
-#' in \code{at} (\code{elementwise = FALSE}). Elementwise evaluation is only possible
-#' if the length of \code{d} and \code{at} is the same and in that case a vector of
-#' the same length is returned. Otherwise a matrix is returned. The default is to use
-#' \code{elementwise = TRUE} if possible, and otherwise \code{elementwise = FALSE}.
+#'        corresponding element of \code{at} (\code{elementwise = TRUE}) or at all elements
+#'        in \code{at} (\code{elementwise = FALSE}). Elementwise evaluation is only possible
+#'        if the length of \code{d} and \code{at} is the same and in that case a vector of
+#'        the same length is returned. Otherwise a matrix is returned. The default is to use
+#'        \code{elementwise = TRUE} if possible, and otherwise \code{elementwise = FALSE}.
 #' @param drop logical. Should the result be simplified to a vector if possible (by
-#' dropping the dimension attribute)? If \code{FALSE} a matrix is always returned.
+#'        dropping the dimension attribute)? If \code{FALSE} a matrix is always returned.
 #' @param type Character string used for naming, typically one of \code{"density"}, \code{"logLik"},
-#' \code{"probability"}, \code{"quantile"}, and \code{"random"}. Note that the \code{"random"}
-#' case is processed differently internally in order to vectorize the random number
-#' generation more efficiently.
+#'        \code{"probability"}, \code{"quantile"}, and \code{"random"}. Note that the \code{"random"}
+#'        case is processed differently internally in order to vectorize the random number
+#'        generation more efficiently.
 #' @param ... Arguments to be passed to  \code{FUN}.
 #' @param min,max Numeric vectors. Minima and maxima of the supports of a `distributions3` object.
 #' @param n numeric. Number of observations for computing random draws. If `length(n) > 1`,
-#' the length is taken to be the number required (consistent with base R as, e.g., for `rnorm()`).
+#'        the length is taken to be the number required (consistent with base R as, e.g., for `rnorm()`).
+#'
+#' @param which character vector, named or unnamed. When calculating cross-derivatives
+#'        a named vector is typically used avoiding to calculate the cross-derivatives
+#'        twice evven if they are identical (symmetric Hessian matrix; see 'Examples').
+#'
+#' @param p character vector with the names of the parameters of a
+#'        distribution.
+#' @param expand logical. If set `TRUE`, the names of cross-derivatives
+#'        are returned (if `which = NULL`) or checked (if `which` is set).
+#' @param check logical. If set `FALSE` a series of sanity checks are bypassed.
+#'
 #'
 #' @examples
 #' ## Implementing a new distribution based on the provided utility functions
@@ -167,22 +182,16 @@ hasS3method <- function(method, classes) {
 #' methods(class = "Normal")
 #'
 #' @export
-apply_dpqr <- function(d,
-                       FUN,
-                       at,
-                       elementwise = NULL,
-                       drop = TRUE,
-                       type = NULL,
-                       ...) {
+apply_dpqr <- function(d, FUN, at, elementwise = NULL, drop = TRUE, type = NULL, ...) {
 
   ## sanity checks
   stopifnot(
-    is_distribution(d),
-    is.function(FUN),
-    is.numeric(at),
-    is.null(elementwise) || is.logical(elementwise),
-    is.logical(drop),
-    is.character(type)
+    "argument 'd' must be a distributions object"      = is_distribution(d),
+    "argument 'FUN' must be a function"                = is.function(FUN),
+    "argument 'at' must be numeric"                    = is.numeric(at),
+    "argument 'elementwise' must be `NULL` or logical" = is.null(elementwise) || is.logical(elementwise),
+    "argument 'drop' must be logical"                  = is.logical(drop),
+    "argument 'type' must be character"                = is.character(type)
   )
 
   ## basic properties:
@@ -272,19 +281,14 @@ apply_dpqr <- function(d,
   return(rval)
 }
 
-#' Get Parameter Names of/for Derivatives
-#'
-#' @param p character vector with the names of the parameters of a
-#'        distribution.
-#' @param which `NULL` or character vector. If not `NULL`
-#'        all possible derivative names are returned (see also `expand`).
-#' @param expand logical. If set `TRUE`, the names of cross-derivatives
-#'        are returned (if `which = NULL`) or checked (if `which` is set).
-#' @param check logical. If set `FALSE` a series of sanity checks are bypassed.
-#'
-#' @return Named character vector. If `which = NULL` a named vector
-#' with all potential parameters is returned, including
-#' parameters for cross-derivatives if `expand = TRUE`.
+#' @examples
+#' ## ----------------
+#' ## get_deriv_names(): Get names of derivatives including cross-derivatives
+#' ## if `expand` is set TRUE, and checks/selects the names requested by
+#' ## the user if `which` is not NULL.
+#' get_deriv_names(c("mu", "sigma"))
+#' get_deriv_names(c("mu", "sigma"), expand = TRUE)
+#' get_deriv_names(c("mu", "sigma"), which = c("mu:sigma", "sigma"), expand = TRUE)
 #'
 #' @rdname apply_dpqr
 #' @export
@@ -327,6 +331,24 @@ get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
 #' @param check logical. If set `FALSE` the maximum length is returned
 #'        without checking that all objects on `...` are recyclable.
 #'
+#' @examples
+#' ## ----------------
+#' ## max_length(): Calculate maximum length of a series of objects.
+#'
+#' ## If check is set FALSE, the maximum length is returned
+#' max_length(a = 1, b = seq_len(10), c = seq_len(5), check = FALSE)
+#' max_length(Normal(mu = 1:3, sigma = 2), 10:11, check = FALSE)
+#'
+#' ## If check is TRUE (default) all objects must be of length 1
+#' ## or length 'N', where 'N' is the length of the longest object.
+#' max_length(Normal(mu = 1:3, sigma = 2), 10)
+#' max_length(Normal(mu = 1:3, sigma = 2), 10:12)
+#'
+#' \dontrun{
+#' ## Non-suitable lenghts, throws error (check = TRUE)
+#' max_length(d = Normal(mu = 1:3, sigma = 2), x = 10:15)
+#' }
+#'
 #' @rdname apply_dpqr
 #' @export
 max_length <- function(..., check = TRUE) {
@@ -346,17 +368,34 @@ max_length <- function(..., check = TRUE) {
   return(m)
 }
 
-## Auxilary function used to calculate and prepare the return
-## of the score and hessian methods.
-## TODO(R): I think I can get rid of params/which
-## - params: if named vector, we assume it is the 'which'
-## - params: unnamed vector: assum eit is only the parameters
-##           we return exactly these,
-## - get rid of expand and get_deriv_names() (
-
-#' @param FUN function to be applied (typically score, hessian).
-#' @param which named character vector with the names of the derivatives to be returned.
-#' @param ... forwarded to `FUN`.
+#' @examples
+#' ## ----------------
+#' ## apply_deriv(): Minimal example on how to use apply_deriv to calculate
+#' ## score/hessian based on the Uniform distribution for demonstration.
+#'
+#' ## Creating distributions object
+#' d <- Uniform(a = c(2, 3), b = c(0.5, 0.5))
+#'
+#' ## Function for calculating score of the Uniform distribution
+#' scr <- function(par, d, x) switch(par,
+#'   "a" = 0 * x + 1 / (d$b - d$a),
+#'   "b" = 0 * x - 1 / (d$b - d$a))
+#'
+#' ## Function for calculating hessian of the Uniform distribution
+#' hess <- function(par, d, x) switch(par,
+#'               "a" = 0 * x + 1 / (d$b - d$a)^2,
+#'               "b" = 0 * x + 1 / (d$b - d$a)^2,
+#'               -(0 * x + 1 / (d$b - d$a)^2)) # Cross-derivatives
+#'
+#' ## Calculating score: first derivative of the likelihood | parameters
+#' apply_deriv(d = d, x = 1.5, FUN = scr, which = c("a", "b"))
+#' score(d, 1.5) # using method for comparison
+#'
+#' ## Calculating hessian: second derivative of the likelihood | parameters,
+#' ## including cross-derivatives
+#' which <- get_deriv_names(c("a", "b"), expand = TRUE)
+#' apply_deriv(d = d, x = 1.5, FUN = hess, which = which)
+#' hessian(d, 1.5) # using method for comparison
 #'
 #' @rdname apply_dpqr
 #' @export
@@ -377,11 +416,11 @@ apply_deriv <- function(d, x, FUN, which, drop = TRUE, check = TRUE, ...) {
 
   names <- names(d)
   if (drop && length(which) == 1L) {
-    res <- FUN(names(which), d = d, x = x)
+    res <- FUN(names(which), d = d, x = x, ...)
     if (!is.null(names)) res <- setNames(res, names)
   } else {
     tmp <- unique(unique(names(which)))
-    res <- structure(lapply(tmp, FUN, d = d, x = x), names = tmp)
+    res <- structure(lapply(tmp, FUN, d = d, x = x, ...), names = tmp)
     res <- do.call("cbind", res[names(which)])
     dimnames(res) <- list(names, unname(which))
   }

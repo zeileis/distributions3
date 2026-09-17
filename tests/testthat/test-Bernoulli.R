@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Bernoulli distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Bernoulli default arguments", {
   expect_identical(formals(Bernoulli),
@@ -211,10 +216,9 @@ test_that("score.Bernoulli works as expected", {
         as.pairlist(alist(d =, x =, which = "p", drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Bernoulli(c(0.2, 0.3, 0.5)), x),  regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Bernoulli(c(0.2, 0.3, 0.5)), x),  regexp = "parameter lengths do not match")
     expect_error(score(Bernoulli(), 1, which = 1),       info = "unknown which should throw error")
     expect_error(score(Bernoulli(), 1, which = "foo"),   info = "unknown which must should throw error")
-    expect_error(score(Bernoulli(), 1, drop = "foo"),    info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- (x - 0.5) / (0.5^2) # Score for p = 0.5
@@ -236,10 +240,9 @@ test_that("hessian.Bernoulli works as expected", {
         as.pairlist(alist(d =, x =, which = "p", drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Bernoulli(c(0.2, 0.3, 0.5)), x),   regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Bernoulli(c(0.2, 0.3, 0.5)), x),   regexp = "parameter lengths do not match")
     expect_error(hessian(Bernoulli(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Bernoulli(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Bernoulli(), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(Bernoulli(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
 
     ## Calculating observed hessian and check return

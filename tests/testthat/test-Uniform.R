@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Uniform distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Uniform default arguments", {
   expect_identical(formals(Uniform),
@@ -205,10 +210,9 @@ test_that("score.Uniform works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch
-    expect_error(score(Uniform(a, b), c(0.1, 0.2)), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Uniform(a, b), c(0.2, 0.3)),     regexp = "parameter lengths do not match")
     expect_error(score(Uniform(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions
     expect_silent(s1 <- score(Uniform(a, b), 1))
@@ -247,13 +251,9 @@ test_that("hessian.Uniform works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Uniform(a, b), c(0.2, 0.3)), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Uniform(a, b), c(0.2, 0.3)),     regexp = "parameter lengths do not match")
     expect_error(hessian(Uniform(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
-
-    # For hessian only the observed (not the expected) hessian is available
-    expect_error(hessian(Uniform(1:2), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(Uniform(a, b), 0.5))
@@ -288,4 +288,13 @@ test_that("hessian.Uniform works as expected", {
     expect_equal(hessian(Uniform(a, b), 0.5, expected = FALSE),
                  distributions3:::hessian.distribution(Uniform(a, b), 0.5),
                  tolerance = 1e-7)
+
+    ## Observed hessian equals expected hessian, thus the argument 'expected' is never
+    ## evaluated (i.e., does not matter what we hand over).
+    expect_identical(hessian(Uniform(a, b), 0.5, expected = FALSE),
+                     hessian(Uniform(a, b), 0.5, expected = TRUE),
+                     info = "expected hessian and observed hessian not identical")
+    expect_identical(hessian(Uniform(a, b), 0.5),
+                     hessian(Uniform(a, b), 0.5, expected = "foo"))
+
 })

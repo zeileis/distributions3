@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Weibull distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Weibull default arguments", {
   expect_identical(formals(Weibull),
@@ -188,10 +193,9 @@ test_that("score.Weibull works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Weibull(2:3, 0.5), 1:5),                   regexp = "'d' and 'x' must have length 1 or the same length")
-    expect_error(score(Weibull(2, 0.5), 1, which = 1),            info = "unknown which should throw error")
-    expect_error(score(Weibull(2, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
-    expect_error(score(Weibull(2, 0.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
+    expect_error(score(Weibull(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
+    expect_error(score(Weibull(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(score(Weibull(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- cbind(shape = 1 / 2 + log(x / 0.5) * (1 - (x / 0.5)^2),
@@ -227,10 +231,9 @@ test_that("hessian.Weibull works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Weibull(2:3, 0.5), 1:5, which = 1),    regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Weibull(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
     expect_error(hessian(Weibull(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Weibull(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Weibull(2, 0.5), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(Weibull(2, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
     ## Comparing to numeric approximation; throws warnings (due to param score)

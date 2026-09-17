@@ -269,33 +269,26 @@ is_continuous.Cauchy <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Cauchy <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
 
-  ## available and selected parameters
-  p <- c("location", "scale")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## pre-compute 'denom', scoped in scr function!
+  denom <- denom <- d$scale^2 + (x - d$location)^2
 
   ## compute scores
-  z <- (x - d$location) / d$scale
-  denom <- d$scale^2 + (x - d$location)^2
-
-  scr <- function(par) switch(par,
-    "location" = 2 * (x - d$location) / denom,
-    "scale"    = -1/d$scale + 2 * (x - d$location)^2 / (d$scale * denom))
-
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- scr(which)
-    if (!is.null(names(x))) s <- setNames(s, names(x))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(x), which)
+  scr <- function(par, d, x) {
+    switch(par,
+      "location" = 2 * (x - d$location) / denom,
+      "scale"    = -1/d$scale + 2 * (x - d$location)^2 / (d$scale * denom)
+    )
   }
-  return(s)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -304,42 +297,27 @@ score.Cauchy <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot(
-    "only the observed hessian is available" = isFALSE(expected),
-    "argument 'expected' must evaluate to TRUE or FALSE" = isTRUE(expected) || isFALSE(expected)
+    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected),
+    "only the observed hessian is available" = isFALSE(expected)
   )
 
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("location" = "location", "scale:location" = "location:scale",
-         "location:scale" = "location:scale", "scale" = "scale")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
-
-  denom <- d$scale^2 + (x - d$location)^2
+  ## pre-compute 'denom', scoped in hess functions!
+  denom <- denom <- d$scale^2 + (x - d$location)^2
 
   ## function for computing Hessian elements (both observed and expected for Cauchy)
-  hess <- function(par) switch(par,
-    "location"      = -2 * (d$scale^2 - (x - d$location)^2) / denom^2,
-    "scale"         = 1/d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
-    "location:scale" = -4 * (x - d$location) * d$scale / denom^2)
-
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- hess(w)
-    if (!is.null(names(x))) h <- setNames(h, names(x))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(x), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
+  hess <- function(par, d, x) {
+      switch(par,
+        "location"       = -2 * (d$scale^2 - (x - d$location)^2) / denom^2,
+        "scale"          = 1/d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
+        "location:scale" = -4 * (x - d$location) * d$scale / denom^2)
   }
-  return(h)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

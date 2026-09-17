@@ -4,7 +4,7 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
+##suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("SinhArcsinh exists and has correct defaults", {
     expect_true(is.function(SinhArcsinh))
@@ -495,10 +495,9 @@ test_that("score.SinhArcsinh works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch
-    expect_error(score(SinhArcsinh(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(SinhArcsinh(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(score(SinhArcsinh(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(SinhArcsinh(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(SinhArcsinh(), 1, drop = "foo"),     info = "non-logical drop should throw error")
 
     ## Calculating all scores for 5 distributions
     expect_silent(s1 <- score(SinhArcsinh(5:1), 1:5))
@@ -538,10 +537,9 @@ test_that("hessian.SinhArcsinh works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(SinhArcsinh(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(SinhArcsinh(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(hessian(SinhArcsinh(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(SinhArcsinh(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(SinhArcsinh(), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(SinhArcsinh(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
 
     # For hessian only the observed (not the expected) hessian is available

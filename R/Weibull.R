@@ -268,34 +268,23 @@ is_continuous.Weibull <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Weibull <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
-  ## available and selected parameters
-  p <- c("shape", "scale")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
-
-  ## pre-compute shared terms
+  ## pre-compute shared terms, scoped by 'scr' function!
   z <- (x / d$scale)^d$shape
   log_z <- log(x / d$scale)
 
   ## compute scores
-  scr <- function(par) switch(par,
+  scr <- function(par, d, x) switch(par,
     "shape" = 1 / d$shape + log_z * (1 - z),
     "scale" = d$shape * (z - 1) / d$scale)
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- scr(which)
-    if (!is.null(names(x))) s <- setNames(s, names(x))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(x), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -303,46 +292,29 @@ score.Weibull <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Weibull <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  ## sanity check
-  n <- c(length(d[[1]]), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("shape" = "shape", "scale:shape" = "shape:scale", "shape:scale" = "shape:scale", "scale" = "scale")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
-
-  ## pre-compute shared terms
+  ## pre-compute shared terms, scoped by 'hess' functions!
   z <- (x / d$scale)^d$shape
   log_z <- log(x / d$scale)
 
   ## function for computing Hessian elements
   hess <- if (expected) {
-    function(par) switch(par,
+    function(par, d, x) switch(par,
       "shape"       = rep_len(-1 / d$shape^2 - pi^2 / 6, n),
       "scale"       = rep_len(-d$shape / d$scale^2 - (d$shape + 1) / d$scale^2, n),
       rep_len(1 / d$scale + (d$shape - 1) / (d$shape * d$scale), n))
   } else {
-    function(par) switch(par,
+    function(par, d, x) switch(par,
       "shape"       = pmin(-1 / d$shape^2 - z * log_z^2, -1e-15),
       "scale"       = pmin(d$shape * (1 - z * (d$shape + 1)) / d$scale^2, -1e-15),
       (z - 1 + d$shape * z * log_z) / d$scale)
   }
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- hess(w)
-    if (!is.null(names(x))) h <- setNames(h, names(x))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(x), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
-  }
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

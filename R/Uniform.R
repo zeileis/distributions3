@@ -262,29 +262,20 @@ is_continuous.Uniform <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
 
-  ## available and selected parameters
-  p <- c("a", "b")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## compute scores
-  scr <- function(par) switch(par,
+  scr <- function(par, d, x) switch(par,
     "a" = 0 * x + 1 / (d$b - d$a),
     "b" = 0 * x - 1 / (d$b - d$a))
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- setNames(scr(which), names(d))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(d), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -292,34 +283,21 @@ score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  ## numeric differentiation yields observed hessian only
-  if (!isFALSE(expected)) stop("only the observed hessian is available")
+  ## Note that 'expected' is never evaluated given the expected and observed
+  ## hessian is identical. Thus, also no sanity checks on expected.
 
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("a" = "a", "b:a" = "a:b", "a:b" = "b:a", "b" = "b")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
+  ## pre-calculating 'hess_num', scoped by 'hess' functions!
+  hess_num <- 0 * x + 1 / (d$b - d$a)^2
 
   ## function for computing Hessian elements (expected or observed)
-  hess_num <- 0 * x + 1 / (d$b - d$a)^2
-  hess <- function(w) switch(w, "a" = hess_num, "b" = hess_num, -hess_num)
+  hess <- function(par, d, x) switch(par, "a" = hess_num, "b" = hess_num, -hess_num)
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- setNames(hess(w), names(d))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(d), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
-  }
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
