@@ -331,7 +331,7 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected) && missing(x)) x <- -999 # dummy; if expected = TRUE 'x' can be missing
+  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names

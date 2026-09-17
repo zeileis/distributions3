@@ -210,6 +210,12 @@ test_that("score.Poisson works as expected", {
     expect_error(score(Poisson(1), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(Poisson(1), 1, which = "foo"),    info = "unknown which must should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Poisson(1:3); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- 1:5 / 5:1 - 1 # Score
     expect_silent(s1 <- score(Poisson(5:1), 1:5))
@@ -237,6 +243,14 @@ test_that("hessian.Poisson works as expected", {
     expect_error(hessian(Poisson(1), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Poisson(1), 1, which = "foo"),    info = "unknown which must should throw error")
     expect_error(hessian(Poisson(1), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Poisson(1:3); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Calculating observed hessian and check return
     tmp_o <- -(1:5) / (5:1)^2 # Observed hessian

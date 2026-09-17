@@ -205,6 +205,12 @@ test_that("score.Cauchy works as expected", {
     expect_error(score(Cauchy(5, 3), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(Cauchy(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Cauchy(1:3, 1); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     ## Using location = 5, scale = 3
     denom <- 3^2 + (x - 5)^2
@@ -246,12 +252,17 @@ test_that("hessian.Cauchy works as expected", {
     expect_error(hessian(Cauchy(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
     expect_error(hessian(Cauchy(5, 3), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Cauchy(1:3, 1); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+
     ## Comparing to numeric approximation; throws warnings (due to param score)
-    hessian(Cauchy(5, 3), x)
     expect_equal(hessian(Cauchy(5, 3), x),
                  suppressWarnings(distributions3:::hessian.distribution(Cauchy(5, 3), x)),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
-    ## Calculating expected hessian and check return
-    expect_error(hessian(Cauchy(5, 3), 1, expected = TRUE), regexp = "only the observed hessian is available")
 })

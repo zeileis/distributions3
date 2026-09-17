@@ -203,6 +203,12 @@ test_that("score.Gamma works as expected", {
     expect_error(score(Gamma(2:3, 0.5), 1:5),                   regexp = "parameter lengths do not match")
     expect_error(score(Gamma(2, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Gamma(1:3, 0.4); x <- 1:3
+    expect_identical(nrow(score(d, x[1])), length(x))
+    expect_identical(nrow(score(d[1], x)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- cbind(shape = log(x) + log(0.5) - digamma(2),
                  rate  = 2 / 0.5 - x)
@@ -240,10 +246,19 @@ test_that("hessian.Gamma works as expected", {
     expect_error(hessian(Gamma(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
     expect_error(hessian(Gamma(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Gamma(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Gamma(2, 0.5), 1, expected = "foo"), regex = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Gamma(1:3, 0.4); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1])), length(x))
+    expect_identical(nrow(hessian(d[1], x)), length(x))
+    expect_identical(nrow(hessian(d, x[1], expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, expected = TRUE)), 1L) # x plays no role
 
     ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(hessian(Gamma(2, 0.5), x),
-                 suppressWarnings(distributions3:::hessian.distribution(Gamma(2, 0.5), x)),
+    expect_equal(hessian(Gamma(2, 0.5), 1:5),
+                 suppressWarnings(distributions3:::hessian.distribution(Gamma(2, 0.5), 1:5)),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
     ## The observed hessian is identical to the observed hessian. I.e., it does
@@ -251,7 +266,5 @@ test_that("hessian.Gamma works as expected", {
     expect_identical(hessian(Gamma(2, 0.5), 1, expected = TRUE),
                      hessian(Gamma(2, 0.5), 1, expected = FALSE),
                      info = "observed hessian not identical to expected hessian")
-    expect_identical(hessian(Gamma(2, 0.5), 1),
-                     hessian(Gamma(2, 0.5), 1, expected = "foo"))
 })
 

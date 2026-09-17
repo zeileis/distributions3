@@ -130,7 +130,7 @@ score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$d
 #' @exportS3Method
 hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, eps = .Machine$double.eps^(1/4), ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected) && missing(x)) x <- -999 # Dummy
+  if (isTRUE(expected) && missing(x)) x <- NA_real_ # Dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -140,21 +140,21 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
 
   ## compute scores
   if (expected) {
-    ## TODO(R)
     ## Discrete: Expecting count data
     if (all(is_discrete(d))) {
       ## function to compute expected hessian
       hess <- function(w, d, ...) {
-          s <- quantile(d, 0.999) + 1L
+          s <- support(d, drop = FALSE) # support
+          if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
+          if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
           fn <- function(i) {
-              at <- 0:s[i]
+              at <- s[i, 1]:s[i, 2]
               h  <- hessian(d[i], x = at, which = w)
               w  <- pdf(d[i], x = at)
               sum(h * w)
           }
           sapply(seq_along(d), fn)
       }
-    ## TODO(R)
     ## Continuous distributions: Currently using stats::integrate,
     ## Alternative would be to use (minimal exmaple/draft)
     ## p <- seq(0.00001, 0.99999, length.out = 1000)
@@ -172,7 +172,6 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
 
       ## function to compute expected hessian
       hess <- function(w, d, ...) {
-          ## TODO(R): Good heuristic?
           s <- support(d, drop = FALSE) # support
           if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
           if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)

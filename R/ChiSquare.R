@@ -307,21 +307,23 @@ score.ChiSquare <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.ChiSquare <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  stopifnot(
-    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected),
-    "only the observed hessian is available" = isFALSE(expected)
-  )
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected) x <- NA_real_
 
-  ## Calculate max length 'n' (plus input sanity check), get parameter names of
-  ## the distribution 'd', and evaluate available/check requested derivative names
-  n      <- max_length(d, x)
-  params <- names(unclass(d))
-  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  if (expected) {
+    return(NextMethod())
+  } else {
+    ## Calculate max length 'n' (plus input sanity check), get parameter names of
+    ## the distribution 'd', and evaluate available/check requested derivative names
+    n      <- max_length(d, x)
+    params <- names(unclass(d))
+    which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## For chi-square, the hessian is constant w.r.t. x
-  hess <- function(par, d, x) switch(par,
-    "df" = rep_len(-0.25 * trigamma(d$df / 2), n))
+    ## For chi-square, the hessian is constant w.r.t. x
+    hess <- function(par, d, x) switch(par,
+      "df" = rep_len(-0.25 * trigamma(d$df / 2), n))
 
-  ## Calculate derivatives, prepare return object
-  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+    ## Calculate derivatives, prepare return object
+    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+  }
 }

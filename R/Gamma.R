@@ -321,8 +321,8 @@ score.Gamma <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Gamma <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  ## Note that 'expected' is never evaluated given the expected and observed
-  ## hessian are identical. Thus, there is also no sanity check on 'expected'.
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected) x <- NA_real_  # Overwrite
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names

@@ -329,7 +329,7 @@ score.Bernoulli <- function(d, x, which = "p", drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Bernoulli <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected) && missing(x)) x <- -999 # dummy; if expected = TRUE 'x' can be missing
+  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -339,9 +339,9 @@ hessian.Bernoulli <- function(d, x, which = "p", drop = TRUE, expected = FALSE, 
 
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
-      function(par, d, x) 0 * x - 1/(d$p * (1 - d$p))
+      function(par, d, x) rep_len(-1 / (d$p * (1 - d$p)), n)
   } else {
-      function(par, d, x) -x/d$p^2 - (1 - x)/(1 - d$p)^2
+      function(par, d, x) rep_len(-x/d$p^2 - (1 - x)/(1 - d$p)^2, n)
   }
 
   ## Calculate derivatives, prepare return object

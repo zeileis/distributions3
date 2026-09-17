@@ -205,6 +205,12 @@ test_that("score.Logistic works as expected", {
     expect_error(score(Logistic(5, 3), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(Logistic(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Logistic(1:3, 1); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     z <- (x - 5) / 3
     tmp <- cbind(location = (1 - 2 * exp(-z) / (1 + exp(-z))) / 3,
@@ -244,6 +250,14 @@ test_that("hessian.Logistic works as expected", {
     expect_error(hessian(Logistic(5, 3), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Logistic(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
     expect_error(hessian(Logistic(5, 3), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Logistic(1:3, 1); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Comparing to numeric approximation; throws warnings (due to param score)
     expect_equal(hessian(Logistic(5, 3), x),

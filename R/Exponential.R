@@ -312,9 +312,8 @@ score.Exponential <- function(d, x, which = "rate", drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Exponential <- function(d, x, which = "rate", drop = TRUE, expected = FALSE, ...) {
-  ## Note that 'expected' is never evaluated/used as the expected hessian
-  ## is identical to the observed hessian. Thus, also no sanity check as it does
-  ## not matter anyways.
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected) x <- NA_real_  # Overwrite
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names

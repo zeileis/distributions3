@@ -296,10 +296,8 @@ score.Cauchy <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  stopifnot(
-    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected),
-    "only the observed hessian is available" = isFALSE(expected)
-  )
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected) x <- NA_real_
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -307,17 +305,21 @@ hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## pre-compute 'denom', scoped in hess functions!
-  denom <- denom <- d$scale^2 + (x - d$location)^2
-
   ## function for computing Hessian elements (both observed and expected for Cauchy)
-  hess <- function(par, d, x) {
-      switch(par,
-        "location"       = -2 * (d$scale^2 - (x - d$location)^2) / denom^2,
-        "scale"          = 1/d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
-        "location:scale" = -4 * (x - d$location) * d$scale / denom^2)
-  }
+  if (expected) {
+    return(NextMethod())
+  } else {
+    ## pre-compute 'denom', scoped in hess functions!
+    denom <- denom <- d$scale^2 + (x - d$location)^2
 
-  ## Calculate derivatives, prepare return object
-  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+    hess <- function(par, d, x) {
+        switch(par,
+          "location"       = rep_len(-2 * (d$scale^2 - (x - d$location)^2) / denom^2, n),
+          "scale"          = 1/d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
+          "location:scale" = -4 * (x - d$location) * d$scale / denom^2)
+    }
+
+    ## Calculate derivatives, prepare return object
+    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+  }
 }

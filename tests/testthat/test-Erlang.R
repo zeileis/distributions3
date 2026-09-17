@@ -193,6 +193,12 @@ test_that("score.Erlang works as expected", {
     expect_error(score(Erlang(3, 0.5), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(Erlang(3, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Erlang(1:3, 0.5); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     ## Using k = 3 and lambda = 0.5
     tmp <- cbind(k      = log(0.5) + log(x) - digamma(3),
@@ -233,11 +239,17 @@ test_that("hessian.Erlang works as expected", {
     expect_error(hessian(Erlang(3, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
     expect_error(hessian(Erlang(3, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Erlang(1:3, 0.5); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, expected = TRUE)), 1L) # x plays no role
+
     ## Comparing to numeric approximation; throws warnings (due to param score)
     expect_equal(hessian(Erlang(3, 0.5), x),
                  suppressWarnings(distributions3:::hessian.distribution(Erlang(3, 0.5), x)),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
-    ## Calculating expected hessian and check return
-    expect_error(hessian(Erlang(3, 0.5), 1, expected = TRUE), regexp = "only the observed hessian is available")
 })

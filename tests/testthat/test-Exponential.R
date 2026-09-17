@@ -213,6 +213,12 @@ test_that("score.Exponential works as expected", {
     expect_error(score(Exponential(2.5), 1, which = "foo"),        info = "unknown which must should throw error")
     expect_error(score(Exponential(2.5), 1, drop = "foo"),         info = "non-logical drop should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Exponential(1:3); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- 1 / 2.5 - x # Score for rate = 2.5
     expect_silent(s1 <- score(Exponential(2.5), x))
@@ -241,6 +247,15 @@ test_that("hessian.Exponential works as expected", {
     expect_error(hessian(Exponential(2:3), 1:5),                 regexp = "parameter lengths do not match")
     expect_error(hessian(Exponential(0.5), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Exponential(0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Exponential(0.5), 1, expected = "foo"), regex = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Exponential(1:3); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Calculating observed hessian and check return
     tmp_o <- rep_len(-1 / 2.5^2, length(x)) ## For rate = 2.5, not dependent on x
@@ -252,14 +267,12 @@ test_that("hessian.Exponential works as expected", {
             tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
     ## Calculating expected hessian and check return
-    tmp_e <- rep_len(-1 / 2.5^2, length(x)) # Expected hessian for rate = 2.5, identical to observed hessian
+    tmp_e <- -1 / 2.5^2 # Expected hessian for rate = 2.5, identical to observed hessian
     expect_identical(hessian(Exponential(2.5), x, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
     expect_identical(hessian(Exponential(2.5), x, expected = TRUE, drop = FALSE), cbind(rate = tmp_e))
 
     ## Expected = Observed, and it the argument 'expected' is completely ignored.
-    expect_identical(hessian(Exponential(2.5), x, expected = TRUE),
-                     hessian(Exponential(2.5), x, expected = FALSE))
-    expect_identical(hessian(Exponential(2.5), x),
-                     hessian(Exponential(2.5), x, expected = "FOOO"))
+    expect_identical(hessian(Exponential(2.5), 1, expected = TRUE),
+                     hessian(Exponential(2.5), 1, expected = FALSE))
 })
 

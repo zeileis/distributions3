@@ -312,7 +312,7 @@ score.Poisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected) && missing(x)) x <- -999 # dummy; if expected = TRUE 'x' can be missing
+  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -322,9 +322,9 @@ hessian.Poisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALS
 
   ## compute hessian
   hess <- if (expected) {
-    function(par, d, x) 0 * x - 1 / d$lambda
+    function(par, d, x) rep_len(-1 / d$lambda, n)
   } else {
-    function(par, d, x) -x / d$lambda^2
+    function(par, d, x) rep_len(-x / d$lambda^2, n)
   }
 
   ## Calculate derivatives, prepare return object

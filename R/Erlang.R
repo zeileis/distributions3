@@ -222,25 +222,27 @@ score.Erlang <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Erlang <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  stopifnot(
-    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected),
-    "only the observed hessian is available" = isFALSE(expected)
-  )
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected) x <- NA_real_
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
-  n      <- max_length(d, x)
-  params <- names(unclass(d))
-  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  if (expected) {
+    return(NextMethod())
+  } else {
+    n      <- max_length(d, x)
+    params <- names(unclass(d))
+    which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## All hessian elements are constant w.r.t. x for Erlang
-  hess <- function(par, d, x) switch(par,
-    "k"        = rep_len(-trigamma(d$k), n),
-    "lambda"   = rep_len(-d$k / d$lambda^2, n),
-    "k:lambda" = rep_len(1 / d$lambda, n))
+    ## All hessian elements are constant w.r.t. x for Erlang
+    hess <- function(par, d, x) switch(par,
+      "k"        = rep_len(-trigamma(d$k), n),
+      "lambda"   = rep_len(-d$k / d$lambda^2, n),
+      "k:lambda" = rep_len(1 / d$lambda, n))
 
 
-  ## Calculate derivatives, prepare return object
-  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+    ## Calculate derivatives, prepare return object
+    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+  }
 }
 

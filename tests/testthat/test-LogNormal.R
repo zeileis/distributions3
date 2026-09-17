@@ -204,6 +204,12 @@ test_that("score.LogNormal works as expected", {
     expect_error(score(LogNormal(5, 3), 1, which = 1),            info = "unknown which should throw error")
     expect_error(score(LogNormal(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- LogNormal(log(1:3), 0.1); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     ## Using log_mu = 2, log_sigma = 0.5
     tmp <- cbind(log_mu    = (log(x) - 2) / 0.5^2,
@@ -244,6 +250,13 @@ test_that("hessian.LogNormal works as expected", {
     expect_error(hessian(LogNormal(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
     expect_error(hessian(LogNormal(2, 0.5), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- LogNormal(log(1:3), 0.1); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Comparing analytic observed hessian to numeric approximation
     d <- LogNormal(1:3, 0.3)
