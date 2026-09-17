@@ -415,7 +415,7 @@ score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
   which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## compute scores
-  scr <- function(par) switch(par,
+  scr <- function(par, d) switch(par,
     "mu"    = (x - d$mu) / (d$sigma^2),
     "sigma" = (x - d$mu)^2 / (d$sigma^3) - 1 / d$sigma)
 
@@ -436,19 +436,18 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
 
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
-    function(par) switch(par,
+    function(par, d) switch(par,
       "mu"    = rep_len(-1 / d$sigma^2, n),
       "sigma" = rep_len(-2 / d$sigma^2, n),
       rep.int(0, n))
   } else {
-    function(par) switch(par,
+    function(par, d) switch(par,
       "mu"    = rep_len(-1 / d$sigma^2, n),
       "sigma" = -3 * (x - d$mu)^2 / d$sigma^4 + 1/d$sigma^2,
       -2 * (x - d$mu) / d$sigma^3)
   }
 
   ## Calculate derivatives, prepare return object
-  return(apply_deriv(hess, params, expand = TRUE,
-                     which = which, names = names(d), drop = drop))
+  return(apply_deriv(d = d, FUN = hess, which = which, drop = drop, check = FALSE))
 }
 

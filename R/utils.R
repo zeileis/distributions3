@@ -326,6 +326,7 @@ get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
 
 #' @param check logical. If set `FALSE` the maximum length is returned
 #'        without checking that all objects on `...` are recyclable.
+#'
 #' @rdname apply_dpqr
 #' @export
 max_length <- function(..., check = TRUE) {
@@ -356,7 +357,10 @@ max_length <- function(..., check = TRUE) {
 #' @param FUN function to be applied (typically score, hessian).
 #' @param which named character vector with the names of the derivatives to be returned.
 #' @param ... forwarded to `FUN`.
-apply_deriv <- function(d, FUN, which, drop = TRUE, check = TRUE, ..) {
+#'
+#' @rdname apply_dpqr
+#' @export
+apply_deriv <- function(d, x, FUN, which, drop = TRUE, check = TRUE, ...) {
   check  <- as.logical(check)[[1L]]
   drop   <- as.logical(drop)[[1L]]
 
@@ -373,17 +377,12 @@ apply_deriv <- function(d, FUN, which, drop = TRUE, check = TRUE, ..) {
 
   names <- names(d)
   if (drop && length(which) == 1L) {
-    res <- FUN(d, which)
+    res <- FUN(names(which), d = d, x = x)
     if (!is.null(names)) res <- setNames(res, names)
   } else {
-    tmp <- unique(names(which))
-    res <- structure(lapply(tmp, FUN, d = d), names = tmp)
-    str(res)
+    tmp <- unique(unique(names(which)))
+    res <- structure(lapply(tmp, FUN, d = d, x = x), names = tmp)
     res <- do.call("cbind", res[names(which)])
-    print('here')
-    print(names)
-    print(unname(which))
-    print(dim(res))
     dimnames(res) <- list(names, unname(which))
   }
 

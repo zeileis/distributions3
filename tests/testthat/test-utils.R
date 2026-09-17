@@ -497,29 +497,65 @@ test_that("max_length() works as expected", {
 })
 
 
-devtools::load_all("../")
-d <- Normal(1:3) |> setNames(letters[1:3])
-testfun <- function(x, d) switch(x, "mu" = rep(1, length(x), "sigma" = rep(2, length(x)), rep(3, length(x))))
-apply_deriv(d, testfun, "mu")
+## apply_deriv(d, FUN, which, drop = TRUE, check = TRUE, ...)
+test_that("apply_deriv() works as expected", {
 
-devtools::load_all("../")
-apply_deriv(d, testfun, c("mu"= "mu"))
-apply_deriv(d, testfun, c("sigma"= "mu"))
-apply_deriv(d, testfun, c("mu" = "fooo"), drop = FALSE)
+    d <- Normal(1:3) |> setNames(letters[1:3])
 
-devtools::load_all("../")
-apply_deriv(unname(d), testfun, c("mu"= "mu"))
-apply_deriv(unname(d), testfun, c("sigma" = "mu"))
-apply_deriv(unname(d), testfun, c("mu" = "fooo"), drop = FALSE)
+    ## Just for testing. 'mu' returns a vector with ones,
+    ## 'sigma' a vector with twos, and else (e.g., hessian
+    ## cross-derivatives) 'x' is returned.
+    testfun <- function(par, d, x) {
+        switch(par, "mu"    = rep(1, length(d)),
+                    "sigma" = rep(2, length(d)),
+                    x)
+    }
 
-apply_deriv(d, testfun, c("foo"= "mu"), drop = FALSE) # ERR
+    # Unnamed vector: returns 'mu' as 'mu'
+    expect_silent(x <- apply_deriv(d, x = seq_along(d), testfun, "mu"))
+    expect_identical(x, rep(1, length(d)) |> setNames(names(d)))
 
-testfun('mu')
+    ## Named vector: Calculates derivative for names(which), the elements
+    ## of the caracter vectors are used for naming the return. This is
+    ## used for hessian cross-elements/cross-derivatives.
+    expect_silent(x <- apply_deriv(d, seq_along(d), testfun, c(mu = "mu")))
+    expect_identical(x, rep(1, length(d)) |> setNames(names(d)))
+    expect_silent(x <- apply_deriv(d, seq_along(d), testfun, c(sigma = "mu")))
+    expect_identical(x, rep(2, length(d)) |> setNames(names(d)))
 
-devtools::load_all("../")
-apply_deriv(d, testfun, c("mu"= "mu", "sigma" = "sigma"))
-apply_deriv(d, testfun, c("mu" = "foo", "sigma" = "bar"))
-apply_deriv(d, testfun, c("mu" = "foo", "sigma" = "bar"), drop = FALSE) # No effect
+    expect_silent(x <- apply_deriv(d, seq_along(d), testfun, c("mu" = "fooo"), drop = FALSE))
+    expect_identical(x, matrix(1, nrow = length(d), ncol = 1, dimnames = list(names(d), "fooo")))
+
+    ## Same when 'd' is an unnamed distributions object
+    expect_silent(x <- apply_deriv(unname(d), seq_along(d), testfun, c(mu = "mu")))
+    expect_identical(x, rep(1, length(d)))
+    expect_silent(x <- apply_deriv(unname(d), seq_along(d), testfun, c(sigma = "mu")))
+    expect_identical(x, rep(2, length(d)))
+    expect_silent(x <- apply_deriv(unname(d), seq_along(d), testfun, c("mu:sigma" = "fooo"), drop = FALSE))
+    expect_identical(x, matrix(seq_along(d), nrow = length(d), ncol = 1, dimnames = list(NULL, "fooo")))
+
+    ## Standard usecase for score: Return all parameters using
+    ## 'mu' and 'sigma' here. Named object 'd'
+    expect_silent(x1 <- apply_deriv(d, seq_along(d), testfun, c("mu", "sigma")))
+    expect_silent(x2 <- apply_deriv(d, seq_along(d), testfun, c(mu = "mu", sigma = "sigma")))
+    tmp <- matrix(c(1, 2), ncol = 2, nrow = 3, byrow = TRUE, dimnames = list(names(d), c("mu", "sigma")))
+
+    ## Same with unnamed distributions object, this time also including cross-cerivatives
+    p <- get_deriv_names(c("mu", "sigma"), expand = TRUE)
+    expect_silent(x1 <- apply_deriv(unname(d), seq_along(d), testfun, unname(p)))
+    expect_silent(x2 <- apply_deriv(unname(d), seq_along(d), testfun, p))
+    tmp <- cbind("mu"       = rep(1, length(d)),
+                 "sigma:mu" = seq_along(d),
+                 "mu:sigma" = seq_along(d),
+                 "sigma"    = rep(2, length(d)))
+    expect_identical(x1, tmp)
+    expect_identical(x2, tmp)
+
+    ## Ensure it takes care of the order
+    expect_silent(x1 <- apply_deriv(unname(d), seq_along(d), testfun, rev(p)))
+    expect_identical(x1, tmp[, 4:1])
+})
+
 
 
 
