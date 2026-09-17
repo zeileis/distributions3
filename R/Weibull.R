@@ -298,21 +298,27 @@ hessian.Weibull <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## pre-compute shared terms, scoped by 'hess' functions!
-  z <- (x / d$scale)^d$shape
-  log_z <- log(x / d$scale)
 
-  ## function for computing Hessian elements
+  ## Function for computing Hessian elements
   hess <- if (expected) {
+    ## pre-compute shared terms (scoped)
+    trigamma_term <- (pi^2 / 6) + (1 + digamma(1))^2
+
     function(par, d, x) switch(par,
-      "shape"       = rep_len(-1 / d$shape^2 - pi^2 / 6, n),
-      "scale"       = rep_len(-d$shape / d$scale^2 - (d$shape + 1) / d$scale^2, n),
-      rep_len(1 / d$scale + (d$shape - 1) / (d$shape * d$scale), n))
+      "shape"       = rep_len(-trigamma_term / d$shape^2, n),
+      "scale"       = rep_len(-d$shape^2 / d$scale^2, n),
+      rep_len((1 + digamma(1)) / d$scale, n) # mixed partials
+    )
   } else {
+    ## pre-compute shared terms (scoped)
+    z     <- (x / d$scale)^d$shape
+    log_z <- log(x / d$scale)
+
     function(par, d, x) switch(par,
-      "shape"       = pmin(-1 / d$shape^2 - z * log_z^2, -1e-15),
-      "scale"       = pmin(d$shape * (1 - z * (d$shape + 1)) / d$scale^2, -1e-15),
-      (z - 1 + d$shape * z * log_z) / d$scale)
+      "shape"       = -1 / d$shape^2 - z * log_z^2,
+      "scale"       = (d$shape - d$shape * (d$shape + 1) * z) / d$scale^2,
+      (-1 + z * (1 + d$shape * log_z)) / d$scale # mixed partials
+    )
   }
 
   ## Calculate derivatives, prepare return object
