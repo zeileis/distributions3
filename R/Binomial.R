@@ -354,6 +354,9 @@ score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected) && missing(x)) x <- -999 # dummy; if expected = TRUE 'x' can be missing
+
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
   n      <- max_length(d, x)

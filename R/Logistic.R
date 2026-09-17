@@ -300,25 +300,31 @@ score.Logistic <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected) && missing(x)) x <- -999 # dummy; if expected = TRUE 'x' can be missing
+
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
   n      <- max_length(d, x)
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## pre-compute z and sigmoid terms; scoped in 'hess' functions!
-  z <- (x - d$location) / d$scale
-  exp_neg_z <- exp(-z)
-  one_plus_exp_neg_z <- 1 + exp_neg_z
-  p_z <- exp_neg_z / one_plus_exp_neg_z  ## sigmoid derivative term
-
   ## function for computing Hessian elements
   hess <- if (expected) {
+    ## pre-computing denominator, scoped by 'hess' function
+    denom     <- (3 * d$scale^2)
+
     function(par, d, x) switch(par,
-      "location"       = rep_len(-1 / (3 * d$scale^2), n),
-      "scale"          = rep_len(-1 / (3 * d$scale^2), n),
+      "location"       = -1 / denom,
+      "scale"          = -(1 + pi^2 / 3) / denom,
       rep.int(0, n))
   } else {
+    ## pre-compute z and sigmoid terms; scoped in 'hess' functions!
+    z <- (x - d$location) / d$scale
+    exp_neg_z <- exp(-z)
+    one_plus_exp_neg_z <- 1 + exp_neg_z
+    p_z <- exp_neg_z / one_plus_exp_neg_z  ## sigmoid derivative term
+
     function(par, d, x) switch(par,
       "location"       = pmin(-2 * p_z * (1 - p_z) / d$scale^2, -1e-15),
       "scale"          = (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / d$scale^2,

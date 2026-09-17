@@ -123,12 +123,14 @@ score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$d
   return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
+#' @importFrom stats integrate
+#'
 #' @rdname score-hessian
 #' @name score-hessian
 #' @exportS3Method
 hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, eps = .Machine$double.eps^(1/4), ...) {
-  ## numeric differentiation yields observed hessian only
-  if (!isFALSE(expected)) stop("only the observed hessian is available")
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected) && missing(x)) x <- -999 # Dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -137,13 +139,59 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## compute scores
-  hess <- function(par, d, x) {
-    par <- strsplit(par, ":", fixed = TRUE)[[1L]]
-    par <- rep_len(par, 2L)
-    d1 <- d2 <- d
-    d1[[par[2L]]] <- d1[[par[2L]]] + eps
-    d2[[par[2L]]] <- d2[[par[2L]]] - eps
-    (score(d1, x, which = par[1L]) - score(d2, x, which = par[1L])) / (2 * eps)
+  if (expected) {
+    ## TODO(R)
+    ## Discrete: Expecting count data
+    if (all(is_discrete(d))) {
+      ## function to compute expected hessian
+      hess <- function(w, d, ...) {
+          s <- quantile(d, 0.999) + 1L
+          fn <- function(i) {
+              at <- 0:s[i]
+              h  <- hessian(d[i], x = at, which = w)
+              w  <- pdf(d[i], x = at)
+              sum(h * w)
+          }
+          sapply(seq_along(d), fn)
+      }
+    ## TODO(R)
+    ## Continuous distributions: Currently using stats::integrate,
+    ## Alternative would be to use (minimal exmaple/draft)
+    ## p <- seq(0.00001, 0.99999, length.out = 1000)
+    ## q <- quantile(d[1], p)
+    ## h <- hessian(d[1], q)
+    ## round(apply(h, MARGIN = 2, mean), 3)
+    } else {
+      ## integrand for numerical integration; scoped by 'hess'
+      integrand <- function(x, dx, w) {
+          obs_h <- hessian(dx, x, which = w)
+          density_x <- pdf(dx, x) # or density(d, val)
+          return(obs_h * density_x)
+      }
+      ifun <- Vectorize(integrand, vectorize.args = "x") # functionto be integrated
+
+      ## function to compute expected hessian
+      hess <- function(w, d, ...) {
+          ## TODO(R): Good heuristic?
+          s <- support(d, drop = FALSE) # support
+          if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
+          if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
+          fn <- function(i) {
+              stats::integrate(ifun, dx = d[i], w = w, lower = s[i, "min"], upper = s[i, "max"])
+          }
+          res <- lapply(seq_along(d), fn)
+          vapply(res, function(x) x$value, numeric(1L))
+      }
+    }
+  } else {
+    hess <- function(par, d, x) {
+      par <- strsplit(par, ":", fixed = TRUE)[[1L]]
+      par <- rep_len(par, 2L)
+      d1 <- d2 <- d
+      d1[[par[2L]]] <- d1[[par[2L]]] + eps
+      d2[[par[2L]]] <- d2[[par[2L]]] - eps
+      (score(d1, x, which = par[1L]) - score(d2, x, which = par[1L])) / (2 * eps)
+    }
   }
 
   ## Calculate derivatives, prepare return object

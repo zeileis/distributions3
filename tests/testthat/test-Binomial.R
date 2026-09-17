@@ -254,7 +254,7 @@ test_that("hessian.Binomial works as expected", {
     expect_error(hessian(Binomial(30, c(0.2, 0.3, 0.5)), x),   regexp = "parameter lengths do not match")
     expect_error(hessian(Binomial(30, ), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Binomial(30, ), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Binomial(30, ), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+    expect_error(hessian(Binomial(30, ), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
     ## Calculating observed hessian and check return
     tmp_o <- -x / 0.5^2 - (30 - x) / 0.5^2 # Observed hessian for size = 30, p = 0.5
@@ -270,9 +270,15 @@ test_that("hessian.Binomial works as expected", {
     expect_identical(hessian(Binomial(30, 0.5), x, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
     expect_identical(hessian(Binomial(30, 0.5), x, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
 
-    ## Hessian only supported for parameter p (not size), when which = 'size'
-    ## we expect a warning, and 'p' is returned.
-    expect_warning(s2 <- hessian(Binomial(size = 30, p = 0.5), x, which = "size"),
-        regexp = "only the scores with respect to 'p' are supported")
-    expect_identical(s2, hessian(Binomial(size = 30, p = 0.5), x))
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Binomial(c(10, 20, 30), 0.4)
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2, which = "p"))
+    expect_equal(h1o, h2o, tolerance = 1e-6)
+
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE, which = "p"))
+    expect_equal(h1e, h2e, tolerance = 1e-3, info = "analytic expected Hessian not equal to numeric approximation")
 })

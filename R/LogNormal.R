@@ -330,23 +330,29 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected) && missing(x)) x <- -999 # dummy; if expected = TRUE 'x' can be missing
+
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
   n      <- max_length(d, x)
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## pre-compute log(x)/z, scoped in 'hess' functions!
-  log_x <- log(x)
-  z <- log_x - d$log_mu
-
   ## function for computing Hessian elements
   hess <- if (expected) {
+    ## pre-computing inverse of 1 over log(sigma)^2
+    sigma2inv <- 1 / d$log_sigma^2
+
     function(par, d, x) switch(par,
-      "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
-      "log_sigma"        = rep_len(-2 / d$log_sigma^2, n),
-      rep.int(0, n))
+      "log_mu"           = -sigma2inv,
+      "log_sigma"        = -2 * sigma2inv,
+      rep(0.0, n))
   } else {
+    ## pre-compute log(x)/z, scoped in 'hess' functions!
+    log_x <- log(x)
+    z <- log_x - d$log_mu
+
     function(par, d, x) switch(par,
       "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
       "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),

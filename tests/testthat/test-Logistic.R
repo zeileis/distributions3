@@ -243,20 +243,23 @@ test_that("hessian.Logistic works as expected", {
     expect_error(hessian(Logistic(2:3, 0.5), 1:5),             regexp = "parameter lengths do not match")
     expect_error(hessian(Logistic(5, 3), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Logistic(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Logistic(5, 3), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+    expect_error(hessian(Logistic(5, 3), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
     ## Comparing to numeric approximation; throws warnings (due to param score)
     expect_equal(hessian(Logistic(5, 3), x),
                  suppressWarnings(distributions3:::hessian.distribution(Logistic(5, 3), x)),
                  tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
-    ## Calculating expected hessian and check return (scale = 3; independent on location)
-    n <- length(x)
-    tmp_e <- cbind("location"       = rep(-1 / (3 * 3^2), n),
-                   "scale:location" = rep(0, n),
-                   "location:scale" = rep(0, n),
-                   "scale"          = rep(-1 / (3 * 3^2), n) )
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Logistic(1:3, 3:1 / 10)
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-5)
 
-    expect_identical(hessian(Logistic(5, 3), x, expected = TRUE), tmp_e, info = "expected hessian incorrect")
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
 })
 

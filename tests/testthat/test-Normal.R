@@ -242,7 +242,7 @@ test_that("hessian.Normal works as expected", {
     expect_error(hessian(Normal(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(hessian(Normal(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Normal(), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+    expect_error(hessian(Normal(2, 0.5), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(Normal(5:1), 1:5))
@@ -274,19 +274,16 @@ test_that("hessian.Normal works as expected", {
     expect_silent(hms <- hessian(Normal(1:5), 5:1, which = "mu:sigma", drop = FALSE))
     expect_identical(h1[5:1, ], cbind(hm, hsm, hms, hs))
 
-    ## Compare to numerically calculated hessian (observed,
-    ## hessian.distribution only has expected = FALSE)
-    expect_equal(hessian(Normal(5:1), 1:5, expected = FALSE),
-                 distributions3:::hessian.distribution(Normal(5:1), 1:5),
-                 tolerance = 1e-7)
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Normal(1:3, 3:1)
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-6)
 
-    ## Testing 'expected = TRUE' and check that the
-    ## expected hessian (Fisher information) are numerically different
-    expect_silent(he <- hessian(Normal(1:5), 5:1, expected = TRUE))
-    expect_identical(dim(he), dim(h1))
-    expect_identical(dimnames(he), dimnames(h1))
-    expect_identical(sum(h1 - he), -105)
-
-    ## Numeric values of expected hessian
-    expect_identical(he, matrix(rep(c(-1, 0, 0, -2), each = 5), nrow = 5, dimnames = dimnames(he)))
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
 })
+

@@ -121,10 +121,6 @@ test_that("hessian.distribution error handling works", {
     expect_error(distributions3:::hessian.distribution(Normal(1:2), 1:3),
         regexp = "parameter lengths do not match")
 
-    # For hessian.distribution only the observed (not the expected) hessian is available
-    expect_error(distributions3:::hessian.distribution(Normal(1:2), 1:3, expected = TRUE),
-        regexp = "only the observed hessian is available")
-
     # Non-existent values for which (handled by match.arg)
     expect_error(distributions3:::hessian.distribution(Normal(), 2, which = 1))
     expect_error(distributions3:::hessian.distribution(Normal(), 2, which = "lambda"))

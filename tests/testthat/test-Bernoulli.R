@@ -243,7 +243,7 @@ test_that("hessian.Bernoulli works as expected", {
     expect_error(hessian(Bernoulli(c(0.2, 0.3, 0.5)), x),   regexp = "parameter lengths do not match")
     expect_error(hessian(Bernoulli(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Bernoulli(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Bernoulli(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+    expect_error(hessian(Bernoulli(), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
     ## Calculating observed hessian and check return
     tmp_o <- -x / 0.5^2 - (1 - x) / (1 - 0.5)^2 # Observed hessian for p = 0.5
@@ -254,4 +254,17 @@ test_that("hessian.Bernoulli works as expected", {
     tmp_e <- rep(-1 / 0.5^2, 6L) # Expected hessian for p = 0.5
     expect_identical(hessian(Bernoulli(0.5), x, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
     expect_identical(hessian(Bernoulli(0.5), x, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Bernoulli(c(0.25, 0.5, 0.75))
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-6)
+
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-3, info = "analytic expected Hessian not equal to numeric approximation")
+
 })

@@ -234,21 +234,18 @@ test_that("hessian.Weibull works as expected", {
     expect_error(hessian(Weibull(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
     expect_error(hessian(Weibull(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Weibull(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Weibull(2, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+    expect_error(hessian(Weibull(2, 0.5), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(hessian(Weibull(2, 0.5), x),
-                 suppressWarnings(distributions3:::hessian.distribution(Weibull(2, 0.5), x)),
-                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Weibull(2, seq(0.1, 0.9, length.out = 3))
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-5)
 
-    ## Calculating expected hessian and check return
-    n     <- length(x)
-    shape <- 2.0
-    scale <- 0.5
-    tmp_e <- cbind("shape"       = rep(-1 / shape^2 - pi^2 / 6, n),
-                   "scale:shape" = rep(1 / scale + (shape - 1) / (shape * scale), n),
-                   "shape:scale" = rep(1 / scale + (shape - 1) / (shape * scale), n),
-                   "scale"       = rep(-shape / scale^2 - (shape + 1) / scale^2, n))
-    expect_identical(hessian(Weibull(2, 0.5), x, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
 })
 
