@@ -291,3 +291,54 @@ is_discrete.Gamma <- function(d, ...) {
 is_continuous.Gamma <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Gamma: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Gamma <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores
+  scr <- function(par, d, x) switch(par,
+    "shape" = log(x) + log(d$rate) - digamma(d$shape),
+    "rate"  = d$shape / d$rate - x)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Gamma <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected) x <- NA_real_  # Overwrite
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## For Gamma with shape/rate parametrization, all second derivatives are constant w.r.t. x,
+  ## so the observed Hessian equals the expected Hessian. Use the same formulas for both.
+  hess <- function(par, d, x) {
+    switch(par,
+           "shape"      = rep_len(-trigamma(d$shape), n),
+           "rate"       = rep_len(-d$shape / d$rate^2, n),
+           rep_len(1 / d$rate, n))
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

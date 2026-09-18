@@ -587,17 +587,14 @@ rsinharcsinh <- function(n, mu = 0, sigma = 1, nu = 1, tau = 1, cores = NULL) {
 #' @usage NULL
 #' @exportS3Method
 score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
-  ## available and selected parameters
-  p <- c("mu", "sigma", "nu", "tau")
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
-
-  ## Calculating a series of vectors used over and over again
-  ## when calculating the score(s).
+  ## pre-compuate a series of objects/vectors used multiple times when calculating
+  ## scores. Scoped by the 'scr' function!
   z                 <- (x - d$mu) / d$sigma
   asinhz            <- asinh(z)
   exp_tauasinhz     <- exp(d$tau * asinhz)
@@ -617,7 +614,7 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
   dldr <- -r
   dldc <- 1 / c
 
-  src_mu <-  function() {
+  src_mu <-  function(d, x) {
     z2p1sqrtinv <- 1 / sqrt(z2 + 1)
 
     dldz <- -z / (1 + z2)
@@ -628,7 +625,7 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
     dldm <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
     return((dldr * drdz + dldc * dcdz + dldz) * dzdm)
   }
-  src_sigma <- function() {
+  src_sigma <- function(d, x) {
     z2p1sqrtinv <- 1 / sqrt(z2 + 1)
 
     dldz <- -z / (1 + z2)
@@ -637,12 +634,12 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
     dzdd <- -z * sigmainv
     return((dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv)
   }
-  src_nu <- function() {
+  src_nu <- function(d, x) {
       drdv <- 0.5 * asinhz * exp_minusnuasinhz
       dcdv <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
       return(dldr * drdv + dldc * dcdv)
   }
-  src_tau <- function() {
+  src_tau <- function(d, x) {
       drdt <- 0.5 * asinhz * exp_tauasinhz
       dcdt <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
       return(dldr * drdt + dldc * dcdt)
@@ -650,19 +647,12 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
 
   ## compute scores.
   ## `src_*()` do scope all required vectors/elements
-  scr <- function(par) switch(par,
-    "mu" = src_mu(), "sigma" = src_sigma(), "nu" = src_nu(), "tau"  = src_tau()
+  scr <- function(par, d, x) switch(par,
+    "mu" = src_mu(d, x), "sigma" = src_sigma(d, x), "nu" = src_nu(d, x), "tau"  = src_tau(d, x)
   )
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- setNames(scr(which), names(d))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(d), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -670,212 +660,180 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-  ## numeric differentiation yields observed hessian only
-  if (!isFALSE(expected)) stop("only the observed hessian is available")
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
 
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-  n <- max(n)
-
-  ## available and selected parameters/combinations and mappings for symmetries
-  p <- c("mu"        = "mu",
-         "sigma:mu"  = "mu:sigma",
-         "nu:mu"     = "mu:nu",
-         "tau:mu"    = "mu:tau",
-         "mu:sigma"  = "mu:sigma",
-         "sigma"     = "sigma",
-         "nu:sigma"  = "sigma:nu",
-         "tau:sigma" = "sigma:tau",
-         "mu:nu"     = "mu:nu",
-         "sigma:nu"  = "sigma:nu",
-         "nu"        = "nu",
-         "tau:nu"    = "nu:tau",
-         "mu:tau"    = "mu:tau",
-         "sigma:tau" = "sigma:tau",
-         "nu:tau"    = "nu:tau",
-         "tau"       = "tau")
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
-
-  ##########################################################
-  ## Calculating a series of vectors used over and over again
-  ## when calculating the score(s).
-  z                 <- (x - d$mu) / d$sigma
-  asinhz            <- asinh(z)
-  exp_tauasinhz     <- exp(d$tau * asinhz)
-  exp_minusnuasinhz <- exp(-d$nu * asinhz)
-
-  ## Performing a series of vector operations used multiple times below
-  z2         <- z^2
-  z2p1       <- z2 + 1
-  z2p1sqrtinv <- 1 / sqrt(z2p1)
-  tau2       <- d$tau^2
-  nu2        <- d$nu^2
-  sigmainv   <- 1 / d$sigma
-
-  r <- 0.5 * (exp_tauasinhz          - exp_minusnuasinhz)
-  c <- 0.5 * (exp_tauasinhz * d$tau  + exp_minusnuasinhz * d$nu)
-  h <- 0.5 * (exp_tauasinhz * tau2   - exp_minusnuasinhz * nu2)
-
-  ## Partial derivatives used everywhere
-  dldr <- -r
-  dldc <- 1 / c
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldm2
-  hess_mu2 <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-    dzdm   <- -sigmainv
-    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
-    dldm   <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
-    d2ldm2 <- -dldm * dldm
-    return(pmin(d2ldm2, -1e-15))
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldd2
-  hess_sigma2 <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-    dzdd   <- -z * sigmainv
-    dldd   <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
-    d2ldd2 <- -dldd * dldd
-    return(pmin(d2ldd2, -1e-15))
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldv2
-  hess_nu2 <- function() {
-    drdv   <- 0.5 * asinhz * exp_minusnuasinhz
-    dcdv   <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
-    dldv   <- dldr * drdv + dldc * dcdv
-    return(pmin(-dldv * dldv, -1e-15))
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldt2
-  hess_tau2 <- function(y,mu,sigma,nu,tau) { 
-    drdt   <- 0.5 * asinhz * exp_tauasinhz
-    dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
-    dldt   <- dldr * drdt + dldc * dcdt
-    return(pmin(-dldt * dldt, -1e-15))
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldmdd
-  hess_mu_sigma <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-    dzdm   <- -sigmainv
-    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
-    dldm   <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
-    dzdd   <- -z * sigmainv
-    dldd   <- (dldr * drdz + dldc * dcdz + dldz) *dzdd - sigmainv
-    return(-dldm * dldd)
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldmdv
-  hess_mu_nu <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-    dzdm   <- -sigmainv
-    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
-
-    drdv   <- 0.5 * asinhz * exp_minusnuasinhz
-    dcdv   <- 0.5 *(1 - d$nu * asinhz) * exp_minusnuasinhz
-    dldv   <- dldr * drdv + dldc * dcdv
-    return(-dldm * dldv)
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldmdt
-  hess_mu_tau <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-    dzdm   <- -sigmainv
-    dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
-
-    dldm <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
-    drdt <- 0.5 * asinhz * exp_tauasinhz
-    dcdt <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
-    dldt <- dldr * drdt + dldc * dcdt
-    return(-dldm * dldt)
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldddv
-  hess_sigma_nu <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-
-    dzdd <- -z * sigmainv
-    dldd <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
-    drdv <- 0.5 * asinhz * exp_minusnuasinhz
-    dcdv <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
-    dldv <- dldr * drdv + dldc * dcdv
-    return(-dldd * dldv)
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldddt
-  hess_sigma_tau <- function() {
-    dldz   <- -z / z2p1
-    dcdz   <- h * z2p1sqrtinv
-    drdz   <- c * z2p1sqrtinv
-
-    dzdd   <- -z * sigmainv
-    dldd   <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
-
-    drdt   <- 0.5 * asinhz * exp_tauasinhz
-    dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
-    dldt   <- dldr * drdt + dldc * dcdt
-    return(-dldd * dldt)
-  }
-
-  ## Corresponds to gamlss.dist::SHASH()$d2ldvdt
-  hess_nu_tau <- function() {
-    dldr   <- -r
-    drdv   <- 0.5 * asinhz * exp_minusnuasinhz
-    dcdv   <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
-
-    dldv   <- dldr * drdv + dldc * dcdv
-    drdt   <- 0.5 * asinhz * exp_tauasinhz
-    dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
-    dldt   <- dldr * drdt + dldc * dcdt
-    return(-dldv * dldt)
-  }
-
-  ##########################################################
-
-
-  ## compute hessian
-  ## `src_*()` do scope all required vectors/elements
-  hess <- function(par) switch(par,
-        "mu"        = hess_mu2(),
-        "mu:sigma"  = hess_mu_sigma(),
-        "mu:tau"    = hess_mu_tau(),
-        "mu:nu"     = hess_mu_nu(),
-        "sigma"     = hess_sigma2(),
-        "sigma:nu"  = hess_sigma_nu(),
-        "sigma:tau" = hess_sigma_tau(),
-        "nu"        = hess_nu2(),
-        "nu:tau"    = hess_nu_tau(),
-        "tau"       = hess_tau2(),
-        stop("missing hess_*() function for ", par)  ## nocov
-  )
-
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- setNames(hess(w), names(d))
+  if (expected) {
+      return(NextMethod())
   } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(d), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
+    ## Calculate max length 'n' (plus input sanity check), get parameter names of
+    ## the distribution 'd', and evaluate available/check requested derivative names
+    n      <- max_length(d, x)
+    params <- names(unclass(d))
+    which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+    ## pre-calculating a series of objects/vectores used multiple
+    ## times when calculating derivatives. Scoped by the 'hess' function!
+    z                 <- (x - d$mu) / d$sigma
+    asinhz            <- asinh(z)
+    exp_tauasinhz     <- exp(d$tau * asinhz)
+    exp_minusnuasinhz <- exp(-d$nu * asinhz)
+
+    ## Performing a series of vector operations used multiple times below
+    z2                <- z^2
+    z2p1              <- z2 + 1
+    z2p1sqrtinv       <- 1 / sqrt(z2p1)
+    tau2              <- d$tau^2
+    nu2               <- d$nu^2
+    sigmainv          <- 1 / d$sigma
+
+    r <- 0.5 * (exp_tauasinhz          - exp_minusnuasinhz)
+    c <- 0.5 * (exp_tauasinhz * d$tau  + exp_minusnuasinhz * d$nu)
+    h <- 0.5 * (exp_tauasinhz * tau2   - exp_minusnuasinhz * nu2)
+
+    ## Partial derivatives used everywhere
+    dldr <- -r
+    dldc <- 1 / c
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldm2
+    hess_mu2 <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+      dzdm   <- -sigmainv
+      dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+      dldm   <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
+      d2ldm2 <- -dldm * dldm
+      return(pmin(d2ldm2, -1e-15))
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldd2
+    hess_sigma2 <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+      dzdd   <- -z * sigmainv
+      dldd   <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
+      d2ldd2 <- -dldd * dldd
+      return(pmin(d2ldd2, -1e-15))
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldv2
+    hess_nu2 <- function(d, x) {
+      drdv   <- 0.5 * asinhz * exp_minusnuasinhz
+      dcdv   <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
+      dldv   <- dldr * drdv + dldc * dcdv
+      return(pmin(-dldv * dldv, -1e-15))
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldt2
+    hess_tau2 <- function(d, x) {
+      drdt   <- 0.5 * asinhz * exp_tauasinhz
+      dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+      dldt   <- dldr * drdt + dldc * dcdt
+      return(pmin(-dldt * dldt, -1e-15))
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldmdd
+    hess_mu_sigma <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+      dzdm   <- -sigmainv
+      dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+      dldm   <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
+      dzdd   <- -z * sigmainv
+      dldd   <- (dldr * drdz + dldc * dcdz + dldz) *dzdd - sigmainv
+      return(-dldm * dldd)
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldmdv
+    hess_mu_nu <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+      dzdm   <- -sigmainv
+      dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+
+      drdv   <- 0.5 * asinhz * exp_minusnuasinhz
+      dcdv   <- 0.5 *(1 - d$nu * asinhz) * exp_minusnuasinhz
+      dldv   <- dldr * drdv + dldc * dcdv
+      return(-dldm * dldv)
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldmdt
+    hess_mu_tau <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+      dzdm   <- -sigmainv
+      dldm   <- sigmainv * z2p1sqrtinv * (-h / c + r * c + z * z2p1sqrtinv)
+
+      dldm <- (dldr * drdz + dldc * dcdz + dldz) * dzdm
+      drdt <- 0.5 * asinhz * exp_tauasinhz
+      dcdt <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+      dldt <- dldr * drdt + dldc * dcdt
+      return(-dldm * dldt)
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldddv
+    hess_sigma_nu <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+
+      dzdd <- -z * sigmainv
+      dldd <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
+      drdv <- 0.5 * asinhz * exp_minusnuasinhz
+      dcdv <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
+      dldv <- dldr * drdv + dldc * dcdv
+      return(-dldd * dldv)
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldddt
+    hess_sigma_tau <- function(d, x) {
+      dldz   <- -z / z2p1
+      dcdz   <- h * z2p1sqrtinv
+      drdz   <- c * z2p1sqrtinv
+
+      dzdd   <- -z * sigmainv
+      dldd   <- (dldr * drdz + dldc * dcdz + dldz) * dzdd - sigmainv
+
+      drdt   <- 0.5 * asinhz * exp_tauasinhz
+      dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+      dldt   <- dldr * drdt + dldc * dcdt
+      return(-dldd * dldt)
+    }
+
+    ## Corresponds to gamlss.dist::SHASH()$d2ldvdt
+    hess_nu_tau <- function(d, x) {
+      dldr   <- -r
+      drdv   <- 0.5 * asinhz * exp_minusnuasinhz
+      dcdv   <- 0.5 * (1 - d$nu * asinhz) * exp_minusnuasinhz
+
+      dldv   <- dldr * drdv + dldc * dcdv
+      drdt   <- 0.5 * asinhz * exp_tauasinhz
+      dcdt   <- 0.5 * (1 + d$tau * asinhz) * exp_tauasinhz
+      dldt   <- dldr * drdt + dldc * dcdt
+      return(-dldv * dldt)
+    }
+
+    ## compute hessian
+    hess <- function(par, d, x) switch(par,
+          "mu"        = hess_mu2(d, x),
+          "mu:sigma"  = hess_mu_sigma(d, x),
+          "mu:tau"    = hess_mu_tau(d, x),
+          "mu:nu"     = hess_mu_nu(d, x),
+          "sigma"     = hess_sigma2(d, x),
+          "sigma:nu"  = hess_sigma_nu(d, x),
+          "sigma:tau" = hess_sigma_tau(d, x),
+          "nu"        = hess_nu2(d, x),
+          "nu:tau"    = hess_nu_tau(d, x),
+          "tau"       = hess_tau2(d, x),
+          stop("missing hess_*() function for ", par)  ## nocov
+    )
+
+    ## Calculate derivatives, prepare return object
+    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
   }
-  return(h)
 }

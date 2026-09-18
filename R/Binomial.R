@@ -331,18 +331,22 @@ is_continuous.Binomial <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
-  ## only one parameter supported
-  which <- match.arg(which, c("p", "size"), several.ok = TRUE)
-  if (!identical(which, "p")) warning("only the scores with respect to 'p' are supported")
+  if (!identical(which, c(p = "p"))) {
+    warning("only the scores with respect to 'p' are supported")
+    which <- c(p = "p") # enforce
+  }
 
-  ## compute score
-  s <- (x - d$size * d$p) / (d$p * (1 - d$p))
-  if (!drop) s <- cbind("p" = s)
-  return(s)
+  ## compute scores
+  scr <- function(par, d, x) s <- (x - d$size * d$p) / (d$p * (1 - d$p))
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
 #' @rdname score-hessian
@@ -350,16 +354,28 @@ score.Binomial <- function(d, x, which = "p", drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.Binomial <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
 
-  ## only one parameter supported
-  which <- match.arg(which, c("p", "size"), several.ok = TRUE)
-  if (!identical(which, "p")) warning("only the scores with respect to 'p' are supported")
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
-  ## compute hessian
-  h <- if (expected) 0 * x - d$size / (d$p * (1 - d$p)) else -x / d$p^2 - (d$size - x) / (1 - d$p)^2
-  if (!drop) h <- cbind("p" = h)
-  return(h)
+  if (!identical(which, c(p = "p"))) {
+    warning("only the scores with respect to 'p' are supported")
+    which <- c(p = "p") # enforce
+  }
+
+  ## function for computing Hessian elements (expected or observed)
+  hess <- if (expected) {
+      function(par, d, x) -d$size / (d$p * (1 - d$p))
+  } else {
+      function(par, d, x) rep_len(-x / d$p^2 - (d$size - x) / (1 - d$p)^2, n)
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
+

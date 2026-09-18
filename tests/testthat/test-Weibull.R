@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Weibull distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Weibull default arguments", {
   expect_identical(formals(Weibull),
@@ -171,3 +176,90 @@ test_that("named return values for Weibull distribution work correctly", {
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.Weibull works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Weibull" %in% ns, info = "score.Weibull not found in namespace")
+    expect_true(is.function(getS3method("score", "Weibull")), "score.Weibull is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Weibull),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Weibull(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
+    expect_error(score(Weibull(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(score(Weibull(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Weibull(1:3, 1); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    tmp <- cbind(shape = 1 / 2 + log(x / 0.5) * (1 - (x / 0.5)^2),
+                 scale = 2 * ((x / 0.5)^2 - 1) / 0.5)
+    expect_silent(s1 <- score(Weibull(2, 0.5), x))
+    expect_identical(s1, tmp)
+
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "shape"))
+    expect_identical(s1, tmp[, "shape"])
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "scale"))
+    expect_identical(s1, tmp[, "scale"])
+
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "shape", drop = FALSE))
+    expect_identical(s1, tmp[, "shape", drop = FALSE])
+    expect_silent(s1 <- score(Weibull(2, 0.5), x, which = "scale", drop = FALSE))
+    expect_identical(s1, tmp[, "scale", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Weibull(2, 0.5), x)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.Weibull works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Weibull" %in% ns, info = "hessian.Weibull not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Weibull")), "hessian.Weibull is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Weibull),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Weibull(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
+    expect_error(hessian(Weibull(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Weibull(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Weibull(2, 0.5), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Weibull(1:3, 1); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Weibull(2, seq(0.1, 0.9, length.out = 3))
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-5)
+
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
+})
+

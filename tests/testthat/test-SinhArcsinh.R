@@ -4,7 +4,7 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
+##suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("SinhArcsinh exists and has correct defaults", {
     expect_true(is.function(SinhArcsinh))
@@ -481,6 +481,10 @@ test_that("rsinharcsinh works as expected", {
     expect_true(all(x < 100))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.SinhArcsinh works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.SinhArcsinh" %in% ns, info = "score.SinhArcsinh not found in namespace")
@@ -491,10 +495,15 @@ test_that("score.SinhArcsinh works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch
-    expect_error(score(SinhArcsinh(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(SinhArcsinh(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(score(SinhArcsinh(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(SinhArcsinh(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(SinhArcsinh(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- SinhArcsinh(1:3); x <- 1:3
+    expect_identical(nrow(score(d, x[1])), length(x))
+    expect_identical(nrow(score(d[1], x)), length(x))
 
     ## Calculating all scores for 5 distributions
     expect_silent(s1 <- score(SinhArcsinh(5:1), 1:5))
@@ -534,14 +543,18 @@ test_that("hessian.SinhArcsinh works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(SinhArcsinh(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(SinhArcsinh(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(hessian(SinhArcsinh(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(SinhArcsinh(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(SinhArcsinh(), 1, drop = "foo"),     info = "non-logical drop should throw error")
     expect_error(hessian(SinhArcsinh(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
 
-    # For hessian only the observed (not the expected) hessian is available
-    expect_error(hessian(SinhArcsinh(), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- SinhArcsinh(1:3); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(SinhArcsinh(5:1), 1:5))

@@ -105,77 +105,97 @@ hessian <- function(d, ...) {
 #' @exportS3Method
 ## fallback methods based on numeric differentiation
 score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$double.eps^(1/3), ...) {
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
-
-  ## available and selected parameters
-  p <- names(unclass(d))
-  if (is.null(which)) which <- p
-  which <- match.arg(which, p, several.ok = TRUE)
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE)
 
   ## compute scores
-  scr <- function(par) {
+  scr <- function(par, d, x) {
     d1 <- d2 <- d
     d1[[par]] <- d1[[par]] + eps
     d2[[par]] <- d2[[par]] - eps
     (log_pdf(d1, x) - log_pdf(d2, x)) / (2 * eps)
   }
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    s <- setNames(scr(which), names(d))
-  } else {
-    s <- lapply(which, scr)
-    s <- do.call("cbind", s)
-    dimnames(s) <- list(names(d), which)
-  }
-  return(s)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
 }
 
+#' @importFrom stats integrate
+#'
 #' @rdname score-hessian
 #' @name score-hessian
 #' @exportS3Method
 hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, eps = .Machine$double.eps^(1/4), ...) {
-  ## numeric differentiation yields observed hessian only
-  if (!isFALSE(expected)) stop("only the observed hessian is available")
-  ## sanity check
-  n <- c(length(d), length(x))
-  if (n[1L] != n[2L] && all(n > 1L)) stop("'d' and 'x' must have length 1 or the same length")
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected) && missing(x)) x <- NA_real_ # Dummy
 
-  ## available and selected parameters
-  p <- names(unclass(d))
-  pp <- outer(p, p, paste, sep = ":")
-  diag(pp) <- p
-  p <- setNames(
-    c(diag(pp), pp[upper.tri(pp)], pp[upper.tri(pp)]),
-    c(diag(pp), pp[upper.tri(pp)], pp[lower.tri(pp)])
-  )[pp]
-  if (is.null(which)) which <- names(p)
-
-  ## which combinations need to be computed?
-  which <- match.arg(which, names(p), several.ok = TRUE)
-  w <- unique(p[which])
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## compute scores
-  hess <- function(par) {
-    par <- strsplit(par, ":", fixed = TRUE)[[1L]]
-    par <- rep_len(par, 2L)
-    d1 <- d2 <- d
-    d1[[par[2L]]] <- d1[[par[2L]]] + eps
-    d2[[par[2L]]] <- d2[[par[2L]]] - eps
-    (score(d1, x, which = par[1L]) - score(d2, x, which = par[1L])) / (2 * eps)
+  if (expected) {
+    ## Discrete: Expecting count data
+    if (all(is_discrete(d))) {
+      ## function to compute expected hessian (x is not used/potentially NA)
+      hess <- function(par, d, x) {
+          s <- support(d, drop = FALSE) # support
+          if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
+          if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
+          fn <- function(i) {
+              at <- s[i, 1]:s[i, 2]
+              h  <- hessian(d[i], x = at, which = par)
+              w  <- pdf(d[i], x = at)
+              sum(h * w)
+          }
+          sapply(seq_along(d), fn)
+      }
+    ## Continuous distributions: Currently using stats::integrate,
+    ## Alternative would be to use (minimal exmaple/draft)
+    ## p <- seq(0.00001, 0.99999, length.out = 1000)
+    ## q <- quantile(d[1], p)
+    ## h <- hessian(d[1], q)
+    ## round(apply(h, MARGIN = 2, mean), 3)
+    } else {
+      ## integrand for numerical integration; scoped by 'hess'
+      integrand <- function(x, dx, par) {
+          obs_h <- hessian(dx, x, which = par)
+          density_x <- pdf(dx, x) # or density(d, val)
+          return(obs_h * density_x)
+      }
+      ifun <- Vectorize(integrand, vectorize.args = "x") # functionto be integrated
+
+      ## function to compute expected hessian (x is not used/potentially NA)
+      hess <- function(par, d, x) {
+          s <- support(d, drop = FALSE) # support
+          if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
+          if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
+          fn <- function(i) {
+              stats::integrate(ifun, dx = d[i], par = par, lower = s[i, "min"], upper = s[i, "max"])
+          }
+          res <- lapply(seq_along(d), fn)
+          vapply(res, function(x) x$value, numeric(1L))
+      }
+    }
+  } else {
+    hess <- function(par, d, x) {
+      par <- strsplit(par, ":", fixed = TRUE)[[1L]]
+      par <- rep_len(par, 2L)
+      d1 <- d2 <- d
+      d1[[par[2L]]] <- d1[[par[2L]]] + eps
+      d2[[par[2L]]] <- d2[[par[2L]]] - eps
+      (score(d1, x, which = par[1L]) - score(d2, x, which = par[1L])) / (2 * eps)
+    }
   }
 
-  ## if possible return single vector, otherwise collect in matrix
-  if (drop && length(which) == 1L) {
-    h <- setNames(hess(w), names(d))
-  } else {
-    h <- lapply(w, hess)
-    h <- do.call("cbind", h)
-    dimnames(h) <- list(names(d), w)
-    if (!identical(w, which)) h <- h[, p[which], drop = FALSE]
-    colnames(h) <- which
-  }
-  return(h)
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
+
+
+

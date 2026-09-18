@@ -1,3 +1,9 @@
+# -------------------------------------------------------
+# Checking Logistic distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+
 
 test_that("Logistic default arguments", {
   expect_identical(formals(Logistic),
@@ -178,3 +184,96 @@ test_that("crps method for Logistic returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.Logistic works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Logistic" %in% ns, info = "score.Logistic not found in namespace")
+    expect_true(is.function(getS3method("score", "Logistic")), "score.Logistic is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Logistic),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Logistic(2:3, 0.5), 1:5),                 regexp = "parameter lengths do not match")
+    expect_error(score(Logistic(5, 3), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(Logistic(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Logistic(1:3, 1); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    z <- (x - 5) / 3
+    tmp <- cbind(location = (1 - 2 * exp(-z) / (1 + exp(-z))) / 3,
+                 scale    = (z - 1 - 2 * z * exp(-z) / (1 + exp(-z))) / 3)
+    expect_silent(s1 <- score(Logistic(5, 3), x))
+    expect_identical(s1, tmp)
+
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "location"))
+    expect_identical(s1, tmp[, "location"])
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "scale"))
+    expect_identical(s1, tmp[, "scale"])
+
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "location", drop = FALSE))
+    expect_identical(s1, tmp[, "location", drop = FALSE])
+    expect_silent(s1 <- score(Logistic(5, 3), x, which = "scale", drop = FALSE))
+    expect_identical(s1, tmp[, "scale", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Logistic(5, 3), x)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.Logistic works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Logistic" %in% ns, info = "hessian.Logistic not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Logistic")), "hessian.Logistic is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Logistic),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Logistic(2:3, 0.5), 1:5),             regexp = "parameter lengths do not match")
+    expect_error(hessian(Logistic(5, 3), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Logistic(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Logistic(5, 3), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Logistic(1:3, 1); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(Logistic(5, 3), x),
+                 suppressWarnings(distributions3:::hessian.distribution(Logistic(5, 3), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Logistic(1:3, 3:1 / 10)
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-5)
+
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
+})
+

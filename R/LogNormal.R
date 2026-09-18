@@ -296,3 +296,69 @@ is_discrete.LogNormal <- function(d, ...) {
 is_continuous.LogNormal <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# LogNormal: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## pre-compute log(x)/z, scoped in 'scr' function!
+  log_x <- log(x)
+  z <- log_x - d$log_mu
+
+  ## compute scores
+  scr <- function(par, d, x) switch(par,
+    "log_mu"    = z / d$log_sigma^2,
+    "log_sigma" = z^2 / d$log_sigma^3 - 1 / d$log_sigma)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## function for computing Hessian elements
+  hess <- if (expected) {
+    ## pre-computing inverse of 1 over log(sigma)^2
+    sigma2inv <- 1 / d$log_sigma^2
+
+    function(par, d, x) switch(par,
+      "log_mu"           = -sigma2inv,
+      "log_sigma"        = -2 * sigma2inv,
+      rep(0.0, n))
+  } else {
+    ## pre-compute log(x)/z, scoped in 'hess' functions!
+    log_x <- log(x)
+    z <- log_x - d$log_mu
+
+    function(par, d, x) switch(par,
+      "log_mu"           = rep_len(-1 / d$log_sigma^2, n),
+      "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
+      -2 * z / d$log_sigma^3)
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Uniform distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Uniform default arguments", {
   expect_identical(formals(Uniform),
@@ -188,6 +193,10 @@ test_that("crps method for Uniform returns correct object", {
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Uniform works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Uniform" %in% ns, info = "score.Uniform not found in namespace")
@@ -201,10 +210,15 @@ test_that("score.Uniform works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch
-    expect_error(score(Uniform(a, b), c(0.1, 0.2)), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Uniform(a, b), c(0.2, 0.3)),     regexp = "parameter lengths do not match")
     expect_error(score(Uniform(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Uniform(1:3 / 10, 4:6 / 10); x <- 1:3
+    expect_identical(nrow(score(d, x[1])), length(x))
+    expect_identical(nrow(score(d[1], x)), length(x))
 
     ## Calculating all scores for 5 distributions
     expect_silent(s1 <- score(Uniform(a, b), 1))
@@ -243,13 +257,18 @@ test_that("hessian.Uniform works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Uniform(a, b), c(0.2, 0.3)), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Uniform(a, b), c(0.2, 0.3)),     regexp = "parameter lengths do not match")
     expect_error(hessian(Uniform(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    expect_error(hessian(Uniform(), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
 
-    # For hessian only the observed (not the expected) hessian is available
-    expect_error(hessian(Uniform(1:2), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Uniform(1:3 / 10, 4:6 / 10); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(Uniform(a, b), 0.5))
@@ -284,4 +303,11 @@ test_that("hessian.Uniform works as expected", {
     expect_equal(hessian(Uniform(a, b), 0.5, expected = FALSE),
                  distributions3:::hessian.distribution(Uniform(a, b), 0.5),
                  tolerance = 1e-7)
+
+    ## Observed hessian equals expected hessian, thus the argument 'expected' is never
+    ## evaluated (i.e., does not matter what we hand over).
+    expect_identical(hessian(Uniform(a, b), 0.5, expected = FALSE),
+                     hessian(Uniform(a, b), 0.5, expected = TRUE),
+                     info = "expected hessian and observed hessian not identical")
+
 })

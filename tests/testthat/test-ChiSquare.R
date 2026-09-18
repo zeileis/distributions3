@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking ChiSquare distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("ChiSquare default arguments", {
   expect_identical(formals(ChiSquare),
@@ -169,4 +174,80 @@ test_that("named return values for ChiSquare distribution work correctly", {
   expect_equal(names(support(d[1])), c("min", "max"))
   expect_equal(colnames(support(d)), c("min", "max"))
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
+})
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.ChiSquare works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.ChiSquare" %in% ns, info = "score.ChiSquare not found in namespace")
+    expect_true(is.function(getS3method("score", "ChiSquare")), "score.ChiSquare is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.ChiSquare),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(ChiSquare(2:3), 1:5),                   regexp = "parameter lengths do not match")
+    expect_error(score(ChiSquare(7), 1, which = 1),            info = "unknown which should throw error")
+    expect_error(score(ChiSquare(7), 1, which = "foo"),        info = "unknown which must should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- ChiSquare(1:3); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    ## Using df = 7
+    tmp <- cbind(df = log(x) / 2 - log(2) / 2 - digamma(7 / 2) / 2)
+    expect_silent(s1 <- score(ChiSquare(7), x, drop = FALSE))
+    expect_equal(s1, tmp)
+
+    expect_silent(s1 <- score(ChiSquare(7), x, which = "df"))
+    expect_equal(s1, tmp[, "df"])
+
+    expect_silent(s1 <- score(ChiSquare(7), x, which = "df", drop = FALSE))
+    expect_equal(s1, tmp[, "df", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(ChiSquare(7), x, drop = FALSE)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.ChiSquare works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.ChiSquare" %in% ns, info = "hessian.ChiSquare not found in namespace")
+    expect_true(is.function(getS3method("hessian", "ChiSquare")), "hessian.ChiSquare is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.ChiSquare),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(ChiSquare(2:3), 1:5),               regexp = "parameter lengths do not match")
+    expect_error(hessian(ChiSquare(7), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(ChiSquare(7), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(ChiSquare(7), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- ChiSquare(1:3); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(ChiSquare(7), x),
+                 suppressWarnings(distributions3:::hessian.distribution(ChiSquare(7), x)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
 })

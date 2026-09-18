@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Gamma distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Gamma default arguments", {
   expect_identical(formals(Gamma),
@@ -178,3 +183,88 @@ test_that("crps method for Gamma returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+test_that("score.Gamma works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("score.Gamma" %in% ns, info = "score.Gamma not found in namespace")
+    expect_true(is.function(getS3method("score", "Gamma")), "score.Gamma is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::score.Gamma),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+
+    ## Testing for error when lenghts mismatch and incorrect arguments
+    expect_error(score(Gamma(2:3, 0.5), 1:5),                   regexp = "parameter lengths do not match")
+    expect_error(score(Gamma(2, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Gamma(1:3, 0.4); x <- 1:3
+    expect_identical(nrow(score(d, x[1])), length(x))
+    expect_identical(nrow(score(d[1], x)), length(x))
+
+    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
+    tmp <- cbind(shape = log(x) + log(0.5) - digamma(2),
+                 rate  = 2 / 0.5 - x)
+    expect_silent(s1 <- score(Gamma(2, 0.5), x))
+    expect_identical(s1, tmp)
+
+    expect_silent(s1 <- score(Gamma(2, 0.5), x, which = "shape"))
+    expect_identical(s1, tmp[, "shape"])
+    expect_silent(s1 <- score(Gamma(2, 0.5), x, which = "rate"))
+    expect_identical(s1, tmp[, "rate"])
+
+    expect_silent(s1 <- score(Gamma(2, 0.5), x, which = "shape", drop = FALSE))
+    expect_identical(s1, tmp[, "shape", drop = FALSE])
+    expect_silent(s1 <- score(Gamma(2, 0.5), x, which = "rate", drop = FALSE))
+    expect_identical(s1, tmp[, "rate", drop = FALSE])
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Gamma(2, 0.5), x)),
+            info = "numeric approximation differs from analytic solution")
+
+})
+
+test_that("hessian.Gamma works as expected", {
+    ns <- ls(getNamespace("distributions3"))
+    expect_true("hessian.Gamma" %in% ns, info = "hessian.Gamma not found in namespace")
+    expect_true(is.function(getS3method("hessian", "Gamma")), "hessian.Gamma is not a function")
+
+    x <- 1:5
+
+    ## Checking defaults
+    expect_identical(formals(distributions3:::hessian.Gamma),
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+
+    ## Testing for error when lenghts mismatch and  incorrect arguments
+    expect_error(hessian(Gamma(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
+    expect_error(hessian(Gamma(2, 0.5), 1, which = 1),        info = "unknown which should throw error")
+    expect_error(hessian(Gamma(2, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
+    expect_error(hessian(Gamma(2, 0.5), 1, expected = "foo"), regex = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Gamma(1:3, 0.4); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1])), length(x))
+    expect_identical(nrow(hessian(d[1], x)), length(x))
+    expect_identical(nrow(hessian(d, x[1], expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, expected = TRUE)), 1L) # x plays no role
+
+    ## Comparing to numeric approximation; throws warnings (due to param score)
+    expect_equal(hessian(Gamma(2, 0.5), 1:5),
+                 suppressWarnings(distributions3:::hessian.distribution(Gamma(2, 0.5), 1:5)),
+                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
+
+    ## The observed hessian is identical to the observed hessian. I.e., it does
+    ## not matter what expected is
+    expect_identical(hessian(Gamma(2, 0.5), 1, expected = TRUE),
+                     hessian(Gamma(2, 0.5), 1, expected = FALSE),
+                     info = "observed hessian not identical to expected hessian")
+})
+

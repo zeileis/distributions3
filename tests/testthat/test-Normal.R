@@ -1,3 +1,9 @@
+# -------------------------------------------------------
+# Checking Normal distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("Normal default arguments", {
   expect_identical(formals(Normal),
@@ -178,6 +184,10 @@ test_that("named return values for Normal distribution work correctly", {
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Normal works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Normal" %in% ns, info = "score.Normal not found in namespace")
@@ -188,10 +198,15 @@ test_that("score.Normal works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch
-    expect_error(score(Normal(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Normal(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(score(Normal(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(score(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(Normal(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Normal(1:3, 1); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
 
     ## Calculating all scores for 5 distributions
     expect_silent(s1 <- score(Normal(5:1), 1:5))
@@ -230,11 +245,18 @@ test_that("hessian.Normal works as expected", {
         as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Normal(1:3), 2:1), regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Normal(1:3), 2:1),              regexp = "parameter lengths do not match")
     expect_error(hessian(Normal(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Normal(), 1, drop = "foo"),     info = "non-logical drop should throw error")
-    expect_error(hessian(Normal(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+    expect_error(hessian(Normal(2, 0.5), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Normal(1:3, 1); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(Normal(5:1), 1:5))
@@ -266,19 +288,16 @@ test_that("hessian.Normal works as expected", {
     expect_silent(hms <- hessian(Normal(1:5), 5:1, which = "mu:sigma", drop = FALSE))
     expect_identical(h1[5:1, ], cbind(hm, hsm, hms, hs))
 
-    ## Compare to numerically calculated hessian (observed,
-    ## hessian.distribution only has expected = FALSE)
-    expect_equal(hessian(Normal(5:1), 1:5, expected = FALSE),
-                 distributions3:::hessian.distribution(Normal(5:1), 1:5),
-                 tolerance = 1e-7)
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Normal(1:3, 3:1)
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-6)
 
-    ## Testing 'expected = TRUE' and check that the
-    ## expected hessian (Fisher information) are numerically different
-    expect_silent(he <- hessian(Normal(1:5), 5:1, expected = TRUE))
-    expect_identical(dim(he), dim(h1))
-    expect_identical(dimnames(he), dimnames(h1))
-    expect_identical(sum(h1 - he), -105)
-
-    ## Numeric values of expected hessian
-    expect_identical(he, matrix(rep(c(-1, 0, 0, -2), each = 5), nrow = 5, dimnames = dimnames(he)))
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
 })
+

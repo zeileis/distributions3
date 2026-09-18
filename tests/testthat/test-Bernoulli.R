@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Bernoulli distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Bernoulli default arguments", {
   expect_identical(formals(Bernoulli),
@@ -195,6 +200,10 @@ test_that("crps method for Bernoulli returns correct object", {
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
 
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
 test_that("score.Bernoulli works as expected", {
     ns <- ls(getNamespace("distributions3"))
     expect_true("score.Bernoulli" %in% ns, info = "score.Bernoulli not found in namespace")
@@ -207,10 +216,15 @@ test_that("score.Bernoulli works as expected", {
         as.pairlist(alist(d =, x =, which = "p", drop = TRUE, ... =)))
 
     ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Bernoulli(c(0.2, 0.3, 0.5)), x),  regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(score(Bernoulli(c(0.2, 0.3, 0.5)), x),  regexp = "parameter lengths do not match")
     expect_error(score(Bernoulli(), 1, which = 1),       info = "unknown which should throw error")
     expect_error(score(Bernoulli(), 1, which = "foo"),   info = "unknown which must should throw error")
-    expect_error(score(Bernoulli(), 1, drop = "foo"),    info = "non-logical drop should throw error")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Bernoulli(1:3 / 10); x <- 1:3
+    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- (x - 0.5) / (0.5^2) # Score for p = 0.5
@@ -232,11 +246,18 @@ test_that("hessian.Bernoulli works as expected", {
         as.pairlist(alist(d =, x =, which = "p", drop = TRUE, expected = FALSE, ... =)))
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Bernoulli(c(0.2, 0.3, 0.5)), x),   regexp = "'d' and 'x' must have length 1 or the same length")
+    expect_error(hessian(Bernoulli(c(0.2, 0.3, 0.5)), x),   regexp = "parameter lengths do not match")
     expect_error(hessian(Bernoulli(), 1, which = 1),        info = "unknown which should throw error")
     expect_error(hessian(Bernoulli(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Bernoulli(), 1, drop = "foo"),     info = "non-logical drop should throw error")
-    expect_error(hessian(Bernoulli(), 1, expected = "foo"), info = "expected not TRUE/FALSE shuld throw error")
+    expect_error(hessian(Bernoulli(), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+
+    ## Ensure we get the correct return length for both combinations:
+    ## three distributions one x, or one distribution evaluated at three points
+    d <- Bernoulli(1:3 / 10); x <- 1:3
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
+    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x)) # x plays no role
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L)
 
     ## Calculating observed hessian and check return
     tmp_o <- -x / 0.5^2 - (1 - x) / (1 - 0.5)^2 # Observed hessian for p = 0.5
@@ -244,7 +265,20 @@ test_that("hessian.Bernoulli works as expected", {
     expect_identical(hessian(Bernoulli(0.5), x, expected = FALSE, drop = FALSE), cbind(p = tmp_o))
 
     ## Calculating expected hessian and check return
-    tmp_e <- rep(-1 / 0.5^2, 6L) # Expected hessian for p = 0.5
-    expect_identical(hessian(Bernoulli(0.5), x, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
-    expect_identical(hessian(Bernoulli(0.5), x, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+    tmp_e <- -1 / 0.5^2 # Expected hessian for p = 0.5
+    expect_identical(hessian(Bernoulli(0.5), 1:6, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
+    expect_identical(hessian(Bernoulli(0.5), 1:6, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+
+    ## Comparing analytic observed hessian to numeric approximation
+    d <- Bernoulli(c(0.25, 0.5, 0.75))
+    expect_silent(h1o <- hessian(d, x = 2))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
+    expect_equal(h1o, h2o, tolerance = 1e-6)
+
+    ## Comparing analytic expected Hessian against the numeric approximation
+    ## Should run silently though 'x' is missing
+    expect_silent(h1e <- hessian(d, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
+    expect_equal(h1e, h2e, tolerance = 1e-3, info = "analytic expected Hessian not equal to numeric approximation")
+
 })
