@@ -130,7 +130,7 @@ score.distribution <- function(d, x, which = NULL, drop = TRUE, eps = .Machine$d
 #' @exportS3Method
 hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, eps = .Machine$double.eps^(1/4), ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected) && missing(x)) x <- NA_real_ # Dummy
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names

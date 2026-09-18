@@ -267,9 +267,9 @@ test_that("hessian.Bernoulli works as expected", {
     expect_identical(hessian(Bernoulli(0.5), x, expected = FALSE, drop = FALSE), cbind(p = tmp_o))
 
     ## Calculating expected hessian and check return
-    tmp_e <- -1 / 0.5^2 # Expected hessian for p = 0.5
-    expect_identical(hessian(Bernoulli(0.5), 1:6, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
-    expect_identical(hessian(Bernoulli(0.5), 1:6, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+    tmp_e <- rep(-1 / 0.5^2, 3) # Expected hessian for p = 0.5
+    expect_identical(hessian(Bernoulli(0.5), 1:3, expected = TRUE), tmp_e, info = "incorrect expected hessian returned")
+    expect_identical(hessian(Bernoulli(0.5), 1:3, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
 
     ## Comparing analytic observed hessian to numeric approximation
     d <- Bernoulli(c(0.25, 0.5, 0.75))

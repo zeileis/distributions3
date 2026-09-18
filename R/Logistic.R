@@ -301,7 +301,7 @@ score.Logistic <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
   if (expected) {
       return(NextMethod())

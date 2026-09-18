@@ -308,7 +308,7 @@ score.ChiSquare <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.ChiSquare <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
   if (expected) {
     return(NextMethod())
@@ -320,7 +320,7 @@ hessian.ChiSquare <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
     which  <- get_deriv_names(params, which = which, expand = TRUE)
 
     ## For chi-square, the hessian is constant w.r.t. x
-    hess <- function(par, d, x) 0 * x + 0.25 * trigamma(d$df / 2)
+    hess <- function(par, d, x) 0 * x - 0.25 * trigamma(d$df / 2)
 
     ## Calculate derivatives, prepare return object
     return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))

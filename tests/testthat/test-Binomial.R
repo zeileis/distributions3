@@ -282,9 +282,9 @@ test_that("hessian.Binomial works as expected", {
             tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
 
     ## Calculating expected hessian and check return
-    tmp_e <- -30 / 0.5^2 # Expected hessian for score = 30, p = 0.5
-    expect_identical(hessian(Binomial(30, 0.5), 1:5, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
-    expect_identical(hessian(Binomial(30, 0.5), 1:5, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
+    tmp_e <- rep(-30 / 0.5^2, 3L) # Expected hessian for score = 30, p = 0.5
+    expect_identical(hessian(Binomial(30, 0.5), 1:3, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
+    expect_identical(hessian(Binomial(30, 0.5), 1:3, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
 
     ## Comparing analytic observed hessian to numeric approximation
     d <- Binomial(c(10, 20, 30), 0.4)
