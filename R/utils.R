@@ -76,6 +76,7 @@ hasS3method <- function(method, classes) {
 #' @param n numeric. Number of observations for computing random draws. If `length(n) > 1`,
 #'        the length is taken to be the number required (consistent with base R as, e.g., for `rnorm()`).
 #'
+#' @param x numeric. Specification of values at which `FUN` should be evaluated.
 #' @param which character vector, named or unnamed. When calculating cross-derivatives
 #'        a named vector is typically used avoiding to calculate the cross-derivatives
 #'        twice evven if they are identical (symmetric Hessian matrix; see 'Examples').
@@ -180,6 +181,8 @@ hasS3method <- function(method, classes) {
 #' ## For further analogous methods see the "Normal" distribution provided
 #' ## in distributions3.
 #' methods(class = "Normal")
+#'
+#' @return `apply_dpqr()`: Numeric vector or matrix, possibly named.
 #'
 #' @export
 apply_dpqr <- function(d, FUN, at, elementwise = NULL, drop = TRUE, type = NULL, ...) {
@@ -290,6 +293,9 @@ apply_dpqr <- function(d, FUN, at, elementwise = NULL, drop = TRUE, type = NULL,
 #' get_deriv_names(c("mu", "sigma"), expand = TRUE)
 #' get_deriv_names(c("mu", "sigma"), which = c("mu:sigma", "sigma"), expand = TRUE)
 #'
+#' @return `get_deriv_names()`: Named character vector with all available or
+#' requested derivative names.
+#'
 #' @rdname apply_dpqr
 #' @export
 get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
@@ -349,6 +355,10 @@ get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
 #' max_length(d = Normal(mu = 1:3, sigma = 2), x = 10:15)
 #' }
 #'
+#' @return `max_length()`: Single integer with the maximum length of all
+#' parameters (objects) provided via the `...` argument. If `check = TRUE` and
+#' the length of all parameters does not match, an error will be thrown.
+#'
 #' @rdname apply_dpqr
 #' @export
 max_length <- function(..., check = TRUE) {
@@ -396,6 +406,8 @@ max_length <- function(..., check = TRUE) {
 #' which <- get_deriv_names(c("a", "b"), expand = TRUE)
 #' apply_deriv(d = d, x = 1.5, FUN = hess, which = which)
 #' hessian(d, 1.5) # using method for comparison
+#'
+#' @return `apply_deriv()`: Numeric vector or matrix (possibly named).
 #'
 #' @rdname apply_dpqr
 #' @export
@@ -573,6 +585,17 @@ make_suffix <- function(x, digits = 3L) {
   return(rval)
 }
 
+#' @examples
+#' ## ----------------
+#' ## make_support(): Creating support matrix/support vector for distribution
+#' ## objects (see also ?support).
+#' d <- setNames(Normal(1:3, 3:1), LETTERS[1:3])
+#' make_support(min = rep(-Inf, 3L), max = rep(Inf, 3L), d)
+#' make_support(0, Inf, Poisson(1.5), drop = TRUE)
+#'
+#' @return `make_support()`: Named vector (if `drop = TRUE` and `length(d) = 1L`)
+#' or named matrix with the support of the distribution.
+#'
 #' @rdname apply_dpqr
 #' @export
 make_support <- function(min, max, d, drop = TRUE) {
@@ -580,6 +603,20 @@ make_support <- function(min, max, d, drop = TRUE) {
   if (drop && NROW(rval) == 1L) rval[1L, , drop = TRUE] else rval
 }
 
+#' @examples
+#' ## ----------------
+#' ## make_positive_integer()
+#' make_positive_integer(5.0)
+#' make_positive_integer(TRUE)
+#' make_positive_integer(LETTERS[1:10])
+#' \dontrun{
+#' make_positive_integer("foo") # Throws error
+#' }
+#'
+#' @return `make_positive_integer()`: Single positive integer. If the length of
+#' the object on argument `n` is larger than one, the length of the object is
+#' returned. Else `n` is converted to integer if possible or an error is thrown.
+#'
 #' @rdname apply_dpqr
 #' @export
 make_positive_integer <- function(n) {

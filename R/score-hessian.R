@@ -142,14 +142,14 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
   if (expected) {
     ## Discrete: Expecting count data
     if (all(is_discrete(d))) {
-      ## function to compute expected hessian
-      hess <- function(w, d, ...) {
+      ## function to compute expected hessian (x is not used/potentially NA)
+      hess <- function(par, d, x) {
           s <- support(d, drop = FALSE) # support
           if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
           if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
           fn <- function(i) {
               at <- s[i, 1]:s[i, 2]
-              h  <- hessian(d[i], x = at, which = w)
+              h  <- hessian(d[i], x = at, which = par)
               w  <- pdf(d[i], x = at)
               sum(h * w)
           }
@@ -163,20 +163,20 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
     ## round(apply(h, MARGIN = 2, mean), 3)
     } else {
       ## integrand for numerical integration; scoped by 'hess'
-      integrand <- function(x, dx, w) {
-          obs_h <- hessian(dx, x, which = w)
+      integrand <- function(x, dx, par) {
+          obs_h <- hessian(dx, x, which = par)
           density_x <- pdf(dx, x) # or density(d, val)
           return(obs_h * density_x)
       }
       ifun <- Vectorize(integrand, vectorize.args = "x") # functionto be integrated
 
-      ## function to compute expected hessian
-      hess <- function(w, d, ...) {
+      ## function to compute expected hessian (x is not used/potentially NA)
+      hess <- function(par, d, x) {
           s <- support(d, drop = FALSE) # support
           if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
           if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
           fn <- function(i) {
-              stats::integrate(ifun, dx = d[i], w = w, lower = s[i, "min"], upper = s[i, "max"])
+              stats::integrate(ifun, dx = d[i], par = par, lower = s[i, "min"], upper = s[i, "max"])
           }
           res <- lapply(seq_along(d), fn)
           vapply(res, function(x) x$value, numeric(1L))

@@ -66,10 +66,31 @@ are returned (if \code{which = NULL}) or checked (if \code{which} is set).}
 \item{check}{logical. If set \code{FALSE} the maximum length is returned
 without checking that all objects on \code{...} are recyclable.}
 
+\item{x}{numeric. Specification of values at which \code{FUN} should be evaluated.}
+
 \item{min, max}{Numeric vectors. Minima and maxima of the supports of a \code{distributions3} object.}
 
 \item{n}{numeric. Number of observations for computing random draws. If \code{length(n) > 1},
 the length is taken to be the number required (consistent with base R as, e.g., for \code{rnorm()}).}
+}
+\value{
+\code{apply_dpqr()}: Numeric vector or matrix, possibly named.
+
+\code{get_deriv_names()}: Named character vector with all available or
+requested derivative names.
+
+\code{max_length()}: Single integer with the maximum length of all
+parameters (objects) provided via the \code{...} argument. If \code{check = TRUE} and
+the length of all parameters does not match, an error will be thrown.
+
+\code{apply_deriv()}: Numeric vector or matrix (possibly named).
+
+\code{make_support()}: Named vector (if \code{drop = TRUE} and \code{length(d) = 1L})
+or named matrix with the support of the distribution.
+
+\code{make_positive_integer()}: Single positive integer. If the length of
+the object on argument \code{n} is larger than one, the length of the object is
+returned. Else \code{n} is converted to integer if possible or an error is thrown.
 }
 \description{
 Various utility functions to implement methods for distributions with a
@@ -225,5 +246,21 @@ score(d, 1.5) # using method for comparison
 which <- get_deriv_names(c("a", "b"), expand = TRUE)
 apply_deriv(d = d, x = 1.5, FUN = hess, which = which)
 hessian(d, 1.5) # using method for comparison
+
+## ----------------
+## make_support(): Creating support matrix/support vector for distribution
+## objects (see also ?support).
+d <- setNames(Normal(1:3, 3:1), LETTERS[1:3])
+make_support(min = rep(-Inf, 3L), max = rep(Inf, 3L), d)
+make_support(0, Inf, Poisson(1.5), drop = TRUE)
+
+## ----------------
+## make_positive_integer()
+make_positive_integer(5.0)
+make_positive_integer(TRUE)
+make_positive_integer(LETTERS[1:10])
+\dontrun{
+make_positive_integer("foo") # Throws error
+}
 
 }
