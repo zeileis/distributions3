@@ -216,8 +216,8 @@ test_that("score.Exponential works as expected", {
     ## Ensure we get the correct return length for both combinations:
     ## three distributions one x, or one distribution evaluated at three points
     d <- Exponential(1:3); x <- 1:3
-    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
-    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+    expect_identical(NROW(score(d, x[1])), length(x))
+    expect_identical(NROW(score(d[1], x)), length(x))
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- 1 / 2.5 - x # Score for rate = 2.5
@@ -252,10 +252,12 @@ test_that("hessian.Exponential works as expected", {
     ## Ensure we get the correct return length for both combinations:
     ## three distributions one x, or one distribution evaluated at three points
     d <- Exponential(1:3); x <- 1:3
-    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
-    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
-    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
-    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+    expect_identical(NROW(hessian(d, x[1])), length(x))
+    expect_identical(NROW(hessian(d[1], x)), length(x))
+    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
+    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
+    expect_identical(NROW(hessian(d,       expected = TRUE)), length(x))
+    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
 
     ## Calculating observed hessian and check return
     tmp_o <- rep_len(-1 / 2.5^2, length(x)) ## For rate = 2.5, not dependent on x

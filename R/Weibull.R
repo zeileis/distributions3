@@ -293,7 +293,7 @@ score.Weibull <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Weibull <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -307,10 +307,9 @@ hessian.Weibull <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
     trigamma_term <- (pi^2 / 6) + (1 + digamma(1))^2
 
     function(par, d, x) switch(par,
-      "shape"       = rep_len(-trigamma_term / d$shape^2, n),
-      "scale"       = rep_len(-d$shape^2 / d$scale^2, n),
-      rep_len((1 + digamma(1)) / d$scale, n) # mixed partials
-    )
+      "shape"       = 0 * x - trigamma_term / d$shape^2,
+      "scale"       = 0 * x - d$shape^2 / d$scale^2,
+      0 * x + (1 + digamma(1)) / d$scale)
   } else {
     ## pre-compute shared terms (scoped)
     z     <- (x / d$scale)^d$shape

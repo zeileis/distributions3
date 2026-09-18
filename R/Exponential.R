@@ -313,7 +313,7 @@ score.Exponential <- function(d, x, which = "rate", drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Exponential <- function(d, x, which = "rate", drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (expected) x <- NA_real_  # Overwrite
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -323,7 +323,7 @@ hessian.Exponential <- function(d, x, which = "rate", drop = TRUE, expected = FA
 
   ## For Exponential with rate parametrization, the second derivative is constant w.r.t. x,
   ## so the observed Hessian equals the expected Hessian.
-  hess <- function(par, d, x) rep_len(-1 / d$rate^2, n)
+  hess <- function(par, d, x) 0 * x - 1 / d$rate^2
 
   ## Calculate derivatives, prepare return object
   return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))

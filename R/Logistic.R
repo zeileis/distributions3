@@ -301,7 +301,7 @@ score.Logistic <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   if (expected) {
       return(NextMethod())
@@ -318,8 +318,8 @@ hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, 
       denom     <- (3 * d$scale^2)
 
       function(par, d, x) switch(par,
-        "location"       = -1 / denom,
-        "scale"          = -(1 + pi^2 / 3) / denom,
+        "location"       = 0 * x - 1 / denom,
+        "scale"          = 0 * x - (1 + pi^2 / 3) / denom,
         rep.int(0, n))
     } else {
       ## pre-compute z and sigmoid terms; scoped in 'hess' functions!

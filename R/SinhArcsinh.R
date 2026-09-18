@@ -661,7 +661,7 @@ score.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.SinhArcsinh <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   if (expected) {
       return(NextMethod())

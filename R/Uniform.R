@@ -284,7 +284,7 @@ score.Uniform <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -293,7 +293,7 @@ hessian.Uniform <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, .
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## pre-calculating 'hess_num', scoped by 'hess' functions!
-  hess_num <- rep_len(1 / (d$b - d$a)^2, n)
+  hess_num <- 0 * x + 1 / (d$b - d$a)^2
 
   ## function for computing Hessian elements (expected or observed)
   hess <- function(par, d, x) switch(par, "a" = hess_num, "b" = hess_num, -hess_num)

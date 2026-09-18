@@ -297,7 +297,7 @@ score.Cauchy <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (expected) x <- NA_real_
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -314,9 +314,9 @@ hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
 
     hess <- function(par, d, x) {
         switch(par,
-          "location"       = rep_len(-2 * (d$scale^2 - (x - d$location)^2) / denom^2, n),
-          "scale"          = 1/d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
-          "location:scale" = -4 * (x - d$location) * d$scale / denom^2)
+          "location"       = -2 * (d$scale^2 - (x - d$location)^2) / denom^2,
+          "scale"          = 1 / d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
+          "location:scale" = - 4 * (x - d$location) * d$scale / denom^2)
     }
 
     ## Calculate derivatives, prepare return object

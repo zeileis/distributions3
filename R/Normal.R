@@ -429,7 +429,7 @@ score.Normal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @exportS3Method
 hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  if (isTRUE(expected)) x <- NA_real_ # dummy; if expected = TRUE 'x' can be missing
+  if (expected && (is.null(x) || missing(x))) x <- 0 # dummy
 
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
@@ -437,16 +437,19 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
+  ## Pre-calculating 1 / sigma^2
+  nvsigma2 <- 1 / (d$sigma * d$sigma)
+
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
     function(par, d, x) switch(par,
-      "mu"    = rep_len(-1 / d$sigma^2, n),
-      "sigma" = rep_len(-2 / d$sigma^2, n),
+      "mu"    = 0 * x - 1 / invsigma2,
+      "sigma" = 0 * x - 2 / invsigma2,
       rep.int(0, n))
   } else {
     function(par, d, x) switch(par,
-      "mu"    = rep_len(-1 / d$sigma^2, n),
-      "sigma" = -3 * (x - d$mu)^2 / d$sigma^4 + 1/d$sigma^2,
+      "mu"    = rep_len(-invsigma2, n),
+      "sigma" = -3 * (x - d$mu)^2 * invsigma2 * invsigma2 + invsigma2,
       -2 * (x - d$mu) / d$sigma^3)
   }
 

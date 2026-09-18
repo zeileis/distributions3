@@ -554,7 +554,9 @@ test_that("hessian.SinhArcsinh works as expected", {
     expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
     expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
     expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
-    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d,       drop = FALSE, expected = TRUE)), length(x))
+    expect_identical(nrow(hessian(d[1],    drop = FALSE, expected = TRUE)), 1L)
 
     ## Calculating all hessians for 5 distributions
     expect_silent(h1 <- hessian(SinhArcsinh(5:1), 1:5))

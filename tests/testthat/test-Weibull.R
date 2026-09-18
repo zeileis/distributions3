@@ -200,8 +200,8 @@ test_that("score.Weibull works as expected", {
     ## Ensure we get the correct return length for both combinations:
     ## three distributions one x, or one distribution evaluated at three points
     d <- Weibull(1:3, 1); x <- 1:3
-    expect_identical(nrow(score(d, x[1], drop = FALSE)), length(x))
-    expect_identical(nrow(score(d[1], x, drop = FALSE)), length(x))
+    expect_identical(NROW(score(d, x[1])), length(x))
+    expect_identical(NROW(score(d[1], x)), length(x))
 
     ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
     tmp <- cbind(shape = 1 / 2 + log(x / 0.5) * (1 - (x / 0.5)^2),
@@ -245,10 +245,12 @@ test_that("hessian.Weibull works as expected", {
     ## Ensure we get the correct return length for both combinations:
     ## three distributions one x, or one distribution evaluated at three points
     d <- Weibull(1:3, 1); x <- 1:3
-    expect_identical(nrow(hessian(d, x[1], drop = FALSE)), length(x))
-    expect_identical(nrow(hessian(d[1], x, drop = FALSE)), length(x))
-    expect_identical(nrow(hessian(d, x[1], drop = FALSE, expected = TRUE)), length(x))
-    expect_identical(nrow(hessian(d[1], x, drop = FALSE, expected = TRUE)), 1L) # x plays no role
+    expect_identical(NROW(hessian(d, x[1])), length(x))
+    expect_identical(NROW(hessian(d[1], x)), length(x))
+    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
+    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
+    expect_identical(NROW(hessian(d,       expected = TRUE)), length(x))
+    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
 
     ## Comparing analytic observed hessian to numeric approximation
     d <- Weibull(2, seq(0.1, 0.9, length.out = 3))
