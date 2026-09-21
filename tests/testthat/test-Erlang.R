@@ -177,81 +177,42 @@ test_that("crps method for Binomial returns correct object", {
 ## Score and hessian
 ## ------------------------------------------------------------------
 
-test_that("score.Erlang works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("score.Erlang" %in% ns, info = "score.Erlang not found in namespace")
-    expect_true(is.function(getS3method("score", "Erlang")), "score.Erlang is not a function")
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
 
-    x <- 1:5
+test_that("score.ChiSquare works as expected", {
+    ## Objects used for testing
+    d <- Erlang(3:1, 1:3)
+    x <- 1:3
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::score.Erlang),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x)
 
-    ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Erlang(2:3, 0.5), 1:5),                   regexp = "parameter lengths do not match")
-    expect_error(score(Erlang(3, 0.5), 1, which = 1),            info = "unknown which should throw error")
-    expect_error(score(Erlang(3, 0.5), 1, which = "foo"),        info = "unknown which must should throw error")
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Erlang(1:3, 0.5); x <- 1:3
-    expect_identical(NROW(score(d, x[1])), length(x))
-    expect_identical(NROW(score(d[1], x)), length(x))
-
-    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
-    ## Using k = 3 and lambda = 0.5
-    tmp <- cbind(k      = log(0.5) + log(x) - digamma(3),
-                 lambda = 3 / 0.5 - x)
-    expect_silent(s1 <- score(Erlang(3, 0.5), x))
-    expect_equal(s1, tmp)
-
-    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "k"))
-    expect_equal(s1, tmp[, "k"])
-    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "lambda"))
-    expect_equal(s1, tmp[, "lambda"])
-
-    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "k", drop = FALSE))
-    expect_equal(s1, tmp[, "k", drop = FALSE])
-    expect_silent(s1 <- score(Erlang(3, 0.5), x, which = "lambda", drop = FALSE))
-    expect_equal(s1, tmp[, "lambda", drop = FALSE])
-
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Erlang(3, 0.5), x, drop = FALSE)),
-            info = "numeric approximation differs from analytic solution")
-
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x)
 })
 
-test_that("hessian.Erlang works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("hessian.Erlang" %in% ns, info = "hessian.Erlang not found in namespace")
-    expect_true(is.function(getS3method("hessian", "Erlang")), "hessian.Erlang is not a function")
+test_that("hessian.ChiSquare works as expected", {
+    ## Objects used for testing
+    d <- Erlang(3:1, 1:3)
+    x <- 1:3
 
-    x <- 1:5
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x)
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::hessian.Erlang),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Erlang(2:3, 0.5), 1:5),               regexp = "parameter lengths do not match")
-    expect_error(hessian(Erlang(3, 0.5), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(hessian(Erlang(3, 0.5), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Erlang(3, 0.5), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
-
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Erlang(1:3, 0.5); x <- 1:3
-    expect_identical(NROW(hessian(d, x[1])), length(x))
-    expect_identical(NROW(hessian(d[1], x)), length(x))
-    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d,       expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
-
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(hessian(Erlang(3, 0.5), x),
-                 suppressWarnings(distributions3:::hessian.distribution(Erlang(3, 0.5), x)),
-                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
-
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x)
 })
+

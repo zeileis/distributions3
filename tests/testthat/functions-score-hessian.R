@@ -179,18 +179,23 @@ hessian_test_return_dim_names <- function(d, x, which = NULL) {
 }
 
 ## Comparing analytic hessian vs. numerically calculated hessian
-hessian_test_analytic_vs_numeric <- function(d, x, which = NULL, tol = 1e-5) {
+hessian_test_analytic_vs_numeric <- function(d, x, which = NULL, tol = 1e-5,
+                                             test_observed = TRUE, test_expected = TRUE) {
     ## Observed hessian
-    expect_silent(h1o <- hessian(d, x, which = which, drop = FALSE))
-    expect_silent(h2o <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE))
-    expect_equal(h1o, h2o, tolerance = tol,
-                 info = "analytic observed Hessian not equal to numeric approximation")
+    if (test_observed) {
+        expect_silent(h1o <- hessian(d, x, which = which, drop = FALSE))
+        expect_silent(h2o <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE))
+        expect_equal(h1o, h2o, tolerance = tol,
+                     info = "analytic observed Hessian not equal to numeric approximation")
+    }
 
     ## Expected hessian
-    expect_silent(h1e <- hessian(d, x, which = which, drop = FALSE, expected = TRUE))
-    expect_silent(h2e <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE, expected = TRUE))
-    expect_equal(h1e, h2e, tolerance = 1e-4,
-                 info = "analytic expected Hessian not equal to numeric approximation")
+    if (test_expected) {
+        expect_silent(h1e <- hessian(d, x, which = which, drop = FALSE, expected = TRUE))
+        expect_silent(h2e <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE, expected = TRUE))
+        expect_equal(h1e, h2e, tolerance = 1e-4,
+                     info = "analytic expected Hessian not equal to numeric approximation")
+    }
 }
 
 

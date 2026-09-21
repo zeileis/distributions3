@@ -189,82 +189,42 @@ test_that("named return values for Cauchy distribution work correctly", {
 ## Score and hessian
 ## ------------------------------------------------------------------
 
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
+
 test_that("score.Cauchy works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("score.Cauchy" %in% ns, info = "score.Cauchy not found in namespace")
-    expect_true(is.function(getS3method("score", "Cauchy")), "score.Cauchy is not a function")
+    ## Objects used for testing
+    d <- Cauchy(3:1, 3:5)
+    x <- 1:3
 
-    x <- 1:5
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x)
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::score.Cauchy),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Cauchy(2:3, 0.5), 1:5),                 regexp = "parameter lengths do not match")
-    expect_error(score(Cauchy(5, 3), 1, which = 1),            info = "unknown which should throw error")
-    expect_error(score(Cauchy(5, 3), 1, which = "foo"),        info = "unknown which must should throw error")
-
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Cauchy(1:3, 1); x <- 1:3
-    expect_identical(NROW(score(d, x[1])), length(x))
-    expect_identical(NROW(score(d[1], x)), length(x))
-
-    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
-    ## Using location = 5, scale = 3
-    denom <- 3^2 + (x - 5)^2
-    tmp <- cbind(location = 2 * (x - 5) / denom,
-                 scale    = -1 / 3 + 2 * (x - 5)^2 / (3 * denom))
-    expect_silent(s1 <- score(Cauchy(5, 3), x))
-    expect_identical(s1, tmp)
-
-    expect_silent(s1 <- score(Cauchy(5, 3), x, which = "location"))
-    expect_identical(s1, tmp[, "location"])
-    expect_silent(s1 <- score(Cauchy(5, 3), x, which = "scale"))
-    expect_identical(s1, tmp[, "scale"])
-
-    expect_silent(s1 <- score(Cauchy(5, 3), x, which = "location", drop = FALSE))
-    expect_identical(s1, tmp[, "location", drop = FALSE])
-    expect_silent(s1 <- score(Cauchy(5, 3), x, which = "scale", drop = FALSE))
-    expect_identical(s1, tmp[, "scale", drop = FALSE])
-
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Cauchy(5, 3), x)),
-            info = "numeric approximation differs from analytic solution")
-
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x)
 })
 
 test_that("hessian.Cauchy works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("hessian.Cauchy" %in% ns, info = "hessian.Cauchy not found in namespace")
-    expect_true(is.function(getS3method("hessian", "Cauchy")), "hessian.Cauchy is not a function")
+    ## Objects used for testing
+    d <- Cauchy(3:1, 3:5)
+    x <- 1:3
 
-    x <- 1:5
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x)
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::hessian.Cauchy),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Cauchy(2:3, 0.5), 1:5),             regexp = "parameter lengths do not match")
-    expect_error(hessian(Cauchy(5, 3), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(hessian(Cauchy(5, 3), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Cauchy(5, 3), 1, expected = "foo"), info = "expected not TRUE/FALSE should throw error")
-
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Cauchy(1:3, 1); x <- 1:3
-    expect_identical(NROW(hessian(d, x[1])), length(x))
-    expect_identical(NROW(hessian(d[1], x)), length(x))
-    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d,       expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
-
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(hessian(Cauchy(5, 3), x),
-                 suppressWarnings(distributions3:::hessian.distribution(Cauchy(5, 3), x)),
-                 tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
-
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x)
 })
+

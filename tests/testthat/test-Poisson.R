@@ -196,84 +196,42 @@ test_that("named return values for Poisson distribution work correctly", {
 ## Score and hessian
 ## ------------------------------------------------------------------
 
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
+
 test_that("score.Poisson works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("score.Poisson" %in% ns, info = "score.Poisson not found in namespace")
-    expect_true(is.function(getS3method("score", "Poisson")), "score.Poisson is not a function")
+    ## Objects used for testing
+    d <- Poisson(1:3)
+    x <- 6:4
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::score.Poisson),
-        as.pairlist(alist(d =, x =, which = "lambda", drop = TRUE, ... =)))
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x, which = "lambda")
 
-    ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Poisson(1:3), 2:1),               regexp = "parameter lengths do not match")
-    expect_error(score(Poisson(1), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(score(Poisson(1), 1, which = "foo"),    info = "unknown which must should throw error")
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x, which = "lambda")
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x, which = "lambda")
 
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Poisson(1:3); x <- 1:3
-    expect_identical(NROW(score(d, x[1])), length(x))
-    expect_identical(NROW(score(d[1], x)), length(x))
-
-    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
-    tmp <- 1:5 / 5:1 - 1 # Score
-    expect_silent(s1 <- score(Poisson(5:1), 1:5))
-    expect_identical(s1, tmp)
-    expect_silent(s1 <- score(Poisson(5:1), 1:5, which = "lambda", drop = FALSE))
-    expect_identical(s1, cbind(lambda = tmp))
-
-    ## Compare to numerically calculated score
-    expect_equal(score(Poisson(5:1), 1:5),
-                 distributions3:::score.distribution(Poisson(5:1), 1:5),
-                 tolerance = 1e-7)
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x, which = "lambda")
 })
 
 test_that("hessian.Poisson works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("hessian.Poisson" %in% ns, info = "hessian.Poisson not found in namespace")
-    expect_true(is.function(getS3method("hessian", "Poisson")), "hessian.Poisson is not a function")
-
-    ## Checking defaults
-    expect_identical(formals(distributions3:::hessian.Poisson),
-        as.pairlist(alist(d =, x =, which = "lambda", drop = TRUE, expected = FALSE, ... =)))
-
-    ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Poisson(1:3), 2:1),               regexp = "parameter lengths do not match")
-    expect_error(hessian(Poisson(1), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(hessian(Poisson(1), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Poisson(1), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
-
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Poisson(1:3); x <- 1:3
-    expect_identical(NROW(hessian(d, x[1])), length(x))
-    expect_identical(NROW(hessian(d[1], x)), length(x))
-    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d,       expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
-
-    ## Calculating observed hessian and check return
-    tmp_o <- -(1:5) / (5:1)^2 # Observed hessian
-    expect_identical(hessian(Poisson(5:1), 1:5, expected = FALSE), tmp_o, info = "incorrect observed hessian returned")
-    expect_identical(hessian(Poisson(5:1), 1:5, expected = FALSE, drop = FALSE), cbind(lambda = tmp_o))
-
-    ## Calculating expected hessian and check return
-    tmp_e <- -1 / 5:1 # Expected hessian
-    expect_identical(hessian(Poisson(5:1), 1:5, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
-    expect_identical(hessian(Poisson(5:1), 1:5, expected = TRUE, drop = FALSE),  cbind(lambda = tmp_e))
-
-    ## Comparing analytic observed hessian to numeric approximation
+    ## Objects used for testing
     d <- Poisson(1:3)
-    expect_silent(h1o <- hessian(d, x = 2))
-    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
-    expect_equal(h1o, h2o, tolerance = 1e-6)
+    x <- 6:4
 
-    ### Comparing analytic expected Hessian against the numeric approximation
-    ### Should run silently though 'x' is missing
-    expect_silent(h1e <- hessian(d, expected = TRUE))
-    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
-    expect_equal(h1e, h2e, tolerance = 1e-3, info = "analytic expected Hessian not equal to numeric approximation")
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x, which = "lambda")
+
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x, which = "lambda")
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x, which = "lambda")
+
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x, which = "lambda")
 })
 
