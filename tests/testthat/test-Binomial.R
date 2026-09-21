@@ -205,96 +205,42 @@ test_that("crps method for Binomial returns correct object", {
 ## Score and hessian
 ## ------------------------------------------------------------------
 
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
+
 test_that("score.Binomial works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("score.Binomial" %in% ns, info = "score.Binomial not found in namespace")
-    expect_true(is.function(getS3method("score", "Binomial")), "score.Binomial is not a function")
+    ## Objects used for testing
+    d <- Binomial(1:3)
+    x <- 1:3
 
-    x <- 1:5
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x, which = "p")
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::score.Binomial),
-        as.pairlist(alist(d =, x =, which = "p", drop = TRUE, ... =)))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x, which = "p")
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x, which = "p")
 
-    ## Testing for error when lenghts mismatch and incorrect arguments
-    expect_error(score(Binomial(30, p = c(0.2, 0.3, 0.5)), x), regexp = "parameter lengths do not match")
-    expect_error(score(Binomial(30), 1, which = 1),            info = "unknown which should throw error")
-    expect_error(score(Binomial(30), 1, which = "foo"),        info = "unknown which must should throw error")
-
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Binomial(1:3); x <- 1:3
-    expect_identical(NROW(score(d, x[1])), length(x))
-    expect_identical(NROW(score(d[1], x)), length(x))
-
-    ## Calculating all scores for 5 distributions w/ drop = TRUE (default) and FALSE
-    tmp <- (x - 30 * 0.5) / 0.5^2 # Score for size = 30, p = 0.5
-    expect_silent(s1 <- score(Binomial(30, 0.5), x))
-    expect_identical(s1, tmp)
-    expect_silent(s1 <- score(Binomial(30, 0.5), x, which = "p", drop = FALSE))
-    expect_identical(s1, cbind(p = tmp))
-
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(tmp, suppressWarnings(distributions3:::score.distribution(Binomial(30, 0.5), x)[, "p"]),
-            info = "numeric approximation differs from analytic solution")
-
-    ## Scores only supported for parameter p (not size), when which = 'size'
-    ## we expect a warning, and 'p' is returned.
-    expect_warning(s2 <- score(Binomial(size = 30, p = 0.5), x, which = "size"),
-        regexp = "only the scores with respect to 'p' are supported")
-    expect_identical(s2, score(Binomial(size = 30, p = 0.5), x))
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x, which = "p")
 })
 
 test_that("hessian.Binomial works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("hessian.Binomial" %in% ns, info = "hessian.Binomial not found in namespace")
-    expect_true(is.function(getS3method("hessian", "Binomial")), "hessian.Binomial is not a function")
+    ## Objects used for testing
+    d <- Binomial(1:3)
+    x <- 1:3
 
-    x <- 1:5
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x, which = "p")
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::hessian.Binomial),
-        as.pairlist(alist(d =, x =, which = "p", drop = TRUE, expected = FALSE, ... =)))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x, which = "p")
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x, which = "p")
 
-    ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Binomial(30, c(0.2, 0.3, 0.5)), x),   regexp = "parameter lengths do not match")
-    expect_error(hessian(Binomial(30, ), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(hessian(Binomial(30, ), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Binomial(30, ), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
-
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Binomial(1:3); x <- 1:3
-    expect_identical(NROW(hessian(d, x[1])), length(x))
-    expect_identical(NROW(hessian(d[1], x)), length(x))
-    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d,       expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
-
-    ## Calculating observed hessian and check return
-    tmp_o <- -x / 0.5^2 - (30 - x) / 0.5^2 # Observed hessian for size = 30, p = 0.5
-    expect_identical(hessian(Binomial(30, 0.5), x, expected = FALSE), tmp_o, info = "incorrect observed hessian returned")
-    expect_identical(hessian(Binomial(30, 0.5), x, expected = FALSE, drop = FALSE), cbind(p = tmp_o))
-
-    ## Comparing to numeric approximation; throws warnings (due to param score)
-    expect_equal(tmp_o, suppressWarnings(distributions3:::hessian.distribution(Binomial(30, 0.5), x)[, "p"]),
-            tolerance = 1e-6, info = "numeric approximation differs from analytic solution")
-
-    ## Calculating expected hessian and check return
-    tmp_e <- rep(-30 / 0.5^2, 3L) # Expected hessian for score = 30, p = 0.5
-    expect_identical(hessian(Binomial(30, 0.5), 1:3, expected = TRUE),  tmp_e, info = "incorrect expected hessian returned")
-    expect_identical(hessian(Binomial(30, 0.5), 1:3, expected = TRUE, drop = FALSE),  cbind(p = tmp_e))
-
-    ## Comparing analytic observed hessian to numeric approximation
-    d <- Binomial(c(10, 20, 30), 0.4)
-    expect_silent(h1o <- hessian(d, x = 2))
-    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2, which = "p"))
-    expect_equal(h1o, h2o, tolerance = 1e-6)
-
-    ## Comparing analytic expected Hessian against the numeric approximation
-    ## Should run silently though 'x' is missing
-    expect_silent(h1e <- hessian(d, expected = TRUE))
-    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE, which = "p"))
-    expect_equal(h1e, h2e, tolerance = 1e-3, info = "analytic expected Hessian not equal to numeric approximation")
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x, which = "p")
 })
+

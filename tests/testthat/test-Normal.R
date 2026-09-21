@@ -188,10 +188,10 @@ test_that("named return values for Normal distribution work correctly", {
 ## Score and hessian
 ## ------------------------------------------------------------------
 
-test_that("score.Normal works as expected", {
-    ## Helper functions for automated testing of S3 methods
-    source("functions-score-hessian.R")
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
 
+test_that("score.Normal works as expected", {
     ## Objects used for testing
     d <- Normal(3:1, 3:5)
     x <- 11:13
@@ -210,9 +210,6 @@ test_that("score.Normal works as expected", {
 })
 
 test_that("hessian.Normal works as expected", {
-    ## Helper functions for automated testing of S3 methods
-    source("functions-score-hessian.R")
-
     ## Objects used for testing
     d <- Normal(3:1, 3:5)
     x <- 11:13

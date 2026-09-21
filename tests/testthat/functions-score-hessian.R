@@ -6,7 +6,7 @@
 
 # Helper function to test score method default arguments and default sanity checks
 # (i.e., incorrect use)
-score_test_args_and_sanity <- function(d, x) {
+score_test_args_and_sanity <- function(d, x, which = NULL) {
     stopifnot(length(d) > 2L && length(x) > 2L)
     name <- class(d)[1L]
 
@@ -14,9 +14,14 @@ score_test_args_and_sanity <- function(d, x) {
     expect_true(paste0("score.", name) %in% ns, info = "score method not found in namespace")
     expect_true(is.function(method <- getS3method("score", name)), "score method is not a function")
 
-    ## Checking defaults
-    expect_identical(formals(method),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+    ## Checking defaults; allows to be specified as character vector for
+    ## special situations such as e.g., the Bernoulli distribution.
+    p <- if (is.null(which)) {
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =))
+    } else {
+        eval(parse(text = sprintf("as.pairlist(alist(d =, x =, which = %s, drop = TRUE, ... =))", deparse(which))))
+    }
+    expect_identical(formals(method), p, info = "default arguments not as expected")
 
     ## Testing for error when lenghts mismatch
     expect_error(method(Normal(1:3), 2:1),              regexp = "parameter lengths do not match")
@@ -26,10 +31,13 @@ score_test_args_and_sanity <- function(d, x) {
 
 # Helper function to test the return dimension/names of normal functions
 # given different inputs/mixed input lengths.
-score_test_return_dim_names <- function(d, x) {
-    m     <- as.matrix(d)
+score_test_return_dim_names <- function(d, x, which = NULL) {
+    ## Get names of all derivatives if not otherwise specified
+    if (is.null(which)) which <- unname(get_deriv_names(names(unclass(d))))
+
+    ## Creating dummy matrix for testing dimension/dimension names
+    m     <- matrix(NA, nrow = length(d), ncol = length(which), dimnames = list(names(d), which))
     m1    <- m[1, , drop = FALSE]
-    which <- get_deriv_names(names(unclass(d))) |> unname()
 
     expect_silent(s <- score(d, x[1], drop = FALSE))
     expect_identical(dim(s), dim(m))
@@ -64,10 +72,10 @@ score_test_return_dim_names <- function(d, x) {
 }
 
 ## Comparing analytic score vs. numerically calculated score
-score_test_analytic_vs_numeric <- function(d, x, tol = 1e-5) {
+score_test_analytic_vs_numeric <- function(d, x, which = NULL, tol = 1e-5) {
     ## Observed hessian
-    expect_silent(s1o <- score(d, x))
-    expect_silent(s2o <- distributions3:::score.distribution(d, x))
+    expect_silent(s1o <- score(d, x, which = which, drop = FALSE))
+    expect_silent(s2o <- distributions3:::score.distribution(d, x, which = which, drop = FALSE))
     expect_equal(s1o, s2o, tolerance = tol,
                  info = "analytic score not equal to numeric approximation")
 }
@@ -78,7 +86,7 @@ score_test_analytic_vs_numeric <- function(d, x, tol = 1e-5) {
 
 # Helper function to test hessian method default arguments and default sanity checks
 # (i.e., incorrect use)
-hessian_test_args_and_sanity <- function(d, x) {
+hessian_test_args_and_sanity <- function(d, x, which = NULL) {
     stopifnot(length(d) > 2L && length(x) > 2L)
     name <- class(d)[1L]
 
@@ -86,9 +94,14 @@ hessian_test_args_and_sanity <- function(d, x) {
     expect_true(paste0("hessian.", name) %in% ns, info = "hessian method not found in namespace")
     expect_true(is.function(method <- getS3method("hessian", name)), "hessian method is not a function")
 
-    ## Checking defaults
-    expect_identical(formals(method),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+    ## Checking defaults; allows to be specified as character vector for
+    ## special situations such as e.g., the Bernoulli distribution.
+    p <- if (is.null(which)) {
+        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =))
+    } else {
+        eval(parse(text = sprintf("as.pairlist(alist(d =, x =, which = %s, drop = TRUE, expected = FALSE, ... =))", deparse(which))))
+    }
+    expect_identical(formals(method), p, info = "default arguments not as expected")
 
     ## Testing for error when lenghts mismatch and  incorrect arguments
     expect_error(hessian(d, head(x, -1)),            regexp = "parameter lengths do not match")
@@ -99,13 +112,13 @@ hessian_test_args_and_sanity <- function(d, x) {
 
 # Helper function to test the return dimension/names of hessian functions
 # given different inputs/mixed input lengths.
-hessian_test_return_dim_names <- function(d, x) {
-    ## Get names of all derivatives (incl. dross-derivatives) to 
-    ## set up a dummy matrix for testing.
-    m     <- get_deriv_names(names(unclass(d)), expand = TRUE) |> unname()
-    m     <- matrix(NA, nrow = length(d), ncol = length(m), dimnames = list(names(d), m))
-    m1    <- m[1L, , drop = FALSE]
-    which <- get_deriv_names(names(unclass(d)), expand = TRUE) |> unname()
+hessian_test_return_dim_names <- function(d, x, which = NULL) {
+    ## Get names of all derivatives (incl. dross-derivatives) if not otherwise specified
+    if (is.null(which)) which <- unname(get_deriv_names(names(unclass(d)), expand = TRUE))
+
+    ## Creating dummy matrix for testing dimension/dimension names
+    m     <- matrix(NA, nrow = length(d), ncol = length(which), dimnames = list(names(d), which))
+    m1    <- m[1, , drop = FALSE]
 
     expect_silent(h <- hessian(d, x[1],    drop = FALSE))
     expect_identical(dim(h), dim(m))
@@ -166,17 +179,16 @@ hessian_test_return_dim_names <- function(d, x) {
 }
 
 ## Comparing analytic hessian vs. numerically calculated hessian
-hessian_test_analytic_vs_numeric <- function(d, x, tol = 1e-5) {
-
+hessian_test_analytic_vs_numeric <- function(d, x, which = NULL, tol = 1e-5) {
     ## Observed hessian
-    expect_silent(h1o <- hessian(d, x))
-    expect_silent(h2o <- distributions3:::hessian.distribution(d, x))
+    expect_silent(h1o <- hessian(d, x, which = which, drop = FALSE))
+    expect_silent(h2o <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE))
     expect_equal(h1o, h2o, tolerance = tol,
                  info = "analytic observed Hessian not equal to numeric approximation")
 
     ## Expected hessian
-    expect_silent(h1e <- hessian(d, x, expected = TRUE))
-    expect_silent(h2e <- distributions3:::hessian.distribution(d, x, expected = TRUE))
+    expect_silent(h1e <- hessian(d, x, which = which, drop = FALSE, expected = TRUE))
+    expect_silent(h2e <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE, expected = TRUE))
     expect_equal(h1e, h2e, tolerance = 1e-4,
                  info = "analytic expected Hessian not equal to numeric approximation")
 }
