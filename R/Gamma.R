@@ -334,9 +334,9 @@ hessian.Gamma <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...
   ## so the observed Hessian equals the expected Hessian. Use the same formulas for both.
   hess <- function(par, d, x) {
     switch(par,
-           "shape"      = 0 * x - trigamma(d$shape),
-           "rate"       = 0 * x - d$shape / d$rate^2,
-           0 * x  + 1 / d$rate, n)
+           "shape" = 0 * x - trigamma(d$shape),
+           "rate"  = 0 * x - d$shape / d$rate^2,
+           0 * x  + 1 / d$rate)
   }
 
   ## Calculate derivatives, prepare return object
