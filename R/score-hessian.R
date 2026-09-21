@@ -163,9 +163,9 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
     ## round(apply(h, MARGIN = 2, mean), 3)
     } else {
       ## integrand for numerical integration; scoped by 'hess'
-      integrand <- function(x, dx, par) {
-          obs_h <- hessian(dx, x, which = par)
-          density_x <- pdf(dx, x) # or density(d, val)
+      integrand <- function(x, d, par) {
+          obs_h <- hessian(d, x, which = par)
+          density_x <- pdf(d, x)
           return(obs_h * density_x)
       }
       ifun <- Vectorize(integrand, vectorize.args = "x") # functionto be integrated
@@ -176,7 +176,7 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
           if (any(is.infinite(s[, 1L]))) s[, 1L] <- quantile(d, 1e-6)
           if (any(is.infinite(s[, 2L]))) s[, 2L] <- quantile(d, 1 - 1e-6)
           fn <- function(i) {
-              stats::integrate(ifun, dx = d[i], par = par, lower = s[i, "min"], upper = s[i, "max"])
+              stats::integrate(ifun, d = d[i], par = par, lower = s[i, "min"], upper = s[i, "max"])
           }
           res <- lapply(seq_along(d), fn)
           vapply(res, function(x) x$value, numeric(1L))

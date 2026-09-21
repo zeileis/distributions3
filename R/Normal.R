@@ -438,18 +438,22 @@ hessian.Normal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## Pre-calculating 1 / sigma^2
-  nvsigma2 <- 1 / (d$sigma * d$sigma)
+  invsigma2 <- 1 / (d$sigma * d$sigma)
 
   ## function for computing Hessian elements (expected or observed)
   hess <- if (expected) {
     function(par, d, x) switch(par,
-      "mu"    = 0 * x - 1 / invsigma2,
-      "sigma" = 0 * x - 2 / invsigma2,
+      "mu"    = 0 * x - invsigma2,
+      "sigma" = 0 * x - 2 * invsigma2,
       rep.int(0, n))
   } else {
-    function(par, d, x) switch(par,
-      "mu"    = rep_len(-invsigma2, n),
-      "sigma" = -3 * (x - d$mu)^2 * invsigma2 * invsigma2 + invsigma2,
+    ##function(par, d, x) switch(par,
+    ##  "mu"    = rep_len(-invsigma2, n),
+    ##  "sigma" = -3 * (x - d$mu)^2 * invsigma2 * invsigma2 + invsigma2,
+    ##  -2 * (x - d$mu) / d$sigma^3)
+      function(par, d, x) switch(par,
+      "mu"    = rep_len(-1 / d$sigma^2, n),
+      "sigma" = -3 * (x - d$mu)^2 / d$sigma^4 + 1/d$sigma^2,
       -2 * (x - d$mu) / d$sigma^3)
   }
 

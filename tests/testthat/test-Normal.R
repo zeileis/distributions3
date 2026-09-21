@@ -189,117 +189,44 @@ test_that("named return values for Normal distribution work correctly", {
 ## ------------------------------------------------------------------
 
 test_that("score.Normal works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("score.Normal" %in% ns, info = "score.Normal not found in namespace")
-    expect_true(is.function(getS3method("score", "Normal")), "score.Normal is not a function")
+    ## Helper functions for automated testing of S3 methods
+    source("functions-score-hessian.R")
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::score.Normal),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+    ## Objects used for testing
+    d <- Normal(3:1, 3:5)
+    x <- 11:13
 
-    ## Testing for error when lenghts mismatch
-    expect_error(score(Normal(1:3), 2:1),              regexp = "parameter lengths do not match")
-    expect_error(score(Normal(), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(score(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x)
 
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Normal(1:3, 1); x <- 1:3
-    expect_identical(NROW(score(d, x[1])), length(x))
-    expect_identical(NROW(score(d[1], x)), length(x))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Calculating all scores for 5 distributions
-    expect_silent(s1 <- score(Normal(5:1), 1:5))
-    expect_identical(s1, matrix(c(seq(-4, 4, by = 2), c(15, 3, -1, 3, 15)), ncol = 2,
-                                dimnames = list(NULL, c("mu", "sigma"))))
-
-    ## Checking changing order of whcih
-    expect_silent(s2 <- score(Normal(5:1), 1:5, which = c("sigma", "mu")))
-    expect_identical(s1, s2[, 2:1]) # Reverse order
-
-    ## Calculating only mu and sigma, compare to full result 's1' from above
-    expect_silent(sm <- score(Normal(1:5), 5:1, which = "m"))
-    expect_silent(ss <- score(Normal(1:5), 5:1, which = "s"))
-    expect_identical(s1[5:1, ], cbind(mu = sm, sigma = ss)) # flipped upside down for testing
-
-    ## with drop = FALSE
-    expect_silent(sm <- score(Normal(1:5), 5:1, which = "m", drop = FALSE))
-    expect_identical(dim(sm), c(5L, 1L))
-    expect_silent(ss <- score(Normal(1:5), 5:1, which = "s", drop = FALSE))
-    expect_identical(dim(ss), c(5L, 1L))
-    expect_identical(s1[5:1, ], cbind(sm, ss)) # flipped upside down for testing
-
-    ## Compare to numerically calculated score
-    expect_equal(score(Normal(5:1), 1:5),
-                 distributions3:::score.distribution(Normal(5:1), 1:5),
-                 tolerance = 1e-7)
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x)
 })
 
 test_that("hessian.Normal works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("hessian.Normal" %in% ns, info = "hessian.Normal not found in namespace")
-    expect_true(is.function(getS3method("hessian", "Normal")), "hessian.Normal is not a function")
+    ## Helper functions for automated testing of S3 methods
+    source("functions-score-hessian.R")
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::hessian.Normal),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+    ## Objects used for testing
+    d <- Normal(3:1, 3:5)
+    x <- 11:13
 
-    ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Normal(1:3), 2:1),              regexp = "parameter lengths do not match")
-    expect_error(hessian(Normal(), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(hessian(Normal(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Normal(2, 0.5), 1, expected = "foo"), regexp = "argument 'expected' must be TRUE or FALSE")
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x)
 
-    ## Ensure we get the correct return length for both combinations:
-    ## three distributions one x, or one distribution evaluated at three points
-    d <- Normal(1:3, 1); x <- 1:3
-    expect_identical(NROW(hessian(d, x[1])), length(x))
-    expect_identical(NROW(hessian(d[1], x)), length(x))
-    expect_identical(NROW(hessian(d, x[1], expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1], x, expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d,,      expected = TRUE)), length(x))
-    expect_identical(NROW(hessian(d[1],    expected = TRUE)), 1L)
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Calculating all hessians for 5 distributions
-    expect_silent(h1 <- hessian(Normal(5:1), 1:5))
-    tmp <- cbind("mu"       = rep(-1, 5L),
-                 "sigma:mu" = c(8, 4, 0, -4, -8),
-                 "mu:sigma" = c(8, 4, 0, -4, -8),
-                 "sigma"    = c(-47, -11, 1, -11, -47))
-    expect_identical(h1, tmp)
-
-    ## Checking changing order of which
-    expect_silent(h2 <- hessian(Normal(5:1), 1:5, which = c("mu:sigma", "sigma", "sigma:mu", "mu")))
-    expect_identical(h1, h2[, colnames(h1)]) # change order
-
-    ## Calculating only hessian for mu and sigma
-    expect_silent(h2 <- hessian(Normal(5:1), 1:5, which = c("mu", "sigma")))
-    expect_identical(h2, h1[, c("mu", "sigma")])
-
-    ## Calculating each individually (flipped upside down for testing)
-    expect_silent(hm  <- hessian(Normal(1:5), 5:1, which = "mu"))
-    expect_silent(hs  <- hessian(Normal(1:5), 5:1, which = "sigma"))
-    expect_silent(hsm <- hessian(Normal(1:5), 5:1, which = "sigma:mu"))
-    expect_silent(hms <- hessian(Normal(1:5), 5:1, which = "mu:sigma"))
-    expect_identical(h1[5:1, ], cbind("mu" = hm, "sigma:mu" = hsm, "mu:sigma" = hms, "sigma" = hs))
-
-    ## with drop = FALSE (still flipped for fun)
-    expect_silent(hm  <- hessian(Normal(1:5), 5:1, which = "mu",       drop = FALSE))
-    expect_silent(hs  <- hessian(Normal(1:5), 5:1, which = "sigma",    drop = FALSE))
-    expect_silent(hsm <- hessian(Normal(1:5), 5:1, which = "sigma:mu", drop = FALSE))
-    expect_silent(hms <- hessian(Normal(1:5), 5:1, which = "mu:sigma", drop = FALSE))
-    expect_identical(h1[5:1, ], cbind(hm, hsm, hms, hs))
-
-    ## Comparing analytic observed hessian to numeric approximation
-    d <- Normal(1:3, 3:1)
-    expect_silent(h1o <- hessian(d, x = 2))
-    expect_silent(h2o <- distributions3:::hessian.distribution(d, x = 2))
-    expect_equal(h1o, h2o, tolerance = 1e-6)
-
-    ## Comparing analytic expected Hessian against the numeric approximation
-    ## Should run silently though 'x' is missing
-    expect_silent(h1e <- hessian(d, expected = TRUE))
-    expect_silent(h2e <- distributions3:::hessian.distribution(d, expected = TRUE))
-    expect_equal(h1e, h2e, tolerance = 1e-4, info = "analytic expected Hessian not equal to numeric approximation")
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x)
 })
 

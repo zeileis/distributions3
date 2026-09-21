@@ -426,7 +426,10 @@ apply_deriv <- function(d, x, FUN, which, drop = TRUE, check = TRUE, ...) {
     )
   }
 
+  n     <- max_length(d, x)
   names <- names(d)
+  if (!is.null(names) && length(d) < n) names <- NULL
+
   if (drop && length(which) == 1L) {
     res <- FUN(names(which), d = d, x = x, ...)
     if (!is.null(names)) res <- setNames(res, names)
