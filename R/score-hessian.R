@@ -179,7 +179,8 @@ hessian.distribution <- function(d, x, which = NULL, drop = TRUE, expected = FAL
               stats::integrate(ifun, d = d[i], par = par, lower = s[i, "min"], upper = s[i, "max"])
           }
           res <- lapply(seq_along(d), fn)
-          vapply(res, function(x) x$value, numeric(1L))
+          res <- vapply(res, function(x) x$value, numeric(1L))
+          if (length(d) == 1L) rep(res, length(x)) else res
       }
     }
   } else {
