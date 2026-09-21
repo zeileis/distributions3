@@ -117,7 +117,8 @@ hessian_test_return_dim_names <- function(d, x, which = NULL) {
     if (is.null(which)) which <- unname(get_deriv_names(names(unclass(d)), expand = TRUE))
 
     ## Creating dummy matrix for testing dimension/dimension names
-    m     <- matrix(NA, nrow = length(d), ncol = length(which), dimnames = list(names(d), which))
+    m     <- matrix(NA, nrow = length(d), ncol = length(which),
+            dimnames = list(names(d), which))
     m1    <- m[1, , drop = FALSE]
 
     expect_silent(h <- hessian(d, x[1],    drop = FALSE))
@@ -126,7 +127,7 @@ hessian_test_return_dim_names <- function(d, x, which = NULL) {
 
     expect_silent(h <- hessian(d[1], x,    drop = FALSE))
     expect_identical(dim(h), dim(m))
-    expect_identical(dimnames(h), dimnames(m))
+    expect_identical(dimnames(h), list(NULL, colnames(m)))
 
     expect_silent(h <- hessian(d, x[1],    drop = FALSE, expected = TRUE))
     expect_identical(dim(h), dim(m))
@@ -146,13 +147,7 @@ hessian_test_return_dim_names <- function(d, x, which = NULL) {
 
     expect_silent(h <- hessian(d[1], x,    drop = FALSE, expected = TRUE))
     expect_identical(dim(h), dim(m))
-    ## Speical case where we have a named distributions object 'd' of length 1,
-    ## and a vector of 'x' with length(x) > 1. In this case, we drop naming!
-    if (!is.null(names(d))) {
-        expect_identical(dimnames(h), list(NULL, colnames(m)))
-    } else {
-        expect_identical(dimnames(h), dimnames(m))
-    }
+    expect_identical(dimnames(h), list(NULL, colnames(m)))
 
     ## Additional checks
 

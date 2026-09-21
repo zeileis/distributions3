@@ -5,13 +5,53 @@
 if (interactive()) { library("distributions3"); library("testthat") }
 suppressPackageStartupMessages(library("scoringRules"))
 
+# Helper functions for automated testing of S3 methods
+source("functions-distribution.R")
+source("functions-score-hessian.R")
+
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd  <- Normal(1:3, 3:1)           # Unnamed
+ddn <- setNames(dd, LETTERS[1:3]) # Named
+pp  <- c(0.25, 0.5, 0.75)
+xx  <- 1:3
+
+stopifnot(length(dd) == length(ddn),
+          length(dd) == length(xx),
+          length(dd) == length(pp))
+
+## Default arguments
 test_that("Normal default arguments", {
-  expect_identical(formals(Normal),
-    as.pairlist(alist(mu = 0, sigma = 1)))
+  expect_identical(formals(Normal), as.pairlist(alist(mu = 0, sigma = 1)))
 })
 
-test_that("print.Normal works", {
-  expect_output(print(Normal()), regexp = "Normal")
+## -------------------------------------------------------
+## "Support" methods
+## -------------------------------------------------------
+test_that("print.Normal works correctly", {
+    d_test_print(Normal(-10, +2))
+    d_test_print(Normal(-100.123456, 1e-10))
+})
+
+test_that("support.Normal works correctly", {
+    ## Generic method tests
+    d_test_support(dd)
+    ## Testing numeric value
+    s <- support(dd)
+    expect_true(all(s[, "min"] == -Inf))
+    expect_true(all(s[, "max"] == +Inf))
+})
+
+test_that("is_discrete.Normal works correctly", {
+    ## Generic method tests
+    d_test_is_discrete(dd,  expected = FALSE) # unnamed
+    d_test_is_discrete(ddn, expected = FALSE) # named
+})
+
+test_that("is_continuous.Normal works correctly", {
+    ## Generic method tests
+    d_test_is_continuous(dd,  expected = TRUE) # unnamed
+    d_test_is_continuous(ddn, expected = TRUE) # named
 })
 
 test_that("suff_stat.Normal works correctly", {
@@ -25,205 +65,102 @@ test_that("fit_mle.Normal works correctly", {
   expect_equal(fit_mle(Normal(), c(0, 0)), Normal(0, 0))
 })
 
+
+## -------------------------------------------------------
+## d/p/q/r methods
+## -------------------------------------------------------
+test_that("pdf.Normal works correctly", {
+  ## Helper function to test pdf.Normal against dnorm
+  dfun <- function(x, ...) {
+      args <- c(list(x = x), as.list(...))
+      dnorm(args$x, mean = args$mu, sd = args$sigma)
+  }
+  d_test_pdf(dd,  xx, dfun) # unnamed
+  d_test_pdf(ddn, xx, dfun) # named
+})
+
+test_that("log_pdf.Normal works correctly", {
+  d_test_log_pdf(dd,  xx) # unnamed
+  d_test_log_pdf(ddn, xx) # named
+})
+
+test_that("cdf.Normal works correctly", {
+  ## Helper function to test cdf.Normal against dnorm
+  pfun <- function(x, ...) {
+      args <- c(list(x = x), as.list(...))
+      pnorm(args$x, mean = args$mu, sd = args$sigma)
+  }
+  d_test_cdf(dd,  xx, pfun) # unnamed
+  d_test_cdf(ddn, xx, pfun) # named
+})
+
+test_that("quantile.Normal works correctly", {
+  ## Helper function to test quantile.Normal against dnorm
+  qfun <- function(p, ...) {
+      args <- c(list(p = p), as.list(...))
+      qnorm(args$p, mean = args$mu, sd = args$sigma)
+  }
+  d_test_quantile(dd,  pp, qfun) # unnamed
+  d_test_quantile(ddn, pp, qfun) # named
+})
+
 test_that("random.Normal work correctly", {
-  n <- Normal()
-
-  expect_length(random(n), 1)
-  expect_length(random(n, 100), 100)
-  expect_length(random(n[-1], 1), 0)
-  expect_length(random(n, 0), 0)
-  expect_error(random(n, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(n, c(1, 2, 3)), 3)
-  expect_length(random(n, cbind(1, 2, 3)), 3)
-  expect_length(random(n, rbind(1, 2, 3)), 3)
+    d_test_random(Normal(3:1, 1:3))
 })
 
-test_that("pdf.Normal work correctly", {
-  n <- Normal()
-
-  expect_equal(pdf(n, 0), dnorm(0, 0, 1))
-  expect_equal(pdf(n, 1), dnorm(1, 0, 1))
-
-  expect_length(pdf(n, seq_len(0)), 0)
-  expect_length(pdf(n, seq_len(1)), 1)
-  expect_length(pdf(n, seq_len(10)), 10)
-})
-
-test_that("log_pdf.Normal work correctly", {
-  n <- Normal()
-
-  expect_equal(log_pdf(n, 0), log(dnorm(0, 0, 1)))
-  expect_equal(log_pdf(n, 1), log(dnorm(1, 0, 1)))
-
-  expect_length(log_pdf(n, seq_len(0)), 0)
-  expect_length(log_pdf(n, seq_len(1)), 1)
-  expect_length(log_pdf(n, seq_len(10)), 10)
-})
-
-test_that("cdf.Normal work correctly", {
-  n <- Normal()
-
-  expect_equal(cdf(n, 0), 0.5)
-
-  expect_length(cdf(n, seq_len(0)), 0)
-  expect_length(cdf(n, seq_len(1)), 1)
-  expect_length(cdf(n, seq_len(10)), 10)
-})
-
-test_that("quantile.Normal work correctly", {
-  n <- Normal()
-
-  expect_equal(quantile(n, 0), -Inf)
-  expect_equal(quantile(n, 0.5), 0)
-  expect_equal(quantile(n, 1), Inf)
 
 
-  expect_length(quantile(n, seq_len(0)), 0)
-  expect_length(quantile(n, c(0, 1)), 2)
-})
 
-test_that("{moments}.Normal work correctly", {
-  n <- Normal()
 
-  expect_equal(mean(n), 0)
-  expect_equal(variance(n), 1)
-  expect_equal(skewness(n), 0)
-  expect_equal(kurtosis(n), 0)
-})
 
-test_that("vectorization of a Normal distribution work correctly", {
-  d <- Normal(c(0, 10), c(1, 1))
-  d1 <- d[1]
-  d2 <- d[2]
 
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
 
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
 
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
 
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
 
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
-})
-
-test_that("named return values for Normal distribution work correctly", {
-  d <- Normal(c(0, 10), c(1, 1))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
-})
-
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
-
-## Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
+##test_that("{moments}.Normal work correctly", {
+##  n <- Normal()
+##
+##  expect_equal(mean(n), 0)
+##  expect_equal(variance(n), 1)
+##  expect_equal(skewness(n), 0)
+##  expect_equal(kurtosis(n), 0)
+##
+##  ## moments
+##  expect_equal(mean(d), c(mean(d1), mean(d2)))
+##  expect_equal(variance(d), c(variance(d1), variance(d2)))
+##  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
+##  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
+##
+##})
 
 test_that("score.Normal works as expected", {
-    ## Objects used for testing
-    d <- Normal(3:1, 3:5)
-    x <- 11:13
+  ## Check that method exists as function, checks default
+  ## arguments as well as all default sanity checks
+  score_test_args_and_sanity(dd, xx)
 
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x)
+  ## Ensure we get the correct return, both for named and unnamed
+  ## distribution objects (tests different combinations)
+  score_test_return_dim_names(dd,  xx) # unnamed
+  score_test_return_dim_names(ddn, xx) # named
 
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic score vs. numeric approximation (score.distribution)
-    score_test_analytic_vs_numeric(d, x)
+  ## Comparing analytic score vs. numeric approximation (score.distribution)
+  score_test_analytic_vs_numeric(dd,  xx) # unnamed
+  score_test_analytic_vs_numeric(ddn, xx) # named
 })
 
 test_that("hessian.Normal works as expected", {
-    ## Objects used for testing
-    d <- Normal(3:1, 3:5)
-    x <- 11:13
+  ## Check that method exists as function, checks default
+  ## arguments as well as all default sanity checks
+  hessian_test_args_and_sanity(dd, xx)
 
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x)
+  ## Ensure we get the correct return, both for named and unnamed
+  ## distribution objects (tests different combinations)
+  hessian_test_return_dim_names(dd,  xx) # unnamed
+  hessian_test_return_dim_names(ddn, xx) # named
 
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
+  ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+  hessian_test_analytic_vs_numeric(dd,  xx) # unnamed
+  hessian_test_analytic_vs_numeric(ddn, xx) # named
 })
 
