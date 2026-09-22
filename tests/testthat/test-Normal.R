@@ -111,7 +111,8 @@ test_that("quantile.Normal works correctly", {
 })
 
 test_that("random.Normal work correctly", {
-    d_test_random(Normal(3:1, 1:3))
+    d_test_random(unname(dd))
+    d_test_random(dd)
 })
 
 

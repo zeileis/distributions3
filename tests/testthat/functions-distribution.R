@@ -18,7 +18,7 @@ d_test_print <- function(d) {
     expect_output(print(d), regexp = pattern, info = "standard print output not as expected")
 
     ## Default print for length-zero distribution
-    par <- names(formals(fun <- getFunction(dist)))
+    par <- names(formals(fun <- getFunction(dist, where = getNamespace("distributions3"))))
     d0  <- do.call(fun, setNames(lapply(par, function(p) numeric(0)), par))
     expect_output(print(d0), regexp = paste(dist, "distribution of length zero"),
         info = "unexpected print() output of empty distributions object")
@@ -139,43 +139,43 @@ d_test_random <- function(d) {
 
     # By default, one random value per distribution
     expect_silent(res <- random(d))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_identical(length(res), length(d))
     expect_identical(names(res), names(d))
 
     # Drop equals false
     expect_silent(res <- random(d, drop = FALSE))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_identical(dim(res), c(n, 1L))
     expect_identical(dimnames(res), list(names(d), "r_1"))
 
     # Drawing 2 or more from multiple distributions always defaults to drop = FALSE
     expect_silent(res <- random(d, n = 3))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_identical(dim(res), c(n, 3L))
     expect_identical(dimnames(res), list(names(d), c("r_1", "r_2", "r_3")))
 
     # If n is a vector, length(n) is used
     expect_silent(res <- random(d, n = 1:4))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_identical(dim(res), c(n, 4L))
     expect_identical(dimnames(res), list(names(d), c("r_1", "r_2", "r_3", "r_4")))
 
     # Single distribution, n = 3, drop = TRUE: potentially named vector
     expect_silent(res <- random(d[1], n = 3))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_null(dim(res))
-    expect_identical(names(res), names(d))
+    expect_null(names(res))
 
     # Single distribution, n = vector
     expect_silent(res <- random(d[1], n = 1:4))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_identical(length(res), 4L)
-    expect_identical(names(res), names(d))
+    expect_null(names(res))
 
     # Single distribution, n = 3, drop = FALSE: matrix
     expect_silent(res <- random(d[1], n = 3, drop = FALSE))
-    expect_type(res, "double")
+    expect_true(is.numeric(res) && all(!is.na(res)))
     expect_identical(dimnames(res), list(names(d[1]), c("r_1", "r_2", "r_3")))
 
     # n = 0
@@ -187,7 +187,7 @@ d_test_random <- function(d) {
     expect_identical(random(d[-seq_along(d)], n = 10, drop = FALSE), numeric())
 
     ## Zero-length distribution
-    par <- names(formals(fun <- getFunction(dist)))
+    par <- names(formals(fun <- getFunction(dist, where = getNamespace("distributions3"))))
     d0  <- do.call(fun, setNames(lapply(par, function(p) numeric(0)), par))
     expect_identical(random(d0), numeric(0))
 }
@@ -201,7 +201,7 @@ d_test_pdf <- function(d, x, dfun = NULL) {
     dist <- class(d)[1L]
 
     ## Test that method exists, testing formals
-    expect_true(is.function(method <- getS3method("pdf", "Normal",
+    expect_true(is.function(method <- getS3method("pdf", dist,
         optional = FALSE, envir = asNamespace("distributions3"))),
         info = "could not find method (function) pdf.*")
     expect_identical(formals(method), as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)),
@@ -246,7 +246,7 @@ d_test_pdf <- function(d, x, dfun = NULL) {
     expect_identical(dimnames(res), list(names(d), paste0("d_", distributions3:::make_suffix(x[1L]))))
 
     ## Zero-length distribution
-    par <- names(formals(fun <- getFunction(dist)))
+    par <- names(formals(fun <- getFunction(dist, where = getNamespace("distributions3"))))
     d0  <- do.call(fun, setNames(lapply(par, function(p) numeric(0)), par))
     expect_identical(pdf(d0, x), numeric(0))
 
@@ -273,14 +273,14 @@ d_test_pdf_support <- function(d, delta = 1e-8) {
     ## If lower support is not all -Inf, test
     if (any(is.finite(s[, "min"]))) {
         idx <- which(is.finite(s[, "min"]))
-        expect_silent(res <- pdf(dd[idx], s[idx, "min"] - delta))
+        expect_silent(res <- pdf(d[idx], s[idx, "min"] - delta))
         expect_true(all(res == 0), info = "expected pdf() below lower bound of numeric support to be 0")
     }
 
     ## If upper support is not all +Inf, test
     if (any(is.finite(s[, "max"]))) {
         idx <- which(is.finite(s[, "max"]))
-        expect_silent(res <- pdf(dd[idx], s[idx, "max"] - delta))
+        expect_silent(res <- pdf(d[idx], s[idx, "max"] + delta))
         expect_true(all(res == 0), info = "expected pdf() above upper bound of numeric support to be 0")
     }
 }
@@ -298,6 +298,7 @@ d_test_log_pdf <- function(d, x) {
 
     # Avoid dispatching to grDevices::pdf
     pdf <- distributions3::pdf
+    log_pdf <- distributions3:::log_pdf
 
     # By default, one random value per distribution
     expect_silent(a <- log(pdf(d, x)))
@@ -314,14 +315,14 @@ d_test_log_pdf_support <- function(d, delta = 1e-8) {
     ## If lower support is not all -Inf, test
     if (any(is.finite(s[, "min"]))) {
         idx <- which(is.finite(s[, "min"]))
-        expect_silent(res <- log_pdf(dd[idx], s[idx, "min"] - delta))
+        expect_silent(res <- log_pdf(d[idx], s[idx, "min"] - delta))
         expect_true(all(res == -Inf), info = "expected log_pdf() below lower bound of numeric support to be -Inf")
     }
 
     ## If upper support is not all +Inf, test
     if (any(is.finite(s[, "max"]))) {
         idx <- which(is.finite(s[, "max"]))
-        expect_silent(res <- log_pdf(dd[idx], s[idx, "max"] - delta))
+        expect_silent(res <- log_pdf(d[idx], s[idx, "max"] + delta))
         expect_true(all(res == Inf), info = "expected log_pdf() above upper bound of numeric support to be Inf")
     }
 }
@@ -336,6 +337,9 @@ d_test_cdf <- function(d, x, pfun = NULL) {
         info = "could not find method (function) cdf.*")
     expect_identical(formals(method), as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)),
         info = "arguments and/or defaults for cdf method not as expected")
+
+    # Avoid dispatching
+    cdf <- distributions3::cdf
 
     # By default, one random value per distribution
     expect_silent(res <- cdf(d, x))
@@ -373,7 +377,7 @@ d_test_cdf <- function(d, x, pfun = NULL) {
     expect_identical(dimnames(res), list(names(d), paste0("p_", distributions3:::make_suffix(x[1]))))
 
     ## Zero-length distribution
-    par <- names(formals(fun <- getFunction(dist)))
+    par <- names(formals(fun <- getFunction(dist, where = getNamespace("distributions3"))))
     d0  <- do.call(fun, setNames(lapply(par, function(p) numeric(0)), par))
     expect_identical(cdf(d0, x), numeric(0))
 
@@ -396,20 +400,24 @@ d_test_cdf <- function(d, x, pfun = NULL) {
 }
 
 d_test_cdf_support <- function(d, delta = 1e-8) {
+    # Avoid dispatching
+    cdf <- distributions3::cdf
+    support <- distributions3::support
+
     ## Get support
     s <- support(d)
 
     ## If lower support is not all -Inf, test
     if (any(is.finite(s[, "min"]))) {
         idx <- which(is.finite(s[, "min"]))
-        expect_silent(res <- cdf(dd[idx], s[idx, "min"] - delta))
+        expect_silent(res <- cdf(d[idx], s[idx, "min"] - delta))
         expect_true(all(res == 0), info = "expected cdf() below lower bound of numeric support to be 0")
     }
 
     ## If upper support is not all +Inf, test
     if (any(is.finite(s[, "max"]))) {
         idx <- which(is.finite(s[, "max"]))
-        expect_silent(res <- cdf(dd[idx], s[idx, "max"] - delta))
+        expect_silent(res <- cdf(d[idx], s[idx, "max"] + delta))
         expect_true(all(res == Inf), info = "expected cdf() above upper bound of numeric support to be 1")
     }
 }
@@ -462,7 +470,7 @@ d_test_quantile <- function(d, p, qfun = NULL) {
     expect_identical(dimnames(res), list(names(d), paste0("q_", distributions3:::make_suffix(p[1]))))
 
     ## Zero-length distribution
-    par <- names(formals(fun <- getFunction(dist)))
+    par <- names(formals(fun <- getFunction(dist, where = getNamespace("distributions3"))))
     d0  <- do.call(fun, setNames(lapply(par, function(p) numeric(0)), par))
     expect_identical(quantile(d0, p), numeric(0))
 
@@ -512,7 +520,7 @@ d_test_moment <- function(d, what = c("mean", "variance", "skewness", "kurtosis"
     expect_identical(method(d), sapply(seq_along(d), function(i) method(d[i])))
 
     # Testing against numeric approximation
-    expect_equal(method(d), nummethod(d), tolerance = tol,
+    expect_equal(method(d), suppressWarnings(nummethod(d)), tolerance = tol,
         info = sprintf("numeric approximation of %s() differs from analytic solution %s.distribution(), tolerance = %s", what, what, format(tol)))
 
     # Testing numeric value if set
