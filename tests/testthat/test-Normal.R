@@ -11,14 +11,14 @@ source("functions-score-hessian.R")
 
 ## distribution object and 'x' used for testing.
 ## Length of 'dd' and 'xx' must be identical and > 1L
-dd  <- Normal(1:3, 3:1)           # Unnamed
-ddn <- setNames(dd, LETTERS[1:3]) # Named
-pp  <- c(0.25, 0.5, 0.75)
-xx  <- 1:3
+dd <- Normal(3:1, 1:3)
+dd <- setNames(dd, LETTERS[1:3]) # named distributions object
+xx <- 1:3                        # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 
-stopifnot(length(dd) == length(ddn),
-          length(dd) == length(xx),
-          length(dd) == length(pp))
+stopifnot(length(dd) == length(xx),
+          length(dd) == length(pp),
+          !is.null(names(dd)))
 
 ## Default arguments
 test_that("Normal default arguments", {
@@ -35,23 +35,20 @@ test_that("print.Normal works correctly", {
 
 test_that("support.Normal works correctly", {
     ## Generic method tests
-    d_test_support(dd)
-    ## Testing numeric value
-    s <- support(dd)
-    expect_true(all(s[, "min"] == -Inf))
-    expect_true(all(s[, "max"] == +Inf))
+    d_test_support(unname(dd), expected_min = -Inf, expected_max = Inf) # unnamed
+    d_test_support(dd,         expected_min = -Inf, expected_max = Inf) # named
 })
 
 test_that("is_discrete.Normal works correctly", {
     ## Generic method tests
-    d_test_is_discrete(dd,  expected = FALSE) # unnamed
-    d_test_is_discrete(ddn, expected = FALSE) # named
+    d_test_is_discrete(unname(dd), expected = FALSE) # named
+    d_test_is_discrete(dd,         expected = FALSE) # unnamed
 })
 
 test_that("is_continuous.Normal works correctly", {
     ## Generic method tests
-    d_test_is_continuous(dd,  expected = TRUE) # unnamed
-    d_test_is_continuous(ddn, expected = TRUE) # named
+    d_test_is_continuous(unname(dd),  expected = TRUE) # unnamed
+    d_test_is_continuous(dd,          expected = TRUE) # named
 })
 
 test_that("suff_stat.Normal works correctly", {
@@ -75,13 +72,13 @@ test_that("pdf.Normal works correctly", {
       args <- c(list(x = x), as.list(...))
       dnorm(args$x, mean = args$mu, sd = args$sigma)
   }
-  d_test_pdf(dd,  xx, dfun) # unnamed
-  d_test_pdf(ddn, xx, dfun) # named
+  d_test_pdf(unname(dd), xx, dfun) # unnamed
+  d_test_pdf(dd,         xx, dfun) # named
 })
 
 test_that("log_pdf.Normal works correctly", {
-  d_test_log_pdf(dd,  xx) # unnamed
-  d_test_log_pdf(ddn, xx) # named
+  d_test_log_pdf(unname(dd),  xx) # unnamed
+  d_test_log_pdf(dd,          xx) # named
 })
 
 test_that("cdf.Normal works correctly", {
@@ -90,8 +87,8 @@ test_that("cdf.Normal works correctly", {
       args <- c(list(x = x), as.list(...))
       pnorm(args$x, mean = args$mu, sd = args$sigma)
   }
-  d_test_cdf(dd,  xx, pfun) # unnamed
-  d_test_cdf(ddn, xx, pfun) # named
+  d_test_cdf(unname(dd), xx, pfun) # unnamed
+  d_test_cdf(dd,         xx, pfun) # named
 })
 
 test_that("quantile.Normal works correctly", {
@@ -100,8 +97,8 @@ test_that("quantile.Normal works correctly", {
       args <- c(list(p = p), as.list(...))
       qnorm(args$p, mean = args$mu, sd = args$sigma)
   }
-  d_test_quantile(dd,  pp, qfun) # unnamed
-  d_test_quantile(ddn, pp, qfun) # named
+  d_test_quantile(unname(dd), pp, qfun) # unnamed
+  d_test_quantile(dd,         pp, qfun) # named
 })
 
 test_that("random.Normal work correctly", {
@@ -109,30 +106,34 @@ test_that("random.Normal work correctly", {
 })
 
 
+## -------------------------------------------------------
+## moments
+## -------------------------------------------------------
 
+test_that("mean.Normal work correctly", {
+    expected <- dd$mu
+    d_test_moment(unname(dd), "mean", expected = expected, tol = 1e-6) # unnamed
+    d_test_moment(dd,         "mean", expected = expected, tol = 1e-6) # named
+})
+test_that("variance.Normal work correctly", {
+    expected <- dd$sigma^2
+    d_test_moment(unname(dd), "variance", expected = expected, tol = 1e-2) # unnamed
+    d_test_moment(dd,         "variance", expected = expected, tol = 1e-2) # named
+})
+test_that("skewness.Normal work correctly", {
+    expected <- 0
+    d_test_moment(unname(dd), "skewness", expected = expected, tol = 1e-3) # unnamed
+    d_test_moment(dd,         "skewness", expected = expected, tol = 1e-3) # named
+})
+test_that("kurtosis.Normal work correctly", {
+    expected <- 0
+    d_test_moment(unname(dd), "kurtosis", expected = expected, tol = 1e-1) # unnamed
+    d_test_moment(dd,         "kurtosis", expected = expected, tol = 1e-1) # named
+})
 
-
-
-
-
-
-
-
-##test_that("{moments}.Normal work correctly", {
-##  n <- Normal()
-##
-##  expect_equal(mean(n), 0)
-##  expect_equal(variance(n), 1)
-##  expect_equal(skewness(n), 0)
-##  expect_equal(kurtosis(n), 0)
-##
-##  ## moments
-##  expect_equal(mean(d), c(mean(d1), mean(d2)))
-##  expect_equal(variance(d), c(variance(d1), variance(d2)))
-##  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-##  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-##
-##})
+## -------------------------------------------------------
+## score and Hessian methods
+## -------------------------------------------------------
 
 test_that("score.Normal works as expected", {
   ## Check that method exists as function, checks default
@@ -141,12 +142,12 @@ test_that("score.Normal works as expected", {
 
   ## Ensure we get the correct return, both for named and unnamed
   ## distribution objects (tests different combinations)
-  score_test_return_dim_names(dd,  xx) # unnamed
-  score_test_return_dim_names(ddn, xx) # named
+  score_test_return_dim_names(unname(dd), xx) # unnamed
+  score_test_return_dim_names(dd,         xx) # named
 
   ## Comparing analytic score vs. numeric approximation (score.distribution)
-  score_test_analytic_vs_numeric(dd,  xx) # unnamed
-  score_test_analytic_vs_numeric(ddn, xx) # named
+  score_test_analytic_vs_numeric(unname(dd), xx) # unnamed
+  score_test_analytic_vs_numeric(dd,         xx) # named
 })
 
 test_that("hessian.Normal works as expected", {
@@ -156,11 +157,11 @@ test_that("hessian.Normal works as expected", {
 
   ## Ensure we get the correct return, both for named and unnamed
   ## distribution objects (tests different combinations)
-  hessian_test_return_dim_names(dd,  xx) # unnamed
-  hessian_test_return_dim_names(ddn, xx) # named
+  hessian_test_return_dim_names(unname(dd), xx) # unnamed
+  hessian_test_return_dim_names(dd,         xx) # named
 
   ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-  hessian_test_analytic_vs_numeric(dd,  xx) # unnamed
-  hessian_test_analytic_vs_numeric(ddn, xx) # named
+  hessian_test_analytic_vs_numeric(unname(dd), xx) # unnamed
+  hessian_test_analytic_vs_numeric(dd,         xx) # named
 })
 

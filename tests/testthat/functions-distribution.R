@@ -46,7 +46,7 @@ d_test_support <- function(d, expected_min = NULL, expected_max = NULL) {
     expect_silent(res <- support(d[1], drop = FALSE))
     expect_type(res, "double")
     expect_identical(dim(res), c(1L, 2L))
-    expect_identical(dimnames(res), list(names(d), c("min", "max")))
+    expect_identical(dimnames(res), list(names(d[1L]), c("min", "max")))
 
     ## Multiple distributions
     expect_silent(res <- support(d))
@@ -57,9 +57,9 @@ d_test_support <- function(d, expected_min = NULL, expected_max = NULL) {
 
     ## Testing expected values
     if (!is.null(expected_min))
-        expect_identical(res[, "min"], rep_len(expected_min, n))
+        expect_identical(res[, "min"], setNames(rep_len(expected_min, n), names(d)))
     if (!is.null(expected_max))
-        expect_identical(res[, "max"], rep_len(expected_max, n))
+        expect_identical(res[, "max"], setNames(rep_len(expected_max, n), names(d)))
 }
 
 
@@ -417,3 +417,47 @@ d_test_quantile <- function(d, p, qfun = NULL) {
         expect_equal(quantile(d, p, elementwise = FALSE), tmp)
     }
 }
+
+## Test mean method, compare against numeric implementation and expected value (if specified)
+d_test_moment <- function(d, what = c("mean", "variance", "skewness", "kurtosis"), expected = NULL, tol = 1e-6) {
+    n <- length(d); stopifnot(n > 1L)
+    dist <- class(d)[1L]
+    what <- match.arg(what)
+
+    ## Test that method exists, testing formals
+    expect_true(is.function(method <- getS3method(what, dist,
+        optional = FALSE, envir = asNamespace("distributions3"))),
+        info = sprintf("could not find method (function) %s.*", what))
+    expect_identical(formals(method), as.pairlist(alist(x =, ... =)),
+        info = sprintf("arguments and/or defaults for %s method not as expected", what))
+
+    ## Numeric method for approximation
+    expect_true(is.function(nummethod <- getS3method(what, "distribution",
+        optional = FALSE, envir = asNamespace("distributions3"))),
+        info = sprintf("could not find method (function) %s.distribution", what))
+
+    # Single distribution
+    expect_silent(res <- method(d[1L]))
+    expect_true(is.vector(res) && is.numeric(res))
+    expect_identical(names(res), names(d[1L]))
+
+    # Multiple distributions
+    expect_silent(res <- method(d))
+    expect_true(is.vector(res) && is.numeric(res))
+    expect_identical(names(res), names(d))
+    expect_true(all(!is.na(res)))
+
+    # Compare vectorized version vs. sapply
+    expect_identical(method(d), sapply(seq_along(d), function(i) method(d[i])))
+
+    # Testing against numeric approximation
+    expect_equal(method(d), nummethod(d), tolerance = tol,
+        info = sprintf("numeric approximation of %s() differs from analytic solution %s.distribution(), tolerance = %s", what, what, format(tol)))
+
+    # Testing numeric value if set
+    if (!is.null(expected))
+        expect_equal(method(d), setNames(rep_len(expected, n), names(d)), tolerance = tol)
+
+}
+
+
