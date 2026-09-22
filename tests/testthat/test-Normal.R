@@ -74,11 +74,17 @@ test_that("pdf.Normal works correctly", {
   }
   d_test_pdf(unname(dd), xx, dfun) # unnamed
   d_test_pdf(dd,         xx, dfun) # named
+
+  ## Test that we get 0 outside numeric support
+  d_test_pdf_support(dd, delta = 1e-6)
 })
 
 test_that("log_pdf.Normal works correctly", {
   d_test_log_pdf(unname(dd),  xx) # unnamed
   d_test_log_pdf(dd,          xx) # named
+
+  ## Test that we get -Inf/+Inf outside support
+  d_test_log_pdf_support(dd, delta = 1e-6)
 })
 
 test_that("cdf.Normal works correctly", {
@@ -89,6 +95,9 @@ test_that("cdf.Normal works correctly", {
   }
   d_test_cdf(unname(dd), xx, pfun) # unnamed
   d_test_cdf(dd,         xx, pfun) # named
+
+  ## Test that we get 0/1 outside support
+  d_test_cdf_support(dd, delta = 1e-6)
 })
 
 test_that("quantile.Normal works correctly", {

@@ -263,6 +263,28 @@ d_test_pdf <- function(d, x, dfun = NULL) {
     }
 }
 
+d_test_pdf_support <- function(d, delta = 1e-8) {
+    # Avoid dispatching to grDevices::pdf
+    pdf <- distributions3::pdf
+
+    ## Get support
+    s <- support(d)
+
+    ## If lower support is not all -Inf, test
+    if (any(is.finite(s[, "min"]))) {
+        idx <- which(is.finite(s[, "min"]))
+        expect_silent(res <- pdf(dd[idx], s[idx, "min"] - delta))
+        expect_true(all(res == 0), info = "expected pdf() below lower bound of numeric support to be 0")
+    }
+
+    ## If upper support is not all +Inf, test
+    if (any(is.finite(s[, "max"]))) {
+        idx <- which(is.finite(s[, "max"]))
+        expect_silent(res <- pdf(dd[idx], s[idx, "max"] - delta))
+        expect_true(all(res == 0), info = "expected pdf() above upper bound of numeric support to be 0")
+    }
+}
+
 d_test_log_pdf <- function(d, x) {
     n <- length(d); stopifnot(n > 1L)
     dist <- class(d)[1L]
@@ -283,6 +305,25 @@ d_test_log_pdf <- function(d, x) {
     expect_silent(c <- log_pdf(d, x))
     expect_equal(a, b, info = "expected log(pdf(...)) to be equal to pdf(..., log = TRUE)")
     expect_equal(a, c, info = "expected log(pdf(...)) to be equal to log_pdf(...)")
+}
+
+d_test_log_pdf_support <- function(d, delta = 1e-8) {
+    ## Get support
+    s <- support(d)
+
+    ## If lower support is not all -Inf, test
+    if (any(is.finite(s[, "min"]))) {
+        idx <- which(is.finite(s[, "min"]))
+        expect_silent(res <- log_pdf(dd[idx], s[idx, "min"] - delta))
+        expect_true(all(res == -Inf), info = "expected log_pdf() below lower bound of numeric support to be -Inf")
+    }
+
+    ## If upper support is not all +Inf, test
+    if (any(is.finite(s[, "max"]))) {
+        idx <- which(is.finite(s[, "max"]))
+        expect_silent(res <- log_pdf(dd[idx], s[idx, "max"] - delta))
+        expect_true(all(res == Inf), info = "expected log_pdf() above upper bound of numeric support to be Inf")
+    }
 }
 
 d_test_cdf <- function(d, x, pfun = NULL) {
@@ -353,6 +394,26 @@ d_test_cdf <- function(d, x, pfun = NULL) {
         expect_equal(cdf(d, x, elementwise = FALSE), tmp)
     }
 }
+
+d_test_cdf_support <- function(d, delta = 1e-8) {
+    ## Get support
+    s <- support(d)
+
+    ## If lower support is not all -Inf, test
+    if (any(is.finite(s[, "min"]))) {
+        idx <- which(is.finite(s[, "min"]))
+        expect_silent(res <- cdf(dd[idx], s[idx, "min"] - delta))
+        expect_true(all(res == 0), info = "expected cdf() below lower bound of numeric support to be 0")
+    }
+
+    ## If upper support is not all +Inf, test
+    if (any(is.finite(s[, "max"]))) {
+        idx <- which(is.finite(s[, "max"]))
+        expect_silent(res <- cdf(dd[idx], s[idx, "max"] - delta))
+        expect_true(all(res == Inf), info = "expected cdf() above upper bound of numeric support to be 1")
+    }
+}
+
 
 d_test_quantile <- function(d, p, qfun = NULL) {
     n <- length(d); stopifnot(n > 1L)
