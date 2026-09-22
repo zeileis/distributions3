@@ -259,3 +259,67 @@ is_discrete.Cauchy <- function(d, ...) {
 is_continuous.Cauchy <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Cauchy: methods for score/hessian
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Cauchy <- function(d, x, which = NULL, drop = TRUE, ...) {
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## pre-compute 'denom', scoped in scr function!
+  denom <- denom <- d$scale^2 + (x - d$location)^2
+
+  ## compute scores
+  scr <- function(par, d, x) {
+    switch(par,
+      "location" = 2 * (x - d$location) / denom,
+      "scale"    = -1/d$scale + 2 * (x - d$location)^2 / (d$scale * denom)
+    )
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## function for computing Hessian elements (both observed and expected for Cauchy)
+  if (expected) {
+    return(NextMethod())
+  } else {
+    ## pre-compute 'denom', scoped in hess functions!
+    denom <- denom <- d$scale^2 + (x - d$location)^2
+
+    hess <- function(par, d, x) {
+        switch(par,
+          "location"       = -2 * (d$scale^2 - (x - d$location)^2) / denom^2,
+          "scale"          = 1 / d$scale^2 - 2 * (x - d$location)^2 * (3 * d$scale^2 + (x - d$location)^2) / (d$scale^2 * denom^2),
+          "location:scale" = - 4 * (x - d$location) * d$scale / denom^2)
+    }
+
+    ## Calculate derivatives, prepare return object
+    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+  }
+}

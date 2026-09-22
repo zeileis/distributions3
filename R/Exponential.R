@@ -284,3 +284,47 @@ is_discrete.Exponential <- function(d, ...) {
 is_continuous.Exponential <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Exponential: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Exponential <- function(d, x, which = "rate", drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores
+  scr <- function(par, d, x) 1 / d$rate - x
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Exponential <- function(d, x, which = "rate", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## For Exponential with rate parametrization, the second derivative is constant w.r.t. x,
+  ## so the observed Hessian equals the expected Hessian.
+  hess <- function(par, d, x) 0 * x - 1 / d$rate^2
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

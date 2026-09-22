@@ -2,11 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{apply_dpqr}
 \alias{apply_dpqr}
+\alias{get_deriv_names}
+\alias{max_length}
+\alias{apply_deriv}
 \alias{make_support}
 \alias{make_positive_integer}
 \title{Utilities for \code{distributions3} objects}
 \usage{
 apply_dpqr(d, FUN, at, elementwise = NULL, drop = TRUE, type = NULL, ...)
+
+get_deriv_names(p, which = NULL, expand = FALSE, check = TRUE)
+
+max_length(..., check = TRUE)
+
+apply_deriv(d, x, FUN, which, drop = TRUE, check = TRUE, ...)
 
 make_support(min, max, d, drop = TRUE)
 
@@ -15,9 +24,13 @@ make_positive_integer(n)
 \arguments{
 \item{d}{A \code{distributions3} object.}
 
-\item{FUN}{Function to be computed. Function should be of type \code{FUN(at, d)}, where
+\item{FUN}{Function to be computed. \code{apply_dpqr()}: Function should be of type \code{FUN(at, d)}, where
 \code{at} is the argument at which the function should be evaluated (e.g., a quantile,
-probability, or sample size) and \code{d} is a \code{distributions3} object.}
+probability, or sample size) and \code{d} is a \code{distributions} object.
+\code{apply_deriv()}: Function to calculate the derivatives, should be of type
+\code{FUN(par, d, x, ...)} where 'par' is character of length one which defines the deriative
+to be calculated, 'd' a \code{distribution} object, and \code{x} a numeric vector where the
+function should be evaluated.}
 
 \item{at}{Specification of values at which \code{FUN} should be evaluated, typically a
 numeric vector (e.g., of quantiles, probabilities, etc.) but possibly also a matrix or data
@@ -40,10 +53,44 @@ generation more efficiently.}
 
 \item{...}{Arguments to be passed to  \code{FUN}.}
 
+\item{p}{character vector with the names of the parameters of a
+distribution.}
+
+\item{which}{character vector, named or unnamed. When calculating cross-derivatives
+a named vector is typically used avoiding to calculate the cross-derivatives
+twice evven if they are identical (symmetric Hessian matrix; see 'Examples').}
+
+\item{expand}{logical. If set \code{TRUE}, the names of cross-derivatives
+are returned (if \code{which = NULL}) or checked (if \code{which} is set).}
+
+\item{check}{logical. If set \code{FALSE} the maximum length is returned
+without checking that all objects on \code{...} are recyclable.}
+
+\item{x}{numeric. Specification of values at which \code{FUN} should be evaluated.}
+
 \item{min, max}{Numeric vectors. Minima and maxima of the supports of a \code{distributions3} object.}
 
 \item{n}{numeric. Number of observations for computing random draws. If \code{length(n) > 1},
 the length is taken to be the number required (consistent with base R as, e.g., for \code{rnorm()}).}
+}
+\value{
+\code{apply_dpqr()}: Numeric vector or matrix, possibly named.
+
+\code{get_deriv_names()}: Named character vector with all available or
+requested derivative names.
+
+\code{max_length()}: Single integer with the maximum length of all
+parameters (objects) provided via the \code{...} argument. If \code{check = TRUE} and
+the length of all parameters does not match, an error will be thrown.
+
+\code{apply_deriv()}: Numeric vector or matrix (possibly named).
+
+\code{make_support()}: Named vector (if \code{drop = TRUE} and \code{length(d) = 1L})
+or named matrix with the support of the distribution.
+
+\code{make_positive_integer()}: Single positive integer. If the length of
+the object on argument \code{n} is larger than one, the length of the object is
+returned. Else \code{n} is converted to integer if possible or an error is thrown.
 }
 \description{
 Various utility functions to implement methods for distributions with a
@@ -146,5 +193,74 @@ random(Y, 3)
 ## For further analogous methods see the "Normal" distribution provided
 ## in distributions3.
 methods(class = "Normal")
+
+## ----------------
+## get_deriv_names(): Get names of derivatives including cross-derivatives
+## if `expand` is set TRUE, and checks/selects the names requested by
+## the user if `which` is not NULL.
+get_deriv_names(c("mu", "sigma"))
+get_deriv_names(c("mu", "sigma"), expand = TRUE)
+get_deriv_names(c("mu", "sigma"), which = c("mu:sigma", "sigma"), expand = TRUE)
+
+## ----------------
+## max_length(): Calculate maximum length of a series of objects.
+
+## If check is set FALSE, the maximum length is returned
+max_length(a = 1, b = seq_len(10), c = seq_len(5), check = FALSE)
+max_length(Normal(mu = 1:3, sigma = 2), 10:11, check = FALSE)
+
+## If check is TRUE (default) all objects must be of length 1
+## or length 'N', where 'N' is the length of the longest object.
+max_length(Normal(mu = 1:3, sigma = 2), 10)
+max_length(Normal(mu = 1:3, sigma = 2), 10:12)
+
+\dontrun{
+## Non-suitable lenghts, throws error (check = TRUE)
+max_length(d = Normal(mu = 1:3, sigma = 2), x = 10:15)
+}
+
+## ----------------
+## apply_deriv(): Minimal example on how to use apply_deriv to calculate
+## score/hessian based on the Uniform distribution for demonstration.
+
+## Creating distributions object
+d <- Uniform(a = c(2, 3), b = c(0.5, 0.5))
+
+## Function for calculating score of the Uniform distribution
+scr <- function(par, d, x) switch(par,
+  "a" = 0 * x + 1 / (d$b - d$a),
+  "b" = 0 * x - 1 / (d$b - d$a))
+
+## Function for calculating hessian of the Uniform distribution
+hess <- function(par, d, x) switch(par,
+              "a" = 0 * x + 1 / (d$b - d$a)^2,
+              "b" = 0 * x + 1 / (d$b - d$a)^2,
+              -(0 * x + 1 / (d$b - d$a)^2)) # Cross-derivatives
+
+## Calculating score: first derivative of the likelihood | parameters
+apply_deriv(d = d, x = 1.5, FUN = scr, which = c("a", "b"))
+score(d, 1.5) # using method for comparison
+
+## Calculating hessian: second derivative of the likelihood | parameters,
+## including cross-derivatives
+which <- get_deriv_names(c("a", "b"), expand = TRUE)
+apply_deriv(d = d, x = 1.5, FUN = hess, which = which)
+hessian(d, 1.5) # using method for comparison
+
+## ----------------
+## make_support(): Creating support matrix/support vector for distribution
+## objects (see also ?support).
+d <- setNames(Normal(1:3, 3:1), LETTERS[1:3])
+make_support(min = rep(-Inf, 3L), max = rep(Inf, 3L), d)
+make_support(0, Inf, Poisson(1.5), drop = TRUE)
+
+## ----------------
+## make_positive_integer()
+make_positive_integer(5.0)
+make_positive_integer(TRUE)
+make_positive_integer(LETTERS[1:10])
+\dontrun{
+make_positive_integer("foo") # Throws error
+}
 
 }
