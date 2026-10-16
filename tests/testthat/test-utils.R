@@ -401,18 +401,18 @@ test_that("get_deriv_names() works as expected", {
 
   ## Testing incorrect use
   expect_error(get_deriv_names(p = TRUE),
-    regex = "argument 'p' must be a character vector of length > 1L")
+    regex = "argument 'p' must be a non-empty character vector")
   expect_error(get_deriv_names(p = character()),
-    regex = "argument 'p' must be a character vector of length > 1L")
+    regex = "argument 'p' must be a non-empty character vector")
   expect_error(get_deriv_names(p = ""),
-    regex = "argument 'p' must be a character vector of length > 1L")
+    regex = "argument 'p' must be a non-empty character vector")
 
   expect_error(get_deriv_names("mu", which = TRUE),
-    regex = "argument 'which' must be NULL or a character vector of length > 1L")
+    regex = "argument 'which' must be NULL or a non-empty character vector")
   expect_error(get_deriv_names("mu", which = character()),
-    regex = "argument 'which' must be NULL or a character vector of length > 1L")
+    regex = "argument 'which' must be NULL or a non-empty character vector")
   expect_error(get_deriv_names("mu", which = ""),
-    regex = "argument 'which' must be NULL or a character vector of length > 1L")
+    regex = "argument 'which' must be NULL or a non-empty character vector")
 
   expect_error(get_deriv_names("mu", expand = 'foo'),
     regex = "invalid argument type")
