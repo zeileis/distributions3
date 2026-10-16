@@ -79,13 +79,13 @@ hasS3method <- function(method, classes) {
 #' @param x numeric. Specification of values at which `FUN` should be evaluated.
 #' @param which character vector, named or unnamed. When calculating cross-derivatives
 #'        a named vector is typically used avoiding to calculate the cross-derivatives
-#'        twice evven if they are identical (symmetric Hessian matrix; see 'Examples').
+#'        twice even if they are identical (symmetric Hessian matrix; see 'Examples').
 #'
 #' @param p character vector with the names of the parameters of a
 #'        distribution.
-#' @param expand logical. If set `TRUE`, the names of cross-derivatives
+#' @param expand logical. If set to `TRUE`, the names of cross-derivatives
 #'        are returned (if `which = NULL`) or checked (if `which` is set).
-#' @param check logical. If set `FALSE` a series of sanity checks are bypassed.
+#' @param check logical. If set to `FALSE` a series of sanity checks are bypassed.
 #'
 #'
 #' @examples
@@ -308,9 +308,9 @@ get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
     ## explicitly check 'p' and which
     if (isTRUE(as.logical(check[1L]))) {
       stopifnot(
-        "argument 'p' must be a character vector of length > 1L" =
+        "argument 'p' must be a non-empty character vector" =
           is.character(p) && length(p) > 0L && all(nchar(p) > 0),
-        "argument 'which' must be NULL or a character vector of length > 1L" =
+        "argument 'which' must be NULL or a non-empty character vector" =
           is.null(which) || (is.character(which) && length(which) > 0L && all(nchar(which) > 0))
       )
     }
@@ -334,8 +334,10 @@ get_deriv_names <- function(p, which = NULL, expand = FALSE, check = TRUE) {
     return(match.arg(which, p, several.ok = TRUE))
 }
 
-#' @param check logical. If set `FALSE` the maximum length is returned
-#'        without checking that all objects on `...` are recyclable.
+#' @param check logical. Should the function check that all objects in `...`
+#'        can be recycled (i.e., each object either has length 1 or the same
+#'        length as the maximum)? If `check = TRUE` and the objects cannot be
+#'        recycled then an informative error is issued.
 #'
 #' @examples
 #' ## ----------------
