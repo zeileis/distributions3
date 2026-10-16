@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Exponential distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Exponential default arguments", {
   expect_identical(formals(Exponential),
@@ -186,3 +191,47 @@ test_that("crps method for Exponential returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
+
+test_that("score.Exponential works as expected", {
+    ## Objects used for testing
+    d <- Exponential(3:1)
+    x <- 1:3
+
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x, which = "rate")
+
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x, which = "rate")
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x, which = "rate")
+
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x)
+})
+
+test_that("hessian.Exponential works as expected", {
+    ## Objects used for testing
+    d <- Exponential(3:1)
+    x <- 1:3
+
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x, which = "rate")
+
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x, which = "rate")
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x, which = "rate")
+
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x)
+})
+

@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking Uniform distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("Uniform default arguments", {
   expect_identical(formals(Uniform),
@@ -188,100 +193,47 @@ test_that("crps method for Uniform returns correct object", {
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
 
-test_that("score.Uniform works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("score.Uniform" %in% ns, info = "score.Uniform not found in namespace")
-    expect_true(is.function(getS3method("score", "Uniform")), "score.Uniform is not a function")
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
 
-    a <- 0.2
-    b <- 5:1
+# Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::score.Uniform),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)))
+test_that("score.Normal works as expected", {
+    ## Objects used for testing
+    d <- Uniform(c(0.2, 0.4, 0.6), c(0.5, 1, 2))
+    x <- c(0.4, 0.1, 0.8)
 
-    ## Testing for error when lenghts mismatch
-    expect_error(score(Uniform(a, b), c(0.1, 0.2)), regexp = "'d' and 'x' must have length 1 or the same length")
-    expect_error(score(Uniform(), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(score(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(score(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x)
 
-    ## Calculating all scores for 5 distributions
-    expect_silent(s1 <- score(Uniform(a, b), 1))
-    expect_identical(s1, matrix(c(1 / (b - a), -1 / (b - a)), ncol = 2, dimnames = list(NULL, letters[1:2])))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Checking changing order of whcih
-    expect_silent(s2 <- score(Uniform(a, b), 0.5, which = c("b", "a")))
-    expect_identical(s1, s2[, 2:1]) # Reverse order
-
-    ## Calculating only a and b individially compare to full result 's1' from above
-    expect_silent(sa <- score(Uniform(a, b), 0.5, which = "a"))
-    expect_silent(sb <- score(Uniform(a, b), 0.5, which = "b"))
-    expect_identical(s1, cbind(a = sa, b = sb))
-
-    ## with drop = FALSE
-    expect_silent(sm <- score(Uniform(a, b), 0.5, which = "a", drop = FALSE))
-    expect_silent(ss <- score(Uniform(a, b), 0.5, which = "b", drop = FALSE))
-    expect_identical(s1, cbind(sm, ss)) # flipped upside down for testing
-
-    ## Compare to numerically calculated score
-    expect_equal(score(Uniform(a, b), 0.5),
-                 distributions3:::score.distribution(Uniform(a, b), 0.5),
-                 tolerance = 1e-7)
+    ## Step function, numeric approximation of score not possible with
+    ## score.distribution but also not required, comparison skipped.
+    ## score_test_analytic_vs_numeric(d, x)
 })
 
-test_that("hessian.Uniform works as expected", {
-    ns <- ls(getNamespace("distributions3"))
-    expect_true("hessian.Uniform" %in% ns, info = "hessian.Uniform not found in namespace")
-    expect_true(is.function(getS3method("hessian", "Uniform")), "hessian.Uniform is not a function")
+test_that("hessian.Normal works as expected", {
+    ## Objects used for testing
+    d <- Uniform(c(0.2, 0.4, 0.6), c(0.5, 1, 2))
+    x <- c(0.4, 0.1, 0.8)
 
-    a <- 0.2
-    b <- 5:1
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x)
 
-    ## Checking defaults
-    expect_identical(formals(distributions3:::hessian.Uniform),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)))
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
 
-    ## Testing for error when lenghts mismatch and  incorrect arguments
-    expect_error(hessian(Uniform(a, b), c(0.2, 0.3)), regexp = "'d' and 'x' must have length 1 or the same length")
-    expect_error(hessian(Uniform(), 1, which = 1),        info = "unknown which should throw error")
-    expect_error(hessian(Uniform(), 1, which = "foo"),    info = "unknown which must should throw error")
-    expect_error(hessian(Uniform(), 1, drop = "foo"),     info = "non-logical drop should throw error")
-
-    # For hessian only the observed (not the expected) hessian is available
-    expect_error(hessian(Uniform(1:2), 1:3, expected = TRUE), regexp = "only the observed hessian is available")
-
-    ## Calculating all hessians for 5 distributions
-    expect_silent(h1 <- hessian(Uniform(a, b), 0.5))
-    tmp <- 1 / (b - a)^2
-    tmp <- cbind("a" = tmp, "b:a" = -tmp, "a:b" = -tmp, "b" = tmp)
-    expect_identical(h1, tmp)
-
-    ## Checking changing order of which
-    expect_silent(h2 <- hessian(Uniform(a, b), 0.5, which = c("b:a", "b", "a:b", "a")))
-    expect_identical(h1, h2[, colnames(h1)]) # change order
-
-    ## Calculating only hessian for mu and sigma
-    expect_silent(h2 <- hessian(Uniform(a, b), 0.5, which = c("b", "a")))
-    expect_identical(h2, h1[, c("b", "a")])
-
-    ## Calculating each individually (flipped upside down for testing)
-    expect_silent(ha  <- hessian(Uniform(a, b), 0.5, which = "a"))
-    expect_silent(hab <- hessian(Uniform(a, b), 0.5, which = "a:b"))
-    expect_silent(hba <- hessian(Uniform(a, b), 0.5, which = "b:a"))
-    expect_silent(hb  <- hessian(Uniform(a, b), 0.5, which = "b"))
-    expect_identical(h1, cbind("a" = ha, "b:a" = hba, "a:b" = hab, "b" = hb))
-
-    ## with drop = FALSE (still flipped for fun)
-    expect_silent(ha  <- hessian(Uniform(a, b), 0.5, which = "a",   drop = FALSE))
-    expect_silent(hab <- hessian(Uniform(a, b), 0.5, which = "a:b", drop = FALSE))
-    expect_silent(hba <- hessian(Uniform(a, b), 0.5, which = "b:a", drop = FALSE))
-    expect_silent(hb  <- hessian(Uniform(a, b), 0.5, which = "b",   drop = FALSE))
-    expect_identical(h1, cbind(ha, hba, hab, hb))
-
-    ## Compare to numerically calculated hessian (observed,
-    ## hessian.distribution only has expected = FALSE)
-    expect_equal(hessian(Uniform(a, b), 0.5, expected = FALSE),
-                 distributions3:::hessian.distribution(Uniform(a, b), 0.5),
-                 tolerance = 1e-7)
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x)
 })
+

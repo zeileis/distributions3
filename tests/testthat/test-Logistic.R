@@ -1,3 +1,9 @@
+# -------------------------------------------------------
+# Checking Logistic distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+
 
 test_that("Logistic default arguments", {
   expect_identical(formals(Logistic),
@@ -178,3 +184,47 @@ test_that("crps method for Logistic returns correct object", {
   expect_true(is.vector(crps))
   expect_true(!all(is.na(crps)) & all(crps >= 0))
 })
+
+## ------------------------------------------------------------------
+## Score and hessian
+## ------------------------------------------------------------------
+
+## Helper functions for automated testing of S3 methods
+source("functions-score-hessian.R")
+
+test_that("score.Logistic works as expected", {
+    ## Objects used for testing
+    d <- Logistic(1:3, 3:1)
+    x <- 2:4
+
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    score_test_args_and_sanity(d, x)
+
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    score_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
+
+    ## Comparing analytic score vs. numeric approximation (score.distribution)
+    score_test_analytic_vs_numeric(d, x)
+})
+
+test_that("hessian.Logistic works as expected", {
+    ## Objects used for testing
+    d <- Logistic(1:3, 3:1)
+    x <- 2:4
+
+    ## Check that method exists as function, checks default
+    ## arguments as well as all default sanity checks
+    hessian_test_args_and_sanity(d, x)
+
+    ## Ensure we get the correct return, both for named and unnamed
+    ## distribution objects (tests different combinations)
+    hessian_test_return_dim_names(d, x)
+    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
+
+    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
+    hessian_test_analytic_vs_numeric(d, x)
+})
+

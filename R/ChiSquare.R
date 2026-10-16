@@ -278,3 +278,51 @@ is_discrete.ChiSquare <- function(d, ...) {
 is_continuous.ChiSquare <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# ChiSquare: methods for score/hessian
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ChiSquare <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores (only one parameter: df)
+  scr <- function(par, d, x) switch(par,
+    "df" = 0.5 * log(x) - 0.5 * log(2) - 0.5 * digamma(d$df / 2))
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ChiSquare <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  if (expected) {
+    return(NextMethod())
+  } else {
+    ## Calculate max length 'n' (plus input sanity check), get parameter names of
+    ## the distribution 'd', and evaluate available/check requested derivative names
+    n      <- max_length(d, x)
+    params <- names(unclass(d))
+    which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+    ## For chi-square, the hessian is constant w.r.t. x
+    hess <- function(par, d, x) 0 * x - 0.25 * trigamma(d$df / 2)
+
+    ## Calculate derivatives, prepare return object
+    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+  }
+}

@@ -117,7 +117,7 @@ test_that("testing basic interface and misuse of crps function", {
     # Testing default arguments
     expect_identical(formals(scoringRules::crps),  as.pairlist(alist(y =, ... = )))
     # Incorrect uses: Non-numeric input
-    expect_error(crps(Normal(), "foo"), regexp = "is\\.numeric\\(at\\) is not TRUE")
+    expect_error(crps(Normal(), "foo"), regexp = "argument 'at' must be numeric")
 })
 
 

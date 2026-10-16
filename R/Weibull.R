@@ -258,3 +258,70 @@ is_discrete.Weibull <- function(d, ...) {
 is_continuous.Weibull <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+# ---------------------------------------------------------------------------
+# Weibull: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Weibull <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## pre-compute shared terms, scoped by 'scr' function!
+  z <- (x / d$scale)^d$shape
+  log_z <- log(x / d$scale)
+
+  ## compute scores
+  scr <- function(par, d, x) switch(par,
+    "shape" = 1 / d$shape + log_z * (1 - z),
+    "scale" = d$shape * (z - 1) / d$scale)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Weibull <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## Function for computing Hessian elements
+  hess <- if (expected) {
+    ## pre-compute shared terms (scoped)
+    trigamma_term <- (pi^2 / 6) + (1 + digamma(1))^2
+
+    function(par, d, x) switch(par,
+      "shape"       = 0 * x - trigamma_term / d$shape^2,
+      "scale"       = 0 * x - d$shape^2 / d$scale^2,
+      0 * x + (1 + digamma(1)) / d$scale)
+  } else {
+    ## pre-compute shared terms (scoped)
+    z     <- (x / d$scale)^d$shape
+    log_z <- log(x / d$scale)
+
+    function(par, d, x) switch(par,
+      "shape"       = -1 / d$shape^2 - z * log_z^2,
+      "scale"       = (d$shape - d$shape * (d$shape + 1) * z) / d$scale^2,
+      (-1 + z * (1 + d$shape * log_z)) / d$scale # mixed partials
+    )
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
