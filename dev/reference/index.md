@@ -77,6 +77,9 @@
 ## Utilities, tools, and data
 
 - [`apply_dpqr()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
+  [`get_deriv_names()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
+  [`max_length()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
+  [`apply_deriv()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
   [`make_support()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
   [`make_positive_integer()`](https://zeileis.github.io/distributions3/dev/reference/apply_dpqr.md)
   :

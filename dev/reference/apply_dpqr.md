@@ -12,6 +12,12 @@ distribution of interest.
 ``` r
 apply_dpqr(d, FUN, at, elementwise = NULL, drop = TRUE, type = NULL, ...)
 
+get_deriv_names(p, which = NULL, expand = FALSE, check = TRUE)
+
+max_length(..., check = TRUE)
+
+apply_deriv(d, x, FUN, which, drop = TRUE, check = TRUE, ...)
+
 make_support(min, max, d, drop = TRUE)
 
 make_positive_integer(n)
@@ -25,10 +31,14 @@ make_positive_integer(n)
 
 - FUN:
 
-  Function to be computed. Function should be of type `FUN(at, d)`,
-  where `at` is the argument at which the function should be evaluated
-  (e.g., a quantile, probability, or sample size) and `d` is a
-  `distributions3` object.
+  Function to be computed. `apply_dpqr()`: Function should be of type
+  `FUN(at, d)`, where `at` is the argument at which the function should
+  be evaluated (e.g., a quantile, probability, or sample size) and `d`
+  is a `distributions` object. `apply_deriv()`: Function to calculate
+  the derivatives, should be of type `FUN(par, d, x, ...)` where 'par'
+  is character of length one which defines the deriative to be
+  calculated, 'd' a `distribution` object, and `x` a numeric vector
+  where the function should be evaluated.
 
 - at:
 
@@ -63,6 +73,31 @@ make_positive_integer(n)
 
   Arguments to be passed to `FUN`.
 
+- p:
+
+  character vector with the names of the parameters of a distribution.
+
+- which:
+
+  character vector, named or unnamed. When calculating cross-derivatives
+  a named vector is typically used avoiding to calculate the
+  cross-derivatives twice evven if they are identical (symmetric Hessian
+  matrix; see 'Examples').
+
+- expand:
+
+  logical. If set `TRUE`, the names of cross-derivatives are returned
+  (if `which = NULL`) or checked (if `which` is set).
+
+- check:
+
+  logical. If set `FALSE` the maximum length is returned without
+  checking that all objects on `...` are recyclable.
+
+- x:
+
+  numeric. Specification of values at which `FUN` should be evaluated.
+
 - min, max:
 
   Numeric vectors. Minima and maxima of the supports of a
@@ -74,6 +109,27 @@ make_positive_integer(n)
   `length(n) > 1`, the length is taken to be the number required
   (consistent with base R as, e.g., for
   [`rnorm()`](https://rdrr.io/r/stats/Normal.html)).
+
+## Value
+
+`apply_dpqr()`: Numeric vector or matrix, possibly named.
+
+`get_deriv_names()`: Named character vector with all available or
+requested derivative names.
+
+`max_length()`: Single integer with the maximum length of all parameters
+(objects) provided via the `...` argument. If `check = TRUE` and the
+length of all parameters does not match, an error will be thrown.
+
+`apply_deriv()`: Numeric vector or matrix (possibly named).
+
+`make_support()`: Named vector (if `drop = TRUE` and `length(d) = 1L`)
+or named matrix with the support of the distribution.
+
+`make_positive_integer()`: Single positive integer. If the length of the
+object on argument `n` is larger than one, the length of the object is
+returned. Else `n` is converted to integer if possible or an error is
+thrown.
 
 ## Examples
 
@@ -207,4 +263,104 @@ methods(class = "Normal")
 #> [11] random        score         skewness      suff_stat     support      
 #> [16] variance     
 #> see '?methods' for accessing help and source code
+
+## ----------------
+## get_deriv_names(): Get names of derivatives including cross-derivatives
+## if `expand` is set TRUE, and checks/selects the names requested by
+## the user if `which` is not NULL.
+get_deriv_names(c("mu", "sigma"))
+#>      mu   sigma 
+#>    "mu" "sigma" 
+get_deriv_names(c("mu", "sigma"), expand = TRUE)
+#>         mu   mu:sigma   mu:sigma      sigma 
+#>       "mu" "sigma:mu" "mu:sigma"    "sigma" 
+get_deriv_names(c("mu", "sigma"), which = c("mu:sigma", "sigma"), expand = TRUE)
+#>   mu:sigma      sigma 
+#> "mu:sigma"    "sigma" 
+
+## ----------------
+## max_length(): Calculate maximum length of a series of objects.
+
+## If check is set FALSE, the maximum length is returned
+max_length(a = 1, b = seq_len(10), c = seq_len(5), check = FALSE)
+#> [1] 10
+max_length(Normal(mu = 1:3, sigma = 2), 10:11, check = FALSE)
+#> [1] 3
+
+## If check is TRUE (default) all objects must be of length 1
+## or length 'N', where 'N' is the length of the longest object.
+max_length(Normal(mu = 1:3, sigma = 2), 10)
+#> [1] 3
+max_length(Normal(mu = 1:3, sigma = 2), 10:12)
+#> [1] 3
+
+if (FALSE) { # \dontrun{
+## Non-suitable lenghts, throws error (check = TRUE)
+max_length(d = Normal(mu = 1:3, sigma = 2), x = 10:15)
+} # }
+
+## ----------------
+## apply_deriv(): Minimal example on how to use apply_deriv to calculate
+## score/hessian based on the Uniform distribution for demonstration.
+
+## Creating distributions object
+d <- Uniform(a = c(2, 3), b = c(0.5, 0.5))
+
+## Function for calculating score of the Uniform distribution
+scr <- function(par, d, x) switch(par,
+  "a" = 0 * x + 1 / (d$b - d$a),
+  "b" = 0 * x - 1 / (d$b - d$a))
+
+## Function for calculating hessian of the Uniform distribution
+hess <- function(par, d, x) switch(par,
+              "a" = 0 * x + 1 / (d$b - d$a)^2,
+              "b" = 0 * x + 1 / (d$b - d$a)^2,
+              -(0 * x + 1 / (d$b - d$a)^2)) # Cross-derivatives
+
+## Calculating score: first derivative of the likelihood | parameters
+apply_deriv(d = d, x = 1.5, FUN = scr, which = c("a", "b"))
+#>               a         b
+#> [1,] -0.6666667 0.6666667
+#> [2,] -0.4000000 0.4000000
+score(d, 1.5) # using method for comparison
+#>               a         b
+#> [1,] -0.6666667 0.6666667
+#> [2,] -0.4000000 0.4000000
+
+## Calculating hessian: second derivative of the likelihood | parameters,
+## including cross-derivatives
+which <- get_deriv_names(c("a", "b"), expand = TRUE)
+apply_deriv(d = d, x = 1.5, FUN = hess, which = which)
+#>              a        b:a        a:b         b
+#> [1,] 0.4444444 -0.4444444 -0.4444444 0.4444444
+#> [2,] 0.1600000 -0.1600000 -0.1600000 0.1600000
+hessian(d, 1.5) # using method for comparison
+#>              a        b:a        a:b         b
+#> [1,] 0.4444444 -0.4444444 -0.4444444 0.4444444
+#> [2,] 0.1600000 -0.1600000 -0.1600000 0.1600000
+
+## ----------------
+## make_support(): Creating support matrix/support vector for distribution
+## objects (see also ?support).
+d <- setNames(Normal(1:3, 3:1), LETTERS[1:3])
+make_support(min = rep(-Inf, 3L), max = rep(Inf, 3L), d)
+#>    min max
+#> A -Inf Inf
+#> B -Inf Inf
+#> C -Inf Inf
+make_support(0, Inf, Poisson(1.5), drop = TRUE)
+#> min max 
+#>   0 Inf 
+
+## ----------------
+## make_positive_integer()
+make_positive_integer(5.0)
+#> [1] 5
+make_positive_integer(TRUE)
+#> [1] 1
+make_positive_integer(LETTERS[1:10])
+#> [1] 10
+if (FALSE) { # \dontrun{
+make_positive_integer("foo") # Throws error
+} # }
 ```
