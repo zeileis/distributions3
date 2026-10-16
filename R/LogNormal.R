@@ -330,6 +330,11 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+
+  ## TODO(R): double-check analytic solution for both observed and expected hessian
+  ## currently resort to numeric solution
+  return(NextMethod())
+
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
   if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
