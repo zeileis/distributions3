@@ -5,7 +5,7 @@
 #'
 #' @reutrn Named list with the content of the YAML files. The names of the
 #' list elements corresponds to the YAML file name.
-autotest_load_config <- function(dir = "autotest-config") {
+load_autotest_config <- function(dir = "autotest-config") {
     stopifnot(
         "argument 'dir' must be name/path to the directory with the YAML files" =
             is.character(dir) && length(dir) == 1L && isTRUE(dir.exists(dir))
@@ -51,7 +51,7 @@ autotest_load_config <- function(dir = "autotest-config") {
 #' A 'tests' section with 'tests > include' or 'tests > exclude' can be specified
 #' to only include certain tests, or exclude specific tests. Must evaluate to
 #' character vectors.
-autotest_check_config <- function(x) {
+check_autotest_config <- function(x) {
     # Basic required elements
     stopifnot(
         "'name' must be string" = is.character(x$name) && length(x$name) == 1L,
@@ -119,6 +119,87 @@ autotest_check_config <- function(x) {
     return(x)
 }
 
+#' Delete all Existing Autotest Test Files
+#'
+#' Removes all existing auto-generated test files from the
+#' directory (`dir`) containing the testthat files.
+#'
+#' @return Invisibly returns the deleted files (`NULL` if no files
+#' were found to be deleted).
+delete_autotest_testfiles <- function(dir, verbose = FALSE) {
+    verbose <- as.logical(verbose)[[1L]]
+    stopifnot(
+        "argument 'dir' must be name/path to the directory with the YAML files" =
+            is.character(dir) && length(dir) == 1L && isTRUE(dir.exists(dir)),
+        "argument 'verbose' must evaluate to TRUE or FALSE" =
+            isTRUE(verbose) || isFALSE(verbose)
+    )
+
+    ## Find automatically generated test files
+    f <- grep("^test-autotest-.*\\.R$", list.files(dir), value = TRUE)
+    f <- file.path(dir, f) # expand path
+
+    if (verbose && length(f) > 0L) {
+        cat("Deleting existing autotest test sets:\n")
+        cat(sprintf("  - \"%s\"\n", f), "\n")
+    } else if (verbose) {
+        cat("No existing autotest test sets to be removed\n")
+        f <- NULL
+    }
+
+    if (!is.null(f)) file.remove(f)
+    invisible(f)
+}
+
+#' Warn about Nonexistent Autotest Functions in Include/Exclude
+#'
+#' Automated tests allow to specify which tests should be excluded
+#' or included (see [load_autotest_config()], [check_autotest_config()]).
+#' This function evaluates the configuration settings and warns the user
+#' in case they have specified an autotest to be included or excluded
+#' which does not exist.
+#'
+#' @param x list of `autotest_config` objects.
+#' @param verbose logical. Defaults to `FALSE`.
+#'
+#' @return Named list with named logical vectors indicating which functions
+#' were defined by the user, but did not exist.
+warnings_include_exclude <- function(x, verbose = FALSE) {
+    verbose <- as.logical(verbose)[[1L]]
+    stopifnot(
+        "argument 'x' must be a list of 'autotest_config' objects, or a single 'autotest_config' object" = 
+            (is.list(x) && all(sapply(x, class) == "autotest_config")) || inherits(x, "autotest_config"),
+        "argument 'verbose' must evaluate to TRUE or FASLE" = 
+            isTRUE(verbose) || isFALSE(verbose)
+        )
+    if (inherits(x, "autotest_config")) x <- list(x)
+
+    ## Extracting all includes and excludes (if any)
+    inc <- unique(unlist(lapply(x, function(k) k$tests$include)))
+    exc <- unique(unlist(lapply(x, function(k) k$tests$exclude)))
+
+    ## Check if autotest_* exists
+    res <- list()
+    if (verbose) {
+        for (n in c("include", "exclude")) {
+            fn <- unique(unlist(lapply(x, function(k) k$tests[[n]])))
+            if (length(fn) == 0L) next
+            ## Else extending function name and check existence
+            missing <- sapply(sprintf("autotest_%s", fn), function(f) !f %in% ls(envir = globalenv()) || !is.function(get(f)))
+            res[[n]] <- missing
+            ## Warn about missing functions/specifications
+            if (any(!missing)) {
+                warning(sprintf("missing function(s) specified via 'test > %s': %s",
+                                n, paste(fn[missing], collapse = ", ")))
+            }
+        }
+
+    }
+
+    invisible(res)
+}
+
+
 
 ## ----------------------------------------------------------------------------
 ## Series of functions which create the strings for the automated tests.
@@ -157,7 +238,7 @@ replace_placeholders <- function(template, x, indentation = 8) {
 #'
 #' @return Character vector with commands for test set.
 autotest_setup <- function(config) {
-    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
     template <- '
     ## --- this file is auto-generated, do not change
@@ -169,12 +250,12 @@ autotest_setup <- function(config) {
     if (interactive()) { library(\"testthat\"); library(\"distributions3\"); }
 
     ## Test that the constructor function with no input arguments works
-    test_that("constructor function <DIST>() with default arguments runs silently", {
+    test_that("constructor function <NAME>() with default arguments runs silently", {
         ## Constructor function w/ default arguments should run silently
-        expect_silent(x <- <DIST>())
+        expect_silent(x <- <NAME>())
 
         ## Returns has correct class attributes
-        expect_s3_class(x, c("<DIST>", "distribution"), exact = TRUE)
+        expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
 
         ## Return is either of length 0 or 1
         expect_true(length(x) == 0L || length(x) == 1L, info = "object not of length 0 or 1")
@@ -184,8 +265,8 @@ autotest_setup <- function(config) {
     });
 
     ## Test that all parameters defined are arguments to the constructor function
-    test_that("constructor <DIST>() has arguments <PARAMTXT>", {
-        args <- names(formals(getFromNamespace("<DIST>", "distributions3")))
+    test_that("constructor <NAME>() has arguments <PARAMTXT>", {
+        args <- names(formals(getFromNamespace("<NAME>", "distributions3")))
         expect_true(all(!is.na(match(<PARAMVEC>, args))), info = "not all parameters are arguments to constructor function")
     });
 
@@ -195,8 +276,9 @@ autotest_setup <- function(config) {
     ## (unnamed distributions object with as many distributions as defined in
     ## parameters$valid), and dn (named version of dx). They are written to the
     ## global env the tests run in.
-    test_that("constructor %1$s runs silent with parameter inputs", {
-        expect_silent(d0 <<- <DIST>())
+    d0 <- d1 <- dn <- dx <- NULL # Initialize global objects
+    test_that("constructor <NAME> runs silent with parameter inputs", {
+        expect_silent(d0 <<- <NAME>())
         expect_silent(d1 <<- <CMD_D1>)
         expect_silent(dx <<- <CMD_DX>)
         expect_silent(dn <<- <CMD_DN>)
@@ -204,7 +286,7 @@ autotest_setup <- function(config) {
     '
 
     ## Commands to create the test objects d1, dx, dn
-    valid <- x$parameters$valid
+    valid  <- config$parameters$valid # For convenience
     cmd_d1 <- sprintf("%s(%s)", config$name,
                       paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
     cmd_d1 <- sprintf("%s(%s)", config$name,
@@ -218,7 +300,7 @@ autotest_setup <- function(config) {
                       paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
 
     ## List of values/placeholders to replace
-    p <- list("<DIST>"       = config$name,
+    p <- list("<NAME>"       = config$name,
               "<PARAMVEC>"   = deparse(names(config$parameters$valid)),
               "<PARAMTXT>"   = paste0(names(config$parameters$valid), collapse = ", "),
               "<CMD_D1>"     = cmd_d1,
@@ -242,16 +324,16 @@ autotest_setup <- function(config) {
 #' containing the test sets (R commands).
 autotest_constructor <- function(config) {
     ## Sanity check + check if this test should be included
-    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
     template <- '
     ## Testing object `d1`: unnamed object of length 1
     test_that("constructor returns expected object: unnamed, length 1", {
         ## Class
-        expect_s3_class(d0, c("<DIST>", "distribution"), exact = TRUE)
-        expect_s3_class(d1, c("<DIST>", "distribution"), exact = TRUE)
-        expect_s3_class(dn, c("<DIST>", "distribution"), exact = TRUE)
-        expect_s3_class(dx, c("<DIST>", "distribution"), exact = TRUE)
+        expect_s3_class(d0, c("<NAME>", "distribution"), exact = TRUE)
+        expect_s3_class(d1, c("<NAME>", "distribution"), exact = TRUE)
+        expect_s3_class(dn, c("<NAME>", "distribution"), exact = TRUE)
+        expect_s3_class(dx, c("<NAME>", "distribution"), exact = TRUE)
 
         ## Converting to data frame for testing
         dd0 <- as.data.frame(as.matrix(d0))
@@ -283,7 +365,7 @@ autotest_constructor <- function(config) {
         sprintf("<INDENT>expect_equal(ddn$%s, %s)", names(valid), sapply(valid, deparse)))
 
     ## List of values/placeholders to replace
-    p <- list("<DIST>"       = x$name,
+    p <- list("<NAME>"       = config$name,
               "<N>"          = deparse(length(config$parameters$valid[[1L]])),
               "<CMD_VALUES>" = paste(cmd_values, collapse = "\n"))
 
@@ -291,29 +373,45 @@ autotest_constructor <- function(config) {
 }
 
 
-#' Setting up Autotests for S3 Method `as.list`
+#' Setting up Autotests for Basic S3 Methods for distribution Objects
 #'
-#' Testing function of the S3 method 'as.list()'.
-#' Expects object `dn` to exist (see `autotest_setup()`).
+#' Testing 'basic' S3 methods to be used on distribution objects. This includes
+#' `as.list`, `as.matrix`, TODO(R)
 #'
 #' @param x object of class `autotest_config`.
 #'
-#' @return Character vector with commands for test set.
-autotest_support <- function(x) {
-    stopifnot("argument 'x' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_support <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$support)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) && "support" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"support" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("as.list method works as expected", {
-        ## Names of parameters
-        expect_silent(ln <- as.list(dn))
+    test_that("support method works as expected", {
+        ## Single unnamed distribution object w/ drop = FALSE (default)
+        expect_silent(x <- support(d1))
+        expect_identical(x, c(min = <SUPPORT_LOWER>, max = <SUPPORT_UPPER>))
 
-        ## Comparing against expected list
-        expect_identical(ln, <DIST>)
+        ## Single unnamed distribution object w/ drop = TRUE
+        expect_silent(x <- support(d1, drop = FALSE))
+        tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = 1,
+                      dimnames = list(NULL, c("min", "max")))
+        expect_identical(x, tmp)
+
+        ## Named distribution object of length > 1L
+        expect_silent(x <- support(dn))
+        tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = <N>,
+                      byrow = TRUE, dimnames = list(names(dn), c("min", "max")))
+        expect_identical(x, tmp)
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<DIST>"       = x$name,
-              "<N>"          = deparse(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"          = config$name,
+              "<N>"             = deparse(length(config$parameters$valid[[1L]])),
+              "<SUPPORT_LOWER>" = deparse(config$support$lower),
+              "<SUPPORT_UPPER>" = deparse(config$support$upper))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }

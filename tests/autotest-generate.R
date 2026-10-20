@@ -4,41 +4,46 @@ rm(list = objects())
 library("yaml")
 source("autotest-functions.R")
 
+
+## Output directory where to put the automated test sets/test files
+OUTDIR <- "testthat"
+
+## Delete all existing automatically generated test files
+## from the testthat folder
+k <- delete_autotest_testfiles(dir = OUTDIR, verbose = TRUE)
+
 ## TODO: Remove, just for testing
 library("testthat")
+library("distributions3")
 
-###
-config <- autotest_load_config()
-#str(config)
-config <- lapply(config, autotest_check_config)
+## Loading all available autotest config files and checking content
+distconfig <- lapply(load_autotest_config(), check_autotest_config)
 
-#for (i in seq_along(config)) {
-for (i in 1L) {
+
+source("autotest-functions.R")
+x <- warnings_include_exclude(distconfig, verbose = TRUE)
+
+for (config in distconfig[1L]) {
+#for (config in distconfig) {
     ## Name of the output file
-    OUTFILE <- file.path("testthat", paste0("test-auto-", names(config)[i]))
-    OUTFILE <- gsub("\\.yaml$", ".R", OUTFILE)
-    cat("--- generating automatic test set \"", OUTFILE, "\"\n")
-
-    x <- config[[i]]
+    cat("--- generating automatic test set \"", config$testfile, "\"\n")
 
     ## List to store all the tests required which will be written to the
     ## test file defined by OUTFILE above.
     res <- list()
-    res <- append(res, autotest_setup(x))
-    res <- append(res, autotest_constructor(x))
-    #res <- append(res, autotest_basic_methods(x))
-    #res <- append(res, autotest_pdf(x))
-    #res <- append(res, autotest_log_pdf(x))
-    #res <- append(res, autotest_constructor_return(x))
+    res <- append(res, autotest_setup(config))
+    res <- append(res, autotest_constructor(config))
+    res <- append(res, autotest_support(config))
+    #res <- append(res, autotest_basic_methods(config))
+    #res <- append(res, autotest_pdf(config))
+    #res <- append(res, autotest_log_pdf(config))
+    #res <- append(res, autotest_constructor_return(config))
 
 
-
-    autotest_setup(x)
-
-    writeLines(unlist(res), con = OUTFILE)
+    writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
 
     ## TODO: Remove, just for testing
-    test_file(OUTFILE)
+    test_file(file.path(OUTDIR, config$testfile))
 }
 
 

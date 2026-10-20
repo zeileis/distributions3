@@ -9,15 +9,11 @@ parameters:
     mu:    [ -10, -1, 0, 1,  10]
     sigma: [0.01,  1, 2, 5, 100]
   invalid:
-    sigma: [-10, -1E-10]
+    sigma: [-10, -1E-3, 0]
 support:
   lower: -.inf
   upper: .inf
 tests:
-  include:
-    - constructor
-    - pdf
-    - cdf
   exclude:
     - cdf
     - log_pdf
