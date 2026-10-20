@@ -131,9 +131,24 @@ autotest_check_config <- function(x) {
 ## All other tests must are added below and can re-use these objects.
 ## ----------------------------------------------------------------------------
 
-autotest_clean_cmd <- function(x) {
+clean_cmd <- function(x) {
     ## Stripping first four spaces (if present)
     gsub("^[ ]{4}", "", strsplit(x, "\n")[[1L]])
+}
+
+replace_placeholders <- function(template, x, indentation = 8) {
+    indentation <- as.integer(indentation)[[1L]]
+    stopifnot(is.character(template), is.list(x), !is.null(names(x)),
+              is.integer(indentation) && indentation > 0L)
+
+    ## Search and replace placeholders
+    for (i in seq_along(x)) {
+        template <- gsub(names(x)[i], x[[i]], template)
+    }
+
+    ## Adjusting indentation
+    template <- gsub("[ ]{0,}<INDENT>", paste0(rep(" ", indentation), collapse = ""), template)
+    return(template)
 }
 
 #' Setting up Autotest 
@@ -141,8 +156,8 @@ autotest_clean_cmd <- function(x) {
 #' @param x object of class `autotest_config`.
 #'
 #' @return Character vector with commands for test set.
-autotest_setup <- function(x) {
-    stopifnot("argument 'x' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
+autotest_setup <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
 
     template <- '
     ## --- this file is auto-generated, do not change
@@ -154,25 +169,24 @@ autotest_setup <- function(x) {
     if (interactive()) { library(\"testthat\"); library(\"distributions3\"); }
 
     ## Test that the constructor function with no input arguments works
-    test_that("constructor function %1$s() with default arguments runs silently", {
+    test_that("constructor function <DIST>() with default arguments runs silently", {
         ## Constructor function w/ default arguments should run silently
-        expect_silent(x <- %1$s())
+        expect_silent(x <- <DIST>())
 
         ## Returns has correct class attributes
-        expect_s3_class(x, "%1$s")
-        expect_s3_class(x, "distribution")
+        expect_s3_class(x, c("<DIST>", "distribution"), exact = TRUE)
 
         ## Return is either of length 0 or 1
         expect_true(length(x) == 0L || length(x) == 1L, info = "object not of length 0 or 1")
 
         ## Correct parameters
-        expect_identical(sort(names(as.list(x))), sort(%2$s), info = "parameters not as expected/defined")
+        expect_identical(sort(names(as.list(x))), sort(<PARAMVEC>), info = "parameters not as expected/defined")
     });
 
     ## Test that all parameters defined are arguments to the constructor function
-    test_that("constructor %1$s() has arguments %3$s", {
-        args <- names(formals(getFromNamespace("%1$s", "distributions3")))
-        expect_true(all(!is.na(match(%2$s, args))), info = "not all parameters are arguments to constructor function")
+    test_that("constructor <DIST>() has arguments <PARAMTXT>", {
+        args <- names(formals(getFromNamespace("<DIST>", "distributions3")))
+        expect_true(all(!is.na(match(<PARAMVEC>, args))), info = "not all parameters are arguments to constructor function")
     });
 
     ## Call constructor function with the pre-defined arguments in
@@ -182,33 +196,36 @@ autotest_setup <- function(x) {
     ## parameters$valid), and dn (named version of dx). They are written to the
     ## global env the tests run in.
     test_that("constructor %1$s runs silent with parameter inputs", {
-        expect_silent(d0 <<- %1$s())
-        expect_silent(d1 <<- %4$s)
-        expect_silent(dx <<- %5$s)
-        expect_silent(dn <<- %6$s)
+        expect_silent(d0 <<- <DIST>())
+        expect_silent(d1 <<- <CMD_D1>)
+        expect_silent(dx <<- <CMD_DX>)
+        expect_silent(dn <<- <CMD_DN>)
     });
     '
 
-    ## Commands to create the test objects d1, dx
+    ## Commands to create the test objects d1, dx, dn
     valid <- x$parameters$valid
-    cmd_d1 <- sprintf("%s(%s)", x$name,
+    cmd_d1 <- sprintf("%s(%s)", config$name,
                       paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
-    cmd_dx <- sprintf("%s(%s)", x$name,
+    cmd_d1 <- sprintf("%s(%s)", config$name,
+                      paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
+    cmd_dx <- sprintf("%s(%s)", config$name,
                       paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
+
+    ## Same as cmd_dx but with named parameters, which should result in a named distributions object
     names(valid[[1L]]) <- LETTERS[seq_along(valid[[1L]])] ## Naming first parameter set
-    cmd_dn <- sprintf("%s(%s)", x$name,
+    cmd_dn <- sprintf("%s(%s)", config$name,
                       paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
 
-    res <- sprintf(template,
-                x$name,                                             # %1$s - name of distribution
-                deparse(names(x$parameters$valid)),                 # %2$s - vector with parameter names
-                paste(names(x$parameters$valid), collapse = ", "),  # %3$s
-                cmd_d1,                                             # %4$s - cmd to create 'd1'
-                cmd_dx,                                             # %5$s - cmd to create 'dx'
-                cmd_dn                                              # %6$s - cmd to create 'dn'
-            )
+    ## List of values/placeholders to replace
+    p <- list("<DIST>"       = config$name,
+              "<PARAMVEC>"   = deparse(names(config$parameters$valid)),
+              "<PARAMTXT>"   = paste0(names(config$parameters$valid), collapse = ", "),
+              "<CMD_D1>"     = cmd_d1,
+              "<CMD_DX>"     = cmd_dx,
+              "<CMD_DN>"     = cmd_dn)
 
-    return(autotest_clean_cmd(res))
+    return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 
@@ -223,19 +240,18 @@ autotest_setup <- function(x) {
 #'
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
-autotest_constructor <- function(x) {
+autotest_constructor <- function(config) {
     ## Sanity check + check if this test should be included
-    stopifnot("argument 'x' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
-
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
 
     template <- '
     ## Testing object `d1`: unnamed object of length 1
     test_that("constructor returns expected object: unnamed, length 1", {
         ## Class
-        expect_s3_class(d0, c("%1$s", "distribution"), exact = TRUE)
-        expect_s3_class(d1, c("%1$s", "distribution"), exact = TRUE)
-        expect_s3_class(dn, c("%1$s", "distribution"), exact = TRUE)
-        expect_s3_class(dx, c("%1$s", "distribution"), exact = TRUE)
+        expect_s3_class(d0, c("<DIST>", "distribution"), exact = TRUE)
+        expect_s3_class(d1, c("<DIST>", "distribution"), exact = TRUE)
+        expect_s3_class(dn, c("<DIST>", "distribution"), exact = TRUE)
+        expect_s3_class(dx, c("<DIST>", "distribution"), exact = TRUE)
 
         ## Converting to data frame for testing
         dd0 <- as.data.frame(as.matrix(d0))
@@ -248,31 +264,30 @@ autotest_constructor <- function(x) {
         expect_identical(names(dd1),    names(dd0))
         expect_null(names(d1))
 
-        expect_identical(dim(ddx),      c(%2$dL, NCOL(as.matrix(d0))))
+        expect_identical(dim(ddx),      c(<N>, NCOL(as.matrix(d0))))
         expect_identical(names(ddx),    names(dd0))
         expect_null(names(dx))
 
-        expect_identical(dim(ddn),      c(%2$dL, NCOL(as.matrix(d0))))
+        expect_identical(dim(ddn),      c(<N>, NCOL(as.matrix(d0))))
         expect_identical(names(ddn),    names(ddn))
-        expect_identical(names(dn),     LETTERS[seq_len(%2$d)])
-        expect_identical(rownames(ddn), LETTERS[seq_len(%2$d)])
+        expect_identical(names(dn),     LETTERS[seq_len(<N>)])
+        expect_identical(rownames(ddn), LETTERS[seq_len(<N>)])
 
         ## Checking values
-        %3$s
+        <CMD_VALUES>
     });
     '
 
-    valid <- x$parameters$valid
-    cmd_values <- sprintf("        expect_equal(ddn$%s, %s)",
-                          names(x$parameters$valid),
-                          sapply(x$parameters$valid, deparse))
+    ## Generating commands to test the values of the parameters
+    cmd_values <- with(config$parameters,
+        sprintf("<INDENT>expect_equal(ddn$%s, %s)", names(valid), sapply(valid, deparse)))
 
-    res <- sprintf(template,
-                x$name,                             # %1$s - name of distribution
-                length(x$parameters$valid$mu),      # %2$s - number of distributions in dx, dn
-                paste(cmd_values, collapse = "\n")  # %3$s - command(s) to check values
-            )
-    return(autotest_clean_cmd(res))
+    ## List of values/placeholders to replace
+    p <- list("<DIST>"       = x$name,
+              "<N>"          = deparse(length(config$parameters$valid[[1L]])),
+              "<CMD_VALUES>" = paste(cmd_values, collapse = "\n"))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 
@@ -293,16 +308,14 @@ autotest_support <- function(x) {
         expect_silent(ln <- as.list(dn))
 
         ## Comparing against expected list
-        expect_identical(ln, %1$s)
+        expect_identical(ln, <DIST>)
     });
     '
+    ## List of values/placeholders to replace
+    p <- list("<DIST>"       = x$name,
+              "<N>"          = deparse(length(config$parameters$valid[[1L]])))
 
-    res <- sprintf(template,
-                x$name,                             # %1$s - name of distribution
-                length(x$parameters$valid$mu),      # %2$s - number of distributions in dx, dn
-                paste(cmd_values, collapse = "\n")  # %3$s - command(s) to check values
-            )
-    return(autotest_clean_cmd(res))
+    return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 
