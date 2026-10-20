@@ -15,7 +15,9 @@ support:
   upper: .inf
 tests:
   include:
-    - foo
-    - bar
+    - constructor
+    - pdf
+    - cdf
   exclude:
-    - bar
+    - cdf
+    - log_pdf

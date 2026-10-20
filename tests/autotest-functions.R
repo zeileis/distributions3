@@ -126,17 +126,12 @@ at_clean_cmd <- function(x) {
 #' Setting up Autotest 
 #'
 #' @param x object of class `at_config`.
+#'
+#' @return Character vector with commands for test set.
 at_setup <- function(x) {
     stopifnot("argument 'x' must be of class 'at_config'" = inherits(x, "at_config"))
 
-
-    ## -------------------------
-    ## Template 1: Tests general functionability of the
-    ## constructor function and creates two objects 'd1' and 'dx'
-    ## used for testing.
-    ## -------------------------
-
-    template1 <- '
+    template <- '
     ## --- this file is auto-generated, do not change
     ##
     ## Automated tests for distribution "%1$s"
@@ -167,13 +162,17 @@ at_setup <- function(x) {
         expect_true(all(!is.na(match(%2$s, args))), info = "not all parameters are arguments to constructor function")
     });
 
-    ## Call constructor function with the pre-defined arguments in parameters$valid
-    ## to create two objects for testing: d1 (distribution object with one distribution),
-    ## dx (distributions object with as many distributions as defined in parameters$valid).
-    ## They are written to the global env the tests run in.
+    ## Call constructor function with the pre-defined arguments in
+    ## parameters$valid to create four objects for testing: d0 (default
+    ## return), d1 (unnamed distribution object with one distribution), dx
+    ## (unnamed distributions object with as many distributions as defined in
+    ## parameters$valid), and dn (named version of dx). They are written to the
+    ## global env the tests run in.
     test_that("constructor %1$s runs silent with parmaeter inputs", {
+        expect_silent(d0 <<- %1$s())
         expect_silent(d1 <<- %4$s)
         expect_silent(dx <<- %5$s)
+        expect_silent(dn <<- %6$s)
     });
     '
 
@@ -181,22 +180,114 @@ at_setup <- function(x) {
     valid <- x$parameters$valid
     cmd_d1 <- sprintf("%s(%s)", x$name,
                       paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
-    cmd_d1 <<- cmd_d1
     cmd_dx <- sprintf("%s(%s)", x$name,
                       paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
+    names(valid[[1L]]) <- LETTERS[seq_along(valid[[1L]])] ## Naming first parameter set
+    cmd_dn <- sprintf("%s(%s)", x$name,
+                      paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
 
-    res <- sprintf(
-                template1, # template
+    res <- sprintf(template,
                 x$name,                                             # %1$s - name of distribution
                 deparse(names(x$parameters$valid)),                 # %2$s - vector with parameter names
                 paste(names(x$parameters$valid), collapse = ", "),  # %3$s
                 cmd_d1,                                             # %4$s - cmd to create 'd1'
-                cmd_dx                                              # %5$s - cmd to create 'dx'
+                cmd_dx,                                             # %5$s - cmd to create 'dx'
+                cmd_dn                                              # %6$s - cmd to create 'dn'
             )
 
     return(at_clean_cmd(res))
 }
 
 
+#' Setting up Autotests for Constructor Return
+#'
+#' Testing correctness of the return of the constructor function. This
+#' test set expects that we already have the two named distribution objects
+#' `d1` and `dx` in the global environment as created by `at_setup()` which
+#' must be added before this test set.
+#'
+#' @param x object of class `at_config`.
+#'
+#' @return Character vector with commands for test set.
+at_constructor_return <- function(x) {
+    stopifnot("argument 'x' must be of class 'at_config'" = inherits(x, "at_config"))
+
+
+    template <- '
+    ## Testing object `d1`: unnamed object of length 1
+    test_that("constructor returns expected object: unnamed, length 1", {
+        ## Class
+        expect_s3_class(d0, c("%1$s", "distribution"), exact = TRUE)
+        expect_s3_class(d1, c("%1$s", "distribution"), exact = TRUE)
+        expect_s3_class(dn, c("%1$s", "distribution"), exact = TRUE)
+        expect_s3_class(dx, c("%1$s", "distribution"), exact = TRUE)
+
+        ## Converting to data frame for testing
+        dd0 <- as.data.frame(as.matrix(d0))
+        dd1 <- as.data.frame(as.matrix(d1))
+        ddx <- as.data.frame(as.matrix(dx))
+        ddn <- as.data.frame(as.matrix(dn))
+
+        ## Dimension and names/dimension names
+        expect_identical(dim(dd1),      c(1L, NCOL(as.matrix(d0))))
+        expect_identical(names(dd1),    names(dd0))
+        expect_null(names(d1))
+
+        expect_identical(dim(ddx),      c(%2$dL, NCOL(as.matrix(d0))))
+        expect_identical(names(ddx),    names(dd0))
+        expect_null(names(dx))
+
+        expect_identical(dim(ddn),      c(%2$dL, NCOL(as.matrix(d0))))
+        expect_identical(names(ddn),    names(ddn))
+        expect_identical(names(dn),     LETTERS[seq_len(%2$d)])
+        expect_identical(rownames(ddn), LETTERS[seq_len(%2$d)])
+
+        ## Checking values
+        %3$s
+    });
+    '
+
+    valid <- x$parameters$valid
+    cmd_values <- sprintf("        expect_equal(ddn$%s, %s)",
+                          names(x$parameters$valid),
+                          sapply(x$parameters$valid, deparse))
+
+    res <- sprintf(template,
+                x$name,                             # %1$s - name of distribution
+                length(x$parameters$valid$mu),      # %2$s - number of distributions in dx, dn
+                paste(cmd_values, collapse = "\n")  # %3$s - command(s) to check values
+            )
+    return(at_clean_cmd(res))
+}
+
+
+#' Setting up Autotests for S3 Method `as.list`
+#'
+#' Testing function of the S3 method 'as.list()'.
+#' Expects object `dn` to exist (see `at_setup()`).
+#'
+#' @param x object of class `at_config`.
+#'
+#' @return Character vector with commands for test set.
+at_support <- function(x) {
+    stopifnot("argument 'x' must be of class 'at_config'" = inherits(x, "at_config"))
+
+    template <- '
+    test_that("as.list method works as expected", {
+        ## Names of parameters
+        expect_silent(ln <- as.list(dn))
+
+        ## Comparing against expected list
+        expect_identical(ln, %1$s)
+    });
+    '
+
+    res <- sprintf(template,
+                x$name,                             # %1$s - name of distribution
+                length(x$parameters$valid$mu),      # %2$s - number of distributions in dx, dn
+                paste(cmd_values, collapse = "\n")  # %3$s - command(s) to check values
+            )
+    return(at_clean_cmd(res))
+}
 
 
