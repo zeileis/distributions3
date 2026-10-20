@@ -5,7 +5,7 @@
 #'
 #' @reutrn Named list with the content of the YAML files. The names of the
 #' list elements corresponds to the YAML file name.
-at_load_config <- function(dir = "autotest-config") {
+autotest_load_config <- function(dir = "autotest-config") {
     stopifnot(
         "argument 'dir' must be name/path to the directory with the YAML files" =
             is.character(dir) && length(dir) == 1L && isTRUE(dir.exists(dir))
@@ -17,12 +17,14 @@ at_load_config <- function(dir = "autotest-config") {
 
     ## Reading yaml files via a helper function for verbose error messages
     parse_yaml <- function(file, dir) {
-        tryCatch(read_yaml(file.path(dir, file)),
-            error = function(e) stop("Problems reading \"", file, "\": ", e)) |>
-        structure(class = "at_config")
+        res <- tryCatch(read_yaml(file.path(dir, file)),
+            error = function(e) stop("Problems reading \"", file, "\": ", e))
+        ## Appending 'testfile' (the output file name), add class, return
+        res$testfile <- sprintf("test-autotest-%s", gsub("\\.yaml$", ".R", file))
+        res |> structure(class = "autotest_config")
     }
 
-    # Load and return as named list of at_config objects.
+    # Load and return as named list of autotest_config objects.
     lapply(yamlfiles, parse_yaml, dir = dir) |> setNames(yamlfiles)
 }
 
@@ -49,7 +51,7 @@ at_load_config <- function(dir = "autotest-config") {
 #' A 'tests' section with 'tests > include' or 'tests > exclude' can be specified
 #' to only include certain tests, or exclude specific tests. Must evaluate to
 #' character vectors.
-at_check_config <- function(x) {
+autotest_check_config <- function(x) {
     # Basic required elements
     stopifnot(
         "'name' must be string" = is.character(x$name) && length(x$name) == 1L,
@@ -69,7 +71,12 @@ at_check_config <- function(x) {
             stop("'parameters > valid > ", n, "' must be numeric and not NA")
     })
     tmp <- sapply(x$parameters$valid, length)
-    if (!all(tmp == tmp[[1L]])) stop("'parameters > valid' must all have the same length")
+    stopifnot(
+        "'parameters > valid' must all have length 1L or N" = all(tmp == 1L | tmp == max(tmp)),
+        "'parameters > valid' must at least have N = 2" = max(tmp) > 1L
+    )
+    ## Extending parameter vectors if needed
+    x$parameters$valid <- lapply(x$parameters$valid, function(x) rep_len(x, max(tmp)))
 
     ## Invvalid parameters (optional)
     if (!is.null(x$parameters$invalid)) {
@@ -99,17 +106,23 @@ at_check_config <- function(x) {
     ## --------------------------------------
     ## Enabled/disabled tests (optional)
     ## --------------------------------------
-    if (!is.null(x$tests$include))
-        stopifnot("'tests > include' incorrectly specified" = is.character(x$tests$include))
-    if (!is.null(x$tests$exclude))
-        stopifnot("'tests > exclude' incorrectly specified" = is.character(x$tests$exclude))
+    if (!is.null(x$tests)) {
+        ## Allows to have 'include' or 'exclude' but mutually exclusive.
+        stopifnot(
+            "'tests' only allow to include one include or exclude rule" =
+                all(names(x$tests) %in% c("include", "exclude")) && length(x$tests) == 1L,
+            "'tests > include' or 'tests > exclude' must be character vector of length > 1" =
+                is.character(x$tests[[1L]]) && length(x$tests[[1L]]) > 0L
+        )
+    }
+
     return(x)
 }
 
 
 ## ----------------------------------------------------------------------------
 ## Series of functions which create the strings for the automated tests.
-## Function `at_setup()` is required to set up a series of tests for the
+## Function `autotest_setup()` is required to set up a series of tests for the
 ## constructor functions (required) and will create a series of objects
 ## placed in the global env to be used by the different tests that follow.
 ## E.g., two distribution objects with one and multiple distributions, used
@@ -118,18 +131,18 @@ at_check_config <- function(x) {
 ## All other tests must are added below and can re-use these objects.
 ## ----------------------------------------------------------------------------
 
-at_clean_cmd <- function(x) {
+autotest_clean_cmd <- function(x) {
     ## Stripping first four spaces (if present)
     gsub("^[ ]{4}", "", strsplit(x, "\n")[[1L]])
 }
 
 #' Setting up Autotest 
 #'
-#' @param x object of class `at_config`.
+#' @param x object of class `autotest_config`.
 #'
 #' @return Character vector with commands for test set.
-at_setup <- function(x) {
-    stopifnot("argument 'x' must be of class 'at_config'" = inherits(x, "at_config"))
+autotest_setup <- function(x) {
+    stopifnot("argument 'x' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
 
     template <- '
     ## --- this file is auto-generated, do not change
@@ -168,7 +181,7 @@ at_setup <- function(x) {
     ## (unnamed distributions object with as many distributions as defined in
     ## parameters$valid), and dn (named version of dx). They are written to the
     ## global env the tests run in.
-    test_that("constructor %1$s runs silent with parmaeter inputs", {
+    test_that("constructor %1$s runs silent with parameter inputs", {
         expect_silent(d0 <<- %1$s())
         expect_silent(d1 <<- %4$s)
         expect_silent(dx <<- %5$s)
@@ -195,7 +208,7 @@ at_setup <- function(x) {
                 cmd_dn                                              # %6$s - cmd to create 'dn'
             )
 
-    return(at_clean_cmd(res))
+    return(autotest_clean_cmd(res))
 }
 
 
@@ -203,14 +216,16 @@ at_setup <- function(x) {
 #'
 #' Testing correctness of the return of the constructor function. This
 #' test set expects that we already have the two named distribution objects
-#' `d1` and `dx` in the global environment as created by `at_setup()` which
+#' `d1` and `dx` in the global environment as created by `autotest_setup()` which
 #' must be added before this test set.
 #'
-#' @param x object of class `at_config`.
+#' @param x object of class `autotest_config`.
 #'
-#' @return Character vector with commands for test set.
-at_constructor_return <- function(x) {
-    stopifnot("argument 'x' must be of class 'at_config'" = inherits(x, "at_config"))
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_constructor <- function(x) {
+    ## Sanity check + check if this test should be included
+    stopifnot("argument 'x' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
 
 
     template <- '
@@ -257,20 +272,20 @@ at_constructor_return <- function(x) {
                 length(x$parameters$valid$mu),      # %2$s - number of distributions in dx, dn
                 paste(cmd_values, collapse = "\n")  # %3$s - command(s) to check values
             )
-    return(at_clean_cmd(res))
+    return(autotest_clean_cmd(res))
 }
 
 
 #' Setting up Autotests for S3 Method `as.list`
 #'
 #' Testing function of the S3 method 'as.list()'.
-#' Expects object `dn` to exist (see `at_setup()`).
+#' Expects object `dn` to exist (see `autotest_setup()`).
 #'
-#' @param x object of class `at_config`.
+#' @param x object of class `autotest_config`.
 #'
 #' @return Character vector with commands for test set.
-at_support <- function(x) {
-    stopifnot("argument 'x' must be of class 'at_config'" = inherits(x, "at_config"))
+autotest_support <- function(x) {
+    stopifnot("argument 'x' must be of class 'autotest_config'" = inherits(x, "autotest_config"))
 
     template <- '
     test_that("as.list method works as expected", {
@@ -287,7 +302,7 @@ at_support <- function(x) {
                 length(x$parameters$valid$mu),      # %2$s - number of distributions in dx, dn
                 paste(cmd_values, collapse = "\n")  # %3$s - command(s) to check values
             )
-    return(at_clean_cmd(res))
+    return(autotest_clean_cmd(res))
 }
 
 
