@@ -69,6 +69,10 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Poisson <- function(lambda = numeric()) {
+  stopifnot("parameter 'lambda' must be an atomic vector" = is.atomic(lambda))
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  stopifnot("parameter 'lambda' must always be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE))
+
   d <- data.frame(lambda = lambda)
   class(d) <- c("Poisson", "distribution")
   d

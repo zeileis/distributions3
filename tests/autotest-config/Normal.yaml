@@ -6,10 +6,10 @@ name: Normal
 ## Name of parameters and supported range/values.
 parameters:
   valid:
-    mu:    [ -10, -1, 0, 1,  10]
-    sigma: [0.01,  1, 2, 5, 100]
+    mu:    [ -10, -1,  0,  1,  10]
+    sigma: [   0,  1,  2,  5, 100]
   invalid:
-    sigma: [-10, -1e-10, 0]
+    sigma: [-10, -1e-10]
 support:
   lower: -.inf
   upper: .inf

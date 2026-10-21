@@ -29,8 +29,8 @@ test_that("Poisson default arguments", {
 ## "Support" methods
 ## -------------------------------------------------------
 test_that("print.Poisson works correctly", {
-    d_test_print(Poisson(-10))
-    d_test_print(Poisson(-100.123456))
+    d_test_print(Poisson(10))
+    d_test_print(Poisson(100.123456))
     d_test_print(Poisson(1e-10))
 })
 

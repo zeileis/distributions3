@@ -163,8 +163,9 @@ Normal <- function(mu = 0, sigma = 1) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1,
-    "parameter 'sigma' must always be in (0, Inf]" = all(sigma > 0, na.rm = TRUE)
+    "parameter 'sigma' must always be in [0, Inf]" = all(sigma >= 0, na.rm = TRUE)
   )
+
   d <- data.frame(mu = mu, sigma = sigma)
   class(d) <- c("Normal", "distribution")
   d

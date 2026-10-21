@@ -6,9 +6,9 @@ name: Poisson
 ## Name of parameters and supported range/values.
 parameters:
   valid:
-    lambda: [0.01, 2, 5.5, 100]
+    lambda: [0, 0.1, 2, 5.5, 100]
   invalid:
-    lambda: [-10, -1e-10, 0]
+    lambda: [-10, -1e-10]
 support:
   lower: 0
   upper: .inf
