@@ -480,9 +480,19 @@ autotest_format <- function(config) {
         ## Generating pattern
         p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
 
-        ## Testing format()
+        ## Testing format() (unnamed length 1)
         expect_silent(x <- format(d1))
-        expect_true(grepl(p, x))
+        expect_true(is.character(x) && length(x) == 1L,
+                    info = "expected format to return character vector of length 1")
+        expect_null(names(x),                 info = "expected unnamed character vector")
+        expect_true(grepl(p, x),              info = "standard representation returns unexpected format")
+
+        ## Testing format() (named, length <N>)
+        expect_silent(x <- format(dn))
+        expect_true(is.character(x) && length(x) == <N>,
+                    info = "expected format to return character vector of length <N>")
+        expect_identical(names(x), names(dn), info = "expected named character vector")
+        expect_true(all(grepl(p, x)),         info = "standard representation returns unexpected format")
 
         ## Testing print
         expect_output(print(d1), regexp = p)
@@ -491,11 +501,58 @@ autotest_format <- function(config) {
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
-              "<PATTERN>"  = "[+\\-]?[0-9\\.\\-e]+") # Basic pattern for numerics
+              "<N>"        = deparse(length(config$parameters$valid[[1L]])),
+              "<PATTERN>"  = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
+
+#' Autotests for S3 Method as.character for distribution Objects
+#'
+#' Testing basic conversion to character.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_as.character <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) &&  "as.character" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"as.character" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("that S3 method as.character for <NAME> works as expected", {
+        ## Generating pattern
+        p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
+
+        ## Testing as.character() (unnamed length 1)
+        expect_silent(x <- as.character(d1))
+        expect_true(is.character(x) && length(x) == 1L,
+                    info = "expected format to return character vector of length 1")
+        expect_null(names(x),                 info = "expected unnamed character vector")
+        expect_true(grepl(p, x),              info = "as.character returns unexpected string")
+
+        ## Testing as.character() (named, length <N>)
+        expect_silent(x <- as.character(dn))
+        expect_true(is.character(x) && length(x) == <N>,
+                    info = "expected format to return character vector of length <N>")
+        expect_null(names(x),                 info = "expected unnamed character vector")
+        expect_true(all(grepl(p, x)),         info = "as.character returns unexpected string")
+
+        ## Testing print
+        expect_output(print(d1), regexp = p)
+    });
+    '
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"     = config$name,
+              "<N>"        = deparse(length(config$parameters$valid[[1L]])),
+              "<PATTERN>"  = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
 
 #' Autotests for S3 Method as.list for distribution Objects
 #'
