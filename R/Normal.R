@@ -157,9 +157,13 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Normal <- function(mu = 0, sigma = 1) {
+  stopifnot("parameters 'mu' and 'sigma' must be atomic vectors" = is.atomic(mu) && is.atomic(sigma))
+  if (!is.numeric(mu))    mu    <- as.numeric(mu)
+  if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1
+      length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1,
+    "parameter 'sigma' must always be in (0, Inf]" = all(sigma > 0, na.rm = TRUE)
   )
   d <- data.frame(mu = mu, sigma = sigma)
   class(d) <- c("Normal", "distribution")
