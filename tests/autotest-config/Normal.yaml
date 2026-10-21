@@ -13,3 +13,6 @@ parameters:
 support:
   lower: -.inf
   upper: .inf
+distributiontype:
+  discrete: false
+  continuous: true

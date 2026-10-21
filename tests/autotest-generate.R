@@ -19,12 +19,7 @@ library("distributions3")
 ## Loading all available autotest config files and checking content
 distconfig <- lapply(load_autotest_config(), check_autotest_config)
 
-
-source("autotest-functions.R"); cat(autotest_format(distconfig[[1L]]), sep = "\n")
-#stop(3)
-
-
-#for (config in distconfig[1L]) {
+## Looping over all configs found
 for (config in distconfig) {
     ## Name of the output file
     cat("--- generating automatic test set \"", config$testfile, "\"\n")
@@ -46,6 +41,7 @@ for (config in distconfig) {
     res <- append(res, autotest_params_incorrect_type(config))
     res <- append(res, autotest_params_length_mismatch(config))
     res <- append(res, autotest_params_empty(config))
+    res <- append(res, autotest_params_nonnumeric(config))
 
     res <- append(res, autotest_as.list(config))
     res <- append(res, autotest_as.matrix(config))
@@ -53,6 +49,8 @@ for (config in distconfig) {
     res <- append(res, autotest_as.character(config))
 
     res <- append(res, autotest_support(config))
+    res <- append(res, autotest_is_discrete(config))
+    res <- append(res, autotest_is_continuous(config))
     #res <- append(res, autotest_basic_methods(config))
     #res <- append(res, autotest_pdf(config))
     #res <- append(res, autotest_log_pdf(config))
