@@ -51,7 +51,12 @@ for (config in distconfig) {
     res <- append(res, autotest_support(config))
     res <- append(res, autotest_is_discrete(config))
     res <- append(res, autotest_is_continuous(config))
-    #res <- append(res, autotest_basic_methods(config))
+
+    ## Moments
+    res <- append(res, autotest_mean(config))
+    res <- append(res, autotest_variance(config))
+    res <- append(res, autotest_skewness(config))
+    res <- append(res, autotest_kurtosis(config))
     #res <- append(res, autotest_pdf(config))
     #res <- append(res, autotest_log_pdf(config))
     #res <- append(res, autotest_constructor_return(config))
