@@ -311,7 +311,7 @@ autotest_setup <- function(config) {
 }
 
 
-#' Setting up Autotests for Constructor Return
+#' Autotests for Constructor Return
 #'
 #' Testing correctness of the return of the constructor function. This
 #' test set expects that we already have the two named distribution objects
@@ -373,7 +373,51 @@ autotest_constructor <- function(config) {
 }
 
 
-#' Setting up Autotests for Basic S3 Methods for distribution Objects
+#' Autotests for Testing Invalid Parameters with Constructor Function
+#'
+#' Creating tests to ensure the creator function throws an error if
+#' invalid parameters are used.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_invalid_params <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) && "invalid_params" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"invalid_params" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("constructor <NAME>() throws error when invalid parameters are handed over", {
+        <CMD_INVALID>
+    });
+    '
+
+    ## Create calls to constructor function with invalid parameters.
+    ## First, take the first set of valid parameters. Replace one at a time
+    ## with one of the specified invalid parameters and create command(s).
+    cmd_invalid <- c()
+    valid <- sapply(config$parameters$valid, head, n = 1) |> setNames(names(config$parameters$valid))
+    for (n in names(config$parameters$invalid)) {
+        for (inv in config$parameters$invalid[[n]]) {
+            tmp <- valid
+            tmp[[n]] <- inv
+            tmp <- sprintf("<INDENT>expect_error(%s(%s), info = \"expected error to be thrown using '%s = %s'\")",
+                           config$name, paste(names(tmp), sapply(tmp, deparse), sep = " = ", collapse = ", "),
+                           n, deparse(inv))
+            cmd_invalid <- append(cmd_invalid, tmp)
+        }
+    }
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"          = config$name,
+              "<CMD_INVALID>"   = paste(cmd_invalid, collapse = "\n"))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+#' Autotests for S3 Method suppport for distribution Objects
 #'
 #' Testing 'basic' S3 methods to be used on distribution objects. This includes
 #' `as.list`, `as.matrix`, TODO(R)
@@ -416,4 +460,114 @@ autotest_support <- function(config) {
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
+
+#' Autotests for S3 Method format for distribution Objects
+#'
+#' Testing basic standard output (formatting).
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_format <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) &&  "format" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"format" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("that S3 methods format and print for <NAME> work as expected", {
+        ## Generating pattern
+        p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
+
+        ## Testing format()
+        expect_silent(x <- format(d1))
+        expect_true(grepl(p, x))
+
+        ## Testing print
+        expect_output(print(d1), regexp = p)
+    });
+    '
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"     = config$name,
+              "<PATTERN>"  = "[+\\-]?[0-9\\.\\-e]+") # Basic pattern for numerics
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests for S3 Method as.list for distribution Objects
+#'
+#' Testing basic functionality of S3 method as.list.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_as.list <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) &&  "as.list" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"as.list" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("that S3 method as.list for <NAME> works as expected", {
+        ## Converting unnamed distributions object
+        expect_silent(x <- as.list(dx))
+        expect_identical(x, <EXPECTED_LIST>)
+
+        ## Converting named distributions object
+        expect_silent(x <- as.list(dx))
+        expect_identical(x, <EXPECTED_LIST>)
+    });
+    '
+
+    ## Expecting the following (unnamed) list to be created
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"           = config$name,
+              "<EXPECTED_LIST>"  = deparse(config$parameters$valid))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests for S3 Method as.matrix for distribution Objects
+#'
+#' Testing basic functionality of S3 method as.matrix.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_as.matrix <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) &&  "as.matrix" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"as.matrix" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("that S3 method as.matrix for <NAME> works as expected", {
+        ## Converting unnamed distributions object
+        expect_silent(x <- as.matrix(dx))
+        expect_identical(x, <CMD_M1>)
+
+        ## Converting named distributions object
+        expect_silent(x <- as.matrix(dn))
+        expect_identical(x, <CMD_M2>)
+    });
+    '
+
+    ## Generate command for expected matrices
+    cmd_m1 <- "matrix(unname(unlist(as.list(dx))), ncol = 2L, dimnames = list(NULL, names(as.list(dx))))"
+    cmd_m2 <- "matrix(unname(unlist(as.list(dn))), ncol = 2L, dimnames = list(names(dn), names(as.list(dx))))"
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"           = config$name,
+              "<CMD_M1>"         = cmd_m1,
+              "<CMD_M2>"         = cmd_m2)
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
 

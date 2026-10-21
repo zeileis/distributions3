@@ -20,8 +20,9 @@ library("distributions3")
 distconfig <- lapply(load_autotest_config(), check_autotest_config)
 
 
-source("autotest-functions.R")
-x <- warnings_include_exclude(distconfig, verbose = TRUE)
+source("autotest-functions.R"); cat(autotest_format(distconfig[[1L]]), sep = "\n")
+#stop(3)
+
 
 for (config in distconfig[1L]) {
 #for (config in distconfig) {
@@ -33,6 +34,12 @@ for (config in distconfig[1L]) {
     res <- list()
     res <- append(res, autotest_setup(config))
     res <- append(res, autotest_constructor(config))
+    res <- append(res, autotest_invalid_params(config))
+
+    res <- append(res, autotest_as.list(config))
+    res <- append(res, autotest_as.matrix(config))
+    res <- append(res, autotest_format(config))
+
     res <- append(res, autotest_support(config))
     #res <- append(res, autotest_basic_methods(config))
     #res <- append(res, autotest_pdf(config))
