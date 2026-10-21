@@ -372,6 +372,37 @@ autotest_constructor <- function(config) {
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
+#' Autotests for Subsetting
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_subsetting <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (!is.null(config$tests$exclude) &&  "subsetting" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"subsetting" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("subsetting of <NAME> objects is working", {
+        ## Subsetting 1 element
+        expect_silent(x <- dn[<N>])
+        expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
+        expect_identical(length(x), 1L, info = "incorrect length after subsetting single element")
+        expect_identical(names(x), names(dn)[<N>])
+
+        ## Subsetting two elements in reverse
+        expect_silent(x <- dn[2:1])
+        expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
+        expect_identical(length(x), 2L, info = "incorrect length after subsetting two elements")
+        expect_identical(names(x), rev(names(dn)[1:2]))
+    });
+    '
+
+    p <- list("<NAME>" = config$name, "<N>" = deparse(length(config$parameters[[1L]])))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
 
 #' Autotest Mismatch of Parameter Lengths
 #'
@@ -389,7 +420,6 @@ autotest_params_length_mismatch <- function(config) {
     if (!is.null(config$tests$exclude) &&  "mismatch_paramlength" %in% config$tests$exclude) return(NULL)
     if (!is.null(config$tests$include) && !"mismatch_paramlength" %in% config$tests$include) return(NULL)
 
-    ## This test only makes sense for distributions with more than one parameter
     template <- '
     test_that("constructor <NAME>() throws error when invalid parameters are handed over", {
         ## Parameters not all of length 1 or N

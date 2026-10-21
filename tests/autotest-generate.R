@@ -41,8 +41,9 @@ for (config in distconfig[1L]) {
 
     res <- append(res, autotest_as.list(config))
     res <- append(res, autotest_as.matrix(config))
-    res <- append(res, autotest_format(config))
     res <- append(res, autotest_as.character(config))
+    res <- append(res, autotest_format(config))
+    res <- append(res, autotest_subsetting(config))
 
     res <- append(res, autotest_support(config))
     #res <- append(res, autotest_basic_methods(config))
