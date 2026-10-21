@@ -373,6 +373,41 @@ autotest_constructor <- function(config) {
 }
 
 
+#' Autotest Mismatch of Parameter Lengths
+#'
+#' Will only be included for distributions with more than one parameter.
+#' Ensures error handling if not all parameter vectors are of length 1
+#' or N.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_params_length_mismatch <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (length(config$parameters$valid) == 1L) return(NULL) # Test not required/useful
+    if (!is.null(config$tests$exclude) &&  "mismatch_paramlength" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"mismatch_paramlength" %in% config$tests$include) return(NULL)
+
+    ## This test only makes sense for distributions with more than one parameter
+    template <- '
+    test_that("constructor <NAME>() throws error when invalid parameters are handed over", {
+        ## Parameters not all of length 1 or N
+        expect_error(<NAME>(<ARGS>), regexp = "lengths do not match",
+                     info = "expected error, but on error was thrown")
+    });
+    '
+
+    ## Putting to gether arguments for testing
+    args <- config$parameters$valid
+    args[[1L]] <- rep(args[[1L]], 2L)
+
+    p <- list("<NAME>" = config$name,
+              "<ARGS>" = args <- paste(lapply(args, deparse), collapse = ", "))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
 #' Autotests for Testing Invalid Parameters with Constructor Function
 #'
 #' Creating tests to ensure the creator function throws an error if
@@ -382,11 +417,11 @@ autotest_constructor <- function(config) {
 #'
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
-autotest_invalid_params <- function(config) {
+autotest_params_invalid <- function(config) {
     stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
-    if (!is.null(config$tests$exclude) && "invalid_params" %in% config$tests$exclude) return(NULL)
-    if (!is.null(config$tests$include) && !"invalid_params" %in% config$tests$include) return(NULL)
+    if (!is.null(config$tests$exclude) &&  "params_invalid" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"params_invalid" %in% config$tests$include) return(NULL)
 
     template <- '
     test_that("constructor <NAME>() throws error when invalid parameters are handed over", {
@@ -413,6 +448,80 @@ autotest_invalid_params <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"          = config$name,
               "<CMD_INVALID>"   = paste(cmd_invalid, collapse = "\n"))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests Incorrect Type for Parameters
+#'
+#' Parameters for the constructor functions must be atomic. Will atuomatically
+#' be coerced to numeric if required.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_params_incorrect_type <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (!is.null(config$tests$exclude) &&  "params_incorrect_type" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"params_incorrect_type" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("constructor <NAME>() fails when incorrect types are provided", {
+        <CMDS>
+    });
+    '
+
+    cmds <- c()
+    for (i in seq_along(config$parameters$valid)) {
+        tmp <- config$parameters$valid
+        tmp[[i]] <- list()
+        cmds <- c(cmds, sprintf("    expect_error(%s(%s), regexp = \"%s\")",
+            config$name, 
+            paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", "),
+            "must be atomic"))
+    }
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>" = config$name,
+              "<CMDS>" = paste(cmds, collapse = "\n"))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests Creating Empty distributions Objects
+#'
+#' All constructor functions should allow to create an empty distributions
+#' object (i.e., length 0L) with a dedicated standard representation.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_params_empty <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (!is.null(config$tests$exclude) &&  "params_empty" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"params_empty" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("constructor <NAME>() works for empty parameter sets", {
+        expect_silent(x <- <NAME>(<PARAMS>))
+        expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
+        expect_identical(length(x), 0L, info = "expected object of length 0")
+
+        ## Standard print
+        expect_output(print(x), regexp = "^<NAME> distribution of length zero",
+            info = "standard representation (print) incorrect")
+    });
+    '
+
+    params <- paste(names(config$parameters$valid), "numeric()", sep = " = ", collapse = ", ")
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"          = config$name,
+              "<PARAMS>"        = params)
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }

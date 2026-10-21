@@ -34,7 +34,10 @@ for (config in distconfig[1L]) {
     res <- list()
     res <- append(res, autotest_setup(config))
     res <- append(res, autotest_constructor(config))
-    res <- append(res, autotest_invalid_params(config))
+    res <- append(res, autotest_params_invalid(config))
+    res <- append(res, autotest_params_incorrect_type(config))
+    res <- append(res, autotest_params_length_mismatch(config))
+    res <- append(res, autotest_params_empty(config))
 
     res <- append(res, autotest_as.list(config))
     res <- append(res, autotest_as.matrix(config))
