@@ -357,6 +357,13 @@ autotest_constructor <- function(config) {
 
         ## Checking values
         <CMD_VALUES>
+
+        ## Also testing overwriting names
+        tmp <- dx
+        tmpn <- sample(letters, length(dx))
+        expect_silent(names(tmp) <- tmpn)
+        expect_identical(names(tmp), tmpn, info = "names not properly overwritten")
+        rm(tmp)
     });
     '
 
@@ -384,7 +391,7 @@ autotest_subsetting <- function(config) {
     if (!is.null(config$tests$include) && !"subsetting" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("subsetting of <NAME> objects is working", {
+    test_that("S3 methods subsetting and print work as expected for <NAME> distribution", {
         ## Subsetting 1 element
         expect_silent(x <- dn[<N>])
         expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
@@ -400,6 +407,36 @@ autotest_subsetting <- function(config) {
     '
 
     p <- list("<NAME>" = config$name, "<N>" = deparse(length(config$parameters[[1L]])))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests for Concatenation
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_concatenate <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (!is.null(config$tests$exclude) &&  "concatenate" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"concatenate" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("subsetting of <NAME> objects is working", {
+        ## Splitting object dn and put it back together
+        idx1 <- seq.int(1L, length(dn) / 2)
+        idx2 <- setdiff(seq.int(1L, length(dn)), idx1)
+
+        expect_silent(x1 <- dn[idx1])
+        expect_silent(x2 <- dn[idx2])
+
+        expect_identical(c(x1, x2), dn, info = "contactenated object not identical to original")
+    });
+    '
+
+    p <- list("<NAME>" = config$name)
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -421,7 +458,7 @@ autotest_params_length_mismatch <- function(config) {
     if (!is.null(config$tests$include) && !"mismatch_paramlength" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("constructor <NAME>() throws error when invalid parameters are handed over", {
+    test_that("constructor <NAME>() throws error when lengths of parameters mismatch", {
         ## Parameters not all of length 1 or N
         expect_error(<NAME>(<ARGS>), regexp = "lengths do not match",
                      info = "expected error, but on error was thrown")
@@ -544,6 +581,9 @@ autotest_params_empty <- function(config) {
         ## Standard print
         expect_output(print(x), regexp = "^<NAME> distribution of length zero",
             info = "standard representation (print) incorrect")
+
+        ## Length must be 0
+        expect_identical(length(x), 0L, info = "expected length of empty object to be 0L")
     });
     '
 
@@ -555,50 +595,6 @@ autotest_params_empty <- function(config) {
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
-
-#' Autotests for S3 Method suppport for distribution Objects
-#'
-#' Testing 'basic' S3 methods to be used on distribution objects. This includes
-#' `as.list`, `as.matrix`, TODO(R)
-#'
-#' @param x object of class `autotest_config`.
-#'
-#' @return Returns `NULL` if the test is excluded, or a character vector
-#' containing the test sets (R commands).
-autotest_support <- function(config) {
-    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
-    if (is.null(config$support)) return(NULL) # no support defined
-    if (!is.null(config$tests$exclude) && "support" %in% config$tests$exclude) return(NULL)
-    if (!is.null(config$tests$include) && !"support" %in% config$tests$include) return(NULL)
-
-    template <- '
-    test_that("support method works as expected", {
-        ## Single unnamed distribution object w/ drop = FALSE (default)
-        expect_silent(x <- support(d1))
-        expect_identical(x, c(min = <SUPPORT_LOWER>, max = <SUPPORT_UPPER>))
-
-        ## Single unnamed distribution object w/ drop = TRUE
-        expect_silent(x <- support(d1, drop = FALSE))
-        tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = 1,
-                      dimnames = list(NULL, c("min", "max")))
-        expect_identical(x, tmp)
-
-        ## Named distribution object of length > 1L
-        expect_silent(x <- support(dn))
-        tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = <N>,
-                      byrow = TRUE, dimnames = list(names(dn), c("min", "max")))
-        expect_identical(x, tmp)
-    });
-    '
-    ## List of values/placeholders to replace
-    p <- list("<NAME>"          = config$name,
-              "<N>"             = deparse(length(config$parameters$valid[[1L]])),
-              "<SUPPORT_LOWER>" = deparse(config$support$lower),
-              "<SUPPORT_UPPER>" = deparse(config$support$upper))
-
-    return(replace_placeholders(template, p) |> clean_cmd())
-}
-
 
 #' Autotests for S3 Method format for distribution Objects
 #'
@@ -615,7 +611,7 @@ autotest_format <- function(config) {
     if (!is.null(config$tests$include) && !"format" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("that S3 methods format and print for <NAME> work as expected", {
+    test_that("S3 methods format and print work as expected for <NAME> distribution", {
         ## Generating pattern
         p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
 
@@ -662,7 +658,7 @@ autotest_as.character <- function(config) {
     if (!is.null(config$tests$include) && !"as.character" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("that S3 method as.character for <NAME> works as expected", {
+    test_that("S3 method as.character works as expected for <NAME> distribution", {
         ## Generating pattern
         p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
 
@@ -708,7 +704,7 @@ autotest_as.list <- function(config) {
     if (!is.null(config$tests$include) && !"as.list" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("that S3 method as.list for <NAME> works as expected", {
+    test_that("S3 method as.list works as expected for <NAME> distribution", {
         ## Converting unnamed distributions object
         expect_silent(x <- as.list(dx))
         expect_identical(x, <EXPECTED_LIST>)
@@ -744,7 +740,7 @@ autotest_as.matrix <- function(config) {
     if (!is.null(config$tests$include) && !"as.matrix" %in% config$tests$include) return(NULL)
 
     template <- '
-    test_that("that S3 method as.matrix for <NAME> works as expected", {
+    test_that("S3 method as.matrix works as expected for <NAME> distribution", {
         ## Converting unnamed distributions object
         expect_silent(x <- as.matrix(dx))
         expect_identical(x, <CMD_M1>)
@@ -766,4 +762,160 @@ autotest_as.matrix <- function(config) {
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
+
+
+#' Autotests for S3 Method as.data.frame for distribution Objects
+#'
+#' Convers the distributions object into a single-column data.frame.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_as.data.frame <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) &&  "as.data.frame" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"as.data.frame" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("S3 method as.data.frame works as expected for <NAME> distribution", {
+        ## Coercing unnamed object
+        expect_silent(x <- as.data.frame(dx))
+        expect_s3_class(x, "data.frame", exact = TRUE)
+        expect_identical(dimnames(x), list(as.character(1:length(dx)), "dx"))
+
+        ## Coercing named object
+        expect_silent(x <- as.data.frame(dn))
+        expect_s3_class(x, "data.frame", exact = TRUE)
+        expect_identical(dimnames(x), list(names(dn), "dn"))
+    });
+    '
+    ## List of values/placeholders to replace
+    p <- list("<NAME>" = config$name)
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests for S3 Method dim for distribution Objects
+#'
+#' Distribution objects have no dimension, testing that
+#' the S3 method returns `NULL` correctly.
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_dim <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$parameters$invalid)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) &&  "dim" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"dim" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("S3 method dim works as expected for <NAME> distribution", {
+        expect_null(dim(d0), info = "expected dim() to return NULL")
+        expect_null(dim(d1), info = "expected dim() to return NULL")
+        expect_null(dim(dx), info = "expected dim() to return NULL")
+    });
+    '
+    ## List of values/placeholders to replace
+    p <- list("<NAME>" = config$name)
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests for S3 Method length for distribution Objects
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_length <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (!is.null(config$tests$exclude) &&  "length" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"length" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("S3 method length works as expected for <NAME> distribution", {
+        expect_identical(length(d1), 1L,  info = "expected dim() to return 1L")
+        expect_identical(length(dx), <N>, info = "expected dim() to return <N>")
+    });
+    '
+    ## List of values/placeholders to replace
+    p <- list("<NAME>" = config$name, "<N>" = deparse(length(config$parameters$valid[[1L]])))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+
+#' Autotests for S3 Method summary
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_summary <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (!is.null(config$tests$exclude) &&  "summary" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"summary" %in% config$tests$include) return(NULL)
+
+    ## TODO(R): The summary method creates output
+    template <- '
+    test_that("S3 method summary works as expected for <NAME> distribution", {
+        expect_output(x <- summary(dn))
+        expect_identical(x, summary(as.data.frame(as.matrix(dn))))
+    });
+    '
+    ## List of values/placeholders to replace
+    p <- list("<NAME>" = config$name, "<N>" = deparse(length(config$parameters$valid[[1L]])))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+#' Autotests for S3 Method suppport for distribution Objects
+#'
+#' Testing 'basic' S3 methods to be used on distribution objects. This includes
+#' `as.list`, `as.matrix`, TODO(R)
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_support <- function(config) {
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    if (is.null(config$support)) return(NULL) # no support defined
+    if (!is.null(config$tests$exclude) && "support" %in% config$tests$exclude) return(NULL)
+    if (!is.null(config$tests$include) && !"support" %in% config$tests$include) return(NULL)
+
+    template <- '
+    test_that("S3 method support works as expected for <NAME> distribution", {
+        ## Single unnamed distribution object w/ drop = FALSE (default)
+        expect_silent(x <- support(d1))
+        expect_identical(x, c(min = <SUPPORT_LOWER>, max = <SUPPORT_UPPER>))
+
+        ## Single unnamed distribution object w/ drop = TRUE
+        expect_silent(x <- support(d1, drop = FALSE))
+        tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = 1,
+                      dimnames = list(NULL, c("min", "max")))
+        expect_identical(x, tmp)
+
+        ## Named distribution object of length > 1L
+        expect_silent(x <- support(dn))
+        tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = <N>,
+                      byrow = TRUE, dimnames = list(names(dn), c("min", "max")))
+        expect_identical(x, tmp)
+    });
+    '
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"          = config$name,
+              "<N>"             = deparse(length(config$parameters$valid[[1L]])),
+              "<SUPPORT_LOWER>" = deparse(config$support$lower),
+              "<SUPPORT_UPPER>" = deparse(config$support$upper))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
 

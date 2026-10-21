@@ -34,6 +34,14 @@ for (config in distconfig[1L]) {
     res <- list()
     res <- append(res, autotest_setup(config))
     res <- append(res, autotest_constructor(config))
+
+    res <- append(res, autotest_length(config))
+    res <- append(res, autotest_dim(config))
+    res <- append(res, autotest_format(config))
+    res <- append(res, autotest_subsetting(config))
+    res <- append(res, autotest_concatenate(config))
+    res <- append(res, autotest_summary(config))
+
     res <- append(res, autotest_params_invalid(config))
     res <- append(res, autotest_params_incorrect_type(config))
     res <- append(res, autotest_params_length_mismatch(config))
@@ -41,9 +49,8 @@ for (config in distconfig[1L]) {
 
     res <- append(res, autotest_as.list(config))
     res <- append(res, autotest_as.matrix(config))
+    res <- append(res, autotest_as.data.frame(config))
     res <- append(res, autotest_as.character(config))
-    res <- append(res, autotest_format(config))
-    res <- append(res, autotest_subsetting(config))
 
     res <- append(res, autotest_support(config))
     #res <- append(res, autotest_basic_methods(config))
