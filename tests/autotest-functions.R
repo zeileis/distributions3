@@ -544,10 +544,9 @@ autotest_params_incorrect_type <- function(config) {
     for (i in seq_along(config$parameters$valid)) {
         tmp <- config$parameters$valid
         tmp[[i]] <- list()
-        cmds <- c(cmds, sprintf("    expect_error(%s(%s), regexp = \"%s\")",
+        cmds <- c(cmds, sprintf("    expect_error(%s(%s), regexp = \"atomic\")",
             config$name, 
-            paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", "),
-            "must be atomic"))
+            paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", ")))
     }
 
     ## List of values/placeholders to replace
@@ -741,24 +740,21 @@ autotest_as.matrix <- function(config) {
 
     template <- '
     test_that("S3 method as.matrix works as expected for <NAME> distribution", {
-        ## Converting unnamed distributions object
+        ## Generating expected matrix and test
+        mx <- matrix(unname(unlist(as.list(dx))), ncol = <NPAR>, dimnames = list(NULL, names(as.list(dx))))
         expect_silent(x <- as.matrix(dx))
-        expect_identical(x, <CMD_M1>)
+        expect_identical(x, mx)
 
-        ## Converting named distributions object
+        ## Generating expected matrix and test
+        mn <- matrix(unname(unlist(as.list(dn))), ncol = <NPAR>, dimnames = list(names(dn), names(as.list(dx))))
         expect_silent(x <- as.matrix(dn))
-        expect_identical(x, <CMD_M2>)
+        expect_identical(x, mn)
     });
     '
 
-    ## Generate command for expected matrices
-    cmd_m1 <- "matrix(unname(unlist(as.list(dx))), ncol = 2L, dimnames = list(NULL, names(as.list(dx))))"
-    cmd_m2 <- "matrix(unname(unlist(as.list(dn))), ncol = 2L, dimnames = list(names(dn), names(as.list(dx))))"
-
     ## List of values/placeholders to replace
-    p <- list("<NAME>"           = config$name,
-              "<CMD_M1>"         = cmd_m1,
-              "<CMD_M2>"         = cmd_m2)
+    p <- list("<NAME>" = config$name,
+              "<NPAR>" = deparse(length(config$parameters$valid)))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -919,3 +915,21 @@ autotest_support <- function(config) {
 }
 
 
+
+# autotest_cdf
+# autotest_dimnames
+# autotest_duplicated
+# autotest_hessian
+# autotest_kurtosis
+# autotest_log_pdf
+# autotest_mean
+# autotest_median
+# autotest_pdf
+# autotest_plot
+# autotest_prodist
+# autotest_quantile
+# autotest_random
+# autotest_score
+# autotest_simulate
+# autotest_skewness
+# autotest_variance

@@ -24,8 +24,8 @@ source("autotest-functions.R"); cat(autotest_format(distconfig[[1L]]), sep = "\n
 #stop(3)
 
 
-for (config in distconfig[1L]) {
-#for (config in distconfig) {
+#for (config in distconfig[1L]) {
+for (config in distconfig) {
     ## Name of the output file
     cat("--- generating automatic test set \"", config$testfile, "\"\n")
 

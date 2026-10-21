@@ -1,19 +1,14 @@
 
 
 ## Name of the distribution, also defines the name of the constructor function
-name: Normal
+name: Poisson
 
 ## Name of parameters and supported range/values.
 parameters:
   valid:
-    mu:    [ -10, -1, 0, 1,  10]
-    sigma: [0.01,  1, 2, 5, 100]
+    lambda: [0.01, 2, 5.5, 100]
   invalid:
-    sigma: [-10, -1e-10, 0]
+    lambda: [-10, -1e-10, 0]
 support:
-  lower: -.inf
+  lower: 0
   upper: .inf
-
-tests:
-  exclude:
-    - invalid_params
