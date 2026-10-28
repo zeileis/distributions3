@@ -35,6 +35,7 @@ for (config in distconfig) {
     res <- append(res, autotest_format(config))
     res <- append(res, autotest_subsetting(config))
     res <- append(res, autotest_concatenate(config))
+    res <- append(res, autotest_duplicated(config))
     res <- append(res, autotest_summary(config))
 
     res <- append(res, autotest_params_invalid(config))
@@ -57,9 +58,21 @@ for (config in distconfig) {
     res <- append(res, autotest_variance(config))
     res <- append(res, autotest_skewness(config))
     res <- append(res, autotest_kurtosis(config))
-    #res <- append(res, autotest_pdf(config))
-    #res <- append(res, autotest_log_pdf(config))
-    #res <- append(res, autotest_constructor_return(config))
+
+
+    ## dpqr
+    res <- append(res, autotest_pdf(config))
+    res <- append(res, autotest_pdf_support(config))
+    res <- append(res, autotest_log_pdf(config))
+
+    res <- append(res, autotest_cdf(config))
+    res <- append(res, autotest_cdf_support(config))
+
+    res <- append(res, autotest_quantile(config))
+    res <- append(res, autotest_quantile_support(config))
+
+    res <- append(res, autotest_random(config))
+    res <- append(res, autotest_random_support(config))
 
 
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
