@@ -1264,6 +1264,10 @@ autotest_log_pdf <- function(config) {
         expect_silent(x <- pdf(dn, 1:10))
         expect_identical(dim(x), c(<N>, 10L))
 
+        ## Adjusting column names of x just for the test.
+        ## pdf() uses "d_", log_pdf uses "l_"
+        colnames(x) <- gsub("^d_", "l_", colnames(x))
+
         ## log_pdf(....)
         expect_silent(xlog <- log_pdf(dn, 1:10))
         expect_equal(xlog, log(x))
