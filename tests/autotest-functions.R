@@ -1265,8 +1265,8 @@ autotest_log_pdf <- function(config) {
         expect_identical(dim(x), c(<N>, 10L))
 
         ## log_pdf(....)
-        expect_silent(xlog2 <- pdf(dn, 1:10, log = TRUE))
-        expect_equal(xlog2, log(x))
+        expect_silent(xlog <- log_pdf(dn, 1:10))
+        expect_equal(xlog, log(x))
     });
     '
     ## List of values/placeholders to replace
@@ -1600,6 +1600,10 @@ autotest_random <- function(config) {
         expect_true(is.matrix(r) && is.numeric(r))
         expect_identical(dim(r), c(length(dn), 3L))
         expect_identical(dimnames(r), list(names(dn), paste0("r_", 1:3)))
+
+        ## with n = 0
+        expect_silent(r <- random(dn, n = 0L))
+        expect_identical(r, numeric())
     });
     '
     ## List of values/placeholders to replace
