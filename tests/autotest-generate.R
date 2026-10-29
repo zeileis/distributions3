@@ -75,6 +75,10 @@ for (config in distconfig) {
     res <- append(res, autotest_random_support(config))
 
 
+    ## score and hessian
+    res <- append(res, autotest_score(config))
+
+
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
 
     ## TODO: Remove, just for testing
