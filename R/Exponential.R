@@ -71,6 +71,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Exponential <- function(rate = 1) {
+  stopifnot("parameter 'rate' must be atomic" = is.atomic(rate))
+  if (!is.numeric(rate))    rate    <- as.numeric(rate)
+  stopifnot(
+    "parameter 'rate' must be in (0, Inf]" = all(rate > 0, na.rm = TRUE)
+  )
+
   d <- data.frame(rate = rate)
   class(d) <- c("Exponential", "distribution")
   d
