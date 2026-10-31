@@ -50,6 +50,8 @@ if (!is.null(dorun)) {
     stopifnot("no yaml files found matching input --file/-f" = length(distconfig) > 0)
 }
 
+delete_autotest_files(distconfig)
+
 ## ------------------------------------------------------------------
 ## Looping over all configs found
 ## ------------------------------------------------------------------

@@ -176,6 +176,27 @@ check_autotest_config <- function(x, verbose = TRUE) {
     return(x)
 }
 
+
+#' Deleting Existing Autotest File
+#'
+#' Deletes old autotest files if existing.
+#'
+#' @param x list of autotest_config objects.
+#' @param dir testthat directory.
+delete_autotest_files <- function(x, dir = "testthat") {
+    stopifnot(
+        "argument 'x' must be a list" = is.list(x),
+        "elements in 'x' must all be of class \"autotest_config\"" =
+            all(sapply(x, class) == "autotest_config")
+    )
+
+    f <- file.path(dir, sapply(x, function(x) x$testfile))
+    # Remove files if existing
+    f <- f[file.exists(f)]
+    file.remove(f)
+    invisible(f)
+}
+
 #' Check if Autotest Should be Skipped
 #'
 #' The autotest YAML files allow to explicitly include a defined set of
