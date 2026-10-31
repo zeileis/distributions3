@@ -95,4 +95,15 @@ test_that("expected hessian for Poisson distribution return correct values", {
         info = "hessian for \"lambda\" returns incorrect values")
 })
 
+test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    ## Solution based on scoringRules
+    expect_silent(crps_scoringRules <- crps_pois(xx, df$lambda))
+    ## Analytic (default) solution based on distribution object
+    expect_silent(crps_analytic <- crps(dd, xx))
+    ## Numeric approximation
+    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
 
+    ## Comparing results
+    expect_identical(crps_scoringRules, crps_analytic)
+    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-8)
+})

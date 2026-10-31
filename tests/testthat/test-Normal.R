@@ -113,3 +113,17 @@ test_that("expected hessian for Normal distribution return correct values", {
 })
 
 
+test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    ## Solution based on scoringRules
+    expect_silent(crps_scoringRules <- crps_norm(xx, location = df$mu, scale = df$sigma))
+    ## Analytic (default) solution based on distribution object
+    expect_silent(crps_analytic <- crps(dd, xx))
+    ## Numeric approximation
+    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
+
+    ## Comparing results
+    expect_identical(crps_scoringRules, crps_analytic)
+    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-4)
+})
+
+
