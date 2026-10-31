@@ -1,0 +1,19 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Exponential
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    rate:  [0.1,  0.5, 1, 2]
+  invalid:
+    rate:  [-10, -0.0001, 0]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
