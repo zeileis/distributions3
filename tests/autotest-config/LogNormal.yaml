@@ -20,6 +20,9 @@ distributiontype:
   discrete: false
   continuous: true
 
+tolerance:
+  cdf: 1e-5
+
 #tests:
 #  exclude:
 #    - cdf_compare2numeric

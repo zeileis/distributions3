@@ -4,10 +4,11 @@
 #'
 #' @reutrn Named list with the content of the YAML files. The names of the
 #' list elements corresponds to the YAML file name.
-load_autotest_config <- function(dir = "autotest-config") {
+load_autotest_config <- function(dir = "autotest-config", verbose = FALSE) {
     stopifnot(
         "argument 'dir' must be name/path to the directory with the YAML files" =
-            is.character(dir) && length(dir) == 1L && isTRUE(dir.exists(dir))
+            is.character(dir) && length(dir) == 1L && isTRUE(dir.exists(dir)),
+        "argument 'verbose' must be TRUE or FALSE" = isTRUE(verbose) || isFALSE(verbose)
     )
 
     ## Searching for yaml files
@@ -16,6 +17,7 @@ load_autotest_config <- function(dir = "autotest-config") {
 
     ## Reading yaml files via a helper function for verbose error messages
     parse_yaml <- function(file, dir) {
+        if (verbose) message("Reading \"", file, "\"")
         res <- tryCatch(read_yaml(file.path(dir, file)),
             error = function(e) stop("Problems reading \"", file, "\": ", e))
         ## Appending 'testfile' (the output file name), add class, return
@@ -51,19 +53,23 @@ load_autotest_config <- function(dir = "autotest-config") {
 #' A 'tests' section with 'tests > include' or 'tests > exclude' can be specified
 #' to only include certain tests, or exclude specific tests. Must evaluate to
 #' character vectors.
-check_autotest_config <- function(x) {
+check_autotest_config <- function(x, verbose = TRUE) {
     # Basic required elements
     stopifnot(
         "'name' must be string" = is.character(x$name) && length(x$name) == 1L,
+        "argument 'verbose' must be TRUE or FALSE" = isTRUE(verbose) || isFALSE(verbose),
         "missing 'parameters' in yaml file" = !is.null(x$parameters),
         "missing 'valid' parameters in yaml file" = !is.null(x$parameters$valid),
         "'parameters > valid' empty in yaml file" = length(x$parameters$valid) > 0L
     )
 
+    if (verbose) message("Checking YAML config: ", x$name)
+
     ## --------------------------------------
     ## Warning the user if we find something unexpected in the YAML
     ## --------------------------------------
-    expected <- c("testfile", "yamlfile", "name", "parameters", "support", "tests", "distributiontype")
+    expected <- c("testfile", "yamlfile", "name", "parameters", "support",
+                  "tolerance", "tests", "distributiontype")
     unexpected <- setdiff(names(x), expected)
     if (length(unexpected))
         warning("Found unexpected entries in \"", x$yamlfile, "\": ",
@@ -125,6 +131,34 @@ check_autotest_config <- function(x) {
                 stop("'distributiontype > ", n, "' must be true or false")
         }
     }
+
+    ## --------------------------------------
+    ## Tolerances for near equality when testing numeric approximations (used
+    ## with testthat::expect_equal().
+    ## The list below is used by default. If tolerances are defined in the YAML
+    ## they (i) must be one of the ones included in the list below, and (ii)
+    ## single positive numeric.
+    ## --------------------------------------
+    tol <- list(pdf              = 1e-6,
+                cdf              = 1e-6,
+                crps             = 1e-6,
+                score            = 1e-6,
+                hessian_observed = 1e-4,
+                hessian_expected = 1e-4)
+    if (!is.null(x$tolerance)) {
+        for (n in names(x$tolerance)) {
+            if (!n %in% names(tol)) {
+                warning("'tolerance > ", n, "' unknown and will be ignored")
+            } else {
+                tmp <- as.numeric(x$tolerance[[n]])
+                if (!is.numeric(tmp) || !length(tmp) == 1L || !tmp > 0) {
+                    stop("'tolerance > ", n, "' must be a single positive numeric value", sep = "")
+                }
+                tol[[n]] <- tmp
+            }
+        }
+    }
+    x$tolerance <- tol; rm(tol)
 
     ## --------------------------------------
     ## Enabled/disabled tests (optional)
@@ -1386,7 +1420,7 @@ autotest_log_pdf <- function(config) {
 
 
 #' @rdname autotest_pdf
-autotest_pdf_support <- function(config, eps = 1e-8) {
+autotest_pdf_support <- function(config, eps = 1e-6) {
     if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$support)) return(NULL) # no support defined
     if (all(sapply(config$support, is.infinite))) return(NULL) # -Inf to +Inf
@@ -1445,7 +1479,7 @@ autotest_pdf_support <- function(config, eps = 1e-8) {
 
 
 #' @rdname autotest_pdf
-autotest_pdf_compare2numeric <- function(config, eps = 1e-6) {
+autotest_pdf_compare2numeric <- function(config) {
     if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
@@ -1471,7 +1505,7 @@ autotest_pdf_compare2numeric <- function(config, eps = 1e-6) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<TOLERANCE>" = deparse1(eps))
+              "<TOLERANCE>" = deparse1(config$tolerance$pdf))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1593,7 +1627,7 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
 
 
 #' @rdname autotest_cdf
-autotest_cdf_compare2numeric <- function(config, eps = 1e-6) {
+autotest_cdf_compare2numeric <- function(config) {
     if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
@@ -1619,7 +1653,7 @@ autotest_cdf_compare2numeric <- function(config, eps = 1e-6) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<TOLERANCE>" = deparse1(eps))
+              "<TOLERANCE>" = deparse1(config$tolerance$cdf))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1944,7 +1978,7 @@ autotest_score <- function(config) {
 
 
 #' @rdname autotest_score
-autotest_score_compare2numeric <- function(config, eps = 1e-5) {
+autotest_score_compare2numeric <- function(config) {
     if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
@@ -1974,7 +2008,7 @@ autotest_score_compare2numeric <- function(config, eps = 1e-5) {
               "<FNAME>"     = fname,
               "<X>"         = deparse1(1),
               "<DERIV>"     = deparse1(deriv),
-              "<TOLERANCE>" = deparse1(eps))
+              "<TOLERANCE>" = deparse1(config$tolerance$score))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2099,7 +2133,7 @@ autotest_hessian_expected <- function(config) {
 
 
 #' @rdname autotest_hessian_observed
-autotest_hessian_observed_compare2numeric <- function(config, eps = 1e-3) {
+autotest_hessian_observed_compare2numeric <- function(config) {
     if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
@@ -2129,14 +2163,14 @@ autotest_hessian_observed_compare2numeric <- function(config, eps = 1e-3) {
               "<FNAME>"     = fname,
               "<X>"         = deparse1(1),
               "<DERIV>"     = deparse1(deriv),
-              "<TOLERANCE>" = deparse1(eps))
+              "<TOLERANCE>" = deparse1(config$tolerance$hessian_observed))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 
 #' @rdname autotest_hessian_observed
-autotest_hessian_expected_compare2numeric <- function(config, eps = 1e-3) {
+autotest_hessian_expected_compare2numeric <- function(config) {
     if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
@@ -2176,7 +2210,7 @@ autotest_hessian_expected_compare2numeric <- function(config, eps = 1e-3) {
               "<FNAME>"     = fname,
               "<X>"         = deparse1(1),
               "<DERIV>"     = deparse1(deriv),
-              "<TOLERANCE>" = deparse1(eps))
+              "<TOLERANCE>" = deparse1(config$tolerance$hessian_expected))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
