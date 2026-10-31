@@ -4,6 +4,19 @@ rm(list = objects())
 library("yaml")
 source("autotest-functions.R")
 
+## For testing; allows to call this script from command line,
+## specifying which yaml files to process.
+## > Rscript autotest-generate.R -f Weibull.yaml Normal.yaml
+dorun <- if (requireNamespace("argparse", quietly = TRUE)) {
+    parser <- argparse::ArgumentParser(description = "Define yaml files to be generated/tested")
+    parser$add_argument("--files", "-f", type = "character", nargs= "+",
+                       help = "name of yaml files (path will be dropped)")
+    args <- parser$parse_args()
+    if (!is.null(args$files)) basename(args$files) else NULL
+} else {
+    NULL
+}
+
 
 ## Output directory where to put the automated test sets/test files
 OUTDIR <- "testthat"
@@ -18,6 +31,12 @@ library("distributions3")
 
 ## Loading all available autotest config files and checking content
 distconfig <- lapply(load_autotest_config(), check_autotest_config)
+
+## If 'dorun' is not NULL, subset
+if (!is.null(dorun)) {
+    distconfig <- distconfig[names(distconfig) %in% dorun]
+    stopifnot("no yaml files found matching input --file/-f" = length(distconfig) > 0)
+}
 
 ## Looping over all configs found
 for (config in distconfig) {
