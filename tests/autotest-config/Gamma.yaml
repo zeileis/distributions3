@@ -20,9 +20,3 @@ distributiontype:
   discrete: false
   continuous: true
 
-#tests:
-#  exclude:
-#    - cdf_compare2numeric
-#    - score_compare2numeric
-#    - hessian_observed_compare2numeric
-#    - hessian_expected_compare2numeric
