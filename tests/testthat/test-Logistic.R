@@ -3,228 +3,135 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-
-
-test_that("Logistic default arguments", {
-  expect_identical(formals(Logistic),
-    as.pairlist(alist(location = 0, scale = 1)))
-})
-
-test_that("print.Logistic works", {
-  expect_output(print(Logistic()), regexp = "Logistic")
-})
-
-test_that("likelihood.Logistic and log_likelihood.Logistic work correctly", {
-  cau <- Logistic()
-  x <- c(1, 1, 0)
-
-  expect_equal(likelihood(cau, 1), dlogis(1))
-  expect_equal(likelihood(cau, x), dlogis(1) * dlogis(1) * dlogis(0))
-
-  expect_equal(log_likelihood(cau, 1), log(dlogis(1)))
-  expect_equal(log_likelihood(cau, x), log(dlogis(1) * dlogis(1) * dlogis(0)))
-})
-
-test_that("random.Logistic work correctly", {
-  cau <- Logistic()
-
-  expect_length(random(cau), 1)
-  expect_length(random(cau, 100), 100)
-  expect_length(random(cau[-1], 1), 0)
-  expect_length(random(cau, 0), 0)
-  expect_error(random(cau, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(cau, c(1, 2, 3)), 3)
-  expect_length(random(cau, cbind(1, 2, 3)), 3)
-  expect_length(random(cau, rbind(1, 2, 3)), 3)
-})
-
-test_that("pdf.Logistic work correctly", {
-  cau <- Logistic()
-
-  expect_equal(pdf(cau, 0), dlogis(0, 0, 1))
-  expect_equal(pdf(cau, 1), dlogis(1, 0, 1))
-
-  expect_length(pdf(cau, seq_len(0)), 0)
-  expect_length(pdf(cau, seq_len(1)), 1)
-  expect_length(pdf(cau, seq_len(10)), 10)
-})
-
-test_that("log_pdf.Logistic work correctly", {
-  cau <- Logistic()
-
-  expect_equal(log_pdf(cau, 0), log(dlogis(0, 0, 1)))
-  expect_equal(log_pdf(cau, 1), log(dlogis(1, 0, 1)))
-
-  expect_length(log_pdf(cau, seq_len(0)), 0)
-  expect_length(log_pdf(cau, seq_len(1)), 1)
-  expect_length(log_pdf(cau, seq_len(10)), 10)
-})
-
-test_that("cdf.Logistic work correctly", {
-  cau <- Logistic()
-
-  expect_equal(cdf(cau, 0), plogis(0, 0, 1))
-  expect_equal(cdf(cau, 1), plogis(1, 0, 1))
-
-
-  expect_length(cdf(cau, seq_len(0)), 0)
-  expect_length(cdf(cau, seq_len(1)), 1)
-  expect_length(cdf(cau, seq_len(10)), 10)
-})
-
-test_that("quantile.Logistic work correctly", {
-  cau <- Logistic()
-
-  expect_equal(quantile(cau, 0), qlogis(0, 0, 1))
-  expect_equal(quantile(cau, 1), qlogis(1, 0, 1))
-
-
-  expect_length(quantile(cau, seq_len(0)), 0)
-  expect_length(quantile(cau, c(0, 1)), 2)
-})
-
-test_that("vectorization of a Logistic distribution work correctly", {
-  d <- Logistic(c(0, 2), c(1, 4))
-  d1 <- d[1]
-  d2 <- d[2]
-
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
-})
-
-test_that("named return values for Logistic distribution work correctly", {
-  d <- Logistic(c(0, 2), c(1, 4))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
-})
-
 suppressPackageStartupMessages(library("scoringRules"))
-test_that("crps method for Logistic returns correct object", {
-  d <- Logistic(c(0, 2), c(1, 4))
-  expect_silent(crps <- crps(d, 3))
-  expect_type(crps, "double")
-  expect_true(is.vector(crps))
-  expect_true(!all(is.na(crps)) & all(crps >= 0))
+
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- Logistic(c(5, 0, -10), c(1, 3, 17))
+xx <- 1:3                        # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Logistic), as.pairlist(alist(location = 0, scale = 1)))
 })
 
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
-
-## Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
-
-test_that("score.Logistic works as expected", {
-    ## Objects used for testing
-    d <- Logistic(1:3, 3:1)
-    x <- 2:4
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic score vs. numeric approximation (score.distribution)
-    score_test_analytic_vs_numeric(d, x)
+## Sufficient statistics
+test_that("suff_stat.Logistic works correctly", {
+  expect_error(suff_stat(Logistic(), c(0, 0)), regexp = "no applicable method")
+  expect_error(suff_stat(Logistic(), "abc"))
 })
 
-test_that("hessian.Logistic works as expected", {
-    ## Objects used for testing
-    d <- Logistic(1:3, 3:1)
-    x <- 2:4
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
+## Fitting
+test_that("fit_mle.Logistic works correctly", {
+  expect_error(fit_mle(Logistic(), c(0, 0)), regexp = "no applicable method")
 })
 
+## Testing correctness of dpq methods
+test_that("pdf.Logistic/log_pdf.Logistic returns correct values", {
+  expect_identical(pdf(dd, xx),             dlogis(xx, df$location, df$scale),
+        info = "pdf.Logistic not identical to dlogis()")
+  expect_identical(pdf(dd, xx, log = TRUE), dlogis(xx, df$location, df$scale, log = TRUE),
+        info = "logarithm of pdf.Logistic not identical to dlogis(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dlogis(xx, df$location, df$scale, log = TRUE),
+        info = "log_pdf.Logistic not identical to dlogis(..., log = TRUE)")
+})
+
+test_that("cdf.Logistic returns correct values", {
+  expect_identical(cdf(dd, xx),             plogis(xx, df$location, df$scale),
+        info = "cdf.Logistic not identical to plogis()")
+  expect_identical(cdf(dd, xx, log = TRUE), plogis(xx, df$location, df$scale, log = TRUE),
+        info = "logarithm of cdf.Logistic not identical to plogis(..., log = TRUE)")
+})
+
+test_that("quantile.Logistic returns correct values", {
+  expect_identical(quantile(dd, pp),        qlogis(pp, df$location, df$scale),
+        info = "quantile.Logistic not identical to qlogis()")
+})
+
+## Testing correctness of moments
+test_that("moments for Logistic distribution return correct values", {
+    expect_identical(mean(dd), df$location,
+        info = "mean.Logistic incorrect")
+    expect_identical(variance(dd), df$scale^2 * pi^2 / 3,
+        info = "variance.Logistic incorrect")
+    expect_identical(skewness(dd), rep(0, nrow(df)),
+        info = "skewness.Logistic incorrect")
+    expect_identical(kurtosis(dd), rep(6 / 5, nrow(df)),
+        info = "kurtosis.Logistic incorrect")
+})
+
+## Testing correctness of score
+test_that("score for Logistic distribution return correct values", {
+    z <- (xx - df$location) / df$scale
+    expect_identical(score(dd, xx, which = "location"),
+        (1 - 2 * exp(-z) / (1 + exp(-z))) / df$scale,
+        info = "score for \"location\" returns incorrect values")
+    expect_identical(score(dd, xx, which = "scale"),
+        (z - 1 - 2 * z * exp(-z) / (1 + exp(-z))) / df$scale,
+        info = "score for \"scale\" returns incorrect values")
+})
+
+## Testing correctness of hessian
+test_that("observed hessian for Logistic distribution return correct values", {
+    z   <- (xx - df$location) / df$scale
+    p_z <- exp(-z) / (1 + exp(-z))
+    expect_identical(hessian(dd, xx, which = "location", expected = FALSE),
+        pmin(-2 * p_z * (1 - p_z) /df$scale^2, -1e-15),
+        info = "hessian for \"location\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "scale", expected = FALSE),
+        (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / df$scale^2,
+        info = "hessian for \"scale\" returns incorrect values")
+
+    # Cross derivatives
+    expect_identical(hessian(dd, xx, which = "scale:location", expected = FALSE),
+        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / df$scale^2,
+        info = "hessian for \"scale:location\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "location:scale", expected = FALSE),
+        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / df$scale^2,
+        info = "hessian for \"location:scale\" returns incorrect values")
+})
+
+test_that("expected hessian for Logistic distribution return correct values", {
+    expect_equal(hessian(dd, xx, which = "location", expected = TRUE),
+        -1 / (3 * df$scale^2),
+        info = "hessian for \"location\" returns incorrect values")
+    expect_equal(hessian(dd, xx, which = "scale", expected = TRUE),
+        -(1 + pi^2 / 3) / (3 * df$scale^2), tolerance = 1e-4,
+        info = "hessian for \"scale\" returns incorrect values")
+
+    # Cross derivatives
+    expect_equal(hessian(dd, xx, which = "scale:location", expected = TRUE),
+        vector("numeric", length(dd)), # = 0
+        info = "hessian for \"scale:location\" returns incorrect values")
+    expect_equal(hessian(dd, xx, which = "location:scale", expected = TRUE),
+        vector("numeric", length(dd)), # = 0
+        info = "hessian for \"location:scale\" returns incorrect values")
+})
+
+
+test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    ## Solution based on scoringRules
+    expect_silent(crps_scoringRules <- crps_logis(xx, location = df$location, scale = df$scale))
+    ## Analytic (default) solution based on distribution object
+    expect_silent(crps_analytic <- crps(dd, xx))
+    ## Numeric approximation
+    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
+
+    ## Comparing results
+    expect_identical(crps_scoringRules, crps_analytic)
+    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-4)
+})
+
+
+
+# -------------------------------------------------------
+# -------------------------------------------------------
+# -------------------------------------------------------
+# -------------------------------------------------------
+# -------------------------------------------------------
+# -------------------------------------------------------

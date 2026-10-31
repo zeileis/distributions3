@@ -1,0 +1,27 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Logistic
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    location: [ -10, -1,  0,  4,  20]
+    scale:    [   1,  1,  2,  5,  10]
+  invalid:
+    scale: [-10, -1e-10]
+
+support:
+  lower: -.inf
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+#tests:
+#  exclude:
+#    - cdf_compare2numeric
+#    - score_compare2numeric
+#    - hessian_observed_compare2numeric
+#    - hessian_expected_compare2numeric

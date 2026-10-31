@@ -60,10 +60,16 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 LogNormal <- function(log_mu = 0, log_sigma = 1) {
+  stopifnot("parameters 'log_mu' and 'log_sigma' log_must be atomic" = is.atomic(log_mu) && is.atomic(log_sigma))
+  if (!is.numeric(log_mu))    log_mu    <- as.numeric(log_mu)
+  if (!is.numeric(log_sigma)) log_sigma <- as.numeric(log_sigma)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(log_mu) == length(log_sigma) | length(log_mu) == 1 | length(log_sigma) == 1
+      length(log_mu) == length(log_sigma) | length(log_mu) == 1 | length(log_sigma) == 1,
+    "parameter 'log_mu' must be in [0, Inf]" = all(log_mu >= 0, na.rm = TRUE),
+    "parameter 'log_sigma' must be in [0, Inf]" = all(log_sigma >= 0, na.rm = TRUE)
   )
+
   d <- data.frame(log_mu = log_mu, log_sigma = log_sigma)
   class(d) <- c("LogNormal", "distribution")
   d

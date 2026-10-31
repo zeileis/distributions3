@@ -71,9 +71,13 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 Logistic <- function(location = 0, scale = 1) {
+  stopifnot("parameters 'location' and 'scale' locationst be atomic" = is.atomic(location) && is.atomic(scale))
+  if (!is.numeric(location)) location <- as.numeric(location)
+  if (!is.numeric(scale)) scale <- as.numeric(scale)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(location) == length(scale) | length(location) == 1 | length(scale) == 1
+      length(location) == length(scale) | length(location) == 1 | length(scale) == 1,
+    "parameter 'scale' must be in [0, Inf]" = all(scale >= 0, na.rm = TRUE)
   )
 
   d <- data.frame(location = location, scale = scale)

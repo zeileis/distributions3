@@ -1,0 +1,28 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: LogNormal
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    log_mu:    [0, 0.25, 0.75, 1.25, 1.50]
+    log_sigma: [2, 1.50, 1.00, 0.50, 0.20]
+  invalid:
+    log_mu:    [-10, -0.01]
+    log_sigma: [-10, -0.01]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+#tests:
+#  exclude:
+#    - cdf_compare2numeric
+#    - score_compare2numeric
+#    - hessian_observed_compare2numeric
+#    - hessian_expected_compare2numeric
