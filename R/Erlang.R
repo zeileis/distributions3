@@ -33,11 +33,17 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Erlang <- function(k = numeric(), lambda = numeric()) {
-  stopifnot("'k' must be an integer" = all(abs(k - as.integer(k)) == 0))
+  stopifnot("parameters 'k' and 'lambda' must be atomic" = is.atomic(k) && is.atomic(lambda))
+  if (!is.numeric(k))     k      <- as.numeric(k)
+  if (!is.numeric(sigma)) lambda <- as.numeric(lambda)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1
+      length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1,
+    "parameter 'k' must be positive integers" =
+        all(k > 0) && isTRUE(all.equal(k, as.integer(k), check.attributes = FALSE)),
+    "parameter 'lambda' must be in (0, Inf]" = all(lambda > 0, na.rm = TRUE)
   )
+
   d <- data.frame(k = k, lambda = lambda)
   class(d) <- c("Erlang", "distribution")
   d

@@ -24,7 +24,7 @@ if (requireNamespace("argparse", quietly = TRUE)) {
     parser <- argparse::ArgumentParser(description = "Define yaml files to be generated/tested")
     parser$add_argument("--files", "-f", type = "character", nargs= "+",
                        help = "name of yaml files (path will be dropped)")
-    parser$add_argument("--run", "-r", action = "store_true",
+    parser$add_argument("--run", "-r", action = "store_true", default = FALSE,
                        help = "should the test be executed after generation?")
     args <- parser$parse_args()
 
@@ -34,7 +34,6 @@ if (requireNamespace("argparse", quietly = TRUE)) {
     dorun     <- NULL
     run_tests <- FALSE
 }
-
 
 ## ------------------------------------------------------------------
 ## Reading config files check YAML content, and subset (if --file/-f is used)
@@ -143,7 +142,7 @@ for (config in distconfig) {
     ## Write test sets to test file and execute if needed (development)
     ## --------------------------------------------------------------
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
-    if (!is.null(run_tests)) test_file(file.path(OUTDIR, config$testfile))
+    if (run_tests) test_file(file.path(OUTDIR, config$testfile))
 }
 
 

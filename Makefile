@@ -34,8 +34,10 @@ documentation:
 	@echo "Building pkgdown page (documentation)"
 	Rscript -e "pkgdown::build_site()"
 
-
-.PHONY: test
+.PHONY: test autotest
+autotest:
+	(cd tests && Rscript autotest-generate.R) && \
+		make test
 test: document
 	Rscript -e "testthat::test_local()"
 

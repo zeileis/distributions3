@@ -87,6 +87,10 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 Bernoulli <- function(p = 0.5) {
+  stopifnot("parameter 'p' must be an atomic vector" = is.atomic(p))
+  if (!is.numeric(p)) p <- as.numeric(p)
+  stopifnot("parameter 'p' must always be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE))
+
   d <- data.frame(p = p)
   class(d) <- c("Bernoulli", "distribution")
   d
