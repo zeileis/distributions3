@@ -30,6 +30,11 @@ for (config in distconfig) {
     res <- append(res, autotest_setup(config))
     res <- append(res, autotest_constructor(config))
 
+    ## Testing default arguments of support, is_discrete, and is_continuous.
+    ## There are dedicated autotests for arguments of the dpqr methods and
+    ## score and hessian, allowing to more granularly enable/disable them if needed.
+    res <- append(res, autotest_S3_defaults(config))
+
     res <- append(res, autotest_length(config))
     res <- append(res, autotest_dim(config))
     res <- append(res, autotest_format(config))
@@ -54,12 +59,15 @@ for (config in distconfig) {
     res <- append(res, autotest_is_continuous(config))
 
     ## ----------- Moments
+    res <- append(res, autotest_moments_defaults(config)) # arguments/defaults
     res <- append(res, autotest_mean(config))
     res <- append(res, autotest_variance(config))
     res <- append(res, autotest_skewness(config))
     res <- append(res, autotest_kurtosis(config))
 
     ## ----------- dpqr
+    res <- append(res, autotest_dpqr_defaults(config)) # arguments/defaults
+
     res <- append(res, autotest_pdf(config))
     res <- append(res, autotest_pdf_support(config))
     res <- append(res, autotest_log_pdf(config))
@@ -78,6 +86,8 @@ for (config in distconfig) {
     res <- append(res, autotest_random_support(config))
 
     ## ----------- score and hessian
+    res <- append(res, autotest_score_hessian_defaults(config)) # arguments/defaults
+
     res <- append(res, autotest_score(config))
     # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
     res <- append(res, autotest_score_compare2numeric(config))
@@ -90,6 +100,8 @@ for (config in distconfig) {
     # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
     res <- append(res, autotest_hessian_expected_compare2numeric(config))
 
+    ## ----------- crps
+    res <- append(res, autotest_crps_defaults(config))
 
     ## ----------- write test file
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
