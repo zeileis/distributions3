@@ -22,7 +22,7 @@ distconfig <- lapply(load_autotest_config(), check_autotest_config)
 ## Looping over all configs found
 for (config in distconfig) {
     ## Name of the output file
-    cat("--- generating automatic test set \"", config$testfile, "\"\n")
+    cat("--- generating automatic test set \"", config$testfile, "\"\n", sep = "")
 
     ## List to store all the tests required which will be written to the
     ## test file defined by OUTFILE above.
@@ -53,20 +53,23 @@ for (config in distconfig) {
     res <- append(res, autotest_is_discrete(config))
     res <- append(res, autotest_is_continuous(config))
 
-    ## Moments
+    ## ----------- Moments
     res <- append(res, autotest_mean(config))
     res <- append(res, autotest_variance(config))
     res <- append(res, autotest_skewness(config))
     res <- append(res, autotest_kurtosis(config))
 
-
-    ## dpqr
+    ## ----------- dpqr
     res <- append(res, autotest_pdf(config))
     res <- append(res, autotest_pdf_support(config))
     res <- append(res, autotest_log_pdf(config))
+    res <- append(res, autotest_pdf_compare2numeric(config))
 
     res <- append(res, autotest_cdf(config))
     res <- append(res, autotest_cdf_support(config))
+    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get a cdf of 1 vs. 0 (numeric)
+    #       and subsequently log(cdf) of 0 vs. -Inf (numeric)
+    res <- append(res, autotest_cdf_compare2numeric(config))
 
     res <- append(res, autotest_quantile(config))
     res <- append(res, autotest_quantile_support(config))
@@ -74,14 +77,21 @@ for (config in distconfig) {
     res <- append(res, autotest_random(config))
     res <- append(res, autotest_random_support(config))
 
-
-    ## score and hessian
+    ## ----------- score and hessian
     res <- append(res, autotest_score(config))
+    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
+    res <- append(res, autotest_score_compare2numeric(config))
+
+    res <- append(res, autotest_hessian(config))
+    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
+    res <- append(res, autotest_hessian_observed_compare2numeric(config))
+    res <- append(res, autotest_hessian_expected_compare2numeric(config))
 
 
+    ## ----------- write test file
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
 
-    ## TODO: Remove, just for testing
+    # TODO: Remove, just for testing
     test_file(file.path(OUTDIR, config$testfile))
 }
 

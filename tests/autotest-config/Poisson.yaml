@@ -17,3 +17,9 @@ support:
 distributiontype:
   discrete: true
   continuous: false
+
+tests:
+  exclude:
+    - score_compare2numeric
+    - hessian_observed_compare2numeric
+    - hessian_expected_compare2numeric

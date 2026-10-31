@@ -10,9 +10,18 @@ parameters:
     sigma: [   0,  1,  2,  5, 100]
   invalid:
     sigma: [-10, -1e-10]
+
 support:
   lower: -.inf
   upper: .inf
+
 distributiontype:
   discrete: false
   continuous: true
+
+tests:
+  exclude:
+    - cdf_compare2numeric
+    - score_compare2numeric
+    - hessian_observed_compare2numeric
+    - hessian_expected_compare2numeric
