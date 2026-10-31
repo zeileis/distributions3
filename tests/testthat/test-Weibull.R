@@ -3,220 +3,113 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
 
-test_that("Weibull default arguments", {
-  expect_identical(formals(Weibull),
-    as.pairlist(alist(shape = numeric(), scale = numeric())))
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- Weibull(c(1, 5, 10), c(20, 50, 100))
+xx <- c(5, 10, 30)               # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Weibull), as.pairlist(alist(shape = numeric(), scale = numeric())))
 })
 
-test_that("print.Weibull works", {
-  expect_output(print(Weibull(1, 1)), regexp = "Weibull")
+## Sufficient statistics
+test_that("suff_stat.Weibull works correctly", {
+  expect_error(suff_stat(Weibull(1, 1), 1:3), regexp = "no applicable method")
 })
 
-test_that("likelihood.Weibull and log_likelihood.Weibull work correctly", {
-  w <- Weibull(1, 1)
-  x <- c(1, 1, 0)
-
-  expect_equal(likelihood(w, 1), 1 / exp(1))
-  expect_equal(likelihood(w, x), (1 / exp(1))^2)
-
-  expect_equal(log_likelihood(w, 1), log(1 / exp(1)))
-  expect_equal(log_likelihood(w, x), log((1 / exp(1))^2))
+## Fitting
+test_that("fit_mle.Weibull works correctly", {
+  expect_error(suff_stat(Weibull(1, 1), c(2, 2)), regexp = "no applicable method")
 })
 
-test_that("random.Weibull work correctly", {
-  w <- Weibull(1, 1)
-
-  expect_length(random(w), 1)
-  expect_length(random(w, 100), 100)
-  expect_length(random(w[-1], 1), 0)
-  expect_length(random(w, 0), 0)
-  expect_error(random(w, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(w, c(1, 2, 3)), 3)
-  expect_length(random(w, cbind(1, 2, 3)), 3)
-  expect_length(random(w, rbind(1, 2, 3)), 3)
+## Testing correctness of dpq methods
+test_that("pdf.Weibull/log_pdf.Weibull returns correct values", {
+  expect_identical(pdf(dd, xx),             dweibull(xx, df$shape, df$scale),
+        info = "pdf.Weibull not identical to dweibull()")
+  expect_identical(pdf(dd, xx, log = TRUE), dweibull(xx, df$shape, df$scale, log = TRUE),
+        info = "logarithm of pdf.Weibull not identical to dweibull(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dweibull(xx, df$shape, df$scale, log = TRUE),
+        info = "log_pdf.Weibull not identical to dweibull(..., log = TRUE)")
 })
 
-test_that("pdf.Weibull work correctly", {
-  w <- Weibull(1, 1)
-
-  expect_equal(pdf(w, 0), 1)
-  expect_equal(pdf(w, 1), 1 / exp(1))
-  expect_equal(pdf(w, -12), 0)
-
-  expect_length(pdf(w, seq_len(0)), 0)
-  expect_length(pdf(w, seq_len(1)), 1)
-  expect_length(pdf(w, seq_len(10)), 10)
+test_that("cdf.Weibull returns correct values", {
+  expect_identical(cdf(dd, xx),             pweibull(xx, df$shape, df$scale),
+        info = "cdf.Weibull not identical to pweibull()")
+  expect_identical(cdf(dd, xx, log = TRUE), pweibull(xx, df$shape, df$scale, log = TRUE),
+        info = "logarithm of cdf.Weibull not identical to pweibull(..., log = TRUE)")
 })
 
-test_that("log_pdf.Weibull work correctly", {
-  w <- Weibull(1, 1)
-
-  expect_equal(log_pdf(w, 0), 0)
-  expect_equal(log_pdf(w, 1), log(1 / exp(1)))
-  expect_equal(log_pdf(w, -12), -Inf)
-
-  expect_length(log_pdf(w, seq_len(0)), 0)
-  expect_length(log_pdf(w, seq_len(1)), 1)
-  expect_length(log_pdf(w, seq_len(10)), 10)
+test_that("quantile.Weibull returns correct values", {
+  expect_identical(quantile(dd, pp),        qweibull(pp, df$shape, df$scale),
+        info = "quantile.Weibull not identical to qweibull()")
 })
 
-test_that("cdf.Weibull work correctly", {
-  w <- Weibull(1, 1)
+## Testing correctness of moments
+test_that("moments for Weibull distribution return correct values", {
+    expect_identical(mean(dd), df$scale * gamma(1 + 1 / df$shape),
+        info = "mean.Weibull incorrect")
+    expect_identical(variance(dd), df$scale^2 * (gamma(1 + 2 / df$shape) - gamma(1 + 1 / df$shape)^2),
+        info = "variance.Weibull incorrect")
 
-  expect_equal(cdf(w, 0), 0)
-  expect_equal(cdf(w, 1), 1 - 1 / exp(1))
-
-
-  expect_length(cdf(w, seq_len(0)), 0)
-  expect_length(cdf(w, seq_len(1)), 1)
-  expect_length(cdf(w, seq_len(10)), 10)
+    r <- mean(dd) / sqrt(variance(dd))
+    expect_identical(skewness(dd), 
+        gamma(1 + 3 / df$shape) * (df$scale / sqrt(variance(dd)))^3 - 3 * r - r^3,
+        info = "skewness.Weibull incorrect")
+    expect_identical(kurtosis(dd),
+        (df$scale / sqrt(variance(dd)))^4 * gamma(1 + 4 / df$shape) - 4 * skewness(dd) * r - 6 * r^2 - r^4 - 3,
+        info = "kurtosis.Weibull incorrect")
 })
 
-test_that("quantile.Weibull work correctly", {
-  w <- Weibull(1, 1)
-
-  expect_equal(quantile(w, 0), 0)
-  expect_equal(quantile(w, 1), Inf)
-
-
-  expect_length(quantile(w, seq_len(0)), 0)
-  expect_length(quantile(w, c(0, 1)), 2)
+## Testing correctness of score
+test_that("score for Weibull distribution return correct values", {
+    expect_identical(score(dd, xx, which = "shape"),
+        1 / df$shape + log(xx / df$scale) * (1 - (xx / df$scale)^df$shape),
+        info = "score for \"shape\" returns incorrect values")
+    expect_identical(score(dd, xx, which = "scale"),
+        df$shape * ((xx / df$scale)^df$shape - 1) / df$scale,
+        info = "score for \"scale\" returns incorrect values")
 })
 
-test_that("vectorization of a Weibull distribution work correctly", {
-  d <- Weibull(c(1, 0.3), c(1, 2))
-  d1 <- d[1]
-  d2 <- d[2]
+## Testing correctness of hessian
+test_that("observed hessian for Weibull distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "shape", expected = FALSE),
+        -1 / df$shape^2 - (xx / df$scale)^df$shape * log(xx / df$scale)^2,
+        info = "hessian for \"shape\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "scale", expected = FALSE),
+        (df$shape - df$shape * (df$shape + 1) * (xx / df$scale)^df$shape) / df$scale^2,
+        info = "hessian for \"scale\" returns incorrect values")
 
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
+    # Cross derivatives
+    tmp <- (-1 + (xx / df$scale)^df$shape * (1 + df$shape * log(xx / df$scale))) / df$scale
+    expect_identical(hessian(dd, xx, which = "shape:scale", expected = FALSE), tmp,
+        info = "hessian for \"shape:scale\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "scale:shape", expected = FALSE), tmp,
+        info = "hessian for \"scale:shape\" returns incorrect values")
 })
 
-test_that("named return values for Weibull distribution work correctly", {
-  d <- Weibull(c(1, 0.3), c(1, 2))
-  names(d) <- LETTERS[1:length(d)]
+test_that("expected hessian for Weibull distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "shape", expected = TRUE),
+        -((pi^2 / 6) + (1 + digamma(1))^2) / df$shape^2,
+        info = "hessian for \"shape\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "scale", expected = TRUE),
+        -df$shape^2 / df$scale^2,
+        info = "hessian for \"scale\" returns incorrect values")
 
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
+    # Cross derivatives
+    expect_identical(hessian(dd, xx, which = "shape:scale", expected = TRUE),
+        (1 + digamma(1)) / df$scale,
+        info = "hessian for \"shape:scale\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "scale:shape", expected = TRUE),
+        (1 + digamma(1)) / df$scale,
+        info = "hessian for \"scale:shape\" returns incorrect values")
 })
 
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
-
-# Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
-
-test_that("score.Normal works as expected", {
-    ## Objects used for testing
-    d <- Weibull(3:1, 3:1/2)
-    x <- 1:3
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic score vs. numeric approximation (score.distribution)
-    score_test_analytic_vs_numeric(d, x)
-})
-
-test_that("hessian.Normal works as expected", {
-    ## Objects used for testing
-    d <- Weibull(3:1, 3:1/2)
-    x <- 1:3
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
-})
 

@@ -1,0 +1,27 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Weibull
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    shape:  [1, 5, 10, 20]
+    scale:  [5, 50, 100, 200]
+    #shape:  [ 0.1,  0.5,  5.0,  10.0]
+    #scale:  [10.0,  5.0,  0.5,  0.1]
+  invalid:
+    shape:  [-10, -0.0001, 0]
+    scale:  [-10, -0.0001, 0]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+tests:
+  exclude:
+    - crps_defaults

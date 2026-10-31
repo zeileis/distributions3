@@ -57,10 +57,16 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 Weibull <- function(shape = numeric(), scale = numeric()) {
+  stopifnot("parameters 'shape' and 'scale' shapest be atomic" = is.atomic(shape) && is.atomic(scale))
+  if (!is.numeric(shape)) shape <- as.numeric(shape)
+  if (!is.numeric(scale)) scale <- as.numeric(scale)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(shape) == length(scale) | length(shape) == 1 | length(scale) == 1
+      length(shape) == length(scale) | length(shape) == 1 | length(scale) == 1,
+    "parameter 'shape' must be in (0, Inf]" = all(shape > 0, na.rm = TRUE),
+    "parameter 'scale' must be in (0, Inf]" = all(scale > 0, na.rm = TRUE)
   )
+
   d <- data.frame(shape = shape, scale = scale)
   class(d) <- c("Weibull", "distribution")
   d

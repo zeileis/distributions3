@@ -1,4 +1,3 @@
-
 #' Reading/Parsing YAML File
 #'
 #' @param dir character. Name of the directory containing the `.yaml` files.
@@ -361,7 +360,7 @@ autotest_setup <- function(config) {
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"       = config$name,
-              "<PARAMVEC>"   = deparse(names(config$parameters$valid)),
+              "<PARAMVEC>"   = deparse1(names(config$parameters$valid)),
               "<PARAMTXT>"   = paste0(names(config$parameters$valid), collapse = ", "),
               "<CMD_D1>"     = cmd_d1,
               "<CMD_DX>"     = cmd_dx,
@@ -434,7 +433,7 @@ autotest_constructor <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"       = config$name,
               "<FNAME>"      = sys.call(0)[[1L]],
-              "<N>"          = deparse(length(config$parameters$valid[[1L]])),
+              "<N>"          = deparse1(length(config$parameters$valid[[1L]])),
               "<CMD_VALUES>" = paste(cmd_values, collapse = "\n"))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -534,7 +533,7 @@ autotest_subsetting <- function(config) {
 
     p <- list("<NAME>"  = config$name,
               "<FNAME>" = fname,
-              "<N>"     = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -563,7 +562,7 @@ autotest_duplicated <- function(config) {
 
     p <- list("<NAME>"  = config$name,
               "<FNAME>" = fname,
-              "<N>"     = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -696,7 +695,7 @@ autotest_params_invalid <- function(config) {
             tmp[[n]] <- inv
             tmp <- sprintf("<INDENT>expect_error(%s(%s), info = \"expected error to be thrown using '%s = %s'\")",
                            config$name, paste(names(tmp), sapply(tmp, deparse), sep = " = ", collapse = ", "),
-                           n, deparse(inv))
+                           n, deparse1(inv))
             cmd_invalid <- append(cmd_invalid, tmp)
         }
     }
@@ -846,7 +845,7 @@ autotest_format <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])),
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
               "<PATTERN>"  = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -893,7 +892,7 @@ autotest_as.character <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])),
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
               "<PATTERN>"  = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -929,7 +928,7 @@ autotest_as.list <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"           = config$name,
               "<FNAME>"          = fname,
-              "<EXPECTED_LIST>"  = deparse(config$parameters$valid))
+              "<EXPECTED_LIST>"  = deparse1(config$parameters$valid))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -965,7 +964,7 @@ autotest_as.matrix <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"  = config$name,
               "<FNAME>" = fname,
-              "<NPAR>"  = deparse(length(config$parameters$valid)))
+              "<NPAR>"  = deparse1(length(config$parameters$valid)))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1051,7 +1050,7 @@ autotest_length <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"  = config$name,
               "<FNAME>" = fname,
-              "<N>"     = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1077,7 +1076,7 @@ autotest_summary <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"  = config$name,
               "<FNAME>" = fname,
-              "<N>"     = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1118,9 +1117,9 @@ autotest_support <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"          = config$name,
               "<FNAME>"         = fname,
-              "<N>"             = deparse(length(config$parameters$valid[[1L]])),
-              "<SUPPORT_LOWER>" = deparse(config$support$lower),
-              "<SUPPORT_UPPER>" = deparse(config$support$upper))
+              "<N>"             = deparse1(length(config$parameters$valid[[1L]])),
+              "<SUPPORT_LOWER>" = deparse1(config$support$lower),
+              "<SUPPORT_UPPER>" = deparse1(config$support$upper))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1152,8 +1151,8 @@ autotest_is_discrete <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])),
-              "<EXPECTED>" = deparse(config$distributiontype$discrete))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
+              "<EXPECTED>" = deparse1(config$distributiontype$discrete))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1185,8 +1184,8 @@ autotest_is_continuous <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])),
-              "<EXPECTED>" = deparse(config$distributiontype$continuous))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
+              "<EXPECTED>" = deparse1(config$distributiontype$continuous))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1222,7 +1221,7 @@ moments_tests <- function(config, fname, what = c("mean", "variance", "skewness"
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
               "<MOMENT>"   = what,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1382,7 +1381,7 @@ autotest_pdf <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1410,7 +1409,7 @@ autotest_log_pdf <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1444,8 +1443,8 @@ autotest_pdf_support <- function(config, eps = 1e-8) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<X1>"       = deparse(config$support$lower),
-                  "<X2>"       = deparse(config$support$lower - eps))
+                  "<X1>"       = deparse1(config$support$lower),
+                  "<X2>"       = deparse1(config$support$lower - eps))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -1468,8 +1467,8 @@ autotest_pdf_support <- function(config, eps = 1e-8) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<X1>"       = deparse(config$support$upper),
-                  "<X2>"       = deparse(config$support$upper + eps))
+                  "<X1>"       = deparse1(config$support$upper),
+                  "<X2>"       = deparse1(config$support$upper + eps))
         res <- append(res, replace_placeholders(template, p))
     }
     return(res |> clean_cmd(spaces = 8L))
@@ -1503,7 +1502,7 @@ autotest_pdf_compare2numeric <- function(config, eps = 1e-6) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<TOLERANCE>" = deparse(eps))
+              "<TOLERANCE>" = deparse1(eps))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1560,7 +1559,7 @@ autotest_cdf <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1592,8 +1591,8 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<X1>"       = deparse(config$support$lower),
-                  "<X2>"       = deparse(config$support$lower - eps))
+                  "<X1>"       = deparse1(config$support$lower),
+                  "<X2>"       = deparse1(config$support$lower - eps))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -1616,8 +1615,8 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<X1>"       = deparse(config$support$upper),
-                  "<X2>"       = deparse(config$support$upper + eps))
+                  "<X1>"       = deparse1(config$support$upper),
+                  "<X2>"       = deparse1(config$support$upper + eps))
         res <- append(res, replace_placeholders(template, p))
     }
     return(res |> clean_cmd(spaces = 8L))
@@ -1651,7 +1650,7 @@ autotest_cdf_compare2numeric <- function(config, eps = 1e-6) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<TOLERANCE>" = deparse(eps))
+              "<TOLERANCE>" = deparse1(eps))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1711,7 +1710,7 @@ autotest_quantile <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<N>"        = deparse(length(config$parameters$valid[[1L]])))
+              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1741,7 +1740,7 @@ autotest_quantile_support <- function(config) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<X>"        = deparse(config$support$lower))
+                  "<X>"        = deparse1(config$support$lower))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -1761,7 +1760,7 @@ autotest_quantile_support <- function(config) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<X>"       = deparse(config$support$upper))
+                  "<X>"       = deparse1(config$support$upper))
         res <- append(res, replace_placeholders(template, p))
     }
     return(res |> clean_cmd(spaces = 8L))
@@ -1842,8 +1841,8 @@ autotest_random_support <- function(config) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<N>"        = deparse(100L),
-                  "<X>"        = deparse(config$support$lower))
+                  "<N>"        = deparse1(100L),
+                  "<X>"        = deparse1(config$support$lower))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -1866,8 +1865,8 @@ autotest_random_support <- function(config) {
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
                   "<FNAME>"    = fname,
-                  "<N>"        = deparse(100L),
-                  "<X>"       = deparse(config$support$upper))
+                  "<N>"        = deparse1(100L),
+                  "<X>"       = deparse1(config$support$upper))
         res <- append(res, replace_placeholders(template, p))
     }
     return(res |> clean_cmd(spaces = 8L))
@@ -1911,7 +1910,7 @@ autotest_score_hessian_defaults <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<DEFAULT>"  = deparse(which))
+              "<DEFAULT>"  = deparse1(which))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1968,8 +1967,8 @@ autotest_score <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<X>"        = deparse(1),
-              "<DERIV>"    = deparse(deriv))
+              "<X>"        = deparse1(1),
+              "<DERIV>"    = deparse1(deriv))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2004,9 +2003,9 @@ autotest_score_compare2numeric <- function(config, eps = 1e-5) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<X>"         = deparse(1),
-              "<DERIV>"     = deparse(deriv),
-              "<TOLERANCE>" = deparse(eps))
+              "<X>"         = deparse1(1),
+              "<DERIV>"     = deparse1(deriv),
+              "<TOLERANCE>" = deparse1(eps))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2071,8 +2070,8 @@ autotest_hessian_observed <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<X>"        = deparse(1),
-              "<DERIV>"    = deparse(deriv))
+              "<X>"        = deparse1(1),
+              "<DERIV>"    = deparse1(deriv))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2123,8 +2122,8 @@ autotest_hessian_expected <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
-              "<X>"        = deparse(1),
-              "<DERIV>"    = deparse(deriv))
+              "<X>"        = deparse1(1),
+              "<DERIV>"    = deparse1(deriv))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2159,9 +2158,9 @@ autotest_hessian_observed_compare2numeric <- function(config, eps = 1e-3) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<X>"         = deparse(1),
-              "<DERIV>"     = deparse(deriv),
-              "<TOLERANCE>" = deparse(eps))
+              "<X>"         = deparse1(1),
+              "<DERIV>"     = deparse1(deriv),
+              "<TOLERANCE>" = deparse1(eps))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2206,9 +2205,9 @@ autotest_hessian_expected_compare2numeric <- function(config, eps = 1e-3) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<X>"         = deparse(1),
-              "<DERIV>"     = deparse(deriv),
-              "<TOLERANCE>" = deparse(eps))
+              "<X>"         = deparse1(1),
+              "<DERIV>"     = deparse1(deriv),
+              "<TOLERANCE>" = deparse1(eps))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2228,7 +2227,7 @@ autotest_hessian_expected_compare2numeric <- function(config, eps = 1e-3) {
 ##    p <- if (is.null(which)) {
 ##        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =))
 ##    } else {
-##        eval(parse(text = sprintf("as.pairlist(alist(d =, x =, which = %s, drop = TRUE, expected = FALSE, ... =))", deparse(which))))
+##        eval(parse(text = sprintf("as.pairlist(alist(d =, x =, which = %s, drop = TRUE, expected = FALSE, ... =))", deparse1(which))))
 ##    }
 ##    expect_identical(formals(method), p, info = "default arguments not as expected")
 ##
