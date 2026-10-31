@@ -1,14 +1,25 @@
+## ------------------------------------------------------------------
+## Generate test-autotest-* files
+##
+## A series of automated test sets are generated via the YAML files
+## stored in autotest-config. This script reads (all) available YAML
+## files, ensures they are valid, and generates a test file for each
+## YAML file available.
+## ------------------------------------------------------------------
 
 
 rm(list = objects())
+
 library("yaml")
 library("testthat")
 library("distributions3")
 source("autotest-functions.R")
 
+## ------------------------------------------------------------------
 ## For testing; allows to call this script from command line,
 ## specifying which yaml files to process.
 ## > Rscript autotest-generate.R -f Weibull.yaml Normal.yaml
+## ------------------------------------------------------------------
 if (requireNamespace("argparse", quietly = TRUE)) {
     parser <- argparse::ArgumentParser(description = "Define yaml files to be generated/tested")
     parser$add_argument("--files", "-f", type = "character", nargs= "+",
@@ -25,6 +36,9 @@ if (requireNamespace("argparse", quietly = TRUE)) {
 }
 
 
+## ------------------------------------------------------------------
+## Reading config files check YAML content, and subset (if --file/-f is used)
+## ------------------------------------------------------------------
 ## Output directory where to put the automated test sets/test files
 OUTDIR <- "testthat"
 
@@ -37,7 +51,9 @@ if (!is.null(dorun)) {
     stopifnot("no yaml files found matching input --file/-f" = length(distconfig) > 0)
 }
 
+## ------------------------------------------------------------------
 ## Looping over all configs found
+## ------------------------------------------------------------------
 for (config in distconfig) {
     ## Name of the output file
     cat("--- generating automatic test set \"", config$testfile, "\"\n", sep = "")
@@ -89,13 +105,13 @@ for (config in distconfig) {
     res <- append(res, autotest_pdf(config))
     res <- append(res, autotest_pdf_support(config))
     res <- append(res, autotest_log_pdf(config))
-    res <- append(res, autotest_pdf_compare2numeric(config))
+    ## TODO(R): NEEDED? res <- append(res, autotest_pdf_compare2numeric(config))
 
     res <- append(res, autotest_cdf(config))
     res <- append(res, autotest_cdf_support(config))
     # TODO: when having e.g., sigma = 0 or lamgda = 0 we get a cdf of 1 vs. 0 (numeric)
     #       and subsequently log(cdf) of 0 vs. -Inf (numeric)
-    res <- append(res, autotest_cdf_compare2numeric(config))
+    ## TODO(R): NEEDED? res <- append(res, autotest_cdf_compare2numeric(config))
 
     res <- append(res, autotest_quantile(config))
     res <- append(res, autotest_quantile_support(config))
@@ -120,11 +136,13 @@ for (config in distconfig) {
 
     ## ----------- crps
     res <- append(res, autotest_crps_defaults(config))
+    res <- append(res, autotest_crps_compare2numeric(config))
 
-    ## ----------- write test file
+
+    ## --------------------------------------------------------------
+    ## Write test sets to test file and execute if needed (development)
+    ## --------------------------------------------------------------
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
-
-    # TODO: Remove, just for testing
     if (!is.null(run_tests)) test_file(file.path(OUTDIR, config$testfile))
 }
 

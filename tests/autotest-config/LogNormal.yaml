@@ -22,6 +22,7 @@ distributiontype:
 
 tolerance:
   cdf: 1e-5
+  crps: 1e-3
 
 #tests:
 #  exclude:
