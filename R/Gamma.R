@@ -14,7 +14,7 @@
 #'
 #' @param shape The shape parameter. Can be any positive number.
 #' @param rate The rate parameter. Can be any positive number. Defaults
-#'   to `1`.
+#'   to `1` if `shape` is of length `> 0L`.
 #'
 #' @return A `Gamma` object.
 #' @export
@@ -79,12 +79,17 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Gamma <- function(shape = numeric(), rate = 1) {
-  if (identical(shape, numeric())) rate <- numeric()
+Gamma <- function(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1) {
+  stopifnot("parameters 'shape' and 'rate' must be atomic" = is.atomic(shape) && is.atomic(rate))
+  if (!is.numeric(shape)) shape <- as.numeric(shape)
+  if (!is.numeric(rate)) rate <- as.numeric(rate)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1
+      length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1,
+    "parameter 'shape' must be in (0, Inf]" = all(shape > 0, na.rm = TRUE),
+    "parameter 'rate' must be in (0, Inf]" = all(rate > 0, na.rm = TRUE)
   )
+
   d <- data.frame(shape = shape, rate = rate)
   class(d) <- c("Gamma", "distribution")
   d

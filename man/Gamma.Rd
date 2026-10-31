@@ -4,13 +4,13 @@
 \alias{Gamma}
 \title{Create a Gamma distribution}
 \usage{
-Gamma(shape = numeric(), rate = 1)
+Gamma(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)
 }
 \arguments{
 \item{shape}{The shape parameter. Can be any positive number.}
 
 \item{rate}{The rate parameter. Can be any positive number. Defaults
-to \code{1}.}
+to \code{1} if \code{shape} is of length \verb{> 0L}.}
 }
 \value{
 A \code{Gamma} object.

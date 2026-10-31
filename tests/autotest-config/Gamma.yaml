@@ -1,0 +1,28 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Gamma
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    shape: [1, 10, 20, 100]
+    rate:  [0.5, 2, 4, 10]
+  invalid:
+    shape: [-10, -1e-10, 0]
+    rate:  [-10, -1e-10, 0]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+#tests:
+#  exclude:
+#    - cdf_compare2numeric
+#    - score_compare2numeric
+#    - hessian_observed_compare2numeric
+#    - hessian_expected_compare2numeric
