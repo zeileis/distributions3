@@ -94,6 +94,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 ChiSquare <- function(df = numeric()) {
+  stopifnot("parameter 'df' must be atomic" = is.atomic(df))
+  if (!is.numeric(df)) df <- as.numeric(df)
+  stopifnot(
+    "parameter 'df' must be in non-missing" = all(!is.na(df))
+  )
+
   d <- data.frame(df = df)
   class(d) <- c("ChiSquare", "distribution")
   d
@@ -287,7 +293,7 @@ is_continuous.ChiSquare <- function(d, ...) {
 #' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
-score.ChiSquare <- function(d, x, which = NULL, drop = TRUE, ...) {
+score.ChiSquare <- function(d, x, which = "df", drop = TRUE, ...) {
   ## Calculate max length 'n' (plus input sanity check), get parameter names of
   ## the distribution 'd', and evaluate available/check requested derivative names
   n      <- max_length(d, x)
@@ -306,7 +312,7 @@ score.ChiSquare <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @name score-hessian
 #' @usage NULL
 #' @exportS3Method
-hessian.ChiSquare <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+hessian.ChiSquare <- function(d, x, which = "df", drop = TRUE, expected = FALSE, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
   if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
