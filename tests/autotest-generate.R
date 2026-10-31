@@ -3,6 +3,8 @@
 rm(list = objects())
 library("yaml")
 source("autotest-functions.R")
+library("testthat")
+library("distributions3")
 
 ## For testing; allows to call this script from command line,
 ## specifying which yaml files to process.
@@ -20,14 +22,6 @@ dorun <- if (requireNamespace("argparse", quietly = TRUE)) {
 
 ## Output directory where to put the automated test sets/test files
 OUTDIR <- "testthat"
-
-## Delete all existing automatically generated test files
-## from the testthat folder
-k <- delete_autotest_testfiles(dir = OUTDIR, verbose = TRUE)
-
-## TODO: Remove, just for testing
-library("testthat")
-library("distributions3")
 
 ## Loading all available autotest config files and checking content
 distconfig <- lapply(load_autotest_config(), check_autotest_config)
@@ -126,7 +120,7 @@ for (config in distconfig) {
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
 
     # TODO: Remove, just for testing
-    test_file(file.path(OUTDIR, config$testfile))
+    if (!is.null(dorun)) test_file(file.path(OUTDIR, config$testfile))
 }
 
 

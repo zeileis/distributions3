@@ -178,37 +178,6 @@ skip_this_autotest <- function(config, fname) {
     return(FALSE)
 }
 
-#' Delete all Existing Autotest Test Files
-#'
-#' Removes all existing auto-generated test files from the
-#' directory (`dir`) containing the testthat files.
-#'
-#' @return Invisibly returns the deleted files (`NULL` if no files
-#' were found to be deleted).
-delete_autotest_testfiles <- function(dir, verbose = FALSE) {
-    verbose <- as.logical(verbose)[[1L]]
-    stopifnot(
-        "argument 'dir' must be name/path to the directory with the YAML files" =
-            is.character(dir) && length(dir) == 1L && isTRUE(dir.exists(dir)),
-        "argument 'verbose' must evaluate to TRUE or FALSE" =
-            isTRUE(verbose) || isFALSE(verbose)
-    )
-
-    ## Find generated test files
-    f <- grep("^test-autotest-.*\\.R$", list.files(dir), value = TRUE)
-    f <- file.path(dir, f) # expand path
-
-    if (verbose && length(f) > 0L) {
-        cat("Deleting existing autotest test sets:\n")
-        cat(sprintf("  - \"%s\"\n", f), "\n")
-    } else if (verbose) {
-        cat("No existing autotest test sets to be removed\n")
-        f <- NULL
-    }
-
-    if (!is.null(f)) file.remove(f)
-    invisible(f)
-}
 
 #' Warn about Nonexistent Autotest Functions in Include/Exclude
 #'
