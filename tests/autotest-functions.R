@@ -135,7 +135,7 @@ check_autotest_config <- function(x) {
         stopifnot(
             "'tests' only allow to include one include or exclude rule" =
                 all(names(x$tests) %in% c("include", "exclude")) && length(x$tests) == 1L,
-            "'tests > include' or 'tests > exclude' must be character vector of length > 1" =
+            "'tests > include' or 'tests > exclude' must be character vector of length > 0" =
                 is.character(x$tests[[1L]]) && length(x$tests[[1L]]) > 0L
         )
     }
