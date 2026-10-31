@@ -529,7 +529,7 @@ test_that("S3 method pdf.Poisson works at/around lower support", {
     expect_true(res >= 0)
 
     ## Below support: expecting 0
-    x <- if (is_discrete(d1)) as.integer(floor(-1e-08)) else -1e-08
+    x <- if (is_discrete(d1)) as.integer(floor(-1e-06)) else -1e-06
     expect_silent(res <- pdf(d1, x))
     expect_equal(res, 0)
 });

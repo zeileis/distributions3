@@ -743,7 +743,7 @@ test_that("S3 method score works as expected for Logistic distribution", {
 test_that("S3 method score vs. the numeric score for the Logistic distribution", {
     expect_silent(analytic_sol <- score(dn, 1, which = c("location", "scale"), drop = FALSE))
     expect_silent(numeric_sol  <- distributions3:::score.distribution(dn, 1, which = c("location", "scale"), drop = FALSE))
-    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-05,
+    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-06,
                  info = "numeric approximation of score not equal to analytic solution")
 });
 
@@ -787,7 +787,7 @@ test_that("S3 method for observed hessian (default) works as expected for Logist
 test_that("S3 method for observed hessian vs. the numeric approximation of the observed hessian for Logistic distribution", {
     expect_silent(analytic_sol <- hessian(dn, 1, which = c("location", "scale"), drop = FALSE))
     expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, which = c("location", "scale"), drop = FALSE))
-    expect_equal(numeric_sol, analytic_sol, tolerance = 0.001,
+    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
                  info = "numeric approximation of hessian not equal to analytic solution")
 });
 
@@ -827,16 +827,16 @@ test_that("S3 method for expected hessian vs. the numeric approximation of the e
     ## With setting "x"
     expect_silent(analytic_sol <- hessian(dn, 1, which = c("location", "scale"), drop = FALSE, expected = TRUE))
     expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, which = c("location", "scale"), drop = FALSE, expected = TRUE))
-    expect_equal(numeric_sol, analytic_sol, tolerance = 0.001,
+    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
                  info = "numeric approximation of expected hessian not equal to analytic solution")
 
     ## Without "x": typically the expected hessian does not depend on x;
     ## we allow that argument x is missing and expect the same results
     expect_silent(analytic_sol2 <- hessian(dn, which = c("location", "scale"), drop = FALSE, expected = TRUE))
     expect_silent(numeric_sol2  <- distributions3:::hessian.distribution(dn, which = c("location", "scale"), drop = FALSE, expected = TRUE))
-    expect_identical(analytic_sol2, analytic_sol, tolerance = 0.001,
+    expect_identical(analytic_sol2, analytic_sol, tolerance = 1e-04,
                  info = "analytic expected hessian when not providing argument x expected to be identical")
-    expect_identical(numeric_sol2, numeric_sol, tolerance = 0.001,
+    expect_identical(numeric_sol2, numeric_sol, tolerance = 1e-04,
                  info = "numeric expected hessian when not providing argument x expected to be identical")
 });
 
