@@ -5,51 +5,22 @@
 if (interactive()) { library("distributions3"); library("testthat") }
 suppressPackageStartupMessages(library("scoringRules"))
 
-# Helper functions for automated testing of S3 methods
-source("functions-distribution.R")
-source("functions-score-hessian.R")
-
 ## distribution object and 'x' used for testing.
 ## Length of 'dd' and 'xx' must be identical and > 1L
 dd <- Normal(3:1, 1:3)
 dd <- setNames(dd, LETTERS[1:3]) # named distributions object
 xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), !is.null(names(dd)))
 
-stopifnot(length(dd) == length(xx),
-          length(dd) == length(pp),
-          !is.null(names(dd)))
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
 
 ## Default arguments
-test_that("Normal default arguments", {
+test_that("constructor function Normal has correct arguments and defaults", {
   expect_identical(formals(Normal), as.pairlist(alist(mu = 0, sigma = 1)))
 })
 
-## -------------------------------------------------------
-## "Support" methods
-## -------------------------------------------------------
-test_that("print.Normal works correctly", {
-    d_test_print(Normal(-10, +2))
-    d_test_print(Normal(-100.123456, 1e-10))
-})
-
-test_that("support.Normal works correctly", {
-    ## Generic method tests
-    d_test_support(unname(dd), expected_min = -Inf, expected_max = Inf) # unnamed
-    d_test_support(dd,         expected_min = -Inf, expected_max = Inf) # named
-})
-
-test_that("is_discrete.Normal works correctly", {
-    ## Generic method tests
-    d_test_is_discrete(unname(dd), expected = FALSE) # named
-    d_test_is_discrete(dd,         expected = FALSE) # unnamed
-})
-
-test_that("is_continuous.Normal works correctly", {
-    ## Generic method tests
-    d_test_is_continuous(unname(dd),  expected = TRUE) # unnamed
-    d_test_is_continuous(dd,          expected = TRUE) # named
-})
 
 test_that("suff_stat.Normal works correctly", {
   ss <- list(mu = 0, sigma = 0, samples = 2)
@@ -63,115 +34,88 @@ test_that("fit_mle.Normal works correctly", {
 })
 
 
-## -------------------------------------------------------
-## d/p/q/r methods
-## -------------------------------------------------------
-test_that("pdf.Normal works correctly", {
-  ## Helper function to test pdf.Normal against dnorm
-  dfun <- function(x, ...) {
-      args <- c(list(x = x), as.list(...))
-      dnorm(args$x, mean = args$mu, sd = args$sigma)
-  }
-  d_test_pdf(unname(dd), xx, dfun) # unnamed
-  d_test_pdf(dd,         xx, dfun) # named
-
-  ## Test that we get 0 outside numeric support
-  d_test_pdf_support(dd, delta = 1e-6)
+test_that("pdf.Normal/log_pdf.Normal returns correct values", {
+  expect_identical(unname(pdf(dd, xx)), dnorm(xx, df$mu, df$sigma),
+        info = "pdf.Normal not identical to dnorm()")
+  expect_identical(unname(pdf(dd, xx, log = TRUE)), dnorm(xx, df$mu, df$sigma, log = TRUE),
+        info = "pdf.Normal not identical to dnorm()")
+  expect_identical(unname(log_pdf(dd, xx)), dnorm(xx, df$mu, df$sigma, log = TRUE),
+        info = "pdf.Normal not identical to dnorm()")
 })
 
-test_that("log_pdf.Normal works correctly", {
-  d_test_log_pdf(unname(dd),  xx) # unnamed
-  d_test_log_pdf(dd,          xx) # named
-
-  ## Test that we get -Inf/+Inf outside support
-  d_test_log_pdf_support(dd, delta = 1e-6)
+test_that("cdf.Normal returns correct values", {
+  expect_identical(unname(cdf(dd, xx)), pnorm(xx, df$mu, df$sigma),
+        info = "cdf.Normal not identical to pnorm()")
+  expect_identical(unname(cdf(dd, xx, log = TRUE)), pnorm(xx, df$mu, df$sigma, log = TRUE),
+        info = "cdf.Normal not identical to pnorm()")
 })
 
-test_that("cdf.Normal works correctly", {
-  ## Helper function to test cdf.Normal against dnorm
-  pfun <- function(x, ...) {
-      args <- c(list(x = x), as.list(...))
-      pnorm(args$x, mean = args$mu, sd = args$sigma)
-  }
-  d_test_cdf(unname(dd), xx, pfun) # unnamed
-  d_test_cdf(dd,         xx, pfun) # named
-
-  ## Test that we get 0/1 outside support
-  d_test_cdf_support(dd, delta = 1e-6)
+test_that("quantile.Normal returns correct values", {
+  expect_identical(unname(quantile(dd, pp)), qnorm(pp, df$mu, df$sigma),
+        info = "quantile.Normal not identical to qnorm()")
 })
 
-test_that("quantile.Normal works correctly", {
-  ## Helper function to test quantile.Normal against dnorm
-  qfun <- function(p, ...) {
-      args <- c(list(p = p), as.list(...))
-      qnorm(args$p, mean = args$mu, sd = args$sigma)
-  }
-  d_test_quantile(unname(dd), pp, qfun) # unnamed
-  d_test_quantile(dd,         pp, qfun) # named
+## Testing correctness of moments
+test_that("moments for Normal distribution return correct values", {
+    expect_identical(unname(mean(dd)), df$mu,
+        info = "mean.Normal incorrect")
+    expect_identical(unname(variance(dd)), df$sigma^2,
+        info = "variance.Normal incorrect")
+    expect_identical(unname(skewness(dd)), rep(0, nrow(df)),
+        info = "skewness.Normal incorrect")
+    expect_identical(unname(kurtosis(dd)), rep(0, nrow(df)),
+        info = "kurtosis.Normal incorrect")
 })
 
-test_that("random.Normal work correctly", {
-    d_test_random(unname(dd))
-    d_test_random(dd)
+## Testing correctness of score
+test_that("score for Normal distribution return correct values", {
+    expect_identical(unname(score(dd, xx, which = "mu")),
+        (xx - df$mu) / df$sigma^2,
+        info = "score for \"mu\" returns incorrect values")
+    expect_identical(unname(score(dd, xx, which = "sigma")),
+        (xx - df$mu)^2 / df$sigma^3 - 1 / df$sigma,
+        info = "score for \"sigma\" returns incorrect values")
+})
+
+## Testing correctness of hessian
+test_that("observed hessian for Normal distribution return correct values", {
+    expect_identical(unname(hessian(dd, xx, which = "mu", expected = FALSE)),
+        -1 / df$sigma^2,
+        info = "hessian for \"mu\" returns incorrect values")
+    expect_identical(unname(hessian(dd, xx, which = "sigma", expected = FALSE)),
+        -3 * (xx - df$mu)^2 / df$sigma^4 + 1 / df$sigma^2,
+        info = "hessian for \"sigma\" returns incorrect values")
+
+    # Cross derivatives
+    expect_identical(unname(hessian(dd, xx, which = "sigma:mu", expected = FALSE)),
+        -2 * (xx - df$mu) / df$sigma^3,
+        info = "hessian for \"sigma:mu\" returns incorrect values")
+    expect_identical(unname(hessian(dd, xx, which = "mu:sigma", expected = FALSE)),
+        -2 * (xx - df$mu) / df$sigma^3,
+        info = "hessian for \"mu:sigma\" returns incorrect values")
+})
+
+test_that("expected hessian for Normal distribution return correct values", {
+    expect_identical(unname(hessian(dd, xx, which = "mu", expected = TRUE)),
+        -1 / df$sigma^2,
+        info = "hessian for \"mu\" returns incorrect values")
+    expect_identical(unname(hessian(dd, xx, which = "sigma", expected = TRUE)),
+        -2 / df$sigma^2,
+        info = "hessian for \"sigma\" returns incorrect values")
+
+    # Cross derivatives
+    expect_identical(unname(hessian(dd, xx, which = "sigma:mu", expected = TRUE)),
+        vector("numeric", nrow(df)), # = 0
+        info = "hessian for \"sigma:mu\" returns incorrect values")
+    expect_identical(unname(hessian(dd, xx, which = "mu:sigma", expected = TRUE)),
+        vector("numeric", nrow(df)), # = 0
+        info = "hessian for \"mu:sigma\" returns incorrect values")
 })
 
 
-## -------------------------------------------------------
-## moments
-## -------------------------------------------------------
 
-test_that("mean.Normal work correctly", {
-    expected <- dd$mu
-    d_test_moment(unname(dd), "mean", expected = expected, tol = 1e-6) # unnamed
-    d_test_moment(dd,         "mean", expected = expected, tol = 1e-6) # named
-})
-test_that("variance.Normal work correctly", {
-    expected <- dd$sigma^2
-    d_test_moment(unname(dd), "variance", expected = expected, tol = 1e-2) # unnamed
-    d_test_moment(dd,         "variance", expected = expected, tol = 1e-2) # named
-})
-test_that("skewness.Normal work correctly", {
-    expected <- 0
-    d_test_moment(unname(dd), "skewness", expected = expected, tol = 1e-3) # unnamed
-    d_test_moment(dd,         "skewness", expected = expected, tol = 1e-3) # named
-})
-test_that("kurtosis.Normal work correctly", {
-    expected <- 0
-    d_test_moment(unname(dd), "kurtosis", expected = expected, tol = 1e-1) # unnamed
-    d_test_moment(dd,         "kurtosis", expected = expected, tol = 1e-1) # named
-})
 
-## -------------------------------------------------------
-## score and Hessian methods
-## -------------------------------------------------------
 
-test_that("score.Normal works as expected", {
-  ## Check that method exists as function, checks default
-  ## arguments as well as all default sanity checks
-  score_test_args_and_sanity(dd, xx)
 
-  ## Ensure we get the correct return, both for named and unnamed
-  ## distribution objects (tests different combinations)
-  score_test_return_dim_names(unname(dd), xx) # unnamed
-  score_test_return_dim_names(dd,         xx) # named
 
-  ## Comparing analytic score vs. numeric approximation (score.distribution)
-  score_test_analytic_vs_numeric(unname(dd), xx) # unnamed
-  score_test_analytic_vs_numeric(dd,         xx) # named
-})
-
-test_that("hessian.Normal works as expected", {
-  ## Check that method exists as function, checks default
-  ## arguments as well as all default sanity checks
-  hessian_test_args_and_sanity(dd, xx)
-
-  ## Ensure we get the correct return, both for named and unnamed
-  ## distribution objects (tests different combinations)
-  hessian_test_return_dim_names(unname(dd), xx) # unnamed
-  hessian_test_return_dim_names(dd,         xx) # named
-
-  ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-  hessian_test_analytic_vs_numeric(unname(dd), xx) # unnamed
-  hessian_test_analytic_vs_numeric(dd,         xx) # named
-})
 
