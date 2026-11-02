@@ -53,6 +53,32 @@ test_that("quantile.Logistic returns correct values", {
         info = "quantile.Logistic not identical to qlogis()")
 })
 
+
+## Testing edge cases
+test_that("pdf.Logistic on edge case scale = 0 works as stats::dlogis", {
+  expect_silent(d <- Logistic(1:5, 0))
+  expect_warning(x <- pdf(d, c(-1, -1, 3, 4, 10)), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(dlogis(c(-1, -1, 3, 4, 10), location = 1:5, scale = 0)))
+})
+test_that("cdf.Logistic on edge case scale = 0 works as stats::plogis", {
+  expect_silent(d <- Logistic(1:5, 0))
+  expect_warning(x <- cdf(d, c(-1, -1, 3, 4, 10)), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(plogis(c(-1, -1, 3, 4, 10), location = 1:5, scale = 0)))
+})
+test_that("quantile.Logistic on edge case scale = 0 works as stats::qlogis", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  l <- seq(-10, 10, length.out = length(p))
+  expect_silent(d <- Logistic(l, 0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qlogis(p, location = l, scale = 0))
+})
+test_that("random.Logistic on edge case scale = 0 works as stats::rlogis", {
+  expect_silent(d <- Logistic(10.5, 0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rep(10.5, 5))
+})
+
+
 ## Testing correctness of moments
 test_that("moments for Logistic distribution return correct values", {
     expect_identical(mean(dd), df$location,

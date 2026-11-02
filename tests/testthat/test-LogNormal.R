@@ -55,6 +55,31 @@ test_that("quantile.LogNormal returns correct values", {
         info = "quantile.LogNormal not identical to qlnorm()")
 })
 
+
+## Testing edge cases
+test_that("pdf.LogNormal on edge case log_sd = 0 works as stats::dlnorm", {
+  expect_silent(d <- LogNormal((-2):2, 0))
+  expect_silent(x <- pdf(d, c(-1, -1, 3, 4, 10)))
+  expect_identical(x, dlnorm(c(-1, -1, 3, 4, 10), meanlog = (-2):2, sdlog = 0))
+})
+test_that("cdf.LogNormal on edge case log_sd = 0 works as stats::plnorm", {
+  expect_silent(d <- LogNormal(1:5, 0))
+  expect_silent(x <- cdf(d, c(-1, -1, 3, 4, 10)))
+  expect_identical(x, plnorm(c(-1, -1, 3, 4, 10), meanlog = 1:5, sdlog = 0))
+})
+test_that("quantile.LogNormal on edge case log_sd = 0 works as stats::qlnorm", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  l <- seq(-10, 10, length.out = length(p))
+  expect_silent(d <- LogNormal(l, 0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qlnorm(p, meanlog = l, sdlog = 0))
+})
+test_that("random.LogNormal on edge case log_sd = 0 works as stats::rlnorm", {
+  expect_silent(d <- LogNormal(0.3, 0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rep(exp(0.3), 5))
+})
+
 ## Testing correctness of moments
 test_that("moments for LogNormal distribution return correct values", {
     expect_identical(mean(dd),

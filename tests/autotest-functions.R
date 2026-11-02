@@ -860,6 +860,9 @@ autotest_params_empty <- function(config) {
         expect_identical(is_discrete(x),     logical())
         expect_identical(is_continuous(x),   logical())
 
+        ## Return of support
+        expect_identical(support(x),         numeric())
+
         ## Moments
         expect_identical(mean(x),            numeric())
         expect_identical(variance(x),        numeric())
@@ -1461,6 +1464,10 @@ autotest_pdf <- function(config) {
         ## pdf(..., log = TRUE)
         expect_silent(xlog <- pdf(dn, xxLong, log = TRUE))
         expect_equal(xlog, log(x))
+
+        ## Expecting pmf to return the same as pdf
+        expect_silent(xpmf <- pmf(dn, xxLong))
+        expect_identical(xpmf, x, info = "expected return pmf.<NAME>() to be identical to pdf.<NAME>()")
     });
     '
     ## List of values/placeholders to replace

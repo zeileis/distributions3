@@ -248,6 +248,9 @@ test_that("constructor Weibull() works for empty parameter sets", {
     expect_identical(is_discrete(x),     logical())
     expect_identical(is_continuous(x),   logical())
 
+    ## Return of support
+    expect_identical(support(x),         numeric())
+
     ## Moments
     expect_identical(mean(x),            numeric())
     expect_identical(variance(x),        numeric())
@@ -552,6 +555,10 @@ test_that("S3 method pdf works as expected for Weibull distribution", {
     ## pdf(..., log = TRUE)
     expect_silent(xlog <- pdf(dn, xxLong, log = TRUE))
     expect_equal(xlog, log(x))
+
+    ## Expecting pmf to return the same as pdf
+    expect_silent(xpmf <- pmf(dn, xxLong))
+    expect_identical(xpmf, x, info = "expected return pmf.Weibull() to be identical to pdf.Weibull()")
 });
 
 

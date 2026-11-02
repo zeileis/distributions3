@@ -52,6 +52,30 @@ test_that("quantile.ChiSquare returns correct values", {
         info = "quantile.ChiSquare not identical to qchisq()")
 })
 
+
+## Testing edge cases
+test_that("pdf.ChiSquare on edge case df = 0 works as stats::dchisq", {
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dchisq(1:5, df = 0))
+})
+test_that("cdf.ChiSquare on edge case df = 0 works as stats::pchisq", {
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pchisq(1:5, df = 0))
+})
+test_that("quantile.ChiSquare on edge case df = 0 works as stats::qchisq", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qchisq(p, df = 0))
+})
+test_that("random.ChiSquare on edge case df = 0 works as stats::rchisq", {
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rep(0.0, 5))
+})
+
 ## Testing correctness of moments
 test_that("moments for ChiSquare distribution return correct values", {
     expect_identical(mean(dd), df$df,
