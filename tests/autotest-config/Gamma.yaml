@@ -9,8 +9,8 @@ parameters:
     shape: [1, 10, 20, 100]
     rate:  [0.5, 2, 4, 10]
   invalid:
-    shape: [-10, -1e-10, 0]
-    rate:  [-10, -1e-10, 0]
+    shape: [-10, -1, -1e-10]
+    rate:  [-10, -1, -1e-10]
 
 support:
   lower: 0

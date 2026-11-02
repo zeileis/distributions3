@@ -86,8 +86,8 @@ Gamma <- function(shape = numeric(), rate = if (length(shape) == 0L) numeric() e
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1,
-    "parameter 'shape' must be in (0, Inf]" = all(shape > 0, na.rm = TRUE),
-    "parameter 'rate' must be in (0, Inf]" = all(rate > 0, na.rm = TRUE)
+    "parameter 'shape' must be in [0, Inf]" = all(shape >= 0, na.rm = TRUE),
+    "parameter 'rate' must be in [0, Inf]" = all(rate >= 0, na.rm = TRUE)
   )
 
   d <- data.frame(shape = shape, rate = rate)
