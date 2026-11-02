@@ -55,6 +55,31 @@ test_that("quantile.Exponential returns correct values", {
         info = "quantile.Exponential not identical to qexp()")
 })
 
+
+## Testing edge cases
+test_that("pdf.Exponential on edge case rate = 0 works as stats::dexp", {
+  expect_silent(d <- Exponential(0))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dexp(1:5, rate = 0))
+})
+test_that("cdf.Exponential on edge case rate = 0 works as stats::pexp", {
+  expect_silent(d <- Exponential(0))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pexp(1:5, rate = 0))
+})
+test_that("quantile.Exponential on edge case rate = 0 works as stats::qexp", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  expect_silent(d <- Exponential(0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qexp(p, rate = 0))
+})
+test_that("random.Exponential on edge case rate = 0 works as stats::rexp", {
+  expect_silent(d <- Exponential(0))
+  expect_warning(x <- random(d, 5), regexp = "NAs produced")
+  expect_identical(x, rep(NaN, 5))
+})
+
+
 ## Testing correctness of moments
 test_that("moments for Exponential distribution return correct values", {
     expect_identical(mean(dd), 1 / df$rate,

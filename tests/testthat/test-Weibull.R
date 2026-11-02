@@ -52,6 +52,46 @@ test_that("quantile.Weibull returns correct values", {
         info = "quantile.Weibull not identical to qweibull()")
 })
 
+
+## Testing edge cases
+test_that("pdf.Weibull on edge case shape = 0 or scale = 0 works as stats::dweibull", {
+  expect_silent(d <- Weibull(1, 0))
+  expect_warning(x <- pdf(d, 1), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(dweibull(1, shape = 1, scale = 0)))
+
+  expect_silent(d <- Weibull(0, 1))
+  expect_warning(x <- pdf(d, 1), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(dweibull(1, shape = 0, scale = 1)))
+})
+test_that("cdf.Weibull on edge case shape = 0 or scale = 0 works as stats::pweibull", {
+  expect_silent(d <- Weibull(1, 0))
+  expect_warning(x <- cdf(d, 1), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(pweibull(1, shape = 1, scale = 0)))
+
+  expect_silent(d <- Weibull(0, 1))
+  expect_warning(x <- cdf(d, 1), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(pweibull(1, shape = 0, scale = 1)))
+})
+test_that("quantile.Weibull on edge case shape = 0 or scale = 0 works as stats::qweibull", {
+  expect_silent(d <- Weibull(1, 0))
+  expect_warning(x <- quantile(d, 0.1), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(qweibull(0.1, shape = 1, scale = 0)))
+
+  expect_silent(d <- Weibull(0, 1))
+  expect_warning(x <- quantile(d, 0.1), regexp = "NaNs produced")
+  expect_identical(x, suppressWarnings(qweibull(0.1, shape = 0, scale = 1)))
+})
+test_that("random.Weibull on edge case shape = 0 or scale = 0 works as stats::rweibull", {
+  expect_silent(d <- Weibull(1, 0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rweibull(5, shape = 1, scale = 0), 5)
+
+  expect_silent(d <- Weibull(0, 1))
+  expect_warning(x <- random(d, 5), regexp = "NAs produced")
+  expect_identical(x, suppressWarnings(rweibull(5, shape = 0, scale = 1)))
+})
+
+
 ## Testing correctness of moments
 test_that("moments for Weibull distribution return correct values", {
     expect_identical(mean(dd), df$scale * gamma(1 + 1 / df$shape),

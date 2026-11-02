@@ -7,11 +7,11 @@
 Cauchy(location = 0, scale = 1)
 }
 \arguments{
-\item{location}{The location parameter. Can be any real number. Defaults
-to \code{0}.}
+\item{location}{The location parameter. Can be any real number.
+Defaults to \code{0}.}
 
-\item{scale}{The scale parameter. Must be greater than zero (?). Defaults
-to \code{1}.}
+\item{scale}{The scale parameter. Must be greater greater or equal to zero.
+Defaults to \code{1}.}
 }
 \value{
 A \code{Cauchy} object.

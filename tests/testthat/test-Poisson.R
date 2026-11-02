@@ -63,6 +63,31 @@ test_that("quantile.Poisson returns correct values", {
         info = "quantile.Poisson not identical to qpois()")
 })
 
+
+## Testing edge cases
+test_that("pdf.Poisson on edge case lambda = 0 works as stats::dpois", {
+  expect_silent(d <- Poisson(0))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dpois(1:5, lambda = 0))
+})
+test_that("cdf.Poisson on edge case lambda = 0 works as stats::ppois", {
+  expect_silent(d <- Poisson(0))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, ppois(1:5, lambda = 0))
+})
+test_that("quantile.Poisson on edge case lambda = 0 works as stats::qpois", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  expect_silent(d <- Poisson(0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qpois(p, lambda = 0))
+})
+test_that("random.Poisson on edge case lambda = 0 works as stats::rpois", {
+  expect_silent(d <- Poisson(0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rep(0L, 5))
+})
+
+
 ## Testing correctness of moments
 test_that("moments for Poisson distribution return correct values", {
     expect_identical(mean(dd), df$lambda,

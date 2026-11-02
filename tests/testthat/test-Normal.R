@@ -55,6 +55,32 @@ test_that("quantile.Normal returns correct values", {
         info = "quantile.Normal not identical to qnorm()")
 })
 
+
+## Testing edge cases
+test_that("pdf.Normal on edge case sigma = 0 works as stats::dnorm", {
+  expect_silent(d <- Normal(1:5, 0))
+  expect_silent(x <- pdf(d, c(-1, -1, 3, 4, 10)))
+  expect_identical(x, dnorm(c(-1, -1, 3, 4, 10), mean = 1:5, sd = 0))
+})
+test_that("cdf.Normal on edge case sigma = 0 works as stats::pnorm", {
+  expect_silent(d <- Normal(1:5, 0))
+  expect_silent(x <- cdf(d, c(-1, -1, 3, 4, 10)))
+  expect_identical(x, pnorm(c(-1, -1, 3, 4, 10), mean = 1:5, sd = 0))
+})
+test_that("quantile.Normal on edge case sigma = 0 works as stats::qnorm", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  m <- seq(-10, 10, length.out = length(p))
+  expect_silent(d <- Normal(m, 0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qnorm(p, mean = m, sd = 0))
+})
+test_that("random.Normal on edge case sigma = 0 works as stats::rnorm", {
+  expect_silent(d <- Normal(10.5, 0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rep(10.5, 5))
+})
+
+
 ## Testing correctness of moments
 test_that("moments for Normal distribution return correct values", {
     expect_identical(mean(dd), df$mu,

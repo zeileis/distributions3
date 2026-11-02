@@ -56,6 +56,46 @@ test_that("quantile.Gamma returns correct values", {
         info = "quantile.Gamma not identical to qgamma()")
 })
 
+
+## Testing edge cases
+test_that("pdf.Gamma on edge case shape = 0 or rate = 0 works as stats::dgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dgamma(1:5, shape = 1, rate = 0))
+
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dgamma(1:5, shape = 0, rate = 1))
+})
+test_that("cdf.Gamma on edge case shape = 0 or rate = 0 works as stats::pgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pgamma(1:5, shape = 1, rate = 0))
+
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pgamma(1:5, shape = 0, rate = 1))
+})
+test_that("quantile.Gamma on edge case shape = 0 or rate = 0 works as stats::qgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- quantile(d, 1:9/10))
+  expect_identical(x, qgamma(1:9/10, shape = 1, rate = 0))
+
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- quantile(d, 1:9/10))
+  expect_identical(x, qgamma(1:9/10, shape = 0, rate = 1))
+})
+test_that("random.Gamma on edge case shape = 0 or rate = 0 works as stats::rgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rgamma(5, shape = 1, rate = 0), 5)
+
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rgamma(5, shape = 0, rate = 1))
+})
+
+
 ## Testing correctness of moments
 test_that("moments for Gamma distribution return correct values", {
     expect_identical(mean(dd), df$shape / df$rate,
