@@ -9,8 +9,7 @@ parameters:
     log_mu:    [0, 0.25, 0.75, 1.25, 1.50]
     log_sigma: [2, 1.50, 1.00, 0.50, 0.20]
   invalid:
-    log_mu:    [-10, -0.01]
-    log_sigma: [-10, -0.01]
+    log_sigma: [-10, -1, -1e-10]
 
 support:
   lower: 0
@@ -23,10 +22,3 @@ distributiontype:
 tolerance:
   cdf: 1e-5
   crps: 1e-3
-
-#tests:
-#  exclude:
-#    - cdf_compare2numeric
-#    - score_compare2numeric
-#    - hessian_observed_compare2numeric
-#    - hessian_expected_compare2numeric

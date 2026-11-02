@@ -66,7 +66,6 @@ LogNormal <- function(log_mu = 0, log_sigma = 1) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(log_mu) == length(log_sigma) | length(log_mu) == 1 | length(log_sigma) == 1,
-    "parameter 'log_mu' must be in [0, Inf]" = all(log_mu >= 0, na.rm = TRUE),
     "parameter 'log_sigma' must be in [0, Inf]" = all(log_sigma >= 0, na.rm = TRUE)
   )
 
