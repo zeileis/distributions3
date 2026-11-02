@@ -9,7 +9,7 @@ parameters:
     location: [ -10, -1,  0,  4,  20]
     scale:    [   1,  1,  2,  5,  10]
   invalid:
-    scale: [-10, -1e-10]
+    scale: [-10, -1, -1e-10]
 
 support:
   lower: -.inf

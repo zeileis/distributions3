@@ -5,10 +5,10 @@
 #' a well defined mean or variance. Cauchy distributions often appear
 #' as priors in Bayesian contexts due to their heavy tails.
 #'
-#' @param location The location parameter. Can be any real number. Defaults
-#'   to `0`.
-#' @param scale The scale parameter. Must be greater than zero (?). Defaults
-#'   to `1`.
+#' @param location The location parameter. Can be any real number.
+#'   Defaults to `0`.
+#' @param scale The scale parameter. Must be greater greater or equal to zero.
+#'   Defaults to `1`.
 #'
 #' @return A `Cauchy` object.
 #' @export
