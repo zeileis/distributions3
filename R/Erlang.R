@@ -41,7 +41,7 @@ Erlang <- function(k = numeric(), lambda = numeric()) {
       length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1,
     "parameter 'k' must be positive integers" =
         all(k > 0) && isTRUE(all.equal(k, as.integer(k), check.attributes = FALSE)),
-    "parameter 'lambda' must be in (0, Inf]" = all(lambda > 0, na.rm = TRUE)
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE)
   )
 
   d <- data.frame(k = k, lambda = lambda)

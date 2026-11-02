@@ -10,7 +10,7 @@ parameters:
     lambda:  [0.5, 2, 4, 10]
   invalid:
     k:       [-5, -1, 0, 1.5, 10.001]
-    lambda:  [-10, -1e-10, 0]
+    lambda:  [-10, -1, -1e-10]
 
 support:
   lower: 0
