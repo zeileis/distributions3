@@ -353,18 +353,36 @@ autotest_setup <- function(config) {
         expect_true(all(!is.na(match(<PARAMVEC>, args))), info = "not all parameters are arguments to constructor function")
     });
 
-    ## Call constructor function with the pre-defined arguments in
-    ## parameters$valid to create four objects for testing: d0 (default
-    ## return), d1 (unnamed distribution object with one distribution), dx
-    ## (unnamed distributions object with as many distributions as defined in
-    ## parameters$valid), and dn (named version of dx). They are written to the
-    ## global env the tests run in.
-    d0 <- d1 <- dn <- dx <- NULL # Initialize global objects
+
+    ## Setting up a series of "global" objects for testing,
+    ## Intialized with NULL and set by the test set below.
+    d0 <- d1 <- dn <- dx <- NULL
+    xx <- xxLong         <- NULL
+    pp <- ppLong         <- NULL
+
+    ## Quantile vectors for testing
     test_that("constructor <NAME> runs silent with parameter inputs", {
+        ## Call constructor function with the pre-defined arguments in
+        ## parameters$valid to create four objects for testing:
+        ## - d0 (default return)
+        ## - d1 (unnamed distribution object with one distribution)
+        ## - dx (unnamed distributions object with as many distributions as defined in parameters$valid)
+        ## - dn (named version of dx)
         expect_silent(d0 <<- <NAME>())
         expect_silent(d1 <<- <CMD_D1>)
         expect_silent(dx <<- <CMD_DX>)
         expect_silent(dn <<- <CMD_DN>)
+
+        ## Response vectors for testing
+        ## - xx (same length as dn/dx)
+        ## - xxLong (longer than dn/dx for testing !elementwise/drops)
+        n  <-  length(dx)
+        pp <<- seq(1 / (n + 1), n / (n + 1), length.out = n)
+        expect_silent(xx   <<- round(quantile(dx, pp), 4))
+
+        n <- as.integer(pmax(length(dn) * 1.3, 20))
+        ppLong <- seq(0.05, 0.95, length.out = n)
+        expect_silent(xxLong <<- quantile(d1, ppLong))
     });
     '
 
@@ -1410,29 +1428,30 @@ autotest_pdf <- function(config) {
     test_that("S3 method pdf works as expected for <NAME> distribution", {
         ## Incorrect use
         expect_error(pdf(d1), regexp = "argument \\"x\\" is missing")
-        expect_error(pdf(d1, 1, drop = "foo"), regexp = "\'drop\' must be logical")
+        expect_error(pdf(d1, xx[1L], drop = "foo"), regexp = "\'drop\' must be logical")
 
         ## Unnamed of length <N>, drop = TRUE (default)
-        expect_silent(x <- pdf(dx, 3))
-        expect_identical(length(x), <N>,             info = "return of incorrect length")
-        expect_null(names(x),                        info = "return expected to be unnamed")
+        expect_silent(x <- pdf(dx, xx))
+        expect_identical(length(x), <N>,                              info = "return of incorrect length")
+        expect_null(names(x),                                         info = "return expected to be unnamed")
 
         ## Named of length <N>, drop = TRUE (default)
-        expect_silent(x <- pdf(dn, 3))
-        expect_true(is.numeric(x) && all(!is.na(x)), info = "return expected to be numeric and non-missing")
-        expect_identical(length(x), <N>,             info = "return of incorrect length")
-        expect_identical(names(x), names(dn),        info = "elements of return not named as expected")
+        expect_silent(x <- pdf(dn, xx))
+        expect_true(is.numeric(x) && all(!is.na(x)),                  info = "return expected to be numeric and non-missing")
+        expect_identical(length(x), <N>,                              info = "return of incorrect length")
+        expect_identical(names(x), names(dn),                         info = "elements of return not named as expected")
 
         ## Named of length <N>, drop = FALSE (returns matrix)
-        expect_silent(x <- pdf(dn, 3, drop = FALSE))
-        expect_true(is.matrix(x),                             info = "expected numeric matrix with drop = FALSE")
-        expect_identical(dim(x), c(length(dn), 1L),           info = "return of incorrect dimension")
-        expect_identical(dimnames(x), list(names(dn), "d_3"), info = "return dimnames not as expected")
+        expect_silent(x <- pdf(dn, xx, drop = FALSE))
+        expect_true(is.matrix(x),                                     info = "expected numeric matrix with drop = FALSE")
+        expect_identical(dim(x), c(length(dn), 1L),                   info = "return of incorrect dimension")
+        expect_identical(dimnames(x), list(names(dn), "density"), info = "return dimnames not as expected")
 
         ## length(x) > <N> (drop should default to FALSE)
-        expect_silent(x <- pdf(dn, 1:10))
-        expect_identical(dim(x), c(<N>, 10L),                 info = "return of incorrect dimension")
-        expect_identical(dimnames(x), list(names(dn), paste0("d_", 1:10)), info = "return dimnames not as expected")
+        expect_silent(x <- pdf(dn, xxLong))
+        expect_identical(dim(x), c(<N>, length(xxLong)),               info = "return of incorrect dimension")
+        cnam <- paste0("d_", distributions3:::make_suffix(xxLong, digits = pmax(3L, getOption("digits") - 3L)))
+        expect_identical(dimnames(x), list(names(dn), cnam),           info = "return dimnames not as expected")
 
         ## Only on the last object: Ensure the (matrix) is numeric,
         ## all elements are non-missing, and all positive finite
@@ -1440,7 +1459,7 @@ autotest_pdf <- function(config) {
                     info = "return expected to be numeric, non-missing, and finite positive [0, Inf)")
 
         ## pdf(..., log = TRUE)
-        expect_silent(xlog <- pdf(dn, 1:10, log = TRUE))
+        expect_silent(xlog <- pdf(dn, xxLong, log = TRUE))
         expect_equal(xlog, log(x))
     });
     '
@@ -1460,15 +1479,15 @@ autotest_log_pdf <- function(config) {
     template <- '
     ## --- test set generated by <FNAME>
     test_that("S3 method log_pdf works as expected for <NAME> distribution", {
-        expect_silent(x <- pdf(dn, 1:10))
-        expect_identical(dim(x), c(<N>, 10L))
+        expect_silent(x <- pdf(dn, xxLong))
+        expect_identical(dim(x), c(<N>, length(xxLong)))
 
         ## Adjusting column names of x just for the test.
         ## pdf() uses "d_", log_pdf uses "l_"
         colnames(x) <- gsub("^d_", "l_", colnames(x))
 
         ## log_pdf(....)
-        expect_silent(xlog <- log_pdf(dn, 1:10))
+        expect_silent(xlog <- log_pdf(dn, xxLong))
         expect_equal(xlog, log(x))
     });
     '
@@ -1588,29 +1607,30 @@ autotest_cdf <- function(config) {
     test_that("S3 method cdf works as expected for <NAME> distribution", {
         ## Incorrect use
         expect_error(cdf(d1), regexp = "argument \\"x\\" is missing")
-        expect_error(cdf(d1, 1, drop = "foo"), regexp = "\'drop\' must be logical")
+        expect_error(cdf(d1, xx[1L], drop = "foo"), regexp = "\'drop\' must be logical")
 
         ## Unnamed of length <N>, drop = TRUE (default)
-        expect_silent(x <- cdf(dx, 3))
-        expect_identical(length(x), <N>,             info = "return of incorrect length")
-        expect_null(names(x),                        info = "return expected to be unnamed")
+        expect_silent(x <- cdf(dx, xx[1L]))
+        expect_identical(length(x), <N>,                               info = "return of incorrect length")
+        expect_null(names(x),                                          info = "return expected to be unnamed")
 
         ## Named of length <N>, drop = TRUE (default)
-        expect_silent(x <- cdf(dn, 3))
-        expect_true(is.numeric(x) && all(!is.na(x)), info = "return expected to be numeric and non-missing")
-        expect_identical(length(x), <N>,             info = "return of incorrect length")
-        expect_identical(names(x), names(dn),        info = "elements of return not named as expected")
+        expect_silent(x <- cdf(dn, xx[1L]))
+        expect_true(is.numeric(x) && all(!is.na(x)),                   info = "return expected to be numeric and non-missing")
+        expect_identical(length(x), <N>,                               info = "return of incorrect length")
+        expect_identical(names(x), names(dn),                          info = "elements of return not named as expected")
 
         ## Named of length <N>, drop = FALSE (returns matrix)
-        expect_silent(x <- cdf(dn, 3, drop = FALSE))
-        expect_true(is.matrix(x),                             info = "expected numeric matrix with drop = FALSE")
-        expect_identical(dim(x), c(length(dn), 1L),           info = "return of incorrect dimension")
-        expect_identical(dimnames(x), list(names(dn), "p_3"), info = "return dimnames not as expected")
+        expect_silent(x <- cdf(dn, xx, drop = FALSE))
+        expect_true(is.matrix(x),                                      info = "expected numeric matrix with drop = FALSE")
+        expect_identical(dim(x), c(length(dn), 1L),                    info = "return of incorrect dimension")
+        expect_identical(dimnames(x), list(names(dn), "probability"),  info = "return dimnames not as expected")
 
         ## length(x) > <N> (drop should default to FALSE)
-        expect_silent(x <- cdf(dn, 1:10))
-        expect_identical(dim(x), c(<N>, 10L),                 info = "return of incorrect dimension")
-        expect_identical(dimnames(x), list(names(dn), paste0("p_", 1:10)), info = "return dimnames not as expected")
+        expect_silent(x <- cdf(dn, xxLong))
+        expect_identical(dim(x), c(<N>, length(xxLong)),               info = "return of incorrect dimension")
+        cnam <- paste0("p_", distributions3:::make_suffix(xxLong, digits = pmax(3L, getOption("digits") - 3L)))
+        expect_identical(dimnames(x), list(names(dn), cnam),           info = "return dimnames not as expected")
 
         ## Only on the last object: Ensure the (matrix) is numeric,
         ## all elements are non-missing, and all positive finite
@@ -1618,10 +1638,11 @@ autotest_cdf <- function(config) {
                     info = "return expected to be numeric, non-missing, and finite positive [0, 1]")
 
         ## cdf(..., log = TRUE)
-        expect_silent(xlog <- cdf(dn, 1:10, log = TRUE))
+        expect_silent(xlog <- cdf(dn, xxLong, log = TRUE))
         expect_equal(xlog, log(x))
     });
     '
+
     ## List of values/placeholders to replace
     p <- list("<NAME>"     = config$name,
               "<FNAME>"    = fname,
@@ -1696,17 +1717,15 @@ autotest_cdf_compare2numeric <- function(config) {
     template <- '
     ## --- test set generated by <FNAME>
     test_that("analytic cdf/log-cdf and numeric approximation are equal for <NAME>", {
-        x <- seq_along(dn)
-
         ## Calculate analytic and nuemric solution
-        expect_silent(analytic_sol <- cdf(dn, x, elementwise = FALSE))
-        expect_silent(numeric_sol  <- distributions3:::cdf.distribution(dn, x, elementwise = FALSE))
+        expect_silent(analytic_sol <- cdf(dn, xx, elementwise = FALSE))
+        expect_silent(numeric_sol  <- distributions3:::cdf.distribution(dn, xx, elementwise = FALSE))
         expect_equal(numeric_sol, analytic_sol, tolerance = <TOLERANCE>,
                      info = "analtyic and numeric solution for cdf <NAME> differ")
 
         ## Same but for log pdf
-        expect_silent(analytic_sol <- cdf(dn, x, elementwise = FALSE, log = TRUE))
-        expect_silent(numeric_sol  <- distributions3:::cdf.distribution(dn, x, elementwise = FALSE, log = TRUE))
+        expect_silent(analytic_sol <- cdf(dn, xx, elementwise = FALSE, log = TRUE))
+        expect_silent(numeric_sol  <- distributions3:::cdf.distribution(dn, xx, elementwise = FALSE, log = TRUE))
         expect_equal(numeric_sol, analytic_sol, tolerance = <TOLERANCE>,
                      info = "analtyic and numeric solution for log-cdf <NAME> differ")
 

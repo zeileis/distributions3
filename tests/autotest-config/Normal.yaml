@@ -6,8 +6,8 @@ name: Normal
 ## Name of parameters and supported range/values.
 parameters:
   valid:
-    mu:    [ -10, -1,  0,  1,  10]
-    sigma: [   0,  1,  2,  5, 100]
+    mu:    [ -10.0, -1,  0,  1,  10]
+    sigma: [   0.5,  1,  2,  5, 100]
   invalid:
     sigma: [-10, -1e-10]
 
@@ -18,10 +18,3 @@ support:
 distributiontype:
   discrete: false
   continuous: true
-
-tests:
-  exclude:
-    - cdf_compare2numeric
-    - score_compare2numeric
-    - hessian_observed_compare2numeric
-    - hessian_expected_compare2numeric
