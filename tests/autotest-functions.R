@@ -376,12 +376,12 @@ autotest_setup <- function(config) {
         ## Response vectors for testing
         ## - xx (same length as dn/dx)
         ## - xxLong (longer than dn/dx for testing !elementwise/drops)
-        n  <-  length(dx)
-        pp <<- seq(1 / (n + 1), n / (n + 1), length.out = n)
+        n      <-  length(dx)
+        pp     <<- seq(1 / (n + 1), n / (n + 1), length.out = n)
         expect_silent(xx   <<- round(quantile(dx, pp), 4))
 
-        n <- as.integer(pmax(length(dn) * 1.3, 20))
-        ppLong <- seq(0.05, 0.95, length.out = n)
+        n      <-  as.integer(pmax(length(dn) * 1.3, 20))
+        ppLong <<- seq(0.05, 0.95, length.out = n)
         expect_silent(xxLong <<- quantile(d1, ppLong))
     });
     '
@@ -1755,36 +1755,37 @@ autotest_quantile <- function(config) {
     test_that("S3 method quantile works as expected for <NAME> distribution", {
         ## Incorrect use
         expect_error(quantile(d1), regexp = "argument \\"probs\\" is missing")
-        expect_error(quantile(d1, 1, drop = "foo"), regexp = "\'drop\' must be logical")
+        expect_error(quantile(d1, 0.3, drop = "foo"), regexp = "\'drop\' must be logical")
 
         ## Probs outside range
-        expect_warning(x <- quantile(dx, -1e-6), info = "expected warning when probs < 0")
+        expect_warning(x <- quantile(dx, -1e-6),                   info = "expected warning when probs < 0")
         expect_identical(x, rep(NaN, length(dx)))
 
-        expect_warning(x <- quantile(dx, 1 + 1e-6), info = "expected warning when probs > 1")
+        expect_warning(x <- quantile(dx, 1 + 1e-6),                info = "expected warning when probs > 1")
         expect_identical(x, rep(NaN, length(dx)))
 
         ## Unnamed of length <N>, drop = TRUE (default)
-        expect_silent(x <- quantile(dx, 0.3))
-        expect_identical(length(x), <N>,             info = "return of incorrect length")
-        expect_null(names(x),                        info = "return expected to be unnamed")
+        expect_silent(x <- quantile(dx, pp[1L]))
+        expect_identical(length(x), <N>,                           info = "return of incorrect length")
+        expect_null(names(x),                                      info = "return expected to be unnamed")
 
         ## Named of length <N>, drop = TRUE (default)
-        expect_silent(x <- quantile(dn, 0.3))
-        expect_true(is.numeric(x) && all(!is.na(x)), info = "return expected to be numeric and non-missing")
-        expect_identical(length(x), <N>,             info = "return of incorrect length")
-        expect_identical(names(x), names(dn),        info = "elements of return not named as expected")
+        expect_silent(x <- quantile(dn, pp[1L]))
+        expect_true(is.numeric(x) && all(!is.na(x)),               info = "return expected to be numeric and non-missing")
+        expect_identical(length(x), <N>,                           info = "return of incorrect length")
+        expect_identical(names(x), names(dn),                      info = "elements of return not named as expected")
 
         ## Named of length <N>, drop = FALSE (returns matrix)
-        expect_silent(x <- quantile(dn, 0.3, drop = FALSE))
-        expect_true(is.matrix(x),                             info = "expected numeric matrix with drop = FALSE")
-        expect_identical(dim(x), c(length(dn), 1L),           info = "return of incorrect dimension")
-        expect_identical(dimnames(x), list(names(dn), "q_0.3"), info = "return dimnames not as expected")
+        expect_silent(x <- quantile(dn, pp, drop = FALSE))
+        expect_true(is.matrix(x),                                  info = "expected numeric matrix with drop = FALSE")
+        expect_identical(dim(x), c(length(dn), 1L),                info = "return of incorrect dimension")
+        expect_identical(dimnames(x), list(names(dn), "quantile"), info = "return dimnames not as expected")
 
         ## length(x) > <N> (drop should default to FALSE)
-        expect_silent(x <- quantile(dn, 1:9 / 10))
-        expect_identical(dim(x), c(<N>, 9L),                 info = "return of incorrect dimension")
-        expect_identical(dimnames(x), list(names(dn), paste0("q_", 1:9 / 10)), info = "return dimnames not as expected")
+        expect_silent(x <- quantile(dn, ppLong))
+        expect_identical(dim(x), c(<N>, length(ppLong)),           info = "return of incorrect dimension")
+        cnam <- paste0("q_", distributions3:::make_suffix(ppLong, digits = pmax(3L, getOption("digits") - 3L)))
+        expect_identical(dimnames(x), list(names(dn), cnam),       info = "return dimnames not as expected")
 
         ## Only on the last object: Ensure the (matrix) is numeric,
         ## all elements are non-missing, and all positive finite
