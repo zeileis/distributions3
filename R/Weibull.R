@@ -63,8 +63,8 @@ Weibull <- function(shape = numeric(), scale = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(shape) == length(scale) | length(shape) == 1 | length(scale) == 1,
-    "parameter 'shape' must be in (0, Inf]" = all(shape > 0, na.rm = TRUE),
-    "parameter 'scale' must be in (0, Inf]" = all(scale > 0, na.rm = TRUE)
+    "parameter 'shape' must be in [0, Inf]" = all(shape >= 0, na.rm = TRUE),
+    "parameter 'scale' must be in [0, Inf]" = all(scale >= 0, na.rm = TRUE)
   )
 
   d <- data.frame(shape = shape, scale = scale)
