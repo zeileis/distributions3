@@ -96,9 +96,7 @@
 ChiSquare <- function(df = numeric()) {
   stopifnot("parameter 'df' must be atomic" = is.atomic(df))
   if (!is.numeric(df)) df <- as.numeric(df)
-  stopifnot(
-    "parameter 'df' must be in non-missing" = all(!is.na(df))
-  )
+  stopifnot("parameter 'df' must be in [0, Inf]" = all(df >= 0, na.rm = TRUE))
 
   d <- data.frame(df = df)
   class(d) <- c("ChiSquare", "distribution")
