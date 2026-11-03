@@ -23,6 +23,10 @@ distributiontype:
 
 tests:
   exclude:
+    ## Score and Hessian only available for parameter 'p', thus
+    ## the automated tests for function defaults fail and are
+    ## excluded; manual tests in test-Binomial.R
+    - score_hessian_defaults
     ## TODO(R): Numeric approximation unhappy, thus excluded for now (needed?)
     - score_compare2numeric
     - hessian_observed_compare2numeric

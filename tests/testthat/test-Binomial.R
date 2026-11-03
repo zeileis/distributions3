@@ -68,6 +68,18 @@ test_that("moments for Binomial distribution return correct values", {
         info = "kurtosis.Binomial incorrect")
 })
 
+## Testing default arguments (not covered by autotests as we have two parameters,
+## but have a default 'p' as score/hessian only allowed for 'p'.
+test_that("score and hessian methods for Binomial have correct arguments/defaults", {
+    expect_identical(formals(getFromNamespace("score.Binomial", ns = "distributions3")),
+        as.pairlist(alist(d =, x =, which = "p", drop = TRUE, ... =)),
+        info = "unexpected arguments/defaults for S3 method score.Binomial")
+
+    expect_identical(formals(getFromNamespace("hessian.Binomial", ns = "distributions3")),
+        as.pairlist(alist(d =, x =, which = "p", drop = TRUE, expected = FALSE, ... =)),
+        info = "unexpected arguments/defaults for S3 method hessian.Binomial")
+});
+
 ## Testing correctness of score
 test_that("score for Binomial distribution return correct values", {
     expect_identical(score(dd, xx, which = "p"),
