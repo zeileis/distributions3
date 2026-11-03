@@ -84,6 +84,10 @@ for (config in distconfig) {
     res <- append(res, autotest_params_empty(config))
     res <- append(res, autotest_params_nonnumeric(config))
 
+    ## Test that constructor function allows for parameters
+    ## being missing (NA) and that all methods react accordingly
+    res <- append(res, autotest_params_NA(config))
+
     res <- append(res, autotest_as.list(config))
     res <- append(res, autotest_as.matrix(config))
     res <- append(res, autotest_as.data.frame(config))
