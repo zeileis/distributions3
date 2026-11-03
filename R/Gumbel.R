@@ -277,8 +277,8 @@ score.Gumbel <- function(d, x, which = NULL, drop = TRUE, ...) {
   scr <- function(par, d, x) {
     z <- (x - d$mu) / d$sigma
     switch(par,
-      "mu" = (exp(z) - 1) / d$sigma,
-      "sigma"    = (z * (exp(z) - 1) - 1) / d$sigma)
+      "mu" = (1 - exp(-z)) / d$sigma,
+      "sigma"    = (z * (1 - exp(-z)) - 1) / d$sigma)
   }
 
   ## Calculate derivatives, prepare return object
@@ -300,21 +300,22 @@ hessian.Gumbel <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   which  <- get_deriv_names(params, which = which, expand = TRUE)
 
   ## function for computing Hessian elements (expected or observed)
-  ## expected: E(exp(z)) = 1, E(z exp(z)) = 1 - gamma, E(z^2 exp(z)) = (1 - gamma)^2 + pi^2 / 6 - 1
+  ## with w = exp(-z) and z ~ standard Gumbel (maximum type), w ~ Exp(1), so
+  ## expected: E(w) = 1, E(z w) = gamma - 1, E(z^2 w) = (1 - gamma)^2 + pi^2 / 6 - 1
   gam <- -digamma(1)
   hess <- if (expected) {
     function(par, d, x) switch(par,
       "mu" = 0 * x - 1 / d$sigma^2,
-      "sigma" = 0 * x - (1 + gam^2 - 2 * gam + pi^2 / 6) / d$sigma^2,
-      0 * x - (1 - gam) / d$sigma^2)
+      "sigma" = 0 * x - ((1 - gam)^2 + pi^2 / 6) / d$sigma^2,
+      0 * x + (1 - gam) / d$sigma^2)
   } else {
     function(par, d, x) {
-      z  <- (x - d$mu) / d$sigma
-      ez <- exp(z)
+      z <- (x - d$mu) / d$sigma
+      w <- exp(-z)
       switch(par,
-        "mu" = -ez / d$sigma^2,
-        "sigma" = (1 + 2 * z - ez * (2 * z + z^2)) / d$sigma^2,
-        (1 - ez * (1 + z)) / d$sigma^2)
+        "mu" = -w / d$sigma^2,
+        "sigma" = (1 - 2 * z + w * (2 * z - z^2)) / d$sigma^2,
+        (w * (1 - z) - 1) / d$sigma^2)
     }
   }
 

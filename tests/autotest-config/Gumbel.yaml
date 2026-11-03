@@ -1,0 +1,27 @@
+## Name of the distribution, also defines the name of the constructor function
+name: Gumbel
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    mu:    [ 0, -10.0, -1,  0,  1, 10]
+    sigma: [ 5,  0.5,  1,  2,  5, 100]
+  invalid:
+    sigma: [-10, -1e-10, 0]
+
+support:
+  lower: -.inf
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+tests:
+  exclude:
+    ## TODO: revdbayes::dgev allows n, loc, shape to be NA, but not 'scale'.
+    ## Thus ecluding this automated test.
+    - params_NA
+    ## TODO: revdbayes::qgev throws error (not warning) if p not in [0, 1],
+    ## thus exlcuded for now.
+    - quantile
