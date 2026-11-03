@@ -113,6 +113,10 @@
 #' mean(x) + quantile(T, 0.12 / 2) * sd(x) / sqrt(nx)
 #' mean(x) + quantile(T, 1 - 0.12 / 2) * sd(x) / sqrt(nx)
 StudentsT <- function(df = numeric()) {
+  stopifnot("parameter 'df' must be atomic" = is.atomic(df))
+  if (!is.numeric(df)) df <- as.numeric(df)
+  stopifnot("parameter 'df' must be in [0, Inf]" = all(df >= 0, na.rm = TRUE))
+
   d <- data.frame(df = df)
   class(d) <- c("StudentsT", "distribution")
   d
@@ -123,46 +127,28 @@ StudentsT <- function(df = numeric()) {
 mean.StudentsT <- function(x, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  rval <- ifelse(x$df > 1,
-    0,
-    NaN
-  )
+  rval <- ifelse(x$df > 1, 0, NaN)
   setNames(rval, names(x))
 }
 
 #' @export
 variance.StudentsT <- function(x, ...) {
   if (length(x) == 0L) return(numeric())
-  rval <- ifelse(x$df > 2,
-    x$df / (x$df - 2),
-    ifelse(x$df > 1,
-      Inf,
-      NaN
-    )
-  )
+  rval <- ifelse(x$df > 2, x$df / (x$df - 2), ifelse(x$df > 1, Inf, NaN))
   setNames(rval, names(x))
 }
 
 #' @export
 skewness.StudentsT <- function(x, ...) {
   if (length(x) == 0L) return(numeric())
-  rval <- ifelse(x$df > 3,
-    0,
-    NaN
-  )
+  rval <- ifelse(x$df > 3, 0, NaN)
   setNames(rval, names(x))
 }
 
 #' @export
 kurtosis.StudentsT <- function(x, ...) {
   if (length(x) == 0L) return(numeric())
-  rval <- ifelse(x$df > 4,
-    6 / (x$df - 4),
-    ifelse(x$df > 2,
-      Inf,
-      NaN
-    )
-  )
+  rval <- ifelse(x$df > 4, 6 / (x$df - 4), ifelse(x$df > 2, Inf, NaN))
   setNames(rval, names(x))
 }
 
@@ -340,3 +326,70 @@ is_discrete.StudentsT <- function(d, ...) {
 is_continuous.StudentsT <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# StudentsT: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.StudentsT <- function(d, x, which = "df", drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute score with respect to 'df' (the only parameter)
+  scr <- function(par, d, x) {
+    nu <- d$df
+    u  <- x^2
+    0.5 * (digamma((nu + 1) / 2) - digamma(nu / 2) - 1 / nu - log1p(u / nu) +
+      (nu + 1) * u / (nu * (nu + u)))
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.StudentsT <- function(d, x, which = "df", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## function for computing the 'df' hessian (expected or observed)
+  ## expected: the x-dependence integrates out, leaving a function of nu only
+  hess <- if (expected) {
+    function(par, d, x) {
+      nu <- d$df
+      0 * x + 0.25 * (trigamma((nu + 1) / 2) - trigamma(nu / 2)) +
+        (nu + 5) / (2 * nu * (nu + 1) * (nu + 3))
+    }
+  } else {
+    function(par, d, x) {
+      nu   <- d$df
+      nu2  <- nu^2
+      u    <- x^2
+      nupu <- nu + u
+      0.25 * (trigamma((nu + 1) / 2) - trigamma(nu / 2)) + 1 / (2 * nu2) +
+        u / (2 * nu * nupu) - u * (nu2 + 2 * nu + u) / (2 * nu2 * nupu^2)
+
+    }
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
+

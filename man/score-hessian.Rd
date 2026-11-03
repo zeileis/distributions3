@@ -2,7 +2,7 @@
 % Please edit documentation in R/Bernoulli.R, R/Binomial.R, R/Cauchy.R,
 %   R/ChiSquare.R, R/Erlang.R, R/Exponential.R, R/Gamma.R, R/Gumbel.R,
 %   R/LogNormal.R, R/Logistic.R, R/Normal.R, R/Poisson.R, R/SinhArcsinh.R,
-%   R/Uniform.R, R/Weibull.R, R/score-hessian.R
+%   R/StudentsT.R, R/Uniform.R, R/Weibull.R, R/score-hessian.R
 \name{score-hessian}
 \alias{score-hessian}
 \alias{score.Bernoulli}
@@ -31,6 +31,8 @@
 \alias{hessian.Poisson}
 \alias{score.SinhArcsinh}
 \alias{hessian.SinhArcsinh}
+\alias{score.StudentsT}
+\alias{hessian.StudentsT}
 \alias{score.Uniform}
 \alias{hessian.Uniform}
 \alias{score.Weibull}
