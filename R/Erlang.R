@@ -34,8 +34,8 @@
 #' quantile(X, cdf(X, 7))
 Erlang <- function(k = numeric(), lambda = numeric()) {
   stopifnot("parameters 'k' and 'lambda' must be atomic" = is.atomic(k) && is.atomic(lambda))
-  if (!is.numeric(k))     k      <- as.numeric(k)
-  if (!is.numeric(sigma)) lambda <- as.numeric(lambda)
+  if (!is.numeric(k))      k      <- as.numeric(k)
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1,
