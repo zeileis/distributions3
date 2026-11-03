@@ -92,9 +92,14 @@
 #' quantile(X, cdf(X, 7))
 Binomial <- function(size = numeric(), p = 0.5) {
   if (identical(size, numeric())) p <- numeric() # Ensure empty default
+  stopifnot("parameters 'size' and 'p' must be atomic" = is.atomic(size) && is.atomic(p))
+  if (!is.numeric(size)) size <- as.numeric(size)
+  if (!is.numeric(p))    p <- as.numeric(p)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(size) == length(p) | length(size) == 1 | length(p) == 1
+      length(size) == length(p) | length(size) == 1 | length(p) == 1,
+    "parameter 'size' must be in [0, Inf]"   = all(size >= 0 | is.na(size)),
+    "parameter 'p' must be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE)
   )
 
   d <- data.frame(size = size, p = p)

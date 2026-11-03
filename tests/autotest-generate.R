@@ -128,15 +128,12 @@ for (config in distconfig) {
     res <- append(res, autotest_score_hessian_defaults(config)) # arguments/defaults
 
     res <- append(res, autotest_score(config))
-    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
     res <- append(res, autotest_score_compare2numeric(config))
 
     res <- append(res, autotest_hessian_observed(config))
-    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
     res <- append(res, autotest_hessian_observed_compare2numeric(config))
 
     res <- append(res, autotest_hessian_expected(config))
-    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get differences in NA/Inf
     res <- append(res, autotest_hessian_expected_compare2numeric(config))
 
     ## ----------- crps
