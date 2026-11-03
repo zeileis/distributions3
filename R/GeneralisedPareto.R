@@ -92,7 +92,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 GP <- function(mu = 0, sigma = 1, xi = 0) {
-  if (any(sigma <= 0)) {
+  stopifnot("parameters 'mu', 'sigma' and 'xi' must be atomic" =
+    is.atomic(mu) && is.atomic(sigma) && is.atomic(xi))
+  if (!is.numeric(mu)) mu <- as.numeric(mu)
+  if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
+  if (!is.numeric(xi)) xi <- as.numeric(xi)
+  if (any(sigma <= 0, na.rm = TRUE)) {
     stop("sigma must be positive")
   }
 
@@ -303,7 +308,8 @@ quantile.GP <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 support.GP <- function(d, drop = TRUE, ...) {
   min <- d$mu
   max <- rep(Inf, length(d))
-  max[d$xi < 0] <- d$mu[d$xi < 0] - d$sigma[d$xi < 0]/d$xi[d$xi < 0]
+  idx <- which(d$xi < 0)
+  max[idx] <- d$mu[idx] - d$sigma[idx] / d$xi[idx]
   make_support(min, max, d, drop = drop)
 }
 
@@ -316,3 +322,100 @@ is_discrete.GP <- function(d, ...) {
 is_continuous.GP <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# GP: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.GP <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores; for xi near 0 the xi-score is evaluated by its Taylor
+  ## expansion in xi (the closed form suffers from cancellation there); the
+  ## test is recycled to the length of z because ifelse() uses its test's length
+  scr <- function(par, d, x) {
+    z <- (x - d$mu) / d$sigma
+    s <- 1 + d$xi * z
+    switch(par,
+      "mu" = (1 + d$xi) / (d$sigma * s),
+      "sigma" = (z - 1) / (d$sigma * s),
+      {
+        xi     <- d$xi
+        direct <- log1p(xi * z) / xi^2 - (xi + 1) * z / (xi * s)
+        series <- z^2 / 2 - z + xi * (z^2 - 2 * z^3 / 3) +
+          xi^2 * (3 * z^4 / 4 - z^3) + xi^3 * (z^4 - 4 * z^5 / 5)
+        ifelse(abs(xi) + 0 * z < 1e-2, series, direct)
+      })
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.GP <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## Key for the derivative: parameter names sorted alphabetically, so that
+  ## e.g. "sigma:mu" and "mu:sigma" both map to "mu:sigma"
+  key <- function(par) paste(sort(strsplit(par, ":", fixed = TRUE)[[1L]]), collapse = ":")
+
+  ## function for computing Hessian elements (expected or observed); with
+  ## S = 1 + xi * z the expected values use E(S^-k) = 1 / (1 + k xi) and E(log S) = xi
+  hess <- if (expected) {
+    function(par, d, x) {
+      xi <- d$xi
+      sg <- d$sigma
+      rval <- switch(key(par),
+        "mu"       = xi * (1 + xi) / (sg^2 * (1 + 2 * xi)),
+        "sigma"    = -1 / (sg^2 * (1 + 2 * xi)),
+        "xi"       = -2 / ((1 + xi) * (1 + 2 * xi)),
+        "mu:sigma" = -(1 + xi) / (sg^2 * (1 + 2 * xi)),
+        "mu:xi"    = xi / (sg * (1 + xi) * (1 + 2 * xi)),
+        "sigma:xi" = -1 / (sg * (1 + xi) * (1 + 2 * xi)))
+      0 * x + rval
+    }
+  } else {
+    function(par, d, x) {
+      z  <- (x - d$mu) / d$sigma
+      s  <- 1 + d$xi * z
+      sg <- d$sigma
+      xi <- d$xi
+      switch(key(par),
+        "mu"       = xi * (1 + xi) / (sg^2 * s^2),
+        "sigma"    = (1 - 2 * z - xi * z^2) / (sg^2 * s^2),
+        "xi" = {
+          direct <- z * (2 * s + xi * (xi + 1) * z) / (xi^2 * s^2) - 2 * log1p(xi * z) / xi^3
+          series <- z^2 - 2 * z^3 / 3 + xi * (3 * z^4 / 2 - 2 * z^3) +
+            xi^2 * (3 * z^4 - 12 * z^5 / 5) + xi^3 * (10 * z^6 / 3 - 4 * z^5)
+          ifelse(abs(xi) + 0 * z < 1e-2, series, direct)
+        },
+        "mu:sigma" = -(1 + xi) / (sg^2 * s^2),
+        "mu:xi"    = (1 - z) / (sg * s^2),
+        "sigma:xi" = z * (1 - z) / (sg * s^2))
+    }
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
+
