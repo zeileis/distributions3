@@ -39,8 +39,8 @@ Erlang <- function(k = numeric(), lambda = numeric()) {
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1,
-    "parameter 'k' must be positive integers" =
-        all(k > 0) && isTRUE(all.equal(k, as.integer(k), check.attributes = FALSE)),
+    "parameter 'k' must be positive integer(s)" =
+        all(k > 0 | is.na(k)) & all.equal(k, as.integer(k), check.attributes = FALSE),
     "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE)
   )
 
