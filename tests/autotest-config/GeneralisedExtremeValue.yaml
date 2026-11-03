@@ -1,0 +1,38 @@
+#
+#
+## Name of the distribution, also defines the name of the constructor function
+name: GEV
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    ## Parameters are combined row by row.
+    mu:    [ -1,   0,  0.5,  -1,  -1, -10,  -5]
+    sigma: [  1,   2,    5, 100,   5,  20, 0.5]
+    xi:    [-0.4, -0.1,   0, 0.1, 0.2, -0.4, 0.2]
+  invalid:
+    sigma: [-10, -1e-10, 0]
+
+support:
+  lower: -.inf
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+tests:
+  exclude:
+    ## The support depends on the parameters (see above), so the fixed support
+    ## above does not apply.
+    - support
+    ## TODO: revdbayes::qgev throws error (not warning) if p not in [0, 1],
+    ## thus excluded for now (as for Gumbel).
+    - quantile
+    ## TODO: revdbayes::dgev throws error for NA scale, thus excluded for now
+    ## (as for Gumbel).
+    - params_NA
+    ## TODO: the numeric fallback for the expected hessian (stats::integrate over
+    ## the density, truncated at the 1e-6 quantile) is inaccurate for this bounded
+    ## or heavy-tailed support (errors of several percent).
+    - hessian_expected_compare2numeric

@@ -1,11 +1,44 @@
+# -------------------------------------------------------
+# Checking GeneralisedExtremeValue distribution
+# -------------------------------------------------------
 
-test_that("GEV default arguments", {
-  expect_identical(formals(GEV),
-    as.pairlist(alist(mu = 0, sigma = 1, xi = 0)))
+if (interactive()) { library("distributions3"); library("testthat") }
+suppressPackageStartupMessages(library("scoringRules"))
+
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- GEV(c(3, -2, 3), c(2, 0.5, 3.5), c(0.1, 0.3, 0.2))
+xx <- 1:3                        # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(GEV), as.pairlist(alist(mu = 0, sigma = 1, xi = 0)))
 })
 
-test_that("print.GEV works", {
-  expect_output(print(GEV()), regexp = "GEV")
+## Sufficient statistics
+test_that("suff_stat.GEV is not yet implemented", {
+  expect_error(suff_stat(GEV(), c(0, 0)), regexp = "no applicable method")
+})
+
+## Fitting
+test_that("fit_mle.GEV is not yet implemented", {
+  expect_error(fit_mle(GEV(), c(0, 0)), regexp = "no applicable method")
+})
+
+## Testing support
+test_that("support.GEV works as expected", {
+    d <- GEV(mu = c(3, 5, -3, -5), sigma = 1, xi = c(-0.5, 0.5, -0.5, 0.5))
+    expect_silent(support(d))
+
+    m <- cbind(min = rep(-Inf, length(d)), max = rep(Inf, length(d)))
+    m[d$xi > 0, 1] <- d$mu[d$xi > 0] - d$sigma[d$xi > 0] / d$xi[d$xi > 0]
+    m[d$xi < 0, 2] <- d$mu[d$xi < 0] - d$sigma[d$xi < 0] / d$xi[d$xi < 0]
+    expect_identical(support(d), m)
 })
 
 ## Example distributions
@@ -150,93 +183,77 @@ test_that("cdf.GEV and quantile.GEV are consistent", {
   expect_equal(unname(cdf(g3, quantile(g3, pvec))), pvec)
 })
 
-test_that("vectorization of a GEV distribution work correctly", {
-  d <- GEV(0, 1, c(0.1, 0))
-  d1 <- d[1]
-  d2 <- d[2]
 
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
+## Custom tests for score and hessian
 
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
 
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
+test_that("analytic score and hessian of GEV match numeric derivatives", {
+  skip_if_not_installed("numDeriv")
 
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
+  ## xi = 0 is covered by the continuity test below: the finite differences in xi
+  ## of this numeric reference pass through tiny xi, where it cancels badly
+  d <- GEV(mu = c(-1, 0.5, 0.5), sigma = c(1.7, 1.7, 1.7), xi = c(-0.1, 0.05, 0.3))
+  x <- c(1.7, 3)
+  ## log-density written out in base R: revdbayes::dgev is too inaccurate near
+  ## xi = 0 for second derivatives in xi
+  ll <- function(p, obs) {
+    z <- (obs - p[1]) / p[2]
+    if (abs(p[3]) < 1e-8) return(-log(p[2]) - z - exp(-z))
+    s <- 1 + p[3] * z
+    -log(p[2]) - (1 + 1 / p[3]) * log(s) - s^(-1 / p[3])
+  }
 
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
+  for (i in seq_along(d)) {
+    di <- d[i]
+    par <- c(mu = di$mu, sigma = di$sigma, xi = di$xi)
+    xx <- x[1 + di$xi * (x - di$mu) / di$sigma > 0.05]
 
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
+    num_scr <- t(sapply(xx, function(v) numDeriv::grad(ll, par, obs = v)))
+    expect_equal(unname(score(di, xx)), unname(num_scr), tolerance = 1e-6)
+
+    num_hess <- t(sapply(xx, function(v) {
+      h <- numDeriv::hessian(ll, par, obs = v)
+      c(mu = h[1, 1], sigma = h[2, 2], xi = h[3, 3],
+        "mu:sigma" = h[1, 2], "mu:xi" = h[1, 3], "sigma:xi" = h[2, 3])
+    }))
+    ana_hess <- hessian(di, xx)
+    expect_equal(unname(ana_hess[, colnames(num_hess)]), unname(num_hess),
+      tolerance = 1e-5)
+  }
 })
 
-test_that("named return values for GEV distribution work correctly", {
-  d <- GEV(0, 1, c(0.1, 0))
-  names(d) <- LETTERS[1:length(d)]
+test_that("score and hessian of GEV are continuous in xi at xi = 0", {
+  x <- c(0.4, 1.7, 3)
+  d0 <- GEV(0.5, 1.7, 0)
+  d1 <- GEV(0.5, 1.7, 1e-6)
+  dm <- GEV(0.5, 1.7, -1e-6)
+  expect_equal(unname(score(d1, x)), unname(score(d0, x)), tolerance = 1e-5)
+  expect_equal(unname(score(dm, x)), unname(score(d0, x)), tolerance = 1e-5)
+  expect_equal(unname(hessian(d1, x)), unname(hessian(d0, x)), tolerance = 1e-5)
+  expect_equal(unname(hessian(dm, x)), unname(hessian(d0, x)), tolerance = 1e-5)
+})
 
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
+test_that("expected hessian of GEV matches integration over the quantile function", {
+  ## E(h(X)) = int_0^1 h(Q(p)) dp, Q the quantile function written out in base R
+  ## xi = -0.2 rather than more negative: for xi <~ -0.3 the integrands of the
+  ## mixed derivatives have a (1 - q)^(-power) endpoint singularity that
+  ## stats::integrate() cannot handle
+  pars <- list(c(-1, 1, -0.2), c(0.5, 5, 0), c(-5, 0.5, 0.2), c(0, 2, 0.3))
+  for (p in pars) {
+    mu <- p[1]; sg <- p[2]; xi <- p[3]
+    d <- GEV(mu, sg, xi)
+    ## p = F(x) = exp(-t) with t ~ Exp(1), so Q(p) = mu + sg * (t^(-xi) - 1) / xi
+    Q <- if (xi == 0) {
+      function(q) mu - sg * log(-log(q))
+    } else {
+      function(q) mu + sg * ((-log(q))^(-xi) - 1) / xi
+    }
+    for (nm in c("mu", "sigma", "xi", "mu:sigma", "mu:xi", "sigma:xi")) {
+      exp_num <- integrate(function(q) hessian(d, Q(q), which = nm), 0, 1,
+        rel.tol = 1e-9, subdivisions = 2000)$value
+      exp_ana <- hessian(d, expected = TRUE, which = nm)
+      expect_equal(unname(exp_ana), exp_num, tolerance = 1e-6,
+        info = sprintf("%s at mu = %g, sigma = %g, xi = %g", nm, mu, sg, xi))
+    }
+  }
 })

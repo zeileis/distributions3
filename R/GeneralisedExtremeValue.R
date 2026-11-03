@@ -99,7 +99,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 GEV <- function(mu = 0, sigma = 1, xi = 0) {
-  if (any(sigma <= 0)) {
+  stopifnot("parameters 'mu', 'sigma' and 'xi' must be atomic" =
+    is.atomic(mu) && is.atomic(sigma) && is.atomic(xi))
+  if (!is.numeric(mu)) mu <- as.numeric(mu)
+  if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
+  if (!is.numeric(xi)) xi <- as.numeric(xi)
+  if (any(sigma <= 0, na.rm = TRUE)) {
     stop("sigma must be positive")
   }
 
@@ -327,9 +332,11 @@ quantile.GEV <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 support.GEV <- function(d, drop = TRUE, ...) {
   min <- rep(-Inf, length(d))
-  min[d$xi > 0] <- d$mu[d$xi > 0] - d$sigma[d$xi > 0]/d$xi[d$xi > 0]
+  idx <- which(d$xi > 0)
+  min[idx] <- d$mu[idx] - d$sigma[idx] / d$xi[idx]
   max <- rep(Inf, length(d))
-  max[d$xi < 0] <- d$mu[d$xi < 0] - d$sigma[d$xi < 0]/d$xi[d$xi < 0]
+  idx <- which(d$xi < 0)
+  max[idx] <- d$mu[idx] - d$sigma[idx] / d$xi[idx]
   make_support(min, max, d, drop = drop)
 }
 
@@ -341,4 +348,129 @@ is_discrete.GEV <- function(d, ...) {
 #' @exportS3Method
 is_continuous.GEV <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
+}
+
+# ---------------------------------------------------------------------------
+# GEV: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+## t = s^(-1 / xi) with s = 1 + xi * z, i.e. t = exp(-z) at xi = 0. For the
+## derivatives it is convenient that t ~ Exp(1) when X ~ GEV.
+gev_t <- function(z, xi) {
+  u <- xi * z
+  exp(-z * ifelse(abs(u) < 1e-8, 1 - u / 2, log1p(u) / u))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.GEV <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores; for xi near 0 the xi-score is evaluated by its Taylor
+  ## expansion in xi (the closed form suffers from cancellation there). The
+  ## test is recycled to the length of z because ifelse() uses its test's length
+  scr <- function(par, d, x) {
+    sg <- d$sigma
+    xi <- d$xi
+    z  <- (x - d$mu) / sg
+    s  <- 1 + xi * z
+    L  <- log1p(xi * z)
+    t  <- gev_t(z, xi)
+    w  <- exp(-z)
+    switch(par,
+      "mu" = (1 + xi - t) / (sg * s),
+      "sigma" = (z * (1 - t) - 1) / (sg * s),
+      ifelse(abs(xi) + 0 * z < 1e-3,
+        -1/96*xi^3*z^8*w + (1/6)*xi^3*z^7*w - 13/18*xi^3*z^6*w - 4/5*xi^3*z^5 + (4/5)*xi^3*z^5*w + xi^3*z^4 - 1/16*xi^2*z^6*w + (1/2)*xi^2*z^5*w + (3/4)*xi^2*z^4 - 3/4*xi^2*z^4*w - xi^2*z^3 - 1/4*xi*z^4*w - 2/3*xi*z^3 + (2/3)*xi*z^3*w + xi*z^2 + (1/2)*z^2 - 1/2*z^2*w - z,
+        (-L*s*t + L*s + t*xi*z - xi^2*z - xi*z)/(s*xi^2)))
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.GEV <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## Key for the derivative: parameter names sorted alphabetically, so that
+  ## e.g. "sigma:mu" and "mu:sigma" both map to "mu:sigma"
+  key <- function(par) paste(sort(strsplit(par, ":", fixed = TRUE)[[1L]]), collapse = ":")
+
+  ## function for computing Hessian elements (expected or observed)
+  hess <- if (expected) {
+    function(par, d, x) {
+      sg    <- d$sigma
+      xi    <- d$xi
+      small <- abs(xi) < 5e-3
+      gam   <- -digamma(1)
+      z3 <- 1.2020569031595942
+      z5 <- 1.0369277551433699
+      z7 <- 1.0083492773819228
+      ## closed forms (valid for xi != 0, xi > -1/2) and Taylor expansions in xi
+      ## for small |xi|; both without the sigma factor
+      rval <- switch(key(par),
+        "mu" = ifelse(small,
+          -2/3*pi^2*xi^3 - 4*gam^2*xi^3 + (4/3)*gam^3*xi^3 + 2*gam*xi^3 + (8/3)*xi^3*z3 + (2/3)*gam*pi^2*xi^3 - 1/3*pi^2*xi^2 - xi^2 - 2*gam^2*xi^2 + 4*gam*xi^2 - 2*xi + 2*gam*xi - 1,
+          -(xi + 1)^2*gamma(2*xi + 1)) / sg^2,
+        "sigma" = ifelse(small,
+          -3/16*pi^4*xi^3 - 10*gam*xi^3*z3 - 5/4*gam^2*pi^2*xi^3 - 5/4*gam^4*xi^3 + (1/4)*gam^5*xi^3 + (4/3)*gam^3*xi^3 + (5/12)*gam^3*pi^2*xi^3 + 5*gam^2*xi^3*z3 + (8/3)*xi^3*z3 + (2/3)*gam*pi^2*xi^3 + 6*xi^3*z5 + (5/6)*pi^2*xi^3*z3 + (3/16)*gam*pi^4*xi^3 - 7/80*pi^4*xi^2 - 1/3*pi^2*xi^2 - 14/3*gam*xi^2*z3 - 7/12*gam^2*pi^2*xi^2 - 2*gam^2*xi^2 - 7/12*gam^4*xi^2 + (7/3)*gam^3*xi^2 + (14/3)*xi^2*z3 + (7/6)*gam*pi^2*xi^2 - 1/2*pi^2*xi - 3*gam^2*xi + gam^3*xi + 2*gam*xi + 2*xi*z3 + (1/2)*gam*pi^2*xi - 1/6*pi^2 - 1 - gam^2 + 2*gam,
+          (-xi^2*gamma(2*xi + 1) + 2*xi*gamma(xi + 1) - 2*xi*gamma(2*xi + 1) + 2*gamma(xi + 1) - gamma(2*xi + 1) - 1)/xi^2) / sg^2,
+        "xi" = ifelse(small,
+          -61/1080*pi^6*xi^3 - 28/9*gam*pi^2*xi^3*z3 - 112/5*gam*xi^3*z5 - 7/20*gam^2*pi^4*xi^3 - 56/9*xi^3*z3^2 - 56/9*gam^3*xi^3*z3 - 7/18*gam^4*pi^2*xi^3 - 7/45*gam^6*xi^3 + (1/45)*gam^7*xi^3 + (1/4)*gam^5*xi^3 + (7/90)*gam^5*pi^2*xi^3 + (14/9)*gam^4*xi^3*z3 + (5/12)*gam^3*pi^2*xi^3 + 5*gam^2*xi^3*z3 + (7/60)*gam^3*pi^4*xi^3 + (56/5)*gam^2*xi^3*z5 + (56/9)*gam*xi^3*z3^2 + (14/9)*gam^2*pi^2*xi^3*z3 + 6*xi^3*z5 + (5/6)*pi^2*xi^3*z3 + (3/16)*gam*pi^4*xi^3 + 16*xi^3*z7 + (28/15)*pi^2*xi^3*z5 + (7/30)*pi^4*xi^3*z3 + (61/1080)*gam*pi^6*xi^3 - 305/12096*pi^6*xi^2 - 25/18*gam*pi^2*xi^2*z3 - 7/80*pi^4*xi^2 - 10*gam*xi^2*z5 - 5/32*gam^2*pi^4*xi^2 - 25/9*xi^2*z3^2 - 14/3*gam*xi^2*z3 - 7/12*gam^2*pi^2*xi^2 - 25/9*gam^3*xi^2*z3 - 25/144*gam^4*pi^2*xi^2 - 7/12*gam^4*xi^2 - 5/72*gam^6*xi^2 + (5/12)*gam^5*xi^2 + (25/36)*gam^3*pi^2*xi^2 + (25/3)*gam^2*xi^2*z3 + 10*xi^2*z5 + (25/18)*pi^2*xi^2*z3 + (5/16)*gam*pi^4*xi^2 - 1/8*pi^4*xi - 20/3*gam*xi*z3 - 5/6*gam^2*pi^2*xi - 5/6*gam^4*xi + (1/6)*gam^5*xi + gam^3*xi + (5/18)*gam^3*pi^2*xi + (10/3)*gam^2*xi*z3 + 2*xi*z3 + (1/2)*gam*pi^2*xi + 4*xi*z5 + (5/9)*pi^2*xi*z3 + (1/8)*gam*pi^4*xi - 3/80*pi^4 - 1/6*pi^2 - 2*gam*z3 - 1/4*gam^2*pi^2 - gam^2 - 1/4*gam^4 + gam^3 + 2*z3 + (1/2)*gam*pi^2,
+          (2*xi^2*gamma(xi + 1)*digamma(xi + 2) + 2*xi^2*gamma(xi + 1) - xi^2*gamma(2*xi + 1) - 1/6*pi^2*xi^2 - xi^2 - gam^2*xi^2 + 2*gam*xi^2 + 2*xi*gamma(xi + 1)*digamma(xi + 2) + 2*xi*gamma(xi + 1) - 2*xi*gamma(2*xi + 1) - 2*xi + 2*gam*xi + 2*gamma(xi + 1) - gamma(2*xi + 1) - 1)/xi^4),
+        "mu:sigma" = ifelse(small,
+          -5/4*gam*pi^2*xi^3 - 5*xi^3*z3 - 5/2*gam^3*xi^3 + (5/8)*gam^4*xi^3 + 2*gam^2*xi^3 + (5/8)*gam^2*pi^2*xi^3 + (1/3)*pi^2*xi^3 + 5*gam*xi^3*z3 + (3/32)*pi^4*xi^3 - 7/12*gam*pi^2*xi^2 - 7/3*xi^2*z3 - 2*gam*xi^2 - 7/6*gam^3*xi^2 + (7/2)*gam^2*xi^2 + (7/12)*pi^2*xi^2 - 3*gam*xi + (3/2)*gam^2*xi + xi + (1/4)*pi^2*xi - gam + 1,
+          (xi + 1)*(xi*gamma(2*xi + 1) - gamma(xi + 1) + gamma(2*xi + 1))/xi) / sg^2,
+        "mu:xi" = ifelse(small,
+          -13/80*pi^4*xi^3 - 26/3*gam*xi^3*z3 - 13/12*gam^2*pi^2*xi^3 - 13/12*gam^4*xi^3 + (13/60)*gam^5*xi^3 + (7/6)*gam^3*xi^3 + (13/36)*gam^3*pi^2*xi^3 + (13/3)*gam^2*xi^3*z3 + (7/3)*xi^3*z3 + (7/12)*gam*pi^2*xi^3 + (26/5)*xi^3*z5 + (13/18)*pi^2*xi^3*z3 + (13/80)*gam*pi^4*xi^3 - 11/160*pi^4*xi^2 - 11/3*gam*xi^2*z3 - 1/4*pi^2*xi^2 - 11/24*gam^2*pi^2*xi^2 - 3/2*gam^2*xi^2 - 11/24*gam^4*xi^2 + (11/6)*gam^3*xi^2 + (11/3)*xi^2*z3 + (11/12)*gam*pi^2*xi^2 - 1/3*pi^2*xi - 2*gam^2*xi + (2/3)*gam^3*xi + gam*xi + (4/3)*xi*z3 + (1/3)*gam*pi^2*xi - 1/12*pi^2 - 1/2*gam^2 + gam,
+          gamma(xi + 1)*digamma(xi + 2) + gamma(xi + 1) - gamma(2*xi + 1) + gamma(xi + 1)*digamma(xi + 2)/xi + gamma(xi + 1)/xi - 2*gamma(2*xi + 1)/xi + gamma(xi + 1)/xi^2 - gamma(2*xi + 1)/xi^2) / sg,
+        "sigma:xi" = ifelse(small,
+          -7/20*gam*pi^4*xi^3 - 14/9*pi^2*xi^3*z3 - 56/5*xi^3*z5 - 28/3*gam^2*xi^3*z3 - 7/9*gam^3*pi^2*xi^3 - 7/15*gam^5*xi^3 + (7/90)*gam^6*xi^3 + (5/8)*gam^4*xi^3 + (7/36)*gam^4*pi^2*xi^3 + (28/9)*gam^3*xi^3*z3 + (5/8)*gam^2*pi^2*xi^3 + 5*gam*xi^3*z3 + (28/9)*xi^3*z3^2 + (7/40)*gam^2*pi^4*xi^3 + (56/5)*gam*xi^3*z5 + (3/32)*pi^4*xi^3 + (14/9)*gam*pi^2*xi^3*z3 + (61/2160)*pi^6*xi^3 - 5/32*gam*pi^4*xi^2 - 25/36*pi^2*xi^2*z3 - 5*xi^2*z5 - 7/12*gam*pi^2*xi^2 - 7/3*xi^2*z3 - 25/6*gam^2*xi^2*z3 - 25/72*gam^3*pi^2*xi^2 - 7/6*gam^3*xi^2 - 5/24*gam^5*xi^2 + (25/24)*gam^4*xi^2 + (25/24)*gam^2*pi^2*xi^2 + (25/3)*gam*xi^2*z3 + (5/32)*pi^4*xi^2 - 5/6*gam*pi^2*xi - 10/3*xi*z3 - 5/3*gam^3*xi + (5/12)*gam^4*xi + (3/2)*gam^2*xi + (5/12)*gam^2*pi^2*xi + (10/3)*gam*xi*z3 + (1/4)*pi^2*xi + (1/16)*pi^4*xi - 1/4*gam*pi^2 - z3 - gam - 1/2*gam^3 + (3/2)*gam^2 + (1/4)*pi^2,
+          (-xi^2*gamma(xi + 1)*digamma(xi + 2) - xi^2*gamma(xi + 1) + xi^2*gamma(2*xi + 1) - xi*gamma(xi + 1)*digamma(xi + 2) - 2*xi*gamma(xi + 1) + 2*xi*gamma(2*xi + 1) - gam*xi + xi - 2*gamma(xi + 1) + gamma(2*xi + 1) + 1)/xi^3) / sg)
+      0 * x + rval
+    }
+  } else {
+    function(par, d, x) {
+      sg <- d$sigma
+      xi <- d$xi
+      z  <- (x - d$mu) / sg
+      s  <- 1 + xi * z
+      L  <- log1p(xi * z)
+      t  <- gev_t(z, xi)
+      w  <- exp(-z)
+      switch(key(par),
+        "mu" = -(t - xi)*(xi + 1)/(s^2*sg^2),
+        "sigma" = -(-2*s*t*z + 2*s*z - s + t*xi*z^2 + t*z^2 - xi*z^2 + xi*z)/(s^2*sg^2),
+        "xi" = ifelse(abs(xi) + 0 * z < 1e-3,
+          -1/192*xi^3*z^10*w + (5/36)*xi^3*z^9*w - 85/72*xi^3*z^8*w + (11/3)*xi^3*z^7*w + (10/3)*xi^3*z^6 - 10/3*xi^3*z^6*w - 4*xi^3*z^5 - 1/32*xi^2*z^8*w + (1/2)*xi^2*z^7*w - 13/6*xi^2*z^6*w - 12/5*xi^2*z^5 + (12/5)*xi^2*z^5*w + 3*xi^2*z^4 - 1/8*xi*z^6*w + xi*z^5*w + (3/2)*xi*z^4 - 3/2*xi*z^4*w - 2*xi*z^3 - 1/4*z^4*w - 2/3*z^3 + (2/3)*z^3*w + z^2,
+          -(L^2*s^2*t - 2*L*s^2*t*xi + 2*L*s^2*xi - 2*L*s*t*xi*z + 2*s*t*xi^2*z - 2*s*xi^2*z + t*xi^3*z^2 + t*xi^2*z^2 - xi^4*z^2 - xi^3*z^2)/(s^2*xi^4)),
+        "mu:sigma" = -(-s*t + s*xi + s + t*xi*z + t*z - xi^2*z - xi*z)/(s^2*sg^2),
+        "mu:xi" = ifelse(abs(xi) + 0 * z < 1e-3,
+          (-1/96*xi^3*z^8*w + (1/4)*xi^3*z^7*w - 17/9*xi^3*z^6*w + (77/15)*xi^3*z^5*w + 4*xi^3*z^4 - 4*xi^3*z^4*w - 4*xi^3*z^3 - 1/16*xi^2*z^6*w + (7/8)*xi^2*z^5*w - 13/4*xi^2*z^4*w - 3*xi^2*z^3 + 3*xi^2*z^3*w + 3*xi^2*z^2 - 1/4*xi*z^4*w + (5/3)*xi*z^3*w + 2*xi*z^2 - 2*xi*z^2*w - 2*xi*z - 1/2*z^2*w - z + z*w + 1) / sg,
+          (-L*s*t + s*xi^2 + t*xi^2*z + t*xi*z - xi^3*z - xi^2*z)/(s^2*sg*xi^2)),
+        "sigma:xi" = ifelse(abs(xi) + 0 * z < 1e-3,
+          (-1/96*xi^3*z^9*w + (1/4)*xi^3*z^8*w - 17/9*xi^3*z^7*w + (77/15)*xi^3*z^6*w + 4*xi^3*z^5 - 4*xi^3*z^5*w - 4*xi^3*z^4 - 1/16*xi^2*z^7*w + (7/8)*xi^2*z^6*w - 13/4*xi^2*z^5*w - 3*xi^2*z^4 + 3*xi^2*z^4*w + 3*xi^2*z^3 - 1/4*xi*z^5*w + (5/3)*xi*z^4*w + 2*xi*z^3 - 2*xi*z^3*w - 2*xi*z^2 - 1/2*z^3*w - z^2 + z^2*w + z) / sg,
+          z*(-L*s*t + t*xi^2*z + t*xi*z - xi^2*z + xi^2)/(s^2*sg*xi^2)))
+    }
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

@@ -42,6 +42,15 @@ test_that("moments for GP distribution return correct values", {
         info = "kurtosis.GP incorrect")
 })
 
+## Support method
+
+test_that("support.GP works as expected", {
+    expect_silent(support(dd))
+
+    m <- cbind(min = df$mu, max = rep(Inf, nrow(df)))
+    m[df$xi < 0, 2] <- df$mu[df$xi < 0] - df$sigma[df$xi < 0] / df$xi[df$xi < 0]
+    expect_identical(support(dd), m)
+});
 
 ## Example distributions
 
