@@ -26,6 +26,7 @@ test_that("suff_stat.Exponential works correctly", {
   expect_equal(suff_stat(Exponential(), 1:3), ss)
 
   expect_error(suff_stat(Exponential(), "abc"))
+  expect_error(suff_stat(Exponential(), -1))
 })
 
 ## Fitting

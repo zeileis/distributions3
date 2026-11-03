@@ -26,6 +26,7 @@ test_that("suff_stat.LogNormal works correctly", {
   expect_equal(suff_stat(LogNormal(), 5:1), ss)
 
   expect_error(suff_stat(LogNormal(), "abc"))
+  expect_error(suff_stat(LogNormal(), -3))
 })
 
 ## Fitting

@@ -27,6 +27,7 @@ test_that("suff_stat.Gamma works correctly", {
   expect_equal(suff_stat(Gamma(1, 1), 1:5), ss)
 
   expect_error(suff_stat(Gamma(1, 1), "abc"))
+  expect_error(suff_stat(Gamma(1, 1), -1))
 })
 
 ## Fitting

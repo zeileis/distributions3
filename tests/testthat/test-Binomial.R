@@ -26,6 +26,7 @@ test_that("suff_stat.Binomial works correctly", {
   expect_equal(suff_stat(Binomial(11), 1:5), ss)
 
   expect_error(suff_stat(Binomial(11), "abc"))
+  expect_error(suff_stat(Binomial(11), -1))
 })
 
 ## Fitting
