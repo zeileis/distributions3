@@ -335,11 +335,6 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-
-  ## TODO(R): double-check analytic solution for both observed and expected hessian
-  ## currently resort to numeric solution
-  return(NextMethod())
-
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
   if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
@@ -365,7 +360,7 @@ hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
 
     function(par, d, x) switch(par,
       "log_mu"           = 0 * x - 1 / d$log_sigma^2,
-      "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
+      "log_sigma"        = -3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2,
       -2 * z / d$log_sigma^3)
   }
 
