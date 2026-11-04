@@ -54,7 +54,7 @@ Other continuous distributions:
 \code{\link[=Exponential]{Exponential()}},
 \code{\link[=Frechet]{Frechet()}},
 \code{\link[=GEV]{GEV()}},
-\code{\link[=GP]{GP()}},
+\code{\link[=GPareto]{GPareto()}},
 \code{\link[=Gamma]{Gamma()}},
 \code{\link[=Gumbel]{Gumbel()}},
 \code{\link[=LogNormal]{LogNormal()}},
