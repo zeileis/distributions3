@@ -302,6 +302,16 @@ is_continuous.LogNormal <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps LogNormal
+crps.LogNormal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_lnorm(y = at, meanlog = d$log_mu, sdlog = d$log_sigma)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
+
 # ---------------------------------------------------------------------------
 # LogNormal: methods for score/hessian (documented on ?score-hessian for now)
 # ---------------------------------------------------------------------------

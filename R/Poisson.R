@@ -286,6 +286,15 @@ is_continuous.Poisson <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Poisson
+crps.Poisson <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_pois(y = at, lambda = d$lambda)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # Poisson: methods for score/hessian (documented on ?score-hessian for now)

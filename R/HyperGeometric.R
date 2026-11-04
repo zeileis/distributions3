@@ -319,3 +319,13 @@ is_discrete.HyperGeometric <- function(d, ...) {
 is_continuous.HyperGeometric <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps HyperGeometric
+crps.HyperGeometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_hyper(y = at, m = d$m, n = d$n, k = d$k)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}

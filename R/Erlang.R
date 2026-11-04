@@ -199,6 +199,16 @@ is_continuous.Erlang <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Erlang
+crps.Erlang <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$k, rate = d$lambda)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
+
 # ---------------------------------------------------------------------------
 # Erlang: methods for score/hessian
 # ---------------------------------------------------------------------------

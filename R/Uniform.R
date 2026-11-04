@@ -252,6 +252,15 @@ is_continuous.Uniform <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Uniform
+crps.Uniform <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_unif(y = at, min = d$a, max = d$b)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # Uniform: methods for score/hessian (documented on ?score-hessian for now)

@@ -327,6 +327,15 @@ is_continuous.StudentsT <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps StudentsT
+crps.StudentsT <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_t(y = at, df = d$df)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # StudentsT: methods for score/hessian (documented on ?score-hessian for now)
