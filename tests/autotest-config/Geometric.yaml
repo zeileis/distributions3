@@ -21,4 +21,6 @@ distributiontype:
 
 tests:
   exclude:
+    ## Works if the R package hypergeo is installed,
+    ## else an error is thrown. Thus, excluded from the automated tests.
     - crps_compare2numeric

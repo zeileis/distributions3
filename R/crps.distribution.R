@@ -445,7 +445,7 @@ crps.GEV <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
 crps.Geometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
-  FUN <- function(at, d) scoringRules::crps_gev(y = at, prob = d$p, size = 1)
+  FUN <- function(at, d) scoringRules::crps_nbinom(y = at, prob = d$p, size = 1)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
