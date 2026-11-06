@@ -1,5 +1,5 @@
 # -------------------------------------------------------
-# Checking GeneralisedExtremeValue distribution
+# Checking GEV distribution
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }

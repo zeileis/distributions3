@@ -1,5 +1,5 @@
 # -------------------------------------------------------
-# Checking GeneralisedPareto distribution
+# Checking GPareto distribution
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }

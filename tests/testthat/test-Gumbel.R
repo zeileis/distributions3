@@ -8,7 +8,7 @@ test_that("print.Gumbel works", {
   expect_output(print(Gumbel()), regexp = "Gumbel")
 })
 
-## Example distribution (from test-GeneralisedExtremeValue.R)
+## Example distribution
 
 g2 <- Gumbel(0, 1)
 xi2 <- 0
