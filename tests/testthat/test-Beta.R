@@ -173,8 +173,8 @@ test_that("named return values for Beta distribution work correctly", {
 })
 
 
-suppressPackageStartupMessages(library("scoringRules"))
 test_that("crps method for Beta returns correct object", {
+  skip_if_not_installed("scoringRules"); library("scoringRules")
   d <- Beta(c(1, 1), c(3, 5))
   expect_silent(crps <- crps(d, 5))
   expect_type(crps, "double")

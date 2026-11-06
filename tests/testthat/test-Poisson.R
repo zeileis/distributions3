@@ -3,7 +3,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 # Helper functions for automated testing of S3 methods
 source("functions-distribution.R")
@@ -121,6 +120,8 @@ test_that("expected hessian for Poisson distribution return correct values", {
 })
 
 test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     ## Solution based on scoringRules
     expect_silent(crps_scoringRules <- crps_pois(xx, df$lambda))
     ## Analytic (default) solution based on distribution object

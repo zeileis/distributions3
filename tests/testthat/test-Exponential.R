@@ -3,7 +3,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 ## distribution object and 'x' used for testing.
 ## Length of 'dd' and 'xx' must be identical and > 1L
@@ -115,6 +114,8 @@ test_that("expected hessian for Exponential distribution return correct values",
 
 
 test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     ## Solution based on scoringRules
     expect_silent(crps_scoringRules <- crps_exp(xx, df$rate))
     ## Analytic (default) solution based on distribution object

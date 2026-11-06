@@ -4,7 +4,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-##suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("SinhArcsinh exists and has correct defaults", {
     expect_true(is.function(SinhArcsinh))

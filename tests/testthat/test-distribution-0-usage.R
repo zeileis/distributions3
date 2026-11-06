@@ -9,7 +9,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 # -------------------------------------------------------
 # Density function (pdf.distribution)

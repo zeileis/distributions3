@@ -3,7 +3,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 ## distribution object and 'x' used for testing.
 ## Length of 'dd' and 'xx' must be identical and > 1L
