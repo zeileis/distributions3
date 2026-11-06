@@ -1,4 +1,4 @@
-#' Create a Generalised Pareto (GPareto) distribution
+#' Create a Generalized Pareto (GPareto) distribution
 #'
 #' The GPareto distribution has a link to the `\link{GEV}` distribution.
 #' Suppose that the maximum of \eqn{n} i.i.d. random variables has
