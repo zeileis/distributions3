@@ -31,6 +31,7 @@ Suggests:
     cowplot,
     crch (>= 1.1-1),
     ggplot2 (>= 3.4.0),
+    hypergeo,
     knitr,
     numDeriv,
     PoissonBinomial,
