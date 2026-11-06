@@ -1,182 +1,111 @@
+# -------------------------------------------------------
+# Checking StudentsT distribution
+# -------------------------------------------------------
 
-test_that("StudentsT default arguments", {
-  expect_identical(formals(StudentsT),
-    as.pairlist(alist(df = numeric())))
+if (interactive()) { library("distributions3"); library("testthat") }
+
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- StudentsT(c(3, 5.6, 20))
+xx <- c(5, 10, 7)                # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(StudentsT), as.pairlist(alist(df = numeric())))
 })
 
-test_that("print.StudentsT works", {
-  expect_output(print(StudentsT(1)), regexp = "StudentsT")
+## Sufficient statistics
+test_that("suff_stat.StudentsT is not yet implemented", {
+  expect_error(suff_stat(StudentsT(10), c(0, 0)), regexp = "no applicable method")
 })
 
-test_that("likelihood.StudentsT and log_likelihood.StudentsT work correctly", {
-  s <- StudentsT(1)
-  x <- c(1, 1, 0)
-
-  expect_equal(likelihood(s, 1), dt(1, 1))
-  expect_equal(likelihood(s, x), dt(1, 1) * dt(1, 1) * dt(0, 1))
-
-  expect_equal(log_likelihood(s, 1), log(dt(1, 1)))
-  expect_equal(log_likelihood(s, x), log(dt(1, 1) * dt(1, 1) * dt(0, 1)))
+## Fitting
+test_that("fit_mle.StudentsT is not yet implemented", {
+  expect_error(fit_mle(StudentsT(10), c(0, 0)), regexp = "no applicable method")
 })
 
-test_that("random.StudentsT work correctly", {
-  s <- StudentsT(1)
-
-  expect_length(random(s), 1)
-  expect_length(random(s, 100), 100)
-  expect_length(random(s[-1], 1), 0)
-  expect_length(random(s, 0), 0)
-  expect_error(random(s, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(s, c(1, 2, 3)), 3)
-  expect_length(random(s, cbind(1, 2, 3)), 3)
-  expect_length(random(s, rbind(1, 2, 3)), 3)
+## Testing correctness of dpq methods
+test_that("pdf.StudentsT/log_pdf.StudentsT returns correct values", {
+  expect_identical(pdf(dd, xx),             dt(xx, df$df),
+        info = "pdf.StudentsT not identical to dt()")
+  expect_identical(pdf(dd, xx, log = TRUE), dt(xx, df$df, log = TRUE),
+        info = "logarithm of pdf.StudentsT not identical to dt(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dt(xx, df$df, log = TRUE),
+        info = "log_pdf.StudentsT not identical to dt(..., log = TRUE)")
 })
 
-test_that("pdf.StudentsT work correctly", {
-  s <- StudentsT(1)
-
-  expect_equal(pdf(s, 0), dt(0, 1))
-  expect_equal(pdf(s, 1), dt(1, 1))
-  expect_equal(pdf(s, -12), dt(-12, 1))
-
-  expect_length(pdf(s, seq_len(0)), 0)
-  expect_length(pdf(s, seq_len(1)), 1)
-  expect_length(pdf(s, seq_len(10)), 10)
+test_that("cdf.StudentsT returns correct values", {
+  expect_identical(cdf(dd, xx),             pt(xx, df$df),
+        info = "cdf.StudentsT not identical to pt()")
+  expect_identical(cdf(dd, xx, log = TRUE), pt(xx, df$df, log = TRUE),
+        info = "logarithm of cdf.StudentsT not identical to pt(..., log = TRUE)")
 })
 
-test_that("log_pdf.StudentsT work correctly", {
-  s <- StudentsT(1)
-
-  expect_equal(log_pdf(s, 0), log(dt(0, 1)))
-  expect_equal(log_pdf(s, 1), log(dt(1, 1)))
-  expect_equal(log_pdf(s, -12), log(dt(-12, 1)))
-
-  expect_length(log_pdf(s, seq_len(0)), 0)
-  expect_length(log_pdf(s, seq_len(1)), 1)
-  expect_length(log_pdf(s, seq_len(10)), 10)
+test_that("quantile.StudentsT returns correct values", {
+  expect_identical(quantile(dd, pp),        qt(pp, df$df),
+        info = "quantile.StudentsT not identical to qt()")
 })
 
-test_that("cdf.StudentsT work correctly", {
-  s <- StudentsT(1)
 
-  expect_equal(cdf(s, 0), pt(0, 1))
-  expect_equal(cdf(s, 1), pt(1, 1))
-
-
-  expect_length(cdf(s, seq_len(0)), 0)
-  expect_length(cdf(s, seq_len(1)), 1)
-  expect_length(cdf(s, seq_len(10)), 10)
+## Testing edge cases
+test_that("pdf.StudentsT on edge case sigma = 0 works as stats::dt", {
+  expect_silent(d <- StudentsT(0))
+  expect_silent(x <- suppressWarnings(pdf(d, c(-1, -1, 3, 4, 10))))
+  expect_identical(x, suppressWarnings(dt(c(-1, -1, 3, 4, 10), df = 0)))
+})
+test_that("cdf.StudentsT on edge case sigma = 0 works as stats::pt", {
+  expect_silent(d <- StudentsT(0))
+  expect_silent(x <- suppressWarnings(cdf(d, c(-1, -1, 3, 4, 10))))
+  expect_identical(x, suppressWarnings(pt(c(-1, -1, 3, 4, 10), df = 0)))
+})
+test_that("quantile.StudentsT on edge case sigma = 0 works as stats::qt", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  m <- seq(-10, 10, length.out = length(p))
+  expect_silent(d <- StudentsT(0))
+  expect_silent(x <- suppressWarnings(quantile(d, p)))
+  expect_identical(x, suppressWarnings(qt(p, df = 0)))
+})
+test_that("random.StudentsT on edge case sigma = 0 works as stats::rt", {
+  expect_silent(d <- StudentsT(0))
+  expect_silent(x <- suppressWarnings(random(d, 5)))
+  expect_identical(x, suppressWarnings(rt(5, 0)))
 })
 
-test_that("quantile.StudentsT work correctly", {
-  s <- StudentsT(1)
 
-  expect_equal(quantile(s, 0), qt(0, 1))
-  expect_equal(quantile(s, 1), qt(1, 1))
-
-
-  expect_length(quantile(s, seq_len(0)), 0)
-  expect_length(quantile(s, c(0, 1)), 2)
+## Testing correctness of moments
+test_that("moments for StudentsT distribution return correct values", {
+    d <- StudentsT(c(0, 1, 2, 3, 4, 5))
+    expect_identical(mean(d),
+        rep(c(NaN, 0), times = c(2, 4)),
+        info = "mean.StudentsT incorrect")
+    expect_identical(variance(d),
+        c(NaN, NaN, Inf, 3 / 1, 4 / 2, 5 / 3),
+        info = "variance.StudentsT incorrect")
+    expect_identical(skewness(d),
+        rep(c(NaN, 0), times = c(4, 2)),
+        info = "skewness.StudentsT incorrect")
+    expect_identical(kurtosis(d),
+        c(NaN, NaN, NaN, Inf, Inf, 6),
+        info = "kurtosis.StudentsT incorrect")
 })
 
-test_that("vectorization of a StudentsT distribution work correctly", {
-  d <- StudentsT(c(1, 3))
-  d1 <- d[1]
-  d2 <- d[2]
+test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
 
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
+    ## Solution based on scoringRules
+    expect_silent(crps_scoringRules <- crps_t(xx, df = df$df))
+    ## Analytic (default) solution based on distribution object
+    expect_silent(crps_analytic <- crps(dd, xx))
+    ## Numeric approximation
+    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
 
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
+    ## Comparing results
+    expect_identical(crps_scoringRules, crps_analytic)
+    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-3)
 })
 
-test_that("named return values for StudentsT distribution work correctly", {
-  d <- StudentsT(c(3, 10))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
-})
-
-suppressPackageStartupMessages(library("scoringRules"))
-test_that("crps method for StudentsT returns correct object", {
-  d <- StudentsT(c(3, 10))
-  expect_silent(crps <- crps(d, 7))
-  expect_type(crps, "double")
-  expect_true(is.vector(crps))
-  expect_true(!all(is.na(crps)) & all(crps >= 0))
-})

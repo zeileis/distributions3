@@ -71,9 +71,13 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 Logistic <- function(location = 0, scale = 1) {
+  stopifnot("parameters 'location' and 'scale' locationst be atomic" = is.atomic(location) && is.atomic(scale))
+  if (!is.numeric(location)) location <- as.numeric(location)
+  if (!is.numeric(scale)) scale <- as.numeric(scale)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(location) == length(scale) | length(location) == 1 | length(scale) == 1
+      length(location) == length(scale) | length(location) == 1 | length(scale) == 1,
+    "parameter 'scale' must be in [0, Inf]" = all(scale >= 0, na.rm = TRUE)
   )
 
   d <- data.frame(location = location, scale = scale)
@@ -266,6 +270,16 @@ is_continuous.Logistic <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Logistic
+crps.Logistic <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_logis(y = at, location = d$location, scale = d$scale)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
+
 # ---------------------------------------------------------------------------
 # Logistic: methods for score/hessian (documented on ?score-hessian for now)
 # ---------------------------------------------------------------------------
@@ -303,38 +317,34 @@ hessian.Logistic <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, 
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
   if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
-  if (expected) {
-      return(NextMethod())
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## function for computing Hessian elements
+  hess <- if (expected) {
+    ## pre-computing denominator, scoped by 'hess' function
+    denom     <- (3 * d$scale^2)
+
+    function(par, d, x) switch(par,
+      "location"       = 0 * x - 1 / denom,
+      "scale"          = 0 * x - (1 + pi^2 / 3) / denom,
+      rep.int(0, n))
   } else {
-    ## Calculate max length 'n' (plus input sanity check), get parameter names of
-    ## the distribution 'd', and evaluate available/check requested derivative names
-    n      <- max_length(d, x)
-    params <- names(unclass(d))
-    which  <- get_deriv_names(params, which = which, expand = TRUE)
+    ## pre-compute z and sigmoid terms; scoped in 'hess' functions!
+    z <- (x - d$location) / d$scale
+    exp_neg_z <- exp(-z)
+    one_plus_exp_neg_z <- 1 + exp_neg_z
+    p_z <- exp_neg_z / one_plus_exp_neg_z  ## sigmoid derivative term
 
-    ## function for computing Hessian elements
-    hess <- if (expected) {
-      ## pre-computing denominator, scoped by 'hess' function
-      denom     <- (3 * d$scale^2)
-
-      function(par, d, x) switch(par,
-        "location"       = 0 * x - 1 / denom,
-        "scale"          = 0 * x - (1 + pi^2 / 3) / denom,
-        rep.int(0, n))
-    } else {
-      ## pre-compute z and sigmoid terms; scoped in 'hess' functions!
-      z <- (x - d$location) / d$scale
-      exp_neg_z <- exp(-z)
-      one_plus_exp_neg_z <- 1 + exp_neg_z
-      p_z <- exp_neg_z / one_plus_exp_neg_z  ## sigmoid derivative term
-
-      function(par, d, x) switch(par,
-        "location"       = pmin(-2 * p_z * (1 - p_z) / d$scale^2, -1e-15),
-        "scale"          = (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / d$scale^2,
-        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / d$scale^2)
-    }
-
-    ## Calculate derivatives, prepare return object
-    return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+    function(par, d, x) switch(par,
+      "location"       = pmin(-2 * p_z * (1 - p_z) / d$scale^2, -1e-15),
+      "scale"          = (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / d$scale^2,
+      (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / d$scale^2)
   }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

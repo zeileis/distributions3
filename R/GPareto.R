@@ -1,11 +1,11 @@
-#' Create a Generalised Pareto (GP) distribution
+#' Create a Generalized Pareto (GPareto) distribution
 #'
-#' The GP distribution has a link to the `\link{GEV}` distribution.
+#' The GPareto distribution has a link to the `\link{GEV}` distribution.
 #' Suppose that the maximum of \eqn{n} i.i.d. random variables has
 #' approximately a GEV distribution. For a sufficiently large threshold
 #' \eqn{u}, the conditional distribution of the amount (the threshold
 #' excess) by which a variable exceeds \eqn{u} given that it exceeds \eqn{u}
-#' has approximately a GP distribution.  Therefore, the GP distribution is
+#' has approximately a GPareto distribution.  Therefore, the GPareto distribution is
 #' often used to model the threshold excesses of a high threshold \eqn{u}.
 #' The requirement that the variables are independent can be relaxed
 #' substantially, but then exceedances of \eqn{u} may cluster.
@@ -18,7 +18,7 @@
 #'   `xi` can be any real number.  Defaults to `0`, which corresponds to a
 #'   Gumbel distribution.
 #'
-#' @return A `GP` object.
+#' @return A `GPareto` object.
 #' @export
 #'
 #' @family continuous distributions
@@ -29,7 +29,7 @@
 #'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail and much greater clarity.
 #'
-#'   In the following, let \eqn{X} be a GP random variable with location
+#'   In the following, let \eqn{X} be a GPareto random variable with location
 #'   parameter  `mu` = \eqn{\mu}, scale parameter `sigma` = \eqn{\sigma} and
 #'   shape parameter `xi` = \eqn{\xi}.
 #'
@@ -78,7 +78,7 @@
 #'
 #' set.seed(27)
 #'
-#' X <- GP(0, 2, 0.1)
+#' X <- GPareto(0, 2, 0.1)
 #' X
 #'
 #' random(X, 10)
@@ -91,8 +91,13 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
-GP <- function(mu = 0, sigma = 1, xi = 0) {
-  if (any(sigma <= 0)) {
+GPareto <- function(mu = 0, sigma = 1, xi = 0) {
+  stopifnot("parameters 'mu', 'sigma' and 'xi' must be atomic" =
+    is.atomic(mu) && is.atomic(sigma) && is.atomic(xi))
+  if (!is.numeric(mu)) mu <- as.numeric(mu)
+  if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
+  if (!is.numeric(xi)) xi <- as.numeric(xi)
+  if (any(sigma <= 0, na.rm = TRUE)) {
     stop("sigma must be positive")
   }
 
@@ -106,13 +111,13 @@ GP <- function(mu = 0, sigma = 1, xi = 0) {
   )
 
   d <- data.frame(mu = mu, sigma = sigma, xi = xi)
-  class(d) <- c("GP", "distribution")
+  class(d) <- c("GPareto", "distribution")
   d
 }
 
 #' @importFrom rlang check_dots_used
 #' @export
-mean.GP <- function(x, ...) {
+mean.GPareto <- function(x, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
   mu <- x$mu
@@ -127,7 +132,7 @@ mean.GP <- function(x, ...) {
 }
 
 #' @export
-variance.GP <- function(x, ...) {
+variance.GPareto <- function(x, ...) {
   sigma <- x$sigma
   xi <- x$xi
 
@@ -139,7 +144,7 @@ variance.GP <- function(x, ...) {
 }
 
 #' @export
-skewness.GP <- function(x, ...) {
+skewness.GPareto <- function(x, ...) {
   xi <- x$xi
 
   rval <- ifelse(xi < 1 / 3,
@@ -150,7 +155,7 @@ skewness.GP <- function(x, ...) {
 }
 
 #' @export
-kurtosis.GP <- function(x, ...) {
+kurtosis.GPareto <- function(x, ...) {
   xi <- x$xi
 
   rval <- ifelse(xi < 1 / 4,
@@ -164,11 +169,11 @@ kurtosis.GP <- function(x, ...) {
   setNames(rval, names(x))
 }
 
-#' Draw a random sample from a GP distribution
+#' Draw a random sample from a GPareto distribution
 #'
-#' @inherit GP examples
+#' @inherit GPareto examples
 #'
-#' @param x A `GP` object created by a call to [GP()].
+#' @param x A `GPareto` object created by a call to [GPareto()].
 #' @param n The number of samples to draw. Defaults to `1L`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... Unused. Unevaluated arguments will generate a warning to
@@ -179,7 +184,7 @@ kurtosis.GP <- function(x, ...) {
 #'   (if `drop = FALSE`).
 #' @export
 #'
-random.GP <- function(x, n = 1L, drop = TRUE, ...) {
+random.GPareto <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) {
     return(numeric(0L))
@@ -188,11 +193,11 @@ random.GP <- function(x, n = 1L, drop = TRUE, ...) {
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
-#' Evaluate the probability mass function of a GP distribution
+#' Evaluate the probability mass function of a GPareto distribution
 #'
-#' @inherit GP examples
+#' @inherit GPareto examples
 #'
-#' @param d A `GP` object created by a call to [GP()].
+#' @param d A `GPareto` object created by a call to [GPareto()].
 #' @param x A vector of elements whose probabilities you would like to
 #'   determine given the distribution `d`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -212,24 +217,24 @@ random.GP <- function(x, n = 1L, drop = TRUE, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #' @export
 #'
-pdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
+pdf.GPareto <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
   FUN <- function(at, d) revdbayes::dgp(x = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
-#' @rdname pdf.GP
+#' @rdname pdf.GPareto
 #' @export
 #'
-log_pdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
+log_pdf.GPareto <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
   FUN <- function(at, d) revdbayes::dgp(x = at, loc = d$mu, scale = d$sigma, shape = d$xi, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
-#' Evaluate the cumulative distribution function of a GP distribution
+#' Evaluate the cumulative distribution function of a GPareto distribution
 #'
-#' @inherit GP examples
+#' @inherit GPareto examples
 #'
-#' @param d A `GP` object created by a call to [GP()].
+#' @param d A `GPareto` object created by a call to [GPareto()].
 #' @param x A vector of elements whose cumulative probabilities you would
 #'   like to determine given the distribution `d`.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -249,17 +254,17 @@ log_pdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'   object, a matrix with `length(x)` columns containing all possible combinations.
 #' @export
 #'
-cdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
+cdf.GPareto <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
   FUN <- function(at, d) revdbayes::pgp(q = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
-#' Determine quantiles of a GP distribution
+#' Determine quantiles of a GPareto distribution
 #'
 #' `quantile()` is the inverse of `cdf()`.
 #'
-#' @inherit GP examples
-#' @inheritParams random.GP
+#' @inherit GPareto examples
+#' @inheritParams random.GPareto
 #'
 #' @param probs A vector of probabilities.
 #' @param drop logical. Should the result be simplified to a vector if possible?
@@ -281,16 +286,16 @@ cdf.GP <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @importFrom rlang check_dots_used
 #' @export
-quantile.GP <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
+quantile.GPareto <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
   FUN <- function(at, d) revdbayes::qgp(p = at, loc = d$mu, scale = d$sigma, shape = d$xi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
-#' Return the support of the GP distribution
+#' Return the support of the GPareto distribution
 #'
-#' @param d An `GP` object created by a call to [GP()].
+#' @param d An `GPareto` object created by a call to [GPareto()].
 #' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... Currently not used.
 #'
@@ -300,19 +305,117 @@ quantile.GP <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #' matrix with 2 columns containing all minima and maxima.
 #'
 #' @export
-support.GP <- function(d, drop = TRUE, ...) {
+support.GPareto <- function(d, drop = TRUE, ...) {
   min <- d$mu
   max <- rep(Inf, length(d))
-  max[d$xi < 0] <- d$mu[d$xi < 0] - d$sigma[d$xi < 0]/d$xi[d$xi < 0]
+  idx <- which(d$xi < 0)
+  max[idx] <- d$mu[idx] - d$sigma[idx] / d$xi[idx]
   make_support(min, max, d, drop = drop)
 }
 
 #' @exportS3Method
-is_discrete.GP <- function(d, ...) {
+is_discrete.GPareto <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
 #' @exportS3Method
-is_continuous.GP <- function(d, ...) {
+is_continuous.GPareto <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
+
+
+# ---------------------------------------------------------------------------
+# GPareto: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.GPareto <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores; for xi near 0 the xi-score is evaluated by its Taylor
+  ## expansion in xi (the closed form suffers from cancellation there); the
+  ## test is recycled to the length of z because ifelse() uses its test's length
+  scr <- function(par, d, x) {
+    z <- (x - d$mu) / d$sigma
+    s <- 1 + d$xi * z
+    switch(par,
+      "mu" = (1 + d$xi) / (d$sigma * s),
+      "sigma" = (z - 1) / (d$sigma * s),
+      {
+        xi     <- d$xi
+        direct <- log1p(xi * z) / xi^2 - (xi + 1) * z / (xi * s)
+        series <- z^2 / 2 - z + xi * (z^2 - 2 * z^3 / 3) +
+          xi^2 * (3 * z^4 / 4 - z^3) + xi^3 * (z^4 - 4 * z^5 / 5)
+        ifelse(abs(xi) + 0 * z < 1e-2, series, direct)
+      })
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.GPareto <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## Key for the derivative: parameter names sorted alphabetically, so that
+  ## e.g. "sigma:mu" and "mu:sigma" both map to "mu:sigma"
+  key <- function(par) paste(sort(strsplit(par, ":", fixed = TRUE)[[1L]]), collapse = ":")
+
+  ## function for computing Hessian elements (expected or observed); with
+  ## S = 1 + xi * z the expected values use E(S^-k) = 1 / (1 + k xi) and E(log S) = xi
+  hess <- if (expected) {
+    function(par, d, x) {
+      xi <- d$xi
+      sg <- d$sigma
+      rval <- switch(key(par),
+        "mu"       = xi * (1 + xi) / (sg^2 * (1 + 2 * xi)),
+        "sigma"    = -1 / (sg^2 * (1 + 2 * xi)),
+        "xi"       = -2 / ((1 + xi) * (1 + 2 * xi)),
+        "mu:sigma" = -(1 + xi) / (sg^2 * (1 + 2 * xi)),
+        "mu:xi"    = xi / (sg * (1 + xi) * (1 + 2 * xi)),
+        "sigma:xi" = -1 / (sg * (1 + xi) * (1 + 2 * xi)))
+      0 * x + rval
+    }
+  } else {
+    function(par, d, x) {
+      z  <- (x - d$mu) / d$sigma
+      s  <- 1 + d$xi * z
+      sg <- d$sigma
+      xi <- d$xi
+      switch(key(par),
+        "mu"       = xi * (1 + xi) / (sg^2 * s^2),
+        "sigma"    = (1 - 2 * z - xi * z^2) / (sg^2 * s^2),
+        "xi" = {
+          direct <- z * (2 * s + xi * (xi + 1) * z) / (xi^2 * s^2) - 2 * log1p(xi * z) / xi^3
+          series <- z^2 - 2 * z^3 / 3 + xi * (3 * z^4 / 2 - 2 * z^3) +
+            xi^2 * (3 * z^4 - 12 * z^5 / 5) + xi^3 * (10 * z^6 / 3 - 4 * z^5)
+          ifelse(abs(xi) + 0 * z < 1e-2, series, direct)
+        },
+        "mu:sigma" = -(1 + xi) / (sg^2 * s^2),
+        "mu:xi"    = (1 - z) / (sg * s^2),
+        "sigma:xi" = z * (1 - z) / (sg * s^2))
+    }
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
+

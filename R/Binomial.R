@@ -92,9 +92,14 @@
 #' quantile(X, cdf(X, 7))
 Binomial <- function(size = numeric(), p = 0.5) {
   if (identical(size, numeric())) p <- numeric() # Ensure empty default
+  stopifnot("parameters 'size' and 'p' must be atomic" = is.atomic(size) && is.atomic(p))
+  if (!is.numeric(size)) size <- as.numeric(size)
+  if (!is.numeric(p))    p <- as.numeric(p)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(size) == length(p) | length(size) == 1 | length(p) == 1
+      length(size) == length(p) | length(size) == 1 | length(p) == 1,
+    "parameter 'size' must be in [0, Inf]"   = all(size >= 0 | is.na(size)),
+    "parameter 'p' must be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE)
   )
 
   d <- data.frame(size = size, p = p)
@@ -321,6 +326,15 @@ is_continuous.Binomial <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Binomial
+crps.Binomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = d$size)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # Binomial: methods for score/hessian (documented on ?score-hessian for now)

@@ -11,9 +11,7 @@
 # -------------------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-
 suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("scoringRules"))
 
 
 ## Constructor function for new 'MyNormalQuantileCDF' distribution

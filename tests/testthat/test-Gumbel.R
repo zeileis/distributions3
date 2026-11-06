@@ -8,7 +8,7 @@ test_that("print.Gumbel works", {
   expect_output(print(Gumbel()), regexp = "Gumbel")
 })
 
-## Example distribution (from test-GeneralisedExtremeValue.R)
+## Example distribution
 
 g2 <- Gumbel(0, 1)
 xi2 <- 0
@@ -160,8 +160,9 @@ test_that("named return values for Gumbel distribution work correctly", {
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
-suppressPackageStartupMessages(library("scoringRules"))
 test_that("crps method for Gumbel returns correct object", {
+  skip_if_not_installed("scoringRules"); library("scoringRules")
+
   d <- Gumbel(0, c(0.5, 1))
   suppressWarnings(crps <- crps(d, 3))
   expect_type(crps, "double")

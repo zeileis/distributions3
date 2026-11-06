@@ -718,6 +718,8 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
 cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail = TRUE, ...) {
     if (!length(d)) return(numeric())
 
+    args <- list(...)
+
     # To be able to numerically approximate the cdf the object must have
     # a pdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
@@ -802,6 +804,10 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
     } else if (n == 1L && drop) {
         res <- as.vector(res)
     }
+
+    ## Logarithm?
+    if (isTRUE(args$log)) res <- log(res)
+
     return(res)
 }
 

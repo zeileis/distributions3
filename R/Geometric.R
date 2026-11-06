@@ -65,6 +65,10 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 Geometric <- function(p = 0.5) {
+  stopifnot("parameter 'p' must be atomic" = is.atomic(p))
+  if (!is.numeric(p)) p <- as.numeric(p)
+  stopifnot("parameter 'p' must be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE))
+
   d <- data.frame(p = p)
   class(d) <- c("Geometric", "distribution")
   d
@@ -293,3 +297,61 @@ is_discrete.Geometric <- function(d, ...) {
 is_continuous.Geometric <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Geometric
+crps.Geometric <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_nbinom(y = at, prob = d$p, size = 1)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
+
+# ---------------------------------------------------------------------------
+# Geometric: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Geometric <- function(d, x, which = "p", drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute score
+  scr <- function(par, d, x) 1 / d$p - x / (1 - d$p)
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Geometric <- function(d, x, which = "p", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## compute hessian; E(x) = (1 - p) / p gives the expected Hessian
+  hess <- if (expected) {
+    function(par, d, x) 0 * x - 1 / (d$p^2 * (1 - d$p))
+  } else {
+    function(par, d, x) -1 / d$p^2 - x / (1 - d$p)^2
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
+

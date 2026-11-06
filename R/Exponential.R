@@ -71,6 +71,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Exponential <- function(rate = 1) {
+  stopifnot("parameter 'rate' must be atomic" = is.atomic(rate))
+  if (!is.numeric(rate))    rate    <- as.numeric(rate)
+  stopifnot(
+    "parameter 'rate' must be in [0, Inf]" = all(rate >= 0, na.rm = TRUE)
+  )
+
   d <- data.frame(rate = rate)
   class(d) <- c("Exponential", "distribution")
   d
@@ -283,6 +289,16 @@ is_discrete.Exponential <- function(d, ...) {
 #' @exportS3Method
 is_continuous.Exponential <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
+}
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Exponential
+crps.Exponential <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_exp(y = at, rate = d$rate)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 # ---------------------------------------------------------------------------

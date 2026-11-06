@@ -167,8 +167,9 @@ test_that("named return values for HyperGeometric distribution work correctly", 
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
-suppressPackageStartupMessages(library("scoringRules"))
 test_that("crps method for HyperGeometric returns correct object", {
+  skip_if_not_installed("scoringRules"); library("scoringRules")
+
   d <- HyperGeometric(6, c(5, 7), 5)
   expect_silent(crps <- crps(d, 3))
   expect_type(crps, "double")

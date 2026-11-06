@@ -1,0 +1,39 @@
+## Name of the distribution, also defines the name of the constructor function
+name: GPareto
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    ## Parameters are combined row by row. The autotests evaluate at x = 1, which
+    ## must lie in the support of every row: mu < 1, and for xi < 0 the upper end
+    ## point mu - sigma / xi must exceed 1.
+    ## xi in (-1/2, 1/2): moments and the expected Hessian are finite there.
+    mu:    [ -1,   0,  0.5,  -1,   0, -10,  -5]
+    sigma: [  1,   2,    5, 100, 0.5,  20, 0.5]
+    xi:    [-0.4, -0.1,   0, 0.1, 0.3, -0.4, 0.2]
+  invalid:
+    sigma: [-10, -1e-10, 0]
+
+support:
+  lower: -.inf
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+tests:
+  exclude:
+    ## TODO: revdbayes::dgp throws error for NA scale, thus excluded for now
+    ## (as for Gumbel).
+    - params_NA
+    ## TODO: revdbayes::qgp throws error (not warning) if p not in [0, 1],
+    ## thus excluded for now (as for Gumbel).
+    - quantile
+    ## The support depends on the parameters (lower end point mu, and mu - sigma / xi
+    ## for xi < 0), so the fixed support above does not apply.
+    - support
+    ## TODO: the numeric fallback for the expected hessian (stats::integrate over
+    ## the density, truncated at the 1e-6 quantile) is inaccurate for this bounded
+    ## or heavy-tailed support (errors up to 6%).
+    - hessian_expected_compare2numeric

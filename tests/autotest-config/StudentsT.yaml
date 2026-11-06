@@ -1,0 +1,21 @@
+
+## Name of the distribution, also defines the name of the constructor function
+name: StudentsT
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    ## Only df > 4 so that all moments (mean, variance, skewness, kurtosis) are
+    ## finite; for smaller df some moments are undefined (NaN or Inf) and the
+    ## CRPS from scoringRules is NaN for df <= 1.
+    df: [ 5, 6.5, 10, 30, 100]
+  invalid:
+    df: [-10, -1, -1e-10]
+
+support:
+  lower: -.inf
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true

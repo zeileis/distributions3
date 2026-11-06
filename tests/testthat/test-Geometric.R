@@ -1,181 +1,144 @@
+# -------------------------------------------------------
+# Checking Geometric distribution
+# -------------------------------------------------------
 
-test_that("Geometric default arguments", {
-  expect_identical(formals(Geometric),
-    as.pairlist(alist(p = 0.5)))
+if (interactive()) { library("distributions3"); library("testthat") }
+
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- Geometric(c(0.5, 0.05, 0.4))
+xx <- 1:3                        # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Geometric), as.pairlist(alist(p = 0.5)))
 })
 
-test_that("print.Geometric works", {
-  expect_output(print(Geometric()), regexp = "Geometric")
+## Sufficient statistics
+test_that("suff_stat.Geometric works correctly", {
+  ss <- list(trials = sum(1:2), experiments = length(1:2))
+  expect_equal(suff_stat(Geometric(), 1:2), ss)
+
+  expect_error(suff_stat(Geometric(), "abc"))
+  expect_error(suff_stat(Geometric(), -1))
 })
 
-test_that("likelihood.Geometric and log_likelihood.Geometric work correctly", {
-  cau <- Geometric()
-  x <- c(1, 1, 0)
-
-  expect_equal(likelihood(cau, 1), dgeom(1, 0.5))
-  expect_equal(likelihood(cau, x), dgeom(1, 0.5) * dgeom(1, 0.5) * dgeom(0, 0.5))
-
-  expect_equal(log_likelihood(cau, 1), log(dgeom(1, 0.5)))
-  expect_equal(log_likelihood(cau, x), log(dgeom(1, 0.5) * dgeom(1, 0.5) * dgeom(0, 0.5)))
+## Fitting
+test_that("fit_mle.Geometric works correctly", {
+  expect_equal(fit_mle(Geometric(), 1:2), Geometric(0.4))
 })
 
-test_that("random.Geometric work correctly", {
-  cau <- Geometric()
-
-  expect_length(random(cau), 1)
-  expect_length(random(cau, 100), 100)
-  expect_length(random(cau[-1], 1), 0)
-  expect_length(random(cau, 0), 0)
-  expect_error(random(cau, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(cau, c(1, 2, 3)), 3)
-  expect_length(random(cau, cbind(1, 2, 3)), 3)
-  expect_length(random(cau, rbind(1, 2, 3)), 3)
+## Testing correctness of dpq methods
+test_that("pdf.Geometric/log_pdf.Geometric returns correct values", {
+  expect_identical(pdf(dd, xx),             dgeom(xx, df$p),
+        info = "pdf.Geometric not identical to dgeom()")
+  expect_identical(pdf(dd, xx, log = TRUE), dgeom(xx, df$p, log = TRUE),
+        info = "logarithm of pdf.Geometric not identical to dgeom(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dgeom(xx, df$p, log = TRUE),
+        info = "log_pdf.Geometric not identical to dgeom(..., log = TRUE)")
 })
 
-test_that("pdf.Geometric work correctly", {
-  cau <- Geometric()
-
-  expect_equal(pdf(cau, 0), dgeom(0, 0.5))
-  expect_equal(pdf(cau, 1), dgeom(1, 0.5))
-
-  expect_length(pdf(cau, seq_len(0)), 0)
-  expect_length(pdf(cau, seq_len(1)), 1)
-  expect_length(pdf(cau, seq_len(10)), 10)
+test_that("cdf.Geometric returns correct values", {
+  expect_identical(cdf(dd, xx),             pgeom(xx, df$p),
+        info = "cdf.Geometric not identical to pgeom()")
+  expect_identical(cdf(dd, xx, log = TRUE), pgeom(xx, df$p, log = TRUE),
+        info = "logarithm of cdf.Geometric not identical to pgeom(..., log = TRUE)")
 })
 
-test_that("log_pdf.Geometric work correctly", {
-  cau <- Geometric()
-
-  expect_equal(log_pdf(cau, 0), log(dgeom(0, 0.5)))
-  expect_equal(log_pdf(cau, 1), log(dgeom(1, 0.5)))
-
-  expect_length(log_pdf(cau, seq_len(0)), 0)
-  expect_length(log_pdf(cau, seq_len(1)), 1)
-  expect_length(log_pdf(cau, seq_len(10)), 10)
+test_that("quantile.Geometric returns correct values", {
+  expect_identical(quantile(dd, pp),        qgeom(pp, df$p),
+        info = "quantile.Geometric not identical to qgeom()")
 })
 
-test_that("cdf.Geometric work correctly", {
-  cau <- Geometric()
 
-  expect_equal(cdf(cau, 0), pgeom(0, 0.5))
-  expect_equal(cdf(cau, 1), pgeom(1, 0.5))
+## Testing edge cases
+test_that("pdf.Geometric on edge case p = 0 or 1 works as stats::dgeom", {
+  expect_silent(d <- Geometric(0))
+  expect_silent(x <- suppressWarnings(pdf(d, c(-1, -1, 3, 4, 10))))
+  expect_identical(x, suppressWarnings(dgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
 
+  expect_silent(d <- Geometric(1))
+  expect_silent(x <- suppressWarnings(pdf(d, c(-1, -1, 3, 4, 10))))
+  expect_identical(x, suppressWarnings(dgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
+})
+test_that("cdf.Geometric on edge case p = 0 or 1 works as stats::pgeom", {
+  expect_silent(d <- Geometric(0))
+  expect_silent(x <- suppressWarnings(cdf(d, c(-1, -1, 3, 4, 10))))
+  expect_identical(x, suppressWarnings(pgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
 
-  expect_length(cdf(cau, seq_len(0)), 0)
-  expect_length(cdf(cau, seq_len(1)), 1)
-  expect_length(cdf(cau, seq_len(10)), 10)
+  expect_silent(d <- Geometric(1))
+  expect_silent(x <- suppressWarnings(cdf(d, c(-1, -1, 3, 4, 10))))
+  expect_identical(x, suppressWarnings(pgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
+})
+test_that("quantile.Geometric on edge case p = 0 or 1 works as stats::qgeom", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  m <- seq(-10, 10, length.out = length(p))
+
+  expect_silent(d <- Geometric(0))
+  expect_silent(x <- suppressWarnings(quantile(d, p)))
+  expect_identical(x, suppressWarnings(qgeom(p, prob = d$p)))
+
+  expect_silent(d <- Geometric(1))
+  expect_silent(x <- suppressWarnings(quantile(d, p)))
+  expect_identical(x, suppressWarnings(qgeom(p, prob = d$p)))
+})
+test_that("random.Geometric on edge case p = 0 or 1 works as stats::rgeom", {
+  expect_silent(d <- Geometric(0))
+  expect_silent(x <- suppressWarnings(random(d, 5)))
+  expect_identical(x, suppressWarnings(rgeom(5, prob = d$p)))
+
+  expect_silent(d <- Geometric(1))
+  expect_silent(x <- suppressWarnings(random(d, 5)))
+  expect_identical(x, rgeom(5L, d$p))
 })
 
-test_that("quantile.Geometric work correctly", {
-  cau <- Geometric()
 
-  expect_equal(quantile(cau, 0), qgeom(0, 0.5))
-  expect_equal(quantile(cau, 1), qgeom(1, 0.5))
-
-
-  expect_length(quantile(cau, seq_len(0)), 0)
-  expect_length(quantile(cau, c(0, 1)), 2)
+## Testing correctness of moments
+test_that("moments for Geometric distribution return correct values", {
+    expect_identical(mean(dd), (1 - df$p) / df$p,
+        info = "mean.Geometric incorrect")
+    expect_identical(variance(dd), (1 - df$p) / df$p^2,
+        info = "variance.Geometric incorrect")
+    expect_identical(skewness(dd), (2 - df$p) / sqrt(1 - df$p),
+        info = "skewness.Geometric incorrect")
+    expect_identical(kurtosis(dd), 6 + (df$p^2 / (1 - df$p)),
+        info = "kurtosis.Geometric incorrect")
 })
 
-test_that("vectorization of a Geometric distribution work correctly", {
-  d <- Geometric(c(0.1, 0.5))
-  d1 <- d[1]
-  d2 <- d[2]
-
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0, 1), elementwise = TRUE),
-    diag(pdf(d, c(0, 1), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0, 1), elementwise = TRUE),
-    diag(cdf(d, c(0, 1), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(all(is_discrete(d)))
-  expect_true(!any(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
+## Testing correctness of score
+test_that("score for Geometric distribution return correct values", {
+    expect_identical(score(dd, xx, which = "p"),
+        1 / df$p - xx / (1 - df$p),
+        info = "score for \"p\" returns incorrect values")
 })
 
-test_that("named return values for Geometric distribution work correctly", {
-  d <- Geometric(c(0.1, 0.7))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(5, 7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(5, 7, 9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(5, 7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(5, 7, 9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(5, 7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(5, 7, 9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
+## Testing correctness of hessian
+test_that("observed hessian for Geometric distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "p", expected = FALSE),
+        -1 / df$p^2 - xx / (1 - df$p)^2,
+        info = "hessian for \"p\" returns incorrect values")
 })
 
-## TODO(R): Fails
-###suppressPackageStartupMessages(library("scoringRules"))
-###test_that("crps method for Geometric returns correct object", {
-###  d <- Geometric(c(0.1, 0.7))
-###  expect_silent(crps <- crps(d, 0.3))
-###  expect_type(crps, "double")
-###  expect_true(is.vector(crps))
-###  expect_true(!all(is.na(crps)) & all(crps >= 0))
-###})
+test_that("expected hessian for Geometric distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "p", expected = TRUE),
+        -1 / (df$p^2 * (1 - df$p)),
+        info = "hessian for \"p\" returns incorrect values")
+})
+
+## Testing CRPS; this is excluded from the automated tests as it depends on the
+## suggested packages 'scoringRules' and 'hypergeo'. If not installed, skip this test set.
+test_that("comparing analytic CRPS against numeric approximation for Geometric distribution", {
+    skip_if_not_installed("hypergeo")
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
+    expect_silent(crps_analytic <- crps(dd, xx))
+    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
+    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-04,
+                 info = "numeric CRPS and analytic CRPS not equal")
+});
+

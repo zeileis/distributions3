@@ -87,6 +87,10 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 Bernoulli <- function(p = 0.5) {
+  stopifnot("parameter 'p' must be an atomic vector" = is.atomic(p))
+  if (!is.numeric(p)) p <- as.numeric(p)
+  stopifnot("parameter 'p' must always be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE))
+
   d <- data.frame(p = p)
   class(d) <- c("Bernoulli", "distribution")
   d
@@ -301,6 +305,15 @@ is_continuous.Bernoulli <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Bernoulli
+crps.Bernoulli <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = 1)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # Bernoulli: methods for score/hessian (documented on ?score-hessian for now)

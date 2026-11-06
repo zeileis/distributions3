@@ -1,0 +1,31 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Erlang
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    k:       [1, 10, 20, 100]
+    lambda:  [0.5, 2, 4, 10]
+  invalid:
+    k:       [-5, -1, 0, 1.5, 10.001]
+    lambda:  [-10, -1, -1e-10]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+tests:
+  exclude:
+    - moments_defaults
+    - mean
+    - variance
+    - skewness
+    - kurtosis
+    - crps_defaults
+    - crps_compare2numeric

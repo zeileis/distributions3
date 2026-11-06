@@ -58,13 +58,15 @@ distribution.}
 
 \item{which}{character vector, named or unnamed. When calculating cross-derivatives
 a named vector is typically used avoiding to calculate the cross-derivatives
-twice evven if they are identical (symmetric Hessian matrix; see 'Examples').}
+twice even if they are identical (symmetric Hessian matrix; see 'Examples').}
 
-\item{expand}{logical. If set \code{TRUE}, the names of cross-derivatives
+\item{expand}{logical. If set to \code{TRUE}, the names of cross-derivatives
 are returned (if \code{which = NULL}) or checked (if \code{which} is set).}
 
-\item{check}{logical. If set \code{FALSE} the maximum length is returned
-without checking that all objects on \code{...} are recyclable.}
+\item{check}{logical. Should the function check that all objects in \code{...}
+can be recycled (i.e., each object either has length 1 or the same
+length as the maximum)? If \code{check = TRUE} and the objects cannot be
+recycled then an informative error is issued.}
 
 \item{x}{numeric. Specification of values at which \code{FUN} should be evaluated.}
 

@@ -4,242 +4,103 @@
 
 if (interactive()) { library("distributions3"); library("testthat") }
 
-test_that("Bernoulli default arguments", {
-  expect_identical(formals(Bernoulli),
-    as.pairlist(alist(p = 0.5)))
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- Bernoulli(c(0.5, 0.9, 0.2))
+xx <- c(0, 1, 0)                 # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Prepare data frame for testing
+df <- as.data.frame(as.matrix(dd))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Bernoulli), as.pairlist(alist(p = 0.5)))
 })
 
-test_that("print.Bernoulli works", {
-  expect_output(print(Bernoulli()), regexp = "Bernoulli")
+## Sufficient statistics
+test_that("suff_stat.Bernoulli works correctly", {
+  x <- c(0, 1, 0, 0, 1)
+  ss <- list(successes = sum(x == 1), failures = sum(x == 0))
+  expect_equal(suff_stat(Bernoulli(), x), ss)
+
+  expect_error(suff_stat(Bernoulli(), "abc"))
 })
 
+## Fitting
 test_that("fit_mle.Bernoulli works correctly", {
-  expect_equal(fit_mle(Bernoulli(), c(0, 1)), Bernoulli(0.5))
+  expect_equal(fit_mle(Bernoulli(), c(0, 0, 0, 1, 1)), Bernoulli(0.4))
 })
 
-test_that("suff_stats.Bernoulli works correctly", {
-  ss <- list(successes = 3, failures = 2)
+## Testing correctness of dpq methods
+test_that("pdf.Bernoulli/log_pdf.Bernoulli returns correct values", {
+  expect_identical(pdf(dd, xx),             dbinom(xx, 1, df$p),
+        info = "pdf.Bernoulli not identical to dbinom(..., size = 1)")
+  expect_identical(pdf(dd, xx, log = TRUE), dbinom(xx, 1, df$p, log = TRUE),
+        info = "logarithm of pdf.Bernoulli not identical to dbinom(..., size = 1, log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dbinom(xx, 1, df$p, log = TRUE),
+        info = "log_pdf.Bernoulli not identical to dbinom(..., size = 1, log = TRUE)")
+})
 
-  expect_equal(suff_stat(Bernoulli(), c(1, 1, 1, 0, 0)), ss)
+test_that("cdf.Bernoulli returns correct values", {
+  expect_identical(cdf(dd, xx),             pbinom(xx, 1, df$p),
+        info = "cdf.Bernoulli not identical to pbinom(..., size = 1)")
+  expect_identical(cdf(dd, xx, log = TRUE), pbinom(xx, 1, df$p, log = TRUE),
+        info = "logarithm of cdf.Bernoulli not identical to pbinom(..., size = 1, log = TRUE)")
+})
 
-  expect_error(suff_stat(Bernoulli(), 2))
-
-  expect_error(suff_stat(Bernoulli(), -1))
+test_that("quantile.Bernoulli returns correct values", {
+  expect_identical(quantile(dd, pp),        qbinom(pp, 1, df$p),
+        info = "quantile.Bernoulli not identical to qbinom(..., size = 1)")
 })
 
 
-test_that("likelihood.Bernoulli and log_likelihood.Bernoulli work correctly", {
-  b <- Bernoulli(0.1)
-  x <- c(1, 1, 0)
-
-  expect_equal(likelihood(b, 1), 0.1)
-  expect_equal(likelihood(b, x), 0.009)
-
-  expect_equal(log_likelihood(b, 1), log(0.1))
-  expect_equal(log_likelihood(b, x), log(0.009))
+## Testing correctness of moments
+test_that("moments for Bernoulli distribution return correct values", {
+    expect_identical(mean(dd), df$p,
+        info = "mean.Bernoulli incorrect")
+    expect_identical(variance(dd), df$p * (1 - df$p),
+        info = "variance.Bernoulli incorrect")
+    expect_identical(skewness(dd), (1 - (2 * df$p)) / sqrt(df$p * (1 - df$p)),
+        info = "skewness.Bernoulli incorrect")
+    expect_identical(kurtosis(dd), (1 - (6 * df$p * (1 - df$p))) / (df$p * (1 - df$p)),
+        info = "kurtosis.Bernoulli incorrect")
 })
 
-test_that("random.Bernoulli work correctly", {
-  b <- Bernoulli()
-
-  expect_length(random(b), 1)
-  expect_length(random(b, 100), 100)
-  expect_length(random(b[-1], 1), 0)
-  expect_length(random(b, 0), 0)
-  expect_error(random(b, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(b, c(1, 2, 3)), 3)
-  expect_length(random(b, cbind(1, 2, 3)), 3)
-  expect_length(random(b, rbind(1, 2, 3)), 3)
+## Testing correctness of score
+test_that("score for Bernoulli distribution return correct values", {
+    expect_identical(score(dd, xx, which = "p"),
+        (xx - df$p) / (df$p * (1 - df$p)),
+        info = "score for \"p\" returns incorrect values")
 })
 
-test_that("pdf.Bernoulli work correctly", {
-  b <- Bernoulli(0.1)
-
-  expect_equal(pdf(b, 0), 0.9)
-  expect_equal(pdf(b, 1), 0.1)
-  expect_equal(pdf(b, -12), 0)
-
-  expect_warning(pdf(b, 0.5))
-
-  expect_length(pdf(b, seq_len(0)), 0)
-  expect_length(pdf(b, seq_len(1)), 1)
-  expect_length(pdf(b, seq_len(10)), 10)
+## Testing correctness of hessian
+test_that("observed hessian for Bernoulli distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "p", expected = FALSE),
+        -xx / df$p^2 - (1 - xx) / (1 - df$p)^2,
+        info = "hessian for \"p\" returns incorrect values")
 })
 
-test_that("cdf.Bernoulli work correctly", {
-  b <- Bernoulli(0.1)
-
-  expect_equal(cdf(b, 0), 0.9)
-  expect_equal(cdf(b, 1), 1)
-
-
-  expect_length(cdf(b, seq_len(0)), 0)
-  expect_length(cdf(b, seq_len(1)), 1)
-  expect_length(cdf(b, seq_len(10)), 10)
+test_that("expected hessian for Bernoulli distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "p", expected = TRUE),
+        -1 / (df$p * (1 - df$p)),
+        info = "hessian for \"p\" returns incorrect values")
 })
 
-test_that("quantile.Bernoulli work correctly", {
-  b <- Bernoulli(0.1)
 
-  expect_equal(quantile(b, 0), 0)
-  expect_equal(quantile(b, 1), 1)
+test_that("crps (both analytic and numeric) are correct/nearly equal", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
 
+    ## Solution based on scoringRules
+    expect_silent(crps_scoringRules <- crps_binom(xx, size = 1, prob = df$p))
+    ## Analytic (default) solution based on distribution object
+    expect_silent(crps_analytic <- crps(dd, xx))
+    ## Numeric approximation
+    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
 
-  expect_length(quantile(b, seq_len(0)), 0)
-  expect_length(quantile(b, c(0, 1)), 2)
-})
-
-test_that("{moments}.Bernoulli work correctly", {
-  n <- Bernoulli()
-
-  expect_equal(mean(n), 0.5)
-  expect_equal(variance(n), 0.25)
-  expect_equal(skewness(n), 0)
-  expect_equal(kurtosis(n), -2)
-})
-
-test_that("vectorization of a Bernoulli distribution work correctly", {
-  d <- Bernoulli(c(0.1, 0.3))
-  d1 <- d[1]
-  d2 <- d[2]
-
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0, 1), elementwise = TRUE),
-    diag(pdf(d, c(0, 1), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0, 1), elementwise = TRUE),
-    diag(cdf(d, c(0, 1), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(all(is_discrete(d)))
-  expect_true(!any(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
-})
-
-test_that("named return values for Bernoulli distribution work correctly", {
-  d <- Bernoulli(c(0.2, 0.5))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0, 1))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0, 0, 1))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0, 1))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0, 0, 1))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
-})
-
-suppressPackageStartupMessages(library("scoringRules"))
-test_that("crps method for Bernoulli returns correct object", {
-  d <- Bernoulli(c(0.2, 0.5))
-  expect_silent(crps <- crps(d, 0.8))
-  expect_type(crps, "double")
-  expect_true(is.vector(crps))
-  expect_true(!all(is.na(crps)) & all(crps >= 0))
-})
-
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
-
-## Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
-
-test_that("score.Bernoulli works as expected", {
-    ## Objects used for testing
-    d <- Bernoulli(1:3 / 10)
-    x <- c(0L, 1L, 0L)
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x, which = "p")
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic score vs. numeric approximation (score.distribution)
-    score_test_analytic_vs_numeric(d, x)
-})
-
-test_that("hessian.Bernoulli works as expected", {
-    ## Objects used for testing
-    d <- Bernoulli(1:3 / 10)
-    x <- c(0L, 1L, 0L)
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x, which = "p")
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
+    ## Comparing results
+    expect_identical(crps_scoringRules, crps_analytic)
+    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-4)
 })
 

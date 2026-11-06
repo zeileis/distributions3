@@ -81,7 +81,7 @@ Other continuous distributions:
 \code{\link[=FisherF]{FisherF()}},
 \code{\link[=Frechet]{Frechet()}},
 \code{\link[=GEV]{GEV()}},
-\code{\link[=GP]{GP()}},
+\code{\link[=GPareto]{GPareto()}},
 \code{\link[=Gamma]{Gamma()}},
 \code{\link[=LogNormal]{LogNormal()}},
 \code{\link[=Logistic]{Logistic()}},

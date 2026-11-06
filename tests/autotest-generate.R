@@ -1,0 +1,152 @@
+## ------------------------------------------------------------------
+## Generate test-autotest-* files
+##
+## A series of automated test sets are generated via the YAML files
+## stored in autotest-config. This script reads (all) available YAML
+## files, ensures they are valid, and generates a test file for each
+## YAML file available.
+## ------------------------------------------------------------------
+
+
+rm(list = objects())
+
+library("yaml")
+library("testthat")
+library("distributions3")
+source("autotest-functions.R")
+
+## ------------------------------------------------------------------
+## For testing; allows to call this script from command line,
+## specifying which yaml files to process.
+## > Rscript autotest-generate.R -f Weibull.yaml Normal.yaml
+## ------------------------------------------------------------------
+if (requireNamespace("argparse", quietly = TRUE)) {
+    parser <- argparse::ArgumentParser(description = "Define yaml files to be generated/tested")
+    parser$add_argument("--files", "-f", type = "character", nargs= "+",
+                       help = "name of yaml files (path will be dropped)")
+    parser$add_argument("--run", "-r", action = "store_true", default = FALSE,
+                       help = "should the test be executed after generation?")
+    args <- parser$parse_args()
+
+    dorun     <- if (!is.null(args$files)) basename(args$files) else NULL
+    run_tests <- args$run
+} else {
+    dorun     <- NULL
+    run_tests <- FALSE
+}
+
+## ------------------------------------------------------------------
+## Reading config files check YAML content, and subset (if --file/-f is used)
+## ------------------------------------------------------------------
+## Output directory where to put the automated test sets/test files
+OUTDIR <- "testthat"
+
+## Loading all available autotest config files and checking content
+distconfig <- lapply(load_autotest_config(), check_autotest_config)
+
+## If 'dorun' is not NULL, subset
+if (!is.null(dorun)) {
+    distconfig <- distconfig[names(distconfig) %in% dorun]
+    stopifnot("no yaml files found matching input --file/-f" = length(distconfig) > 0)
+}
+
+delete_autotest_files(distconfig)
+
+## ------------------------------------------------------------------
+## Looping over all configs found
+## ------------------------------------------------------------------
+for (config in distconfig) {
+    ## Name of the output file
+    cat("--- generating automatic test set \"", config$testfile, "\"\n", sep = "")
+
+    ## List to store all the tests required which will be written to the
+    ## test file defined by OUTFILE above.
+    res <- list()
+    res <- append(res, autotest_setup(config))
+    res <- append(res, autotest_constructor(config))
+
+    ## Testing default arguments of support, is_discrete, and is_continuous.
+    ## There are dedicated autotests for arguments of the dpqr methods and
+    ## score and hessian, allowing to more granularly enable/disable them if needed.
+    res <- append(res, autotest_S3_defaults(config))
+
+    res <- append(res, autotest_length(config))
+    res <- append(res, autotest_dim(config))
+    res <- append(res, autotest_format(config))
+    res <- append(res, autotest_subsetting(config))
+    res <- append(res, autotest_concatenate(config))
+    res <- append(res, autotest_duplicated(config))
+    res <- append(res, autotest_summary(config))
+
+    res <- append(res, autotest_params_invalid(config))
+    res <- append(res, autotest_params_incorrect_type(config))
+    res <- append(res, autotest_params_length_mismatch(config))
+    res <- append(res, autotest_params_empty(config))
+    res <- append(res, autotest_params_nonnumeric(config))
+
+    ## Test that constructor function allows for parameters
+    ## being missing (NA) and that all methods react accordingly
+    res <- append(res, autotest_params_NA(config))
+
+    res <- append(res, autotest_as.list(config))
+    res <- append(res, autotest_as.matrix(config))
+    res <- append(res, autotest_as.data.frame(config))
+    res <- append(res, autotest_as.character(config))
+
+    res <- append(res, autotest_support(config))
+    res <- append(res, autotest_is_discrete(config))
+    res <- append(res, autotest_is_continuous(config))
+
+    ## ----------- Moments
+    res <- append(res, autotest_moments_defaults(config)) # arguments/defaults
+    res <- append(res, autotest_mean(config))
+    res <- append(res, autotest_variance(config))
+    res <- append(res, autotest_skewness(config))
+    res <- append(res, autotest_kurtosis(config))
+
+    ## ----------- dpqr
+    res <- append(res, autotest_dpqr_defaults(config)) # arguments/defaults
+
+    res <- append(res, autotest_pdf(config))
+    res <- append(res, autotest_pdf_support(config))
+    res <- append(res, autotest_log_pdf(config))
+    ## TODO(R): NEEDED? res <- append(res, autotest_pdf_compare2numeric(config))
+
+    res <- append(res, autotest_cdf(config))
+    res <- append(res, autotest_cdf_support(config))
+    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get a cdf of 1 vs. 0 (numeric)
+    #       and subsequently log(cdf) of 0 vs. -Inf (numeric)
+    ## TODO(R): NEEDED? res <- append(res, autotest_cdf_compare2numeric(config))
+
+    res <- append(res, autotest_quantile(config))
+    res <- append(res, autotest_quantile_support(config))
+
+    res <- append(res, autotest_random(config))
+    res <- append(res, autotest_random_support(config))
+
+    ## ----------- score and hessian
+    res <- append(res, autotest_score_hessian_defaults(config)) # arguments/defaults
+
+    res <- append(res, autotest_score(config))
+    res <- append(res, autotest_score_compare2numeric(config))
+
+    res <- append(res, autotest_hessian_observed(config))
+    res <- append(res, autotest_hessian_observed_compare2numeric(config))
+
+    res <- append(res, autotest_hessian_expected(config))
+    res <- append(res, autotest_hessian_expected_compare2numeric(config))
+
+    ## ----------- crps
+    res <- append(res, autotest_crps_defaults(config))
+    res <- append(res, autotest_crps_compare2numeric(config))
+
+
+    ## --------------------------------------------------------------
+    ## Write test sets to test file and execute if needed (development)
+    ## --------------------------------------------------------------
+    writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
+    if (run_tests) test_file(file.path(OUTDIR, config$testfile))
+}
+
+
+

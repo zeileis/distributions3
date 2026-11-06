@@ -324,3 +324,20 @@ is_discrete.NegativeBinomial <- function(d, ...) {
 is_continuous.NegativeBinomial <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps NegativeBinomial
+crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  FUN <- if ("mu" %in% names(unclass(y))) {
+    function(at, d) scoringRules::crps_nbinom(y = at, mu = d$mu, size = d$size)
+  } else {
+    function(at, d) scoringRules::crps_nbinom(y = at, p = d$p, size = d$size)
+  }
+  s <- try(apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise), silent = TRUE)
+  if (inherits(s, "try-error")) s <- NextMethod()
+  return(s)
+}
+

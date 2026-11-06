@@ -1,0 +1,26 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Bernoulli
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    p: [0, 0.0001, 0.5, 0.9999, 1]
+  invalid:
+    p: [-1, -0.00001, 1.00001, 2]
+
+support:
+  lower: 0.0
+  upper: 1.0
+
+distributiontype:
+  discrete: true
+  continuous: false
+
+tests:
+  exclude:
+    ## TODO(R): Numeric approximation unhappy, thus excluded for now (needed?)
+    - score_compare2numeric
+    - hessian_observed_compare2numeric
+    - hessian_expected_compare2numeric
