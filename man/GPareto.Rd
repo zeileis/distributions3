@@ -2,7 +2,7 @@
 % Please edit documentation in R/GPareto.R
 \name{GPareto}
 \alias{GPareto}
-\title{Create a Generalised Pareto (GPareto) distribution}
+\title{Create a Generalized Pareto (GPareto) distribution}
 \usage{
 GPareto(mu = 0, sigma = 1, xi = 0)
 }
