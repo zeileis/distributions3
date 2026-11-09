@@ -238,7 +238,7 @@ cdf.Binomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @inheritParams random.Binomial
 #'
 #' @param probs A vector of probabilities.
-#' @param drop logical. Shoul the result be simplified to a vector if possible?
+#' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param elementwise logical. Should each distribution in \code{x} be evaluated
 #'   at all elements of \code{probs} (\code{elementwise = FALSE}, yielding a matrix)?
 #'   Or, if \code{x} and \code{probs} have the same length, should the evaluation be
@@ -304,7 +304,7 @@ suff_stat.Binomial <- function(d, x, ...) {
 #' Return the support of the Binomial distribution
 #'
 #' @param d An `Binomial` object created by a call to [Binomial()].
-#' @param drop logical. Shoul the result be simplified to a vector if possible?
+#' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... Currently not used.
 #'
 #' @return A vector of length 2 with the minimum and maximum value of the support.
