@@ -152,13 +152,8 @@ random.GammaR <- function(x, n = 1L, drop = TRUE, ...) {
 #' @export
 #'
 pdf.GammaR <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  if (length(list(...)) > 0L) {
-    FUN <- function(at, d, ...) dgamma(x = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), ...)
-    apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise, ...)
-  } else {
-    FUN <- function(at, d) dgamma(x = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2))
-    apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
-  }
+  FUN <- function(at, d) dgamma(x = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), ...)
+  apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
 
@@ -166,7 +161,7 @@ pdf.GammaR <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 log_pdf.GammaR <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dgamma(x = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), log = TRUE)
+  FUN <- function(at, d) dgamma(x = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), log = TRUE, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -195,13 +190,8 @@ log_pdf.GammaR <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 cdf.GammaR <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  if (length(list(...)) > 0L) {
-    FUN <- function(at, d, ...) pgamma(q = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), ...)
-    apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise, ...)
-  } else {
-    FUN <- function(at, d) pgamma(q = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2))
-    apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
-  }
+  FUN <- function(at, d) pgamma(q = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), ...)
+  apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
 
@@ -231,7 +221,7 @@ cdf.GammaR <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 quantile.GammaR <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  FUN <- function(at, d) qgamma(p = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2))
+  FUN <- function(at, d) qgamma(p = at, shape = 1 / d$sigma^2, rate = 1 / (d$mu * d$sigma^2), ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
@@ -313,8 +303,8 @@ hessian.GammaR <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
   if (expected) {
     hess <- function(par, d, x) switch(par,
       "mu"    = 0 * x - 1 / ((d$sigma^2) * (d$mu^2)),
-      "sigma" = 0 * x + (4 / d$sigma^4) - (4 / d$sigma^6) * trigamma((1 / d$sigma^2)),
-      0 * x + 0 * d$mu
+      "sigma" = 0 * x + (4 / d$sigma^4) - (4 / d$sigma^6) * trigamma(1 / d$sigma^2),
+      0 * d$mu
     )
   } else {
     hess <- function(par, d, x) switch(par,
