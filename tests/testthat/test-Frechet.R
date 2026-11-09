@@ -34,6 +34,8 @@ x1 <- c(low, xvec)
 pvec <- c(0, 0.25, 0.5, 0.75, 1, NA)
 
 test_that("random.Frechet works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_length(random(g1), 1)
   expect_length(random(g1, 100), 100)
   expect_length(random(g1[-1], 1), 0)
@@ -47,6 +49,8 @@ test_that("random.Frechet works correctly", {
 })
 
 test_that("pdf.Frechet works correctly", {
+  skip_if_not_installed("revdbayes")
+
   p <- pvec[2:4]
   expect_equal(unname(pdf(g1, x1)), c(0, 0, exp(-1), 0, NA))
   expect_equal(unname(pdf(g1, quantile(g1, p))), (-log(p))^(1 + xi1) * p)
@@ -56,6 +60,8 @@ test_that("pdf.Frechet works correctly", {
 })
 
 test_that("log_pdf.Frechet works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(log_pdf(g1, x1)), c(-Inf, -Inf, -1, -Inf, NA))
   expect_length(log_pdf(g1, seq_len(0)), 0)
   expect_length(log_pdf(g1, seq_len(1)), 1)
@@ -63,6 +69,8 @@ test_that("log_pdf.Frechet works correctly", {
 })
 
 test_that("cdf.Frechet works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(cdf(g1, x1)), c(0, 0, exp(-1), 1, NA))
   expect_length(cdf(g1, seq_len(0)), 0)
   expect_length(cdf(g1, seq_len(1)), 1)
@@ -70,6 +78,8 @@ test_that("cdf.Frechet works correctly", {
 })
 
 test_that("quantile.Frechet works correctly", {
+  skip_if_not_installed("revdbayes")
+
   q1 <- ((-log(pvec[2:4]))^(-xi1) - 1) / xi1
   expect_equal(unname(quantile(g1, pvec)), c(low, q1, Inf, NA))
   expect_length(quantile(g1, seq_len(0)), 0)
@@ -78,10 +88,14 @@ test_that("quantile.Frechet works correctly", {
 })
 
 test_that("cdf.Frechet and quantile.Frechet are consistent", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(cdf(g1, quantile(g1, pvec))), pvec)
 })
 
 test_that("vectorization of a Frechet distribution work correctly", {
+  skip_if_not_installed("revdbayes")
+
   d <- Frechet(c(-10, -5), c(10, 5), c(10, 5))
   d1 <- d[1]
   d2 <- d[2]
@@ -146,6 +160,8 @@ test_that("vectorization of a Frechet distribution work correctly", {
 })
 
 test_that("named return values for Frechet distribution work correctly", {
+  skip_if_not_installed("revdbayes")
+
   d <- Frechet(c(-10, -5), c(10, 5), c(10, 5))
   names(d) <- LETTERS[1:length(d)]
 

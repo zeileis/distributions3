@@ -77,6 +77,8 @@ x3 <- c(up, xvec)
 pvec <- c(0, 0.25, 0.5, 0.75, 1, NA)
 
 test_that("random.GPareto works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_length(random(g1), 1)
   expect_length(random(g1, 100), 100)
   expect_length(random(g1[-1], 1), 0)
@@ -112,6 +114,8 @@ test_that("random.GPareto works correctly", {
 })
 
 test_that("pdf.GPareto works correctly", {
+  skip_if_not_installed("revdbayes")
+
   p <- pvec[2:4]
   expect_equal(unname(pdf(g1, x1)), c(1, 0, NA))
   expect_equal(unname(pdf(g1, quantile(g1, p))), (1 - p)^(1 + xi1))
@@ -133,6 +137,8 @@ test_that("pdf.GPareto works correctly", {
 })
 
 test_that("log_pdf.GPareto works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(log_pdf(g1, x1)), c(0, -Inf, NA))
   expect_length(log_pdf(g1, seq_len(0)), 0)
   expect_length(log_pdf(g1, seq_len(1)), 1)
@@ -150,6 +156,7 @@ test_that("log_pdf.GPareto works correctly", {
 })
 
 test_that("cdf.GPareto works correctly", {
+  skip_if_not_installed("revdbayes")
   expect_equal(unname(cdf(g1, x1)), c(0, 1, NA))
   expect_length(cdf(g1, seq_len(0)), 0)
   expect_length(cdf(g1, seq_len(1)), 1)
@@ -167,6 +174,7 @@ test_that("cdf.GPareto works correctly", {
 })
 
 test_that("quantile.GPareto works correctly", {
+  skip_if_not_installed("revdbayes")
   q1 <- ((1 - pvec[2:4])^(-xi1) - 1) / xi1
   expect_equal(unname(quantile(g1, pvec)), c(0, q1, Inf, NA))
   expect_length(quantile(g1, seq_len(0)), 0)
@@ -187,6 +195,8 @@ test_that("quantile.GPareto works correctly", {
 })
 
 test_that("cdf.GPareto and quantile.GPareto are consistent", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(cdf(g1, quantile(g1, pvec))), pvec)
   expect_equal(unname(cdf(g2, quantile(g2, pvec))), pvec)
   expect_equal(unname(cdf(g3, quantile(g3, pvec))), pvec)
@@ -197,6 +207,7 @@ test_that("cdf.GPareto and quantile.GPareto are consistent", {
 
 
 test_that("analytic score and hessian of GPareto match numeric derivatives", {
+  skip_if_not_installed("revdbayes")
   skip_if_not_installed("numDeriv")
 
   ## includes xi = 0 (exponential limit); the Taylor branch is tested below

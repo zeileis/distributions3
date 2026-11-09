@@ -17,6 +17,10 @@ distributiontype:
   discrete: false
   continuous: true
 
+## Skipping a series of tests if the R package 'revdbyas' is not
+## installed (suggested package).
+skip_if_not_installed: revdbayes
+
 tests:
   exclude:
     ## TODO: revdbayes::dgev allows n, loc, shape to be NA, but not 'scale'.

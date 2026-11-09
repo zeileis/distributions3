@@ -18,9 +18,10 @@ distributiontype:
   discrete: true
   continuous: false
 
-tests:
-  exclude:
-    ## TODO(R): Numeric approximation unhappy, thus excluded for now (needed?)
-    - score_compare2numeric
-    - hessian_observed_compare2numeric
-    - hessian_expected_compare2numeric
+## Skipping a series of tests if the R package 'revdbyas' is not
+## installed (suggested package).
+skip_if_not_installed:
+  autotest_score_compare2numeric: revdbyas
+  autotest_hessian_observed_compare2numeric: revdbyas
+  autotest_hessian_expected_compare2numeric: revdbyas
+

@@ -22,6 +22,10 @@ distributiontype:
   discrete: false
   continuous: true
 
+## Skipping a series of tests if the R package 'revdbyas' is not
+## installed (suggested package).
+skip_if_not_installed: revdbayes
+
 tests:
   exclude:
     ## TODO: revdbayes::dgp throws error for NA scale, thus excluded for now

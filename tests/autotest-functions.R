@@ -2,7 +2,7 @@
 #'
 #' @param dir character. Name of the directory containing the `.yaml` files.
 #'
-#' @reutrn Named list with the content of the YAML files. The names of the
+#' @return Named list with the content of the YAML files. The names of the
 #' list elements corresponds to the YAML file name.
 load_autotest_config <- function(dir = "autotest-config", verbose = FALSE) {
     stopifnot(
@@ -69,7 +69,8 @@ check_autotest_config <- function(x, verbose = TRUE) {
     ## Warning the user if we find something unexpected in the YAML
     ## --------------------------------------
     expected <- c("testfile", "yamlfile", "name", "parameters", "support",
-                  "tolerance", "tests", "distributiontype")
+                  "tolerance", "tests", "distributiontype",
+                  "skip_if_not_installed")
     unexpected <- setdiff(names(x), expected)
     if (length(unexpected))
         warning("Found unexpected entries in \"", x$yamlfile, "\": ",
@@ -160,6 +161,34 @@ check_autotest_config <- function(x, verbose = TRUE) {
     }
     x$tolerance <- tol; rm(tol)
 
+
+    ## --------------------------------------
+    ## Skip if not installed: Allows to specify a series of packages (str) used
+    ## to add `skip_if_not_installed()` in the tests to skip if a suggested
+    ## package is ont available.
+    ## --------------------------------------
+    if (!is.null(x$skip_if_not_installed)) {
+        fn <- function(name, x) {
+            if (!is.character(x))     stop("'", name, "' must be character", sep = "")
+            if (any(grepl("\\s", x))) stop("'", name, "' contians strings with spaces, can't be R packages", sep = "")
+            if (!all(nchar(x) > 0L))  stop("'", name, "' contians empty characters", sep = "")
+            invisible(TRUE)
+        }
+
+        ## If single character: We include it under 'always' to alwaysly
+        ## skip all tests if this package(s) are not installed.
+        if (is.character(x$skip_if_not_installed)) {
+            fn("skip_if_not_installed", x$skip_if_not_installed)
+            x$skip_if_not_installed <- list(always = x$skip_if_not_installed)
+        ## If list, it must be a list of valid characters
+        } else if (is.list(x$skip_if_not_installed) && !is.null(x$skip_if_not_installed)) {
+            for (n in names(x$skip_if_not_installed)) fn(n, x$skip_if_not_installed[[n]])
+        } else {
+            stop("unexpected 'skip_if_not_installed' configuration")
+        }
+    }
+
+
     ## --------------------------------------
     ## Enabled/disabled tests (optional)
     ## --------------------------------------
@@ -197,6 +226,57 @@ delete_autotest_files <- function(x, dir = "testthat") {
     invisible(f)
 }
 
+
+#' Get Command to Skip Tests if Package is Not Installed
+#'
+#' Certain tests rely on suggested packages. The YAML file
+#' allows to exclude tests by either specifying that autotests
+#' should always be skipped if a package is not installed, or
+#' only skip certain tests. This function returns the command
+#' to `testthat::skip_if_not_installed()` if devined via the
+#' autotest YAML file.
+#'
+#' @param x character, name of the autotest function.
+#' @param config object of class `autotest_config`.
+#' @param spaces integer >= 0, number of spaces to add before the command.
+#'
+#' @return Character, command to be included in the autotest test sets.
+get_skipifnot <- function(x, config, spaces = 4) {
+    if (inherits(x, "name")) x <- as.character(x)
+    spaces <- as.integer(spaces)[[1L]]
+    stopifnot(
+        "argument 'x' must be character of length 1" = 
+            is.character(x) && length(x) == 1L && nchar(x) > 0,
+        "argument 'config' must be of class 'autotest_config'" =
+            inherits(config, "autotest_config"),
+        "argument 'spaces' must evaluate to integer >= 0" = spaces >= 0L
+    )
+
+    ## If config$skip_if_not_installed is empty, return "\r"
+    if (is.null(config$skip_if_not_installed)) return("\r")
+
+    ## Stripping autotest_ from 'n'
+    x2 <- gsub("^autotest_", "", x)
+
+    ## If skip_if_not_installed contains $always we take it, else
+    ## we check if we should skip this specific test if some packages
+    ## are not installed.
+    if (!is.null(config$skip_if_not_installed$always)) {
+        pkg <- config$skip_if_not_installed$always
+    } else if (!is.null(config$skip_if_not_installed[[x]])) {
+        pkg <- config$skip_if_not_installe[[x]]
+    } else if (!is.null(config$skip_if_not_installed[[x2]])) {
+        pkg <- config$skip_if_not_installe[[x2]]
+    } else {
+        return("\r")
+    }
+
+    ## Create command and return
+    cmd <- paste(sprintf("%sskip_if_not_installed(\"%s\")", paste(rep(" ", spaces + 4L), collapse = ""), pkg),
+                         collapse = "\n", sep = "")
+    return(paste0("## Skip if suggested package is missing\n", cmd, "\n", sep = ""))
+}
+
 #' Check if Autotest Should be Skipped
 #'
 #' The autotest YAML files allow to explicitly include a defined set of
@@ -218,11 +298,11 @@ delete_autotest_files <- function(x, dir = "testthat") {
 #' but also the short form (just "dim").
 #'
 #' @return Logical `TRUE` if this autotest set should be skipped, else `FALSE`.
-skip_this_autotest <- function(config, fname) {
+exclude_this_autotest <- function(config, fname) {
     stopifnot(
-        "parameter 'config' must be of class 'autotest_config'" =
+        "argument 'config' must be of class 'autotest_config'" =
             inherits(config, "autotest_config"),
-        "parameter 'fname' must be of class 'name' or single character" =
+        "argument 'fname' must be of class 'name' or single character" =
             inherits(fname, "name") || (is.character(fname) && length(fname) == 1L)
     )
 
@@ -296,8 +376,11 @@ warnings_include_exclude <- function(x, verbose = FALSE) {
 ## ----------------------------------------------------------------------------
 
 clean_cmd <- function(x, spaces = 4L) {
-    ## Stripping first four spaces (if present)
-    gsub(sprintf("^[ ]{%d}", spaces), "", strsplit(x, "\n")[[1L]])
+    ## Splitting up, removing lines only containing "    \r"
+    x <- strsplit(x, "\n")[[1L]]
+    x <- x[!grepl("^\\s*\\r", x)]
+    ## Stripping first <spaces> spaces (if present) and return
+    gsub(sprintf("^[ ]{%d}", spaces), "", x)
 }
 
 replace_placeholders <- function(template, x, indentation = 8) {
@@ -321,19 +404,22 @@ replace_placeholders <- function(template, x, indentation = 8) {
 #'
 #' @return Character vector with commands for test set.
 autotest_setup <- function(config) {
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
     template <- '
-    ## --- this file is auto-generated, do not change
+    ## --- this file is auto-generated, do not change ---
     ##
-    ## Automated tests for distribution "%1$s"
-    ## ... TODO(R)
+    ## Automated tests for distribution "<NAME>" generated by
+    ## generated by `../autotest-generate.R` based on the YAML
+    ## config file `../autotest-config/<YAMLFILE>`.
 
     ## For interactive use (testing the tests)
     if (interactive()) { library(\"testthat\"); library(\"distributions3\"); }
 
     ## Test that the constructor function with no input arguments works
-    test_that("constructor function <NAME>() with default arguments runs silently", {
+    test_that("[<FNAME>]: constructor function <NAME>() with default arguments runs silently", {
+        <SKIPIFNOT>
         ## Constructor function w/ default arguments should run silently
         expect_silent(x <- <NAME>())
 
@@ -348,7 +434,7 @@ autotest_setup <- function(config) {
     });
 
     ## Test that all parameters defined are arguments to the constructor function
-    test_that("constructor <NAME>() has arguments <PARAMTXT>", {
+    test_that("[<FNAME>]: constructor <NAME>() has arguments <PARAMTXT>", {
         args <- names(formals(getFromNamespace("<NAME>", "distributions3")))
         expect_true(all(!is.na(match(<PARAMVEC>, args))), info = "not all parameters are arguments to constructor function")
     });
@@ -361,7 +447,8 @@ autotest_setup <- function(config) {
     pp <- ppLong         <- NULL
 
     ## Quantile vectors for testing
-    test_that("constructor <NAME> runs silent with parameter inputs", {
+    test_that("[<FNAME>]: constructor <NAME> runs silent with parameter inputs", {
+        <SKIPIFNOT>
         ## Call constructor function with the pre-defined arguments in
         ## parameters$valid to create four objects for testing:
         ## - d0 (default return)
@@ -402,6 +489,9 @@ autotest_setup <- function(config) {
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"       = config$name,
+              "<FNAME>"      = fname,
+              "<SKIPIFNOT>"  = get_skipifnot(fname, config),
+              "<YAMLFILE>"   = config$yamlfile,
               "<PARAMVEC>"   = deparse1(names(config$parameters$valid)),
               "<PARAMTXT>"   = paste0(names(config$parameters$valid), collapse = ", "),
               "<CMD_D1>"     = cmd_d1,
@@ -424,12 +514,13 @@ autotest_setup <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_constructor <- function(config) {
-    ## Sanity check + check if this test should be included
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("constructor returns expected object: unnamed, length 1", {
+    test_that("[<FNAME>]: constructor returns expected object: unnamed, length 1", {
+        <SKIPIFNOT>
         ## Class
         expect_s3_class(d0, c("<NAME>", "distribution"), exact = TRUE)
         expect_s3_class(d1, c("<NAME>", "distribution"), exact = TRUE)
@@ -474,7 +565,8 @@ autotest_constructor <- function(config) {
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"       = config$name,
-              "<FNAME>"      = sys.call(0)[[1L]],
+              "<FNAME>"      = fname,
+              "<SKIPIFNOT>"  = get_skipifnot(fname, config),
               "<N>"          = deparse1(length(config$parameters$valid[[1L]])),
               "<CMD_VALUES>" = paste(cmd_values, collapse = "\n"))
 
@@ -493,11 +585,12 @@ autotest_constructor <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_S3_defaults <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by autotest_<FNAME>
-    test_that("testing arguments and defaults of a series of S3 methods", {
+    test_that("[<FNAME>]: testing arguments and defaults of a series of S3 methods", {
+        <SKIPIFNOT>
         ## Helper function to get formals of S3 method
         get_formals <- function(x) formals(getFromNamespace(x, ns = "distributions3"))
 
@@ -513,8 +606,9 @@ autotest_S3_defaults <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -530,7 +624,7 @@ autotest_S3_defaults <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_crps_defaults <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## No dedicated crps.<NAME> method? Skipping test
     fun <- tryCatch(getFromNamespace(paste("crps", config$name, sep = "."), ns = "distributions3"),
@@ -540,7 +634,7 @@ autotest_crps_defaults <- function(config) {
 
     template <- '
     ## --- test set generated by autotest_<FNAME>
-    test_that("testing default arguments for S3 method crps.<NAME>", {
+    test_that("[<FNAME>]: testing default arguments for S3 method crps.<NAME>", {
         skip_if_not_installed("scoringRules"); library("scoringRules")
 
         expect_identical(formals(getFromNamespace("crps.<NAME>", ns = "distributions3")),
@@ -549,8 +643,9 @@ autotest_crps_defaults <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -563,7 +658,7 @@ autotest_crps_defaults <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_crps_compare2numeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## This test only makes sense if we have an analytic solution for the CRPS,
     ## else comparing apples with apples. Thus, we first check if we have
@@ -574,7 +669,8 @@ autotest_crps_compare2numeric <- function(config) {
 
     template <- '
     ## --- test set generated by autotest_<FNAME>
-    test_that("comparing analytic CRPS against numeric approximation for <NAME> distribution", {
+    test_that("[<FNAME>]: comparing analytic CRPS against numeric approximation for <NAME> distribution", {
+        <SKIPIFNOT>
         skip_if_not_installed("scoringRules"); library("scoringRules")
 
         expect_silent(crps_analytic <- crps(dn, xx))
@@ -587,6 +683,7 @@ autotest_crps_compare2numeric <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<TOLERANCE>" = deparse1(config$tolerance$crps))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -599,11 +696,12 @@ autotest_crps_compare2numeric <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_subsetting <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 methods subsetting and print work as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 methods subsetting and print work as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Subsetting 1 element
         expect_silent(x <- dn[<N>])
         expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
@@ -618,9 +716,10 @@ autotest_subsetting <- function(config) {
     });
     '
 
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -633,11 +732,12 @@ autotest_subsetting <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_duplicated <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method duplicated for <NAME> works", {
+    test_that("[<FNAME>]: S3 method duplicated for <NAME> works", {
+        <SKIPIFNOT>
         ## Create new object with duplicated elements
         d <- c(dn, dn[seq_len(<N> - 1)])
 
@@ -647,9 +747,10 @@ autotest_duplicated <- function(config) {
     });
     '
 
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -662,11 +763,12 @@ autotest_duplicated <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_concatenate <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("subsetting of <NAME> objects is working", {
+    test_that("[<FNAME>]: subsetting of <NAME> objects is working", {
+        <SKIPIFNOT>
         ## Splitting object dn and put it back together
         idx1 <- seq.int(1L, length(dn) / 2)
         idx2 <- setdiff(seq.int(1L, length(dn)), idx1)
@@ -678,7 +780,9 @@ autotest_concatenate <- function(config) {
     });
     '
 
-    p <- list("<NAME>" = config$name, "<FNAME>" = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -694,12 +798,14 @@ autotest_concatenate <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_params_length_mismatch <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Sanity check + check if this test should be included
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (length(config$parameters$valid) == 1L) return(NULL) # Test not required/useful
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("constructor <NAME>() throws error when lengths of parameters mismatch", {
+    test_that("[<FNAME>]: constructor <NAME>() throws error when lengths of parameters mismatch", {
+        <SKIPIFNOT>
         ## Parameters not all of length 1 or N
         expect_error(<NAME>(<ARGS>), regexp = "lengths do not match",
                      info = "expected error, but on error was thrown")
@@ -710,9 +816,10 @@ autotest_params_length_mismatch <- function(config) {
     args <- config$parameters$valid
     args[[1L]] <- rep(args[[1L]], 2L)
 
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<ARGS>"  = paste(lapply(args, deparse), collapse = ", "))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<ARGS>"      = paste(lapply(args, deparse), collapse = ", "))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -727,11 +834,12 @@ autotest_params_length_mismatch <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_params_nonnumeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("constructor <NAME>() coerces inputs to numeric", {
+    test_that("[<FNAME>]: constructor <NAME>() coerces inputs to numeric", {
+        <SKIPIFNOT>
         ## Parameters not all of length 1 or N
         expect_silent(x1 <- <NAME>(<ARGS_NUM>))
         expect_silent(x2 <- <NAME>(<ARGS_STR>))
@@ -743,10 +851,11 @@ autotest_params_nonnumeric <- function(config) {
     args <- config$parameters$valid
     args_chr <- lapply(args, as.character)
 
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<ARGS_NUM>" = paste(lapply(args, deparse), collapse = ", "),
-              "<ARGS_STR>" = paste(lapply(args_chr, deparse), collapse = ", "))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<ARGS_NUM>"  = paste(lapply(args, deparse), collapse = ", "),
+              "<ARGS_STR>"  = paste(lapply(args_chr, deparse), collapse = ", "))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -762,11 +871,12 @@ autotest_params_nonnumeric <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_params_NA <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("<NAME>() allows for parameters set NA", {
+    test_that("[<FNAME>]: <NAME>() allows for parameters set NA", {
+        <SKIPIFNOT>
         ## Calling constructor function
         expect_silent(d <- <NAME>(<ARGS_NA>))
 
@@ -821,10 +931,11 @@ autotest_params_NA <- function(config) {
     ## to return missing values when calling the S3 methods.
     idx_na <- unique(unlist(lapply(args, function(k) which(is.na(k)))))
 
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<ARGS_NA>"  = paste(lapply(args, deparse), collapse = ", "),
-              "<IDX_NA>"   = deparse1(idx_na))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<ARGS_NA>"   = paste(lapply(args, deparse), collapse = ", "),
+              "<IDX_NA>"    = deparse1(idx_na))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -840,12 +951,13 @@ autotest_params_NA <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_params_invalid <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("constructor <NAME>() throws error when invalid parameters are handed over", {
+    test_that("[<FNAME>]: constructor <NAME>() throws error when invalid parameters are handed over", {
+        <SKIPIFNOT>
         <CMD_INVALID>
     });
     '
@@ -869,6 +981,7 @@ autotest_params_invalid <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"        = config$name,
               "<FNAME>"       = fname,
+              "<SKIPIFNOT>"   = get_skipifnot(fname, config),
               "<CMD_INVALID>" = paste(cmd_invalid, collapse = "\n"))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -885,11 +998,12 @@ autotest_params_invalid <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_params_incorrect_type <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("constructor <NAME>() fails when incorrect types are provided", {
+    test_that("[<FNAME>]: constructor <NAME>() fails when incorrect types are provided", {
+        <SKIPIFNOT>
         <CMDS>
     });
     '
@@ -904,9 +1018,10 @@ autotest_params_incorrect_type <- function(config) {
     }
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<CMDS>"  = paste(cmds, collapse = "\n"))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<CMDS>"      = paste(cmds, collapse = "\n"))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -922,11 +1037,12 @@ autotest_params_incorrect_type <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_params_empty <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("constructor <NAME>() works for empty parameter sets", {
+    test_that("[<FNAME>]: constructor <NAME>() works for empty parameter sets", {
+        <SKIPIFNOT>
         expect_silent(x <- <NAME>(<PARAMS>))
         expect_s3_class(x, c("<NAME>", "distribution"), exact = TRUE)
         expect_identical(length(x), 0L, info = "expected object of length 0")
@@ -967,9 +1083,10 @@ autotest_params_empty <- function(config) {
     params <- paste(names(config$parameters$valid), "numeric()", sep = " = ", collapse = ", ")
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"   = config$name,
-              "<FNAME>"  = fname,
-              "<PARAMS>" = params)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<PARAMS>"    = params)
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -983,12 +1100,13 @@ autotest_params_empty <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_format <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 methods format and print work as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 methods format and print work as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Generating pattern
         p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
 
@@ -1012,10 +1130,11 @@ autotest_format <- function(config) {
     '
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
-              "<PATTERN>"  = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])),
+              "<PATTERN>"   = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1030,12 +1149,13 @@ autotest_format <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_as.character <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method as.character works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method as.character works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Generating pattern
         p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
 
@@ -1059,10 +1179,11 @@ autotest_as.character <- function(config) {
     '
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
-              "<PATTERN>"  = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])),
+              "<PATTERN>"   = "([ ]+)?[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([e][+-]?[0-9]+)?")
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1076,12 +1197,13 @@ autotest_as.character <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_as.list <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method as.list works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method as.list works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Converting unnamed distributions object
         expect_silent(x <- as.list(dx))
         expect_identical(x, <EXPECTED_LIST>)
@@ -1097,6 +1219,7 @@ autotest_as.list <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"           = config$name,
               "<FNAME>"          = fname,
+              "<SKIPIFNOT>"      = get_skipifnot(fname, config),
               "<EXPECTED_LIST>"  = deparse1(config$parameters$valid))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -1112,12 +1235,13 @@ autotest_as.list <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_as.matrix <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method as.matrix works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method as.matrix works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Generating expected matrix and test
         mx <- matrix(unname(unlist(as.list(dx))), ncol = <NPAR>, dimnames = list(NULL, names(as.list(dx))))
         expect_silent(x <- as.matrix(dx))
@@ -1131,9 +1255,10 @@ autotest_as.matrix <- function(config) {
     '
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<NPAR>"  = deparse1(length(config$parameters$valid)))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<NPAR>"      = deparse1(length(config$parameters$valid)))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1148,12 +1273,13 @@ autotest_as.matrix <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_as.data.frame <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method as.data.frame works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method as.data.frame works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Coercing unnamed object
         expect_silent(x <- as.data.frame(dx))
         expect_s3_class(x, "data.frame", exact = TRUE)
@@ -1166,7 +1292,9 @@ autotest_as.data.frame <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>" = config$name, "<FNAME>" = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1182,19 +1310,22 @@ autotest_as.data.frame <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_dim <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method dim works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method dim works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_null(dim(d0), info = "expected dim() to return NULL")
         expect_null(dim(d1), info = "expected dim() to return NULL")
         expect_null(dim(dx), info = "expected dim() to return NULL")
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>" = config$name, "<FNAME>" = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1207,19 +1338,21 @@ autotest_dim <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_length <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method length works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method length works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_identical(length(d1), 1L,  info = "expected dim() to return 1L")
         expect_identical(length(dx), <N>, info = "expected dim() to return <N>")
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1232,20 +1365,22 @@ autotest_length <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_summary <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## TODO(R): The summary method creates output
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method summary works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method summary works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_output(x <- summary(dn))
         expect_identical(x, summary(as.data.frame(as.matrix(dn))))
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"  = config$name,
-              "<FNAME>" = fname,
-              "<N>"     = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1260,12 +1395,13 @@ autotest_summary <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_support <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$support)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method support works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method support works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Single unnamed distribution object w/ drop = FALSE (default)
         expect_silent(x <- support(d1))
         expect_identical(x, c(min = <SUPPORT_LOWER>, max = <SUPPORT_UPPER>))
@@ -1286,6 +1422,7 @@ autotest_support <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"          = config$name,
               "<FNAME>"         = fname,
+              "<SKIPIFNOT>"     = get_skipifnot(fname, config),
               "<N>"             = deparse1(length(config$parameters$valid[[1L]])),
               "<SUPPORT_LOWER>" = deparse1(config$support$lower),
               "<SUPPORT_UPPER>" = deparse1(config$support$upper))
@@ -1301,12 +1438,13 @@ autotest_support <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_is_discrete <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$distributiontype$discrete)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method is_discrete works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method is_discrete works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_silent(x <- is_discrete(d1))
         expect_identical(x, rep(<EXPECTED>, 1L))
 
@@ -1318,10 +1456,11 @@ autotest_is_discrete <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
-              "<EXPECTED>" = deparse1(config$distributiontype$discrete))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])),
+              "<EXPECTED>"  = deparse1(config$distributiontype$discrete))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1334,12 +1473,13 @@ autotest_is_discrete <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_is_continuous <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$distributiontype$continuous)) return(NULL) # no support defined
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method is_continuous works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method is_continuous works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_silent(x <- is_continuous(d1))
         expect_identical(x, rep(<EXPECTED>, 1L))
 
@@ -1351,22 +1491,24 @@ autotest_is_continuous <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])),
-              "<EXPECTED>" = deparse1(config$distributiontype$continuous))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])),
+              "<EXPECTED>"  = deparse1(config$distributiontype$continuous))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 
 moments_tests <- function(config, fname, what = c("mean", "variance", "skewness", "kurtosis")) {
-    if (skip_this_autotest(config, fname)) return(NULL)
+    if (exclude_this_autotest(config, fname)) return(NULL)
     what <- match.arg(what)
 
     template <- '
     ## --- test set generated by autotest_<FNAME>
-    test_that("S3 method <MOMENT> works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method <MOMENT> works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_silent(x <- <MOMENT>(d1))
         expect_true(is.numeric(x) && length(x) == 1L,
                     info = "expected return to be numeric vector of length 1L")
@@ -1387,10 +1529,11 @@ moments_tests <- function(config, fname, what = c("mean", "variance", "skewness"
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<MOMENT>"   = what,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<MOMENT>"    = what,
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1408,11 +1551,12 @@ moments_tests <- function(config, fname, what = c("mean", "variance", "skewness"
 #'
 #' @rdname autotest_moments
 autotest_moments_defaults <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by autotest_<FNAME>
-    test_that("mean/variance/skewness/kurtosis methods for <NAME> have correct arguments/defaults", {
+    test_that("[<FNAME>]: mean/variance/skewness/kurtosis methods for <NAME> have correct arguments/defaults", {
+        <SKIPIFNOT>
         ## Helper function to get formals of S3 method
         get_formals <- function(x) formals(getFromNamespace(x, ns = "distributions3"))
 
@@ -1429,31 +1573,32 @@ autotest_moments_defaults <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"      = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 #' @rdname autotest_moments
 autotest_mean <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     return(moments_tests(config, fname, "mean"))
 }
 
 #' @rdname autotest_moments
 autotest_variance <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     return(moments_tests(config, fname, "variance"))
 }
 #' @rdname autotest_moments
 autotest_skewness <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     return(moments_tests(config, fname, "skewness"))
 }
 #' @rdname autotest_moments
 autotest_kurtosis <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     return(moments_tests(config, fname, "kurtosis"))
 }
 
@@ -1467,11 +1612,12 @@ autotest_kurtosis <- function(config) {
 #'
 #' @rdname autotest_moments
 autotest_dpqr_defaults <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by autotest_<FNAME>
-    test_that("dpqr methods for <NAME> have correct arguments/defaults", {
+    test_that("[<FNAME>]: dpqr methods for <NAME> have correct arguments/defaults", {
+        <SKIPIFNOT>
         ## Helper function to get formals of S3 method
         get_formals <- function(x) formals(getFromNamespace(x, ns = "distributions3"))
 
@@ -1493,8 +1639,9 @@ autotest_dpqr_defaults <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1506,11 +1653,12 @@ autotest_dpqr_defaults <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_pdf <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method pdf works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method pdf works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Incorrect use
         expect_error(pdf(d1), regexp = "argument \\"x\\" is missing")
         expect_error(pdf(d1, xx[1L], drop = "foo"), regexp = "\'drop\' must be logical")
@@ -1553,9 +1701,10 @@ autotest_pdf <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1563,11 +1712,12 @@ autotest_pdf <- function(config) {
 
 #' @rdname autotest_pdf
 autotest_log_pdf <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method log_pdf works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method log_pdf works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_silent(x <- pdf(dn, xxLong))
         expect_identical(dim(x), c(<N>, length(xxLong)))
 
@@ -1581,9 +1731,10 @@ autotest_log_pdf <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1592,7 +1743,7 @@ autotest_log_pdf <- function(config) {
 
 #' @rdname autotest_pdf
 autotest_pdf_support <- function(config, eps = 1e-6) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$support)) return(NULL) # no support defined
     if (all(sapply(config$support, is.infinite))) return(NULL) # -Inf to +Inf
 
@@ -1602,7 +1753,8 @@ autotest_pdf_support <- function(config, eps = 1e-6) {
     if (is.finite(config$support$lower)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method pdf.<NAME> works at/around lower support", {
+        test_that("[<FNAME>]: S3 method pdf.<NAME> works at/around lower support", {
+            <SKIPIFNOT>
             ## On lower support: expecting >= 0
             expect_silent(res <- pdf(d1, <X1>))
             expect_true(res >= 0)
@@ -1616,7 +1768,8 @@ autotest_pdf_support <- function(config, eps = 1e-6) {
 
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
                   "<X1>"       = deparse1(config$support$lower),
                   "<X2>"       = deparse1(config$support$lower - eps))
         res <- append(res, replace_placeholders(template, p))
@@ -1626,7 +1779,8 @@ autotest_pdf_support <- function(config, eps = 1e-6) {
     if (is.finite(config$support$upper)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method pdf.<NAME> works at/around upper support", {
+        test_that("[<FNAME>]: S3 method pdf.<NAME> works at/around upper support", {
+            <SKIPIFNOT>
             ## On upper support: expecting >= 0
             expect_silent(res <- pdf(d1, <X1>))
             expect_true(res >= 0)
@@ -1639,10 +1793,11 @@ autotest_pdf_support <- function(config, eps = 1e-6) {
         '
 
         ## List of values/placeholders to replace
-        p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
-                  "<X1>"       = deparse1(config$support$upper),
-                  "<X2>"       = deparse1(config$support$upper + eps))
+        p <- list("<NAME>"      = config$name,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
+                  "<X1>"        = deparse1(config$support$upper),
+                  "<X2>"        = deparse1(config$support$upper + eps))
         res <- append(res, replace_placeholders(template, p))
     }
     return(res |> clean_cmd(spaces = 8L))
@@ -1651,11 +1806,12 @@ autotest_pdf_support <- function(config, eps = 1e-6) {
 
 #' @rdname autotest_pdf
 autotest_pdf_compare2numeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("analytic pdf/log-pdf and numeric approximation are equal for <NAME>", {
+    test_that("[<FNAME>]: analytic pdf/log-pdf and numeric approximation are equal for <NAME>", {
+        <SKIPIFNOT>
         x <- seq_along(dn)
 
         ## Calculate analytic and nuemric solution
@@ -1676,6 +1832,7 @@ autotest_pdf_compare2numeric <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<TOLERANCE>" = deparse1(config$tolerance$pdf))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -1689,11 +1846,12 @@ autotest_pdf_compare2numeric <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_cdf <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method cdf works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method cdf works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Incorrect use
         expect_error(cdf(d1), regexp = "argument \\"x\\" is missing")
         expect_error(cdf(d1, xx[1L], drop = "foo"), regexp = "\'drop\' must be logical")
@@ -1733,16 +1891,17 @@ autotest_cdf <- function(config) {
     '
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 #' @rdname autotest_cdf
 autotest_cdf_support <- function(config, eps = 1e-8) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$support)) return(NULL) # no support defined
     if (all(sapply(config$support, is.infinite))) return(NULL) # -Inf to +Inf
 
@@ -1752,7 +1911,8 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
     if (is.finite(config$support$lower)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method cdf.<NAME> works at/around lower support", {
+        test_that("[<FNAME>]: S3 method cdf.<NAME> works at/around lower support", {
+            <SKIPIFNOT>
             ## On lower support: expecting value in [0, 1]
             expect_silent(res <- cdf(d1, <X1>))
             expect_true(res >= 0 & res <= 1)
@@ -1765,10 +1925,11 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
         '
 
         ## List of values/placeholders to replace
-        p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
-                  "<X1>"       = deparse1(config$support$lower),
-                  "<X2>"       = deparse1(config$support$lower - eps))
+        p <- list("<NAME>"      = config$name,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
+                  "<X1>"        = deparse1(config$support$lower),
+                  "<X2>"        = deparse1(config$support$lower - eps))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -1776,7 +1937,8 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
     if (is.finite(config$support$upper)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method cdf.<NAME> works at/around upper support", {
+        test_that("[<FNAME>]: S3 method cdf.<NAME> works at/around upper support", {
+            <SKIPIFNOT>
             ## On upper support: expecting value in [0, 1]
             expect_silent(res <- cdf(d1, <X1>))
             expect_true(res >= 0 & res <= 1)
@@ -1790,7 +1952,8 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
 
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
                   "<X1>"       = deparse1(config$support$upper),
                   "<X2>"       = deparse1(config$support$upper + eps))
         res <- append(res, replace_placeholders(template, p))
@@ -1801,11 +1964,12 @@ autotest_cdf_support <- function(config, eps = 1e-8) {
 
 #' @rdname autotest_cdf
 autotest_cdf_compare2numeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("analytic cdf/log-cdf and numeric approximation are equal for <NAME>", {
+    test_that("[<FNAME>]: analytic cdf/log-cdf and numeric approximation are equal for <NAME>", {
+        <SKIPIFNOT>
         ## Calculate analytic and nuemric solution
         expect_silent(analytic_sol <- cdf(dn, xx, elementwise = FALSE))
         expect_silent(numeric_sol  <- distributions3:::cdf.distribution(dn, xx, elementwise = FALSE))
@@ -1824,6 +1988,7 @@ autotest_cdf_compare2numeric <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<TOLERANCE>" = deparse1(config$tolerance$cdf))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -1837,11 +2002,12 @@ autotest_cdf_compare2numeric <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_quantile <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method quantile works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method quantile works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Incorrect use
         expect_error(quantile(d1), regexp = "argument \\"probs\\" is missing")
         expect_error(quantile(d1, 0.3, drop = "foo"), regexp = "\'drop\' must be logical")
@@ -1883,9 +2049,10 @@ autotest_quantile <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<N>"        = deparse1(length(config$parameters$valid[[1L]])))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<N>"         = deparse1(length(config$parameters$valid[[1L]])))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1893,7 +2060,7 @@ autotest_quantile <- function(config) {
 
 #' @rdname autotest_quantile
 autotest_quantile_support <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$support)) return(NULL) # no support defined
     if (all(sapply(config$support, is.infinite))) return(NULL) # -Inf to +Inf
 
@@ -1903,7 +2070,8 @@ autotest_quantile_support <- function(config) {
     if (is.finite(config$support$lower)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method quantile.<NAME> returns values >= lower support", {
+        test_that("[<FNAME>]: S3 method quantile.<NAME> returns values >= lower support", {
+            <SKIPIFNOT>
             ## Drawing a series of quantiles, check that all are >= lower support
             probs <- c(1e-5, 1e-3, 1:9 / 10, 1 - 1e-3, 1 - 1e-5)
             expect_silent(res <- quantile(dn, probs))
@@ -1913,9 +2081,10 @@ autotest_quantile_support <- function(config) {
         '
 
         ## List of values/placeholders to replace
-        p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
-                  "<X>"        = deparse1(config$support$lower))
+        p <- list("<NAME>"      = config$name,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
+                  "<X>"         = deparse1(config$support$lower))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -1923,7 +2092,8 @@ autotest_quantile_support <- function(config) {
     if (is.finite(config$support$upper)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method quantile.<NAME> returns values <= upper support", {
+        test_that("[<FNAME>]: S3 method quantile.<NAME> returns values <= upper support", {
+            <SKIPIFNOT>
             ## Drawing a series of quantiles, check that all are >= lower support
             probs <- c(1e-5, 1e-3, 1:9 / 10, 1 - 1e-3, 1 - 1e-5)
             expect_silent(res <- quantile(dn, probs))
@@ -1949,11 +2119,12 @@ autotest_quantile_support <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_random <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method quantile works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method quantile works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Distirbutions length 1, n = 1
         expect_silent(r <- random(d1))
         expect_true(is.numeric(r) & length(r) == 1)
@@ -1982,8 +2153,9 @@ autotest_random <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname)
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1991,7 +2163,7 @@ autotest_random <- function(config) {
 
 #' @rdname autotest_random
 autotest_random_support <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$support)) return(NULL) # no support defined
     if (all(sapply(config$support, is.infinite))) return(NULL) # -Inf to +Inf
 
@@ -2001,7 +2173,8 @@ autotest_random_support <- function(config) {
     if (is.finite(config$support$lower)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method random.<NAME> returns values >= lower support", {
+        test_that("[<FNAME>]: S3 method random.<NAME> returns values >= lower support", {
+            <SKIPIFNOT>
             set.seed(6020)
 
             ## Drawing a series of randoms, check that all are >= lower support
@@ -2014,10 +2187,11 @@ autotest_random_support <- function(config) {
         '
 
         ## List of values/placeholders to replace
-        p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
-                  "<N>"        = deparse1(100L),
-                  "<X>"        = deparse1(config$support$lower))
+        p <- list("<NAME>"      = config$name,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
+                  "<N>"         = deparse1(100L),
+                  "<X>"         = deparse1(config$support$lower))
         res <- append(res, replace_placeholders(template, p))
     }
 
@@ -2025,7 +2199,8 @@ autotest_random_support <- function(config) {
     if (is.finite(config$support$upper)) {
         template <- '
         ## --- test set generated by <FNAME>
-        test_that("S3 method random.<NAME> returns values <= upper support", {
+        test_that("[<FNAME>]: S3 method random.<NAME> returns values <= upper support", {
+            <SKIPIFNOT>
             set.seed(6020)
 
             ## Drawing a series of randoms, check that all are >= lower support
@@ -2039,7 +2214,8 @@ autotest_random_support <- function(config) {
 
         ## List of values/placeholders to replace
         p <- list("<NAME>"     = config$name,
-                  "<FNAME>"    = fname,
+                  "<FNAME>"     = fname,
+                  "<SKIPIFNOT>" = get_skipifnot(fname, config),
                   "<N>"        = deparse1(100L),
                   "<X>"       = deparse1(config$support$upper))
         res <- append(res, replace_placeholders(template, p))
@@ -2061,11 +2237,12 @@ autotest_random_support <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_score_hessian_defaults <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("score and hessian methods for <NAME> have correct arguments/defaults", {
+    test_that("[<FNAME>]: score and hessian methods for <NAME> have correct arguments/defaults", {
+        <SKIPIFNOT>
         expect_identical(formals(getFromNamespace("score.<NAME>", ns = "distributions3")),
             as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, ... =)),
             info = "unexpected arguments/defaults for S3 method score.<NAME>")
@@ -2083,9 +2260,10 @@ autotest_score_hessian_defaults <- function(config) {
     which <- if (length(params) == 1L) params else NULL
 
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<DEFAULT>"  = deparse1(which))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<DEFAULT>"   = deparse1(which))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2097,7 +2275,7 @@ autotest_score_hessian_defaults <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_score <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Some methods have a default argument 'what'. If found,
     ## take it as is. Else we auto-generate all available derivatives.
@@ -2110,7 +2288,8 @@ autotest_score <- function(config) {
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method score works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method score works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Incorrect use (sanity checks)
         expect_error(score(d1),                           regexp = "argument \\\"x\\\" is missing")
         expect_error(score(dn, seq_len(length(dn) + 1)),  regexp = "parameter lengths do not match")
@@ -2140,10 +2319,11 @@ autotest_score <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<X>"        = deparse1(1),
-              "<DERIV>"    = deparse1(deriv))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<X>"         = deparse1(1),
+              "<DERIV>"     = deparse1(deriv))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2151,7 +2331,7 @@ autotest_score <- function(config) {
 
 #' @rdname autotest_score
 autotest_score_compare2numeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
     ## if the default S3 method does return the analytic solution.
@@ -2168,7 +2348,8 @@ autotest_score_compare2numeric <- function(config) {
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method score vs. the numeric score for the <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method score vs. the numeric score for the <NAME> distribution", {
+        <SKIPIFNOT>
         expect_silent(analytic_sol <- score(dn, <X>, which = <DERIV>, drop = FALSE))
         expect_silent(numeric_sol  <- distributions3:::score.distribution(dn, <X>, which = <DERIV>, drop = FALSE))
         expect_equal(numeric_sol, analytic_sol, tolerance = <TOLERANCE>,
@@ -2178,6 +2359,7 @@ autotest_score_compare2numeric <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<X>"         = deparse1(1),
               "<DERIV>"     = deparse1(deriv),
               "<TOLERANCE>" = deparse1(config$tolerance$score))
@@ -2196,7 +2378,7 @@ autotest_score_compare2numeric <- function(config) {
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
 autotest_hessian_observed <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Some methods have a default argument 'what'. If found,
     ## take it as is. Else we auto-generate all available derivatives.
@@ -2209,7 +2391,8 @@ autotest_hessian_observed <- function(config) {
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method for observed hessian (default) works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method for observed hessian (default) works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Incorrect use (sanity checks)
         expect_error(hessian(d1),                           regexp = "argument \\\"x\\\" is missing")
         expect_error(hessian(dn, seq_len(length(dn) + 1)),  regexp = "parameter lengths do not match")
@@ -2243,17 +2426,18 @@ autotest_hessian_observed <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<X>"        = deparse1(1),
-              "<DERIV>"    = deparse1(deriv))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<X>"         = deparse1(1),
+              "<DERIV>"     = deparse1(deriv))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
 
 #' @rdname autotest_hessian_observed
 autotest_hessian_expected <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Some methods have a default argument 'what'. If found,
     ## take it as is. Else we auto-generate all available derivatives.
@@ -2266,7 +2450,8 @@ autotest_hessian_expected <- function(config) {
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method for expected hessian works as expected for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method for expected hessian works as expected for <NAME> distribution", {
+        <SKIPIFNOT>
         ## Checking structure of returned object (not values)
         expect_silent(x <- hessian(dn, <X>, expected = TRUE, drop = FALSE))
         expect_true(is.matrix(x) && is.numeric(x),              info = "expected numeric matrix")
@@ -2295,10 +2480,11 @@ autotest_hessian_expected <- function(config) {
     });
     '
     ## List of values/placeholders to replace
-    p <- list("<NAME>"     = config$name,
-              "<FNAME>"    = fname,
-              "<X>"        = deparse1(1),
-              "<DERIV>"    = deparse1(deriv))
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<X>"         = deparse1(1),
+              "<DERIV>"     = deparse1(deriv))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -2306,7 +2492,7 @@ autotest_hessian_expected <- function(config) {
 
 #' @rdname autotest_hessian_observed
 autotest_hessian_observed_compare2numeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
     ## if the default S3 method does return the analytic solution.
@@ -2323,7 +2509,8 @@ autotest_hessian_observed_compare2numeric <- function(config) {
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method for observed hessian vs. the numeric approximation of the observed hessian for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method for observed hessian vs. the numeric approximation of the observed hessian for <NAME> distribution", {
+        <SKIPIFNOT>
         expect_silent(analytic_sol <- hessian(dn, <X>, which = <DERIV>, drop = FALSE))
         expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, <X>, which = <DERIV>, drop = FALSE))
         expect_equal(numeric_sol, analytic_sol, tolerance = <TOLERANCE>,
@@ -2333,6 +2520,7 @@ autotest_hessian_observed_compare2numeric <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<X>"         = deparse1(1),
               "<DERIV>"     = deparse1(deriv),
               "<TOLERANCE>" = deparse1(config$tolerance$hessian_observed))
@@ -2343,7 +2531,7 @@ autotest_hessian_observed_compare2numeric <- function(config) {
 
 #' @rdname autotest_hessian_observed
 autotest_hessian_expected_compare2numeric <- function(config) {
-    if (skip_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
     ## if the default S3 method does return the analytic solution.
@@ -2360,7 +2548,8 @@ autotest_hessian_expected_compare2numeric <- function(config) {
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("S3 method for expected hessian vs. the numeric approximation of the expected hessian for <NAME> distribution", {
+    test_that("[<FNAME>]: S3 method for expected hessian vs. the numeric approximation of the expected hessian for <NAME> distribution", {
+        <SKIPIFNOT>
         ## With setting "x"
         expect_silent(analytic_sol <- hessian(dn, <X>, which = <DERIV>, drop = FALSE, expected = TRUE))
         expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, <X>, which = <DERIV>, drop = FALSE, expected = TRUE))
@@ -2380,6 +2569,7 @@ autotest_hessian_expected_compare2numeric <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<X>"         = deparse1(1),
               "<DERIV>"     = deparse1(deriv),
               "<TOLERANCE>" = deparse1(config$tolerance$hessian_expected))

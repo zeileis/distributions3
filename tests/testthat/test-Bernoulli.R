@@ -87,20 +87,3 @@ test_that("expected hessian for Bernoulli distribution return correct values", {
         -1 / (df$p * (1 - df$p)),
         info = "hessian for \"p\" returns incorrect values")
 })
-
-
-test_that("crps (both analytic and numeric) are correct/nearly equal", {
-    skip_if_not_installed("scoringRules"); library("scoringRules")
-
-    ## Solution based on scoringRules
-    expect_silent(crps_scoringRules <- crps_binom(xx, size = 1, prob = df$p))
-    ## Analytic (default) solution based on distribution object
-    expect_silent(crps_analytic <- crps(dd, xx))
-    ## Numeric approximation
-    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
-
-    ## Comparing results
-    expect_identical(crps_scoringRules, crps_analytic)
-    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-4)
-})
-

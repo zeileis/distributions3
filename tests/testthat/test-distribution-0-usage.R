@@ -194,6 +194,9 @@ test_that("pdf.distributions returns log-pdf if requested", {
 
 # deriv.method = 'grad' or 'numericDeriv' (undocumented feature for testing)
 test_that("pdf.distributions hidden deriv.method feature works (testing)", {
+    ## Skip if suggested package 'numDeriv' is not installed, used when
+    ## deriv.method is set to "numericDeriv"
+    skip_if_not_installed("numDeriv")
 
     # Continuous
     d <- Normal(3)
@@ -214,7 +217,6 @@ test_that("pdf.distributions hidden deriv.method feature works (testing)", {
     expect_silent(x3 <- distributions3:::pdf.distribution(d, 2, deriv.method = "numericDeriv"))
     expect_equal(x1, x2)
     expect_equal(x1, x3)
-
 })
 
 
