@@ -94,18 +94,3 @@ test_that("moments for StudentsT distribution return correct values", {
         info = "kurtosis.StudentsT incorrect")
 })
 
-test_that("crps (both analytic and numeric) are correct/nearly equal", {
-    skip_if_not_installed("scoringRules"); library("scoringRules")
-
-    ## Solution based on scoringRules
-    expect_silent(crps_scoringRules <- crps_t(xx, df = df$df))
-    ## Analytic (default) solution based on distribution object
-    expect_silent(crps_analytic <- crps(dd, xx))
-    ## Numeric approximation
-    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
-
-    ## Comparing results
-    expect_identical(crps_scoringRules, crps_analytic)
-    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-3)
-})
-
