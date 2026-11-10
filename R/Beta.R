@@ -233,7 +233,7 @@ is_continuous.Beta <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Beta
 crps.Beta <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_beta(y = at, shape1 = d$alpha, shape2 = d$beta)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

@@ -331,7 +331,7 @@ is_continuous.StudentsT <- function(d, ...) {
 #' @exportS3Method scoringRules::crps StudentsT
 crps.StudentsT <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_t(y = at, df = d$df)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

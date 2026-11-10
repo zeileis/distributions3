@@ -261,7 +261,7 @@ is_continuous.Gumbel <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Gumbel
 crps.Gumbel <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_gev(y = at, location = d$mu, scale = d$sigma, shape = 0)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

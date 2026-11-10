@@ -301,7 +301,7 @@ is_continuous.Gamma <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Gamma
 crps.Gamma <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$shape, rate = d$rate)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

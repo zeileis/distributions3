@@ -295,7 +295,7 @@ is_continuous.Exponential <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Exponential
 crps.Exponential <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_exp(y = at, rate = d$rate)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

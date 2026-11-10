@@ -407,7 +407,7 @@ is_continuous.Normal <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Normal
 crps.Normal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_norm(y = at, mean = d$mu, sd = d$sigma)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

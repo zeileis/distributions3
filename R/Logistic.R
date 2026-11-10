@@ -274,7 +274,7 @@ is_continuous.Logistic <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Logistic
 crps.Logistic <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_logis(y = at, location = d$location, scale = d$scale)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

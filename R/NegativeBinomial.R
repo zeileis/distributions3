@@ -330,7 +330,7 @@ is_continuous.NegativeBinomial <- function(d, ...) {
 #' @exportS3Method scoringRules::crps NegativeBinomial
 crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- if ("mu" %in% names(unclass(y))) {
     function(at, d) scoringRules::crps_nbinom(y = at, mu = d$mu, size = d$size)
   } else {

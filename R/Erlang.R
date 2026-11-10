@@ -203,7 +203,7 @@ is_continuous.Erlang <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Erlang
 crps.Erlang <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$k, rate = d$lambda)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }

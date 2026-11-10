@@ -290,7 +290,7 @@ is_continuous.Poisson <- function(d, ...) {
 #' @exportS3Method scoringRules::crps Poisson
 crps.Poisson <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
-  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
   FUN <- function(at, d) scoringRules::crps_pois(y = at, lambda = d$lambda)
   apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
