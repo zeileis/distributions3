@@ -38,7 +38,7 @@
 #'
 #'   **Variance**: \eqn{\frac{\alpha}{\beta^2}}
 #'
-#'   **Probability density function (p.m.f)**:
+#'   **Probability density function (p.d.f)**:
 #'
 #'   \deqn{
 #'     f(x) = \frac{\beta^{\alpha}}{\Gamma(\alpha)} x^{\alpha - 1} e^{-\beta x}
@@ -49,9 +49,9 @@
 #'   **Cumulative distribution function (c.d.f)**:
 #'
 #'   \deqn{
-#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}}
+#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)}
 #'   }{
-#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}}
+#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)}
 #'   }
 #'
 #'   **Moment generating function (m.g.f)**:
