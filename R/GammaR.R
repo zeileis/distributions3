@@ -52,7 +52,6 @@
 #' quantile(X, cdf(X, 1))
 
 GammaR <- function(mu = numeric(), sigma = numeric()) {
-  stopifnot("parameters 'mu' and 'sigma' must be atomic" = is.atomic(mu) && is.atomic(sigma))
   if (!is.numeric(mu)) mu <- as.numeric(mu)
   if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
   stopifnot(
@@ -77,7 +76,6 @@ mean.GammaR <- function(x, ...) {
 
 #' @export
 variance.GammaR <- function(x, ...) {
-  check_dots_used()
   if (!length(x)) return(numeric())
   rval <- x$mu^2 * x$sigma^2
   setNames(rval, names(x))
@@ -86,7 +84,6 @@ variance.GammaR <- function(x, ...) {
 
 #' @export
 skewness.GammaR <- function(x, ...) {
-  check_dots_used()
   if (!length(x)) return(numeric())
   rval <- 2 * x$sigma
   setNames(rval, names(x))
@@ -95,7 +92,6 @@ skewness.GammaR <- function(x, ...) {
 
 #' @export
 kurtosis.GammaR <- function(x, ...) {
-  check_dots_used()
   if (!length(x)) return(numeric())
   rval <- 6 * x$sigma^2
   setNames(rval, names(x))
@@ -118,7 +114,6 @@ kurtosis.GammaR <- function(x, ...) {
 #'   (if `drop = FALSE`).
 #'
 random.GammaR <- function(x, n = 1L, drop = TRUE, ...) {
-  check_dots_used()
   n <- make_positive_integer(n)
   if (n == 0L) {
     return(numeric(0L))
@@ -236,7 +231,6 @@ quantile.GammaR <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
 #'
 #' @export
 support.GammaR <- function(d, drop = TRUE, ...) {
-  check_dots_used()
   min <- rep(0, length(d))
   max <- rep(Inf, length(d))
   make_support(min, max, d, drop = drop)
@@ -304,12 +298,12 @@ hessian.GammaR <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
     hess <- function(par, d, x) switch(par,
       "mu"    = 0 * x - 1 / (d$sigma^2 * d$mu^2),
       "sigma" = 0 * x + (4 / d$sigma^4) - (4 / d$sigma^6) * trigamma(1 / d$sigma^2),
-      0 * d$mu
+      0 * d$mu + 0 * x
     )
   } else {
     hess <- function(par, d, x) switch(par,
       "mu"    = (d$mu - 2 * x) / (d$mu^3 * d$sigma^2),
-      "sigma" = -(1 / d$sigma^4) * (6 * (digamma(1 / d$sigma^2) + log(d$mu) + 2 * log(d$sigma) - log(x) + x / d$mu) - 4 + 4 * trigamma(1 / d$sigma^2) / d$sigma^2),
+      "sigma" = -(1 / d$sigma^4) * (6 * (digamma(1 / d$sigma^2) + log(d$mu) + 2 * log(d$sigma) - log(x) + x / d$mu) - 10 + 4 * trigamma(1 / d$sigma^2) / d$sigma^2),
       -2 * (x - d$mu) / (d$mu^2 * d$sigma^3)
     )
   }

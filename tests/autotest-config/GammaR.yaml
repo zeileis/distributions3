@@ -6,11 +6,11 @@ name: GammaR
 ## Name of parameters and supported range/values.
 parameters:
   valid:
-    mu:    [2, 3, 4, 10]
-    sigma: [1, 0.5, 0.25, 0.1]
+    mu:     [  4,   3, 1,  10]
+    sigma:  [0.5, 0.2, 1, 0.3]
   invalid:
-    mu:    [-1, -1, -1]
-    sigma: [-0.1, -1, -10000]
+    mu:     [-10, -1, -1e-10]
+    sigma:  [-10, -1, -1e-10]
 
 support:
   lower: 0
@@ -20,3 +20,5 @@ distributiontype:
   discrete: false
   continuous: true
 
+tolerance:
+  crps: 1e-2
