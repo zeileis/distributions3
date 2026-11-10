@@ -927,7 +927,6 @@ test_that("[autotest_crps_defaults]: testing default arguments for S3 method crp
 test_that("[autotest_crps_compare2numeric]: comparing analytic CRPS against numeric approximation for Geometric distribution", {
     ## Skip if suggested package is missing
     skip_if_not_installed("hypergeo")
-    skip_if_not_installed("scoringRules")
 
     skip_if_not_installed("scoringRules"); library("scoringRules")
 

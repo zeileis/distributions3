@@ -20,6 +20,4 @@ distributiontype:
   continuous: false
 
 skip_if_not_installed:
-  crps_compare2numeric:
-    - hypergeo
-    - scoringRules
+  crps_compare2numeric: hypergeo
