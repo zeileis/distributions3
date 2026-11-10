@@ -130,15 +130,3 @@ test_that("expected hessian for Geometric distribution return correct values", {
         info = "hessian for \"p\" returns incorrect values")
 })
 
-## Testing CRPS; this is excluded from the automated tests as it depends on the
-## suggested packages 'scoringRules' and 'hypergeo'. If not installed, skip this test set.
-test_that("comparing analytic CRPS against numeric approximation for Geometric distribution", {
-    skip_if_not_installed("hypergeo")
-    skip_if_not_installed("scoringRules"); library("scoringRules")
-
-    expect_silent(crps_analytic <- crps(dd, xx))
-    expect_silent(crps_numeric <- distributions3:::crps.distribution(dd, xx))
-    expect_equal(crps_analytic, crps_numeric, tolerance = 1e-04,
-                 info = "numeric CRPS and analytic CRPS not equal")
-});
-

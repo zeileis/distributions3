@@ -27,5 +27,5 @@ tests:
     - variance
     - skewness
     - kurtosis
-    - crps_defaults
-    - crps_compare2numeric
+#    - crps_defaults
+#    - crps_compare2numeric

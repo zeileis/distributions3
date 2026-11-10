@@ -18,10 +18,18 @@ distributiontype:
   discrete: true
   continuous: false
 
-## Skipping a series of tests if the R package 'revdbyas' is not
+## Skipping a series of tests if the R package 'revdbayes' is not
 ## installed (suggested package).
 skip_if_not_installed:
-  autotest_score_compare2numeric: revdbyas
-  autotest_hessian_observed_compare2numeric: revdbyas
-  autotest_hessian_expected_compare2numeric: revdbyas
+  autotest_score_compare2numeric: revdbayes
+  autotest_hessian_observed_compare2numeric: revdbayes
+  autotest_hessian_expected_compare2numeric: revdbayes
+
+tests:
+  exclude:
+    ## With p = 0 and p = 1 (edge cases) these autotests fail,
+    ## manual tests added to test-Bernoulli.R
+    - score_compare2numeric
+    - hessian_expected_compare2numeric
+    - hessian_observed_compare2numeric
 

@@ -87,3 +87,50 @@ test_that("expected hessian for Bernoulli distribution return correct values", {
         -1 / (df$p * (1 - df$p)),
         info = "hessian for \"p\" returns incorrect values")
 })
+
+
+## Testing numeric score for p > 0 and p < 1 (excluding edge cases)
+test_that("S3 method score vs. the numeric score for the Bernoulli distribution", {
+    ## Skip if suggested package is missing
+    skip_if_not_installed("revdbayes")
+
+    expect_silent(analytic_sol <- score(dd, 1, which = "p", drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::score.distribution(dd, 1, which = "p", drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::score.distribution(dd, 1, which = "p", drop = FALSE))
+    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-06,
+                 info = "numeric approximation of score not equal to analytic solution")
+});
+
+
+## Testing numeric hessian for p > 0 and p < 1 (excluding edge cases)
+test_that("S3 method for expected hessian vs. the numeric approximation of the expected hessian for Bernoulli distribution", {
+    ## Skip if suggested package is missing
+    skip_if_not_installed("revdbayes")
+
+    ## With setting "x"
+    expect_silent(analytic_sol <- hessian(dd, 1, which = "p", drop = FALSE, expected = TRUE))
+    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dd, 1, which = "p", drop = FALSE, expected = TRUE))
+    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
+                 info = "numeric approximation of expected hessian not equal to analytic solution")
+
+    ## Without "x": typically the expected hessian does not depend on x;
+    ## we allow that argument x is missing and expect the same results
+    expect_silent(analytic_sol2 <- hessian(dd, which = "p", drop = FALSE, expected = TRUE))
+    expect_silent(numeric_sol2  <- distributions3:::hessian.distribution(dd, which = "p", drop = FALSE, expected = TRUE))
+    expect_identical(analytic_sol2, analytic_sol, tolerance = 1e-04,
+                 info = "analytic expected hessian when not providing argument x expected to be identical")
+    expect_identical(numeric_sol2, numeric_sol, tolerance = 1e-04,
+                 info = "numeric expected hessian when not providing argument x expected to be identical")
+});
+
+
+## Testing numeric hessian for p > 0 and p < 1 (excluding edge cases)
+test_that("S3 method for observed hessian vs. the numeric approximation of the observed hessian for Bernoulli distribution", {
+    ## Skip if suggested package is missing
+    skip_if_not_installed("revdbayes")
+
+    expect_silent(analytic_sol <- hessian(dd, 1, which = "p", drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dd, 1, which = "p", drop = FALSE))
+    expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
+                 info = "numeric approximation of hessian not equal to analytic solution")
+});

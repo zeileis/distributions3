@@ -16,6 +16,3 @@ distributiontype:
   discrete: false
   continuous: true
 
-tests:
-  exclude:
-    - hessian_expected

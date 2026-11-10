@@ -17,7 +17,7 @@ distributiontype:
   discrete: false
   continuous: true
 
-## Skipping a series of tests if the R package 'revdbyas' is not
+## Skipping a series of tests if the R package 'revdbayes' is not
 ## installed (suggested package).
 skip_if_not_installed: revdbayes
 
@@ -29,3 +29,4 @@ tests:
     ## TODO: revdbayes::qgev throws error (not warning) if p not in [0, 1],
     ## thus exlcuded for now.
     - quantile
+

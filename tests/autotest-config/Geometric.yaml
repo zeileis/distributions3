@@ -19,8 +19,7 @@ distributiontype:
   discrete: true
   continuous: false
 
-tests:
-  exclude:
-    ## Relies on suggested package 'hypergeo'; covered by manual tests
-    ## (test-Geometric.R), skipped if the hypergeo package is not installed.
-    - crps_compare2numeric
+skip_if_not_installed:
+  crps_compare2numeric:
+    - hypergeo
+    - scoringRules

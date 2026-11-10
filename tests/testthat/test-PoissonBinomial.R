@@ -9,6 +9,7 @@ test_that("print.PoissonBinomial works", {
 })
 
 test_that("likelihood.PoissonBinomial and log_likelihood.PoissonBinomial work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   pb <- PoissonBinomial(0.5, 0.3, 0.8)
   x <- c(1, 1, 0)
 
@@ -20,6 +21,7 @@ test_that("likelihood.PoissonBinomial and log_likelihood.PoissonBinomial work co
 })
 
 test_that("random.PoissonBinomial work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   pb <- PoissonBinomial(0.5, 0.3, 0.8)
 
   expect_length(random(pb), 1)
@@ -36,6 +38,7 @@ test_that("random.PoissonBinomial work correctly", {
 
 
 test_that("pdf.PoissonBinomial work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   pb <- PoissonBinomial(0.5, 0.3, 0.8)
 
   expect_equal(pdf(pb, 0), prod(1 - as.matrix(pb)))
@@ -49,6 +52,7 @@ test_that("pdf.PoissonBinomial work correctly", {
 })
 
 test_that("cdf.PoissonBinomial work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   pb <- PoissonBinomial(0.5, 0.3, 0.8)
 
   expect_equal(cdf(pb, 0), prod(1 - as.matrix(pb)))
@@ -61,6 +65,7 @@ test_that("cdf.PoissonBinomial work correctly", {
 })
 
 test_that("quantile.PoissonBinomial work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   pb <- PoissonBinomial(0.5, 0.3, 0.8)
 
   expect_equal(quantile(pb, 0), 0)
@@ -72,6 +77,7 @@ test_that("quantile.PoissonBinomial work correctly", {
 })
 
 test_that("vectorization of a PoissonBinomial distribution work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   d <- PoissonBinomial(c(0.5, 0.1), c(0.3, 0.9), c(0.8, 0.6))
   d1 <- d[1]
   d2 <- d[2]
@@ -136,6 +142,7 @@ test_that("vectorization of a PoissonBinomial distribution work correctly", {
 })
 
 test_that("named return values for PoissonBinomial distribution work correctly", {
+  skip_if_not_installed("PoissonBinomial")
   d <- PoissonBinomial(c(0.5, 0.1), c(0.3, 0.9), c(0.8, 0.6))
   names(d) <- LETTERS[1:length(d)]
 

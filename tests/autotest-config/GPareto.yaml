@@ -22,7 +22,7 @@ distributiontype:
   discrete: false
   continuous: true
 
-## Skipping a series of tests if the R package 'revdbyas' is not
+## Skipping a series of tests if the R package 'revdbayes' is not
 ## installed (suggested package).
 skip_if_not_installed: revdbayes
 
@@ -41,3 +41,4 @@ tests:
     ## the density, truncated at the 1e-6 quantile) is inaccurate for this bounded
     ## or heavy-tailed support (errors up to 6%).
     - hessian_expected_compare2numeric
+
