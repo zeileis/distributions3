@@ -57,7 +57,6 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 Weibull <- function(shape = numeric(), scale = numeric()) {
-  stopifnot("parameters 'shape' and 'scale' shapest be atomic" = is.atomic(shape) && is.atomic(scale))
   if (!is.numeric(shape)) shape <- as.numeric(shape)
   if (!is.numeric(scale)) scale <- as.numeric(scale)
   stopifnot(

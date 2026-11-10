@@ -94,7 +94,6 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 ChiSquare <- function(df = numeric()) {
-  stopifnot("parameter 'df' must be atomic" = is.atomic(df))
   if (!is.numeric(df)) df <- as.numeric(df)
   stopifnot("parameter 'df' must be in [0, Inf]" = all(df >= 0, na.rm = TRUE))
 

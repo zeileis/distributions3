@@ -74,7 +74,6 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Cauchy <- function(location = 0, scale = 1) {
-  stopifnot("parameters 'location' and 'scale' locationst be atomic" = is.atomic(location) && is.atomic(scale))
   if (!is.numeric(location)) location <- as.numeric(location)
   if (!is.numeric(scale)) scale <- as.numeric(scale)
   stopifnot(

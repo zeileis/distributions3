@@ -65,7 +65,6 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 Geometric <- function(p = 0.5) {
-  stopifnot("parameter 'p' must be atomic" = is.atomic(p))
   if (!is.numeric(p)) p <- as.numeric(p)
   stopifnot("parameter 'p' must be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE))
 

@@ -80,7 +80,6 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Gamma <- function(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1) {
-  stopifnot("parameters 'shape' and 'rate' must be atomic" = is.atomic(shape) && is.atomic(rate))
   if (!is.numeric(shape)) shape <- as.numeric(shape)
   if (!is.numeric(rate)) rate <- as.numeric(rate)
   stopifnot(

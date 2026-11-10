@@ -33,7 +33,6 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Erlang <- function(k = numeric(), lambda = numeric()) {
-  stopifnot("parameters 'k' and 'lambda' must be atomic" = is.atomic(k) && is.atomic(lambda))
   if (!is.numeric(k))      k      <- as.numeric(k)
   if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
   stopifnot(

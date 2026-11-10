@@ -60,7 +60,6 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 LogNormal <- function(log_mu = 0, log_sigma = 1) {
-  stopifnot("parameters 'log_mu' and 'log_sigma' log_must be atomic" = is.atomic(log_mu) && is.atomic(log_sigma))
   if (!is.numeric(log_mu))    log_mu    <- as.numeric(log_mu)
   if (!is.numeric(log_sigma)) log_sigma <- as.numeric(log_sigma)
   stopifnot(

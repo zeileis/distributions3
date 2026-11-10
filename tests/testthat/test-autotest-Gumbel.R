@@ -255,8 +255,8 @@ test_that("[autotest_params_incorrect_type]: constructor Gumbel() fails when inc
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-        expect_error(Gumbel(mu = list(), sigma = c(5, 0.5, 1, 2, 5, 100)), regexp = "atomic")
-expect_error(Gumbel(mu = c(0, -10, -1, 0, 1, 10), sigma = list()), regexp = "atomic")
+    expect_error(Gumbel(mu = list(), sigma = c(5, 0.5, 1, 2, 5, 100)), regexp = "parameter lengths do not match")
+    expect_error(Gumbel(mu = c(0, -10, -1, 0, 1, 10), sigma = list()), regexp = "parameter lengths do not match")
 });
 
 

@@ -99,8 +99,6 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 GEV <- function(mu = 0, sigma = 1, xi = 0) {
-  stopifnot("parameters 'mu', 'sigma' and 'xi' must be atomic" =
-    is.atomic(mu) && is.atomic(sigma) && is.atomic(xi))
   if (!is.numeric(mu)) mu <- as.numeric(mu)
   if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
   if (!is.numeric(xi)) xi <- as.numeric(xi)

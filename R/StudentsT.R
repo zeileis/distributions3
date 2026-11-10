@@ -113,7 +113,6 @@
 #' mean(x) + quantile(T, 0.12 / 2) * sd(x) / sqrt(nx)
 #' mean(x) + quantile(T, 1 - 0.12 / 2) * sd(x) / sqrt(nx)
 StudentsT <- function(df = numeric()) {
-  stopifnot("parameter 'df' must be atomic" = is.atomic(df))
   if (!is.numeric(df)) df <- as.numeric(df)
   stopifnot("parameter 'df' must be in [0, Inf]" = all(df >= 0, na.rm = TRUE))
 

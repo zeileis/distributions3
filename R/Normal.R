@@ -157,7 +157,6 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Normal <- function(mu = 0, sigma = 1) {
-  stopifnot("parameters 'mu' and 'sigma' must be atomic" = is.atomic(mu) && is.atomic(sigma))
   if (!is.numeric(mu))    mu    <- as.numeric(mu)
   if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
   stopifnot(

@@ -1009,12 +1009,17 @@ autotest_params_incorrect_type <- function(config) {
     '
 
     cmds <- c()
-    for (i in seq_along(config$parameters$valid)) {
-        tmp <- config$parameters$valid
-        tmp[[i]] <- list()
-        cmds <- c(cmds, sprintf("    expect_error(%s(%s), regexp = \"atomic\")",
-            config$name, 
-            paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", ")))
+
+    ## If number of parameters equal one, we hand over an empty list which
+    ## is converted to numeric length 0, should throw a length mismatch error.
+    if (length(config$parameter$valid) > 1L) {
+        for (i in seq_along(config$parameters$valid)) {
+            tmp <- config$parameters$valid
+            tmp[[i]] <- list()
+            cmds <- c(cmds, sprintf("<INDENT>expect_error(%s(%s), regexp = \"parameter lengths do not match\")",
+                config$name, 
+                paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", ")))
+        }
     }
 
     ## List of values/placeholders to replace
