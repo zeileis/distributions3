@@ -777,8 +777,8 @@ test_that("[autotest_score_compare2numeric]: S3 method score vs. the numeric sco
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_silent(analytic_sol <- score(dn, 1, which = c("mu", "sigma", "xi"), drop = FALSE))
-    expect_silent(numeric_sol  <- distributions3:::score.distribution(dn, 1, which = c("mu", "sigma", "xi"), drop = FALSE))
+    expect_silent(analytic_sol <- score(dn, 1, drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::score.distribution(dn, 1, drop = FALSE))
     expect_equal(numeric_sol, analytic_sol, tolerance = 1e-06,
                  info = "numeric approximation of score not equal to analytic solution")
 });
@@ -827,8 +827,8 @@ test_that("[autotest_hessian_observed_compare2numeric]: S3 method for observed h
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_silent(analytic_sol <- hessian(dn, 1, which = c("mu", "sigma", "xi"), drop = FALSE))
-    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, which = c("mu", "sigma", "xi"), drop = FALSE))
+    expect_silent(analytic_sol <- hessian(dn, 1, drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, drop = FALSE))
     expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
                  info = "numeric approximation of hessian not equal to analytic solution")
 });

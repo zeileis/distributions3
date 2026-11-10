@@ -798,8 +798,8 @@ test_that("[autotest_score_compare2numeric]: S3 method score vs. the numeric sco
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_silent(analytic_sol <- score(dn, 1, which = c("mu", "sigma"), drop = FALSE))
-    expect_silent(numeric_sol  <- distributions3:::score.distribution(dn, 1, which = c("mu", "sigma"), drop = FALSE))
+    expect_silent(analytic_sol <- score(dn, 1, drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::score.distribution(dn, 1, drop = FALSE))
     expect_equal(numeric_sol, analytic_sol, tolerance = 1e-06,
                  info = "numeric approximation of score not equal to analytic solution")
 });
@@ -848,8 +848,8 @@ test_that("[autotest_hessian_observed_compare2numeric]: S3 method for observed h
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_silent(analytic_sol <- hessian(dn, 1, which = c("mu", "sigma"), drop = FALSE))
-    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, which = c("mu", "sigma"), drop = FALSE))
+    expect_silent(analytic_sol <- hessian(dn, 1, drop = FALSE))
+    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, drop = FALSE))
     expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
                  info = "numeric approximation of hessian not equal to analytic solution")
 });
@@ -894,15 +894,15 @@ test_that("[autotest_hessian_expected_compare2numeric]: S3 method for expected h
     skip_if_not_installed("revdbayes")
 
     ## With setting "x"
-    expect_silent(analytic_sol <- hessian(dn, 1, which = c("mu", "sigma"), drop = FALSE, expected = TRUE))
-    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, which = c("mu", "sigma"), drop = FALSE, expected = TRUE))
+    expect_silent(analytic_sol <- hessian(dn, 1, drop = FALSE, expected = TRUE))
+    expect_silent(numeric_sol  <- distributions3:::hessian.distribution(dn, 1, drop = FALSE, expected = TRUE))
     expect_equal(numeric_sol, analytic_sol, tolerance = 1e-04,
                  info = "numeric approximation of expected hessian not equal to analytic solution")
 
     ## Without "x": typically the expected hessian does not depend on x;
     ## we allow that argument x is missing and expect the same results
-    expect_silent(analytic_sol2 <- hessian(dn, which = c("mu", "sigma"), drop = FALSE, expected = TRUE))
-    expect_silent(numeric_sol2  <- distributions3:::hessian.distribution(dn, which = c("mu", "sigma"), drop = FALSE, expected = TRUE))
+    expect_silent(analytic_sol2 <- hessian(dn, drop = FALSE, expected = TRUE))
+    expect_silent(numeric_sol2  <- distributions3:::hessian.distribution(dn, drop = FALSE, expected = TRUE))
     expect_identical(analytic_sol2, analytic_sol, tolerance = 1e-04,
                  info = "analytic expected hessian when not providing argument x expected to be identical")
     expect_identical(numeric_sol2, numeric_sol, tolerance = 1e-04,
