@@ -277,7 +277,7 @@ score.GammaR <- function(d, x, which = NULL, drop = TRUE, ...) {
 
   ## compute scores
   scr <- function(par, d, x) switch(par,
-    "mu"    = (x - d$mu) / ((d$sigma^2) * (d$mu^2)),
+    "mu"    = (x - d$mu) / (d$sigma^2 * d$mu^2),
     "sigma" = (2 / d$sigma^3) * ((x / d$mu) - log(x) + log(d$mu) + 2 * log(d$sigma) - 1 + digamma(1 / (d$sigma^2))),
   )
 
@@ -302,7 +302,7 @@ hessian.GammaR <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
 
   if (expected) {
     hess <- function(par, d, x) switch(par,
-      "mu"    = 0 * x - 1 / ((d$sigma^2) * (d$mu^2)),
+      "mu"    = 0 * x - 1 / (d$sigma^2 * d$mu^2),
       "sigma" = 0 * x + (4 / d$sigma^4) - (4 / d$sigma^6) * trigamma(1 / d$sigma^2),
       0 * d$mu
     )
