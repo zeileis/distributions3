@@ -48,6 +48,7 @@ Other continuous distributions:
 \code{\link[=ChiSquare]{ChiSquare()}},
 \code{\link[=Erlang]{Erlang()}},
 \code{\link[=Exponential]{Exponential()}},
+\code{\link[=ExponentialR]{ExponentialR()}},
 \code{\link[=FisherF]{FisherF()}},
 \code{\link[=Frechet]{Frechet()}},
 \code{\link[=GEV]{GEV()}},

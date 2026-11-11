@@ -161,7 +161,16 @@ rzipois <- function(n, lambda, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-ZIPoisson <- function(lambda, pi) {
+ZIPoisson <- function(lambda = numeric(), pi = numeric()) {
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  if (!is.numeric(pi))     pi     <- as.numeric(pi)
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      length(lambda) == length(pi) | length(lambda) == 1 | length(pi) == 1,
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE),
+    "parameter 'pi' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE)
+  )
+
   d <- data.frame(lambda = lambda, pi = pi)
   class(d) <- c("ZIPoisson", "distribution")
   return(d)
@@ -170,6 +179,7 @@ ZIPoisson <- function(lambda, pi) {
 #' @importFrom rlang check_dots_used
 #' @export
 mean.ZIPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   check_dots_used()
   rval <- (1 - x$pi) * x$lambda
   setNames(rval, names(x))
@@ -177,12 +187,14 @@ mean.ZIPoisson <- function(x, ...) {
 
 #' @export
 variance.ZIPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   rval <- (1 - x$pi) * x$lambda * (1 + x$pi * x$lambda)
   setNames(rval, names(x))
 }
 
 #' @export
 skewness.ZIPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   m <- (1 - x$pi) * x$lambda
   s <- sqrt(m * (1 + x$pi * x$lambda))
   rval <- ((1 - x$pi) * (x$lambda + 3 * x$lambda^2 + x$lambda^3) - 3 * m * s^2 - m^3) / s^3  
@@ -191,6 +203,7 @@ skewness.ZIPoisson <- function(x, ...) {
 
 #' @export
 kurtosis.ZIPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   rval <- ( (1 + 7 * x$lambda + 6 * x$lambda^2 + x$lambda^3)
              - 4 * (1 - x$pi) * (x$lambda + 3 * x$lambda^2 + x$lambda^3)
              + 6 * (1 - x$pi)^2 * (x$lambda^2 + x$lambda^3)
@@ -216,9 +229,7 @@ kurtosis.ZIPoisson <- function(x, ...) {
 #'
 random.ZIPoisson <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
-  if (n == 0L) {
-    return(numeric(0L))
-  }
+  if (n == 0L) return(numeric(0L))
   FUN <- function(at, d) rzipois(n = at, lambda = d$lambda, pi = d$pi)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
@@ -318,6 +329,7 @@ cdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 quantile.ZIPoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
+  if (!length(x)) return(numeric())
   FUN <- function(at, d) qzipois(p = at, lambda = d$lambda, pi = d$pi, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
@@ -348,3 +360,74 @@ is_continuous.ZIPoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZIPoisson and suff_stat.ZIPoisson
+
+# ---------------------------------------------------------------------------
+# ZIPoisson: methods for score/hessian (pi = probability of a structural zero)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZIPoisson <- function(d, x, which = NULL, drop = TRUE, ...) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    q  <- exp(-d$lambda)
+    p0 <- d$pi + (1 - d$pi) * q
+    s <- switch(par,
+      "lambda" = ifelse(x > 0, x / d$lambda - 1, -(1 - d$pi) * q / p0),
+      "pi"     = ifelse(x > 0, -1 / (1 - d$pi), (1 - q) / p0))
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZIPoisson <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## observed Hessian, evaluated at x (integer support only, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    q  <- exp(-d$lambda)
+    p0 <- d$pi + (1 - d$pi) * q
+    h <- switch(par,
+      "lambda" = ifelse(x0, (1 - d$pi) * q / p0 - ((1 - d$pi) * q / p0)^2, -x / d$lambda^2),
+      "pi"     = ifelse(x0, -((1 - q) / p0)^2, -1 / (1 - d$pi)^2),
+      "lambda:pi" = ifelse(x0, q / p0 + (1 - q) * (1 - d$pi) * q / p0^2, 0 * x))
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 0:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

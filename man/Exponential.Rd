@@ -81,6 +81,7 @@ Other continuous distributions:
 \code{\link[=Cauchy]{Cauchy()}},
 \code{\link[=ChiSquare]{ChiSquare()}},
 \code{\link[=Erlang]{Erlang()}},
+\code{\link[=ExponentialR]{ExponentialR()}},
 \code{\link[=FisherF]{FisherF()}},
 \code{\link[=Frechet]{Frechet()}},
 \code{\link[=GEV]{GEV()}},

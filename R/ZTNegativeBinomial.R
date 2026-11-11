@@ -369,3 +369,88 @@ is_continuous.ZTNegativeBinomial <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZTNegativeBinomial and suff_stat.ZTNegativeBinomial
+
+# ---------------------------------------------------------------------------
+# ZTNegativeBinomial: methods for score/hessian (mu, theta as in
+# dnbinom(mu = , size = theta)); log f = log f_nb(x) - log(1 - f0)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZTNegativeBinomial <- function(d, x, which = NULL, drop = TRUE, ...) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 0) # keep special functions finite off the support
+    z  <- .nb_zero_derivs(d$mu, d$theta)
+    ## truncation term: d/dv [-log(1 - f0)] = f0 g_v / (1 - f0)
+    s <- switch(par,
+      "mu" = x / d$mu - (x + d$theta) / (d$mu + d$theta) +
+        z$f0 * z$mu / (1 - z$f0),
+      "theta" = digamma(x + d$theta) - digamma(d$theta) + log(d$theta) + 1 -
+        log(d$mu + d$theta) - (x + d$theta) / (d$mu + d$theta) +
+        z$f0 * z$theta / (1 - z$f0))
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZTNegativeBinomial <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## observed Hessian, evaluated at x (support x >= 1, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 0) # keep special functions finite off the support
+    mu <- d$mu; th <- d$theta
+    z  <- .nb_zero_derivs(mu, th)
+    P  <- z$f0
+    ## second derivatives of -log(1 - P), with P_v = P g_v, P_vw = P (g_vw + g_v g_w)
+    Pm  <- P * z$mu
+    Pt  <- P * z$theta
+    Pmm <- P * (z$mumu + z$mu^2)
+    Ptt <- P * (z$thetatheta + z$theta^2)
+    Pmt <- P * (z$mutheta + z$mu * z$theta)
+    h <- switch(par,
+      "mu"       = -x / mu^2 + (x + th) / (mu + th)^2 +
+        Pmm / (1 - P) + Pm^2 / (1 - P)^2,
+      "theta"    = trigamma(x + th) - trigamma(th) + 1 / th - 2 / (mu + th) +
+        (x + th) / (mu + th)^2 + Ptt / (1 - P) + Pt^2 / (1 - P)^2,
+      "mu:theta" = (x - mu) / (mu + th)^2 + Pmt / (1 - P) + Pm * Pt / (1 - P)^2)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 1:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

@@ -26,10 +26,14 @@ if (requireNamespace("argparse", quietly = TRUE)) {
                        help = "name of yaml files (path will be dropped)")
     parser$add_argument("--run", "-r", action = "store_true", default = FALSE,
                        help = "should the test be executed after generation?")
+    parser$add_argument("--devel", "-d", action = "store_true", default = FALSE,
+                       help = "should devtools::load_all be called before running tests?")
+
     args <- parser$parse_args()
 
     dorun     <- if (!is.null(args$files)) basename(args$files) else NULL
     run_tests <- args$run
+    devel     <- args$devel
 } else {
     dorun     <- NULL
     run_tests <- FALSE
@@ -145,6 +149,7 @@ for (config in distconfig) {
     ## Write test sets to test file and execute if needed (development)
     ## --------------------------------------------------------------
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
+    if (run_tests && devel) devtools::load_all()
     if (run_tests) test_file(file.path(OUTDIR, config$testfile))
 }
 

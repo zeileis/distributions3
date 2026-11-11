@@ -176,6 +176,15 @@ rhpois <- function(n, lambda, pi) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 HurdlePoisson <- function(lambda = numeric(), pi = numeric()) {
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  if (!is.numeric(pi)) pi <- as.numeric(pi)
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      length(lambda) == length(pi) | length(lambda) == 1 | length(pi) == 1,
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE),
+    "parameter 'p' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE)
+  )
+
   d <- data.frame(lambda = lambda, pi = pi)
   class(d) <- c("HurdlePoisson", "distribution")
   return(d)
@@ -366,3 +375,71 @@ is_continuous.HurdlePoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.HurdlePoisson and suff_stat.HurdlePoisson
+
+# ---------------------------------------------------------------------------
+# HurdlePoisson: methods for score/hessian (pi = P(X > 0), as in countreg)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, ...) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    s <- switch(par,
+      "lambda" = ifelse(x0, 0, x / d$lambda - 1 - 1 / expm1(d$lambda)),
+      "pi"     = ifelse(x0, -1 / (1 - d$pi), 1 / d$pi))
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## observed Hessian, evaluated at x (integer support only, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    h <- switch(par,
+      "lambda" = ifelse(x0, 0, -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2),
+      "pi"     = ifelse(x0, -1 / (1 - d$pi)^2, -1 / d$pi^2),
+      "lambda:pi" = 0 * x)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 0:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
