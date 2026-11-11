@@ -88,23 +88,28 @@
 NegativeBinomial <- function(size = numeric(), p = 0.5, mu = size) {
   if (identical(size, numeric())) p <- numeric()
   if(!missing(mu) && !missing(p)) stop("only one of the parameters 'p' or 'mu' must be specified")
+  if (!is.numeric(size)) size <- as.numeric(size)
+
   if(missing(mu)) {
-    stopifnot("parameter 'size' must always be positive" = all(size > 0))
-    stopifnot("parameter 'p' must always be in [0, 1]" = all(p >= 0 & p <= 1))
+    if (!is.numeric(p)) p <- as.numeric(p)
+    stopifnot("parameter 'size' must always be positive" = all(size > 0, na.rm = TRUE))
+    stopifnot("parameter 'p' must always be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE))
     stopifnot(
       "parameter lengths do not match (only scalars are allowed to be recycled)" =
         length(size) == length(p) | length(size) == 1L | length(p) == 1L
     )
     d <- data.frame(size = size, p = p)
   } else {
-    stopifnot("parameter 'mu' must always be non-negative" = all(mu >= 0))
-    stopifnot("parameter 'size' must always be positive" = all(size > 0))
+    if (!is.numeric(mu)) mu <- as.numeric(mu)
+    stopifnot("parameter 'mu' must always be non-negative" = all(mu >= 0, na.rm = TRUE))
+    stopifnot("parameter 'size' must always be positive" = all(size > 0, na.rm = TRUE))
     stopifnot(
       "parameter lengths do not match (only scalars are allowed to be recycled)" =
         length(size) == length(mu) | length(size) == 1L | length(mu) == 1L
     )
     d <- data.frame(mu = mu, size = size)
   }
+
   class(d) <- c("NegativeBinomial", "distribution")
   d
 }
@@ -341,3 +346,88 @@ crps.NegativeBinomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
   return(s)
 }
 
+
+# ---------------------------------------------------------------------------
+# NegativeBinomial: methods for score/hessian, both parameterizations:
+#   (mu, size) as in countreg::snbinom()/hnbinom(), and (size, p)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.NegativeBinomial <- function(d, x, which = NULL, drop = TRUE, ...) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 0) # keep special functions finite off the support
+    s <- if ("mu" %in% params) {
+      switch(par,
+        "mu"   = x / d$mu - (x + d$size) / (d$mu + d$size),
+        "size" = digamma(x + d$size) - digamma(d$size) + log(d$size) + 1 -
+          log(d$mu + d$size) - (x + d$size) / (d$mu + d$size))
+    } else {
+      switch(par,
+        "size" = digamma(x + d$size) - digamma(d$size) + log(d$p),
+        "p"    = d$size / d$p - x / (1 - d$p))
+    }
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.NegativeBinomial <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## observed Hessian, evaluated at x (integer support only, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 0) # keep special functions finite off the support
+    h <- if ("mu" %in% params) {
+      mu <- d$mu; s <- d$size
+      switch(par,
+        "mu"      = -x / mu^2 + (x + s) / (mu + s)^2,
+        "size"    = trigamma(x + s) - trigamma(s) + 1 / s - 2 / (mu + s) + (x + s) / (mu + s)^2,
+        "mu:size" = (x - mu) / (mu + s)^2)
+    } else {
+      s <- d$size; p <- d$p
+      switch(par,
+        "size"   = trigamma(x + s) - trigamma(s),
+        "p"      = -s / p^2 - x / (1 - p)^2,
+        "size:p" = 1 / p + 0 * x)
+    }
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 0:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
