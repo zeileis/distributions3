@@ -82,8 +82,8 @@ test_that("vectorization of a ZTNegativeBinomial distribution work correctly", {
   ## moments
   expect_equal(mean(d), c(mean(d1), mean(d2)))
   expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_error(skewness(d)) ## not yet implemented
-  expect_error(kurtosis(d)) ## not yet implemented
+  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
+  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
 
   ## pdf, log_pdf, cdf
   expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
