@@ -33,7 +33,8 @@ if (requireNamespace("argparse", quietly = TRUE)) {
 
     dorun     <- if (!is.null(args$files)) basename(args$files) else NULL
     run_tests <- args$run
-    devel     <- args$devel
+
+    if (args$devel) devtools::load_all()
 } else {
     dorun     <- NULL
     run_tests <- FALSE
@@ -149,7 +150,6 @@ for (config in distconfig) {
     ## Write test sets to test file and execute if needed (development)
     ## --------------------------------------------------------------
     writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
-    if (run_tests && devel) devtools::load_all()
     if (run_tests) test_file(file.path(OUTDIR, config$testfile))
 }
 

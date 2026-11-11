@@ -163,6 +163,9 @@ rztpois <- function(n, lambda) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 ZTPoisson <- function(lambda = numeric()) {
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  stopifnot("parameter 'lambda' must always be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE))
+
   d <- data.frame(lambda = lambda)
   class(d) <- c("ZTPoisson", "distribution")
   return(d)
@@ -180,6 +183,7 @@ mean.ZTPoisson <- function(x, ...) {
 
 #' @export
 variance.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m * (1 + x$lambda - m), names(x))
@@ -187,6 +191,7 @@ variance.ZTPoisson <- function(x, ...) {
 
 #' @export
 skewness.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s <- sqrt(m * (x$lambda + 1 - m))
@@ -197,6 +202,7 @@ skewness.ZTPoisson <- function(x, ...) {
 
 #' @export
 kurtosis.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s2 <- m * (x$lambda + 1 - m)
@@ -356,3 +362,69 @@ is_continuous.ZTPoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZTPoisson and suff_stat.ZTPoisson
+
+# ---------------------------------------------------------------------------
+# ZTPoisson: methods for score/hessian (formulas as in countreg::sztpois()
+# and countreg::hztpois(), written in terms of expm1() for stability)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 1) # keep expressions finite off the support
+    s  <- switch(par,
+      "lambda" = x / d$lambda - 1 - 1 / expm1(d$lambda))
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## observed Hessian, evaluated at x (support x >= 1, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 1)
+    h  <- switch(par,
+      "lambda" = -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 1:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

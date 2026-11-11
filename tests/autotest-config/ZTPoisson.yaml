@@ -1,0 +1,22 @@
+## Name of the distribution, also defines the name of the constructor function
+name: ZTPoisson
+
+## Name of parameters and supported range/values. Parameters are zipped row
+## by row (equal lengths).
+parameters:
+  valid:
+    lambda: [0.5, 1.5, 3, 10, 0.1]
+
+support:
+  lower: 1
+  upper: .inf
+
+distributiontype:
+  discrete: true
+  continuous: false
+
+tests:
+  exclude:
+    ## TODO(R): Excluding quantile tests as we get finite
+    ## values when prob < 0, expecting NaN.
+    - quantile
