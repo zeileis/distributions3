@@ -4,7 +4,7 @@
 \alias{ZINegativeBinomial}
 \title{Create a zero-inflated negative binomial distribution}
 \usage{
-ZINegativeBinomial(mu, theta, pi)
+ZINegativeBinomial(mu = numeric(), theta = numeric(), pi = numeric())
 }
 \arguments{
 \item{mu}{Location parameter of the negative binomial component of the distribution.

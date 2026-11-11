@@ -5,7 +5,7 @@
 %   R/HurdlePoisson.R, R/LogNormal.R, R/Logistic.R, R/NegativeBinomial.R,
 %   R/Normal.R, R/Poisson.R, R/SinhArcsinh.R, R/StudentsT.R, R/Uniform.R,
 %   R/Weibull.R, R/ZINegativeBinomial.R, R/ZIPoisson.R, R/ZTNegativeBinomial.R,
-%   R/score-hessian.R
+%   R/ZTPoisson.R, R/score-hessian.R
 \name{score-hessian}
 \alias{score-hessian}
 \alias{score.Bernoulli}
@@ -60,6 +60,8 @@
 \alias{hessian.ZIPoisson}
 \alias{score.ZTNegativeBinomial}
 \alias{hessian.ZTNegativeBinomial}
+\alias{score.ZTPoisson}
+\alias{hessian.ZTPoisson}
 \alias{score}
 \alias{hessian}
 \alias{score.distribution}

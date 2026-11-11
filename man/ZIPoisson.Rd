@@ -4,7 +4,7 @@
 \alias{ZIPoisson}
 \title{Create a zero-inflated Poisson distribution}
 \usage{
-ZIPoisson(lambda, pi)
+ZIPoisson(lambda = numeric(), pi = numeric())
 }
 \arguments{
 \item{lambda}{Parameter of the Poisson component of the distribution.
