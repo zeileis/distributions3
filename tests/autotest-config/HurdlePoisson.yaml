@@ -28,3 +28,5 @@ tests:
     ## to just go for Poisson?
     - params_NA
     - quantile
+    ## TODO(R): Check quantile
+    - quantile_compare2numeric

@@ -130,6 +130,7 @@ for (config in distconfig) {
 
     res <- append(res, autotest_quantile(config))
     res <- append(res, autotest_quantile_support(config))
+    res <- append(res, autotest_quantile_compare2numeric(config))
 
     res <- append(res, autotest_random(config))
     res <- append(res, autotest_random_support(config))
