@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(Logistic), as.pairlist(alist(location = 0, scale = 1)))
@@ -32,23 +29,23 @@ test_that("fit_mle.Logistic works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Logistic/log_pdf.Logistic returns correct values", {
-  expect_identical(pdf(dd, xx),             dlogis(xx, df$location, df$scale),
+  expect_identical(pdf(dd, xx),             dlogis(xx, dd$location, dd$scale),
         info = "pdf.Logistic not identical to dlogis()")
-  expect_identical(pdf(dd, xx, log = TRUE), dlogis(xx, df$location, df$scale, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dlogis(xx, dd$location, dd$scale, log = TRUE),
         info = "logarithm of pdf.Logistic not identical to dlogis(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dlogis(xx, df$location, df$scale, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dlogis(xx, dd$location, dd$scale, log = TRUE),
         info = "log_pdf.Logistic not identical to dlogis(..., log = TRUE)")
 })
 
 test_that("cdf.Logistic returns correct values", {
-  expect_identical(cdf(dd, xx),             plogis(xx, df$location, df$scale),
+  expect_identical(cdf(dd, xx),             plogis(xx, dd$location, dd$scale),
         info = "cdf.Logistic not identical to plogis()")
-  expect_identical(cdf(dd, xx, log = TRUE), plogis(xx, df$location, df$scale, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), plogis(xx, dd$location, dd$scale, log = TRUE),
         info = "logarithm of cdf.Logistic not identical to plogis(..., log = TRUE)")
 })
 
 test_that("quantile.Logistic returns correct values", {
-  expect_identical(quantile(dd, pp),        qlogis(pp, df$location, df$scale),
+  expect_identical(quantile(dd, pp),        qlogis(pp, dd$location, dd$scale),
         info = "quantile.Logistic not identical to qlogis()")
 })
 
@@ -80,53 +77,53 @@ test_that("random.Logistic on edge case scale = 0 works as stats::rlogis", {
 
 ## Testing correctness of moments
 test_that("moments for Logistic distribution return correct values", {
-    expect_identical(mean(dd), df$location,
+    expect_identical(mean(dd), dd$location,
         info = "mean.Logistic incorrect")
-    expect_identical(variance(dd), df$scale^2 * pi^2 / 3,
+    expect_identical(variance(dd), dd$scale^2 * pi^2 / 3,
         info = "variance.Logistic incorrect")
-    expect_identical(skewness(dd), rep(0, nrow(df)),
+    expect_identical(skewness(dd), rep(0, length(dd)),
         info = "skewness.Logistic incorrect")
-    expect_identical(kurtosis(dd), rep(6 / 5, nrow(df)),
+    expect_identical(kurtosis(dd), rep(6 / 5, length(dd)),
         info = "kurtosis.Logistic incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Logistic distribution return correct values", {
-    z <- (xx - df$location) / df$scale
+    z <- (xx - dd$location) / dd$scale
     expect_identical(score(dd, xx, which = "location"),
-        (1 - 2 * exp(-z) / (1 + exp(-z))) / df$scale,
+        (1 - 2 * exp(-z) / (1 + exp(-z))) / dd$scale,
         info = "score for \"location\" returns incorrect values")
     expect_identical(score(dd, xx, which = "scale"),
-        (z - 1 - 2 * z * exp(-z) / (1 + exp(-z))) / df$scale,
+        (z - 1 - 2 * z * exp(-z) / (1 + exp(-z))) / dd$scale,
         info = "score for \"scale\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Logistic distribution return correct values", {
-    z   <- (xx - df$location) / df$scale
+    z   <- (xx - dd$location) / dd$scale
     p_z <- exp(-z) / (1 + exp(-z))
     expect_identical(hessian(dd, xx, which = "location", expected = FALSE),
-        pmin(-2 * p_z * (1 - p_z) /df$scale^2, -1e-15),
+        pmin(-2 * p_z * (1 - p_z) /dd$scale^2, -1e-15),
         info = "hessian for \"location\" returns incorrect values")
     expect_identical(hessian(dd, xx, which = "scale", expected = FALSE),
-        (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / df$scale^2,
+        (1 - 2 * z + 4 * z * p_z - 2 * z^2 * p_z * (1 - p_z)) / dd$scale^2,
         info = "hessian for \"scale\" returns incorrect values")
 
     # Cross derivatives
     expect_identical(hessian(dd, xx, which = "scale:location", expected = FALSE),
-        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / df$scale^2,
+        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / dd$scale^2,
         info = "hessian for \"scale:location\" returns incorrect values")
     expect_identical(hessian(dd, xx, which = "location:scale", expected = FALSE),
-        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / df$scale^2,
+        (2 * p_z - 2 * z * p_z * (1 - p_z) - 1) / dd$scale^2,
         info = "hessian for \"location:scale\" returns incorrect values")
 })
 
 test_that("expected hessian for Logistic distribution return correct values", {
     expect_equal(hessian(dd, xx, which = "location", expected = TRUE),
-        -1 / (3 * df$scale^2),
+        -1 / (3 * dd$scale^2),
         info = "hessian for \"location\" returns incorrect values")
     expect_equal(hessian(dd, xx, which = "scale", expected = TRUE),
-        -(1 + pi^2 / 3) / (3 * df$scale^2), tolerance = 1e-4,
+        -(1 + pi^2 / 3) / (3 * dd$scale^2), tolerance = 1e-4,
         info = "hessian for \"scale\" returns incorrect values")
 
     # Cross derivatives

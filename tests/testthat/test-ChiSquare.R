@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(ChiSquare), as.pairlist(alist(df = numeric())))
@@ -31,23 +28,23 @@ test_that("fit_mle.ChiSquare works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.ChiSquare/log_pdf.ChiSquare returns correct values", {
-  expect_identical(pdf(dd, xx),             dchisq(xx, df$df),
+  expect_identical(pdf(dd, xx),             dchisq(xx, dd$df),
         info = "pdf.ChiSquare not identical to dchisq()")
-  expect_identical(pdf(dd, xx, log = TRUE), dchisq(xx, df$df, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dchisq(xx, dd$df, log = TRUE),
         info = "logarithm of pdf.ChiSquare not identical to dchisq(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dchisq(xx, df$df, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dchisq(xx, dd$df, log = TRUE),
         info = "log_pdf.ChiSquare not identical to dchisq(..., log = TRUE)")
 })
 
 test_that("cdf.ChiSquare returns correct values", {
-  expect_identical(cdf(dd, xx),             pchisq(xx, df$df),
+  expect_identical(cdf(dd, xx),             pchisq(xx, dd$df),
         info = "cdf.ChiSquare not identical to pchisq()")
-  expect_identical(cdf(dd, xx, log = TRUE), pchisq(xx, df$df, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), pchisq(xx, dd$df, log = TRUE),
         info = "logarithm of cdf.ChiSquare not identical to pchisq(..., log = TRUE)")
 })
 
 test_that("quantile.ChiSquare returns correct values", {
-  expect_identical(quantile(dd, pp),        qchisq(pp, df$df),
+  expect_identical(quantile(dd, pp),        qchisq(pp, dd$df),
         info = "quantile.ChiSquare not identical to qchisq()")
 })
 
@@ -77,27 +74,27 @@ test_that("random.ChiSquare on edge case df = 0 works as stats::rchisq", {
 
 ## Testing correctness of moments
 test_that("moments for ChiSquare distribution return correct values", {
-    expect_identical(mean(dd), df$df,
+    expect_identical(mean(dd), dd$df,
         info = "mean.ChiSquare incorrect")
-    expect_identical(variance(dd), df$df * 2,
+    expect_identical(variance(dd), dd$df * 2,
         info = "variance.ChiSquare incorrect")
-    expect_identical(skewness(dd), sqrt(8 / df$df),
+    expect_identical(skewness(dd), sqrt(8 / dd$df),
         info = "skewness.ChiSquare incorrect")
-    expect_identical(kurtosis(dd), 12 / df$df,
+    expect_identical(kurtosis(dd), 12 / dd$df,
         info = "kurtosis.ChiSquare incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for ChiSquare distribution return correct values", {
     expect_identical(score(dd, xx, which = "df"),
-        0.5 * log(xx) - 0.5 * log(2) - 0.5 * digamma(df$df / 2),
+        0.5 * log(xx) - 0.5 * log(2) - 0.5 * digamma(dd$df / 2),
         info = "score for \"df\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for ChiSquare distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "df", expected = FALSE),
-        - 1 / 4 * trigamma(df$df / 2),
+        - 1 / 4 * trigamma(dd$df / 2),
         info = "hessian for \"df\" returns incorrect values")
 })
 

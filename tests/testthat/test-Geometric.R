@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(Geometric), as.pairlist(alist(p = 0.5)))
@@ -35,23 +32,23 @@ test_that("fit_mle.Geometric works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Geometric/log_pdf.Geometric returns correct values", {
-  expect_identical(pdf(dd, xx),             dgeom(xx, df$p),
+  expect_identical(pdf(dd, xx),             dgeom(xx, dd$p),
         info = "pdf.Geometric not identical to dgeom()")
-  expect_identical(pdf(dd, xx, log = TRUE), dgeom(xx, df$p, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dgeom(xx, dd$p, log = TRUE),
         info = "logarithm of pdf.Geometric not identical to dgeom(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dgeom(xx, df$p, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dgeom(xx, dd$p, log = TRUE),
         info = "log_pdf.Geometric not identical to dgeom(..., log = TRUE)")
 })
 
 test_that("cdf.Geometric returns correct values", {
-  expect_identical(cdf(dd, xx),             pgeom(xx, df$p),
+  expect_identical(cdf(dd, xx),             pgeom(xx, dd$p),
         info = "cdf.Geometric not identical to pgeom()")
-  expect_identical(cdf(dd, xx, log = TRUE), pgeom(xx, df$p, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), pgeom(xx, dd$p, log = TRUE),
         info = "logarithm of cdf.Geometric not identical to pgeom(..., log = TRUE)")
 })
 
 test_that("quantile.Geometric returns correct values", {
-  expect_identical(quantile(dd, pp),        qgeom(pp, df$p),
+  expect_identical(quantile(dd, pp),        qgeom(pp, dd$p),
         info = "quantile.Geometric not identical to qgeom()")
 })
 
@@ -100,33 +97,33 @@ test_that("random.Geometric on edge case p = 0 or 1 works as stats::rgeom", {
 
 ## Testing correctness of moments
 test_that("moments for Geometric distribution return correct values", {
-    expect_identical(mean(dd), (1 - df$p) / df$p,
+    expect_identical(mean(dd), (1 - dd$p) / dd$p,
         info = "mean.Geometric incorrect")
-    expect_identical(variance(dd), (1 - df$p) / df$p^2,
+    expect_identical(variance(dd), (1 - dd$p) / dd$p^2,
         info = "variance.Geometric incorrect")
-    expect_identical(skewness(dd), (2 - df$p) / sqrt(1 - df$p),
+    expect_identical(skewness(dd), (2 - dd$p) / sqrt(1 - dd$p),
         info = "skewness.Geometric incorrect")
-    expect_identical(kurtosis(dd), 6 + (df$p^2 / (1 - df$p)),
+    expect_identical(kurtosis(dd), 6 + (dd$p^2 / (1 - dd$p)),
         info = "kurtosis.Geometric incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Geometric distribution return correct values", {
     expect_identical(score(dd, xx, which = "p"),
-        1 / df$p - xx / (1 - df$p),
+        1 / dd$p - xx / (1 - dd$p),
         info = "score for \"p\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Geometric distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "p", expected = FALSE),
-        -1 / df$p^2 - xx / (1 - df$p)^2,
+        -1 / dd$p^2 - xx / (1 - dd$p)^2,
         info = "hessian for \"p\" returns incorrect values")
 })
 
 test_that("expected hessian for Geometric distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "p", expected = TRUE),
-        -1 / (df$p^2 * (1 - df$p)),
+        -1 / (dd$p^2 * (1 - dd$p)),
         info = "hessian for \"p\" returns incorrect values")
 })
 

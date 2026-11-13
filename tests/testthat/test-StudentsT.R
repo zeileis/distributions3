@@ -11,9 +11,6 @@ xx <- c(5, 10, 7)                # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(StudentsT), as.pairlist(alist(df = numeric())))
@@ -31,23 +28,23 @@ test_that("fit_mle.StudentsT is not yet implemented", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.StudentsT/log_pdf.StudentsT returns correct values", {
-  expect_identical(pdf(dd, xx),             dt(xx, df$df),
+  expect_identical(pdf(dd, xx),             dt(xx, dd$df),
         info = "pdf.StudentsT not identical to dt()")
-  expect_identical(pdf(dd, xx, log = TRUE), dt(xx, df$df, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dt(xx, dd$df, log = TRUE),
         info = "logarithm of pdf.StudentsT not identical to dt(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dt(xx, df$df, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dt(xx, dd$df, log = TRUE),
         info = "log_pdf.StudentsT not identical to dt(..., log = TRUE)")
 })
 
 test_that("cdf.StudentsT returns correct values", {
-  expect_identical(cdf(dd, xx),             pt(xx, df$df),
+  expect_identical(cdf(dd, xx),             pt(xx, dd$df),
         info = "cdf.StudentsT not identical to pt()")
-  expect_identical(cdf(dd, xx, log = TRUE), pt(xx, df$df, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), pt(xx, dd$df, log = TRUE),
         info = "logarithm of cdf.StudentsT not identical to pt(..., log = TRUE)")
 })
 
 test_that("quantile.StudentsT returns correct values", {
-  expect_identical(quantile(dd, pp),        qt(pp, df$df),
+  expect_identical(quantile(dd, pp),        qt(pp, dd$df),
         info = "quantile.StudentsT not identical to qt()")
 })
 

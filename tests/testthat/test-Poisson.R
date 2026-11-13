@@ -15,9 +15,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   ## Constructor
@@ -42,23 +39,23 @@ test_that("fit_mle.Poisson works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Poisson/log_pdf.Poisson returns correct values", {
-  expect_identical(pdf(dd, xx),             dpois(xx, df$lambda),
+  expect_identical(pdf(dd, xx),             dpois(xx, dd$lambda),
         info = "pdf.Poisson not identical to dpois()")
-  expect_identical(pdf(dd, xx, log = TRUE), dpois(xx, df$lambda, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dpois(xx, dd$lambda, log = TRUE),
         info = "logarighm of pdf.Poisson not identical to dpois(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dpois(xx, df$lambda, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dpois(xx, dd$lambda, log = TRUE),
         info = "log_pdf.Poisson not identical to dpois(..., log = TRUE)")
 })
 
 test_that("cdf.Poisson returns correct values", {
-  expect_identical(cdf(dd, xx),              ppois(xx, df$lambda),
+  expect_identical(cdf(dd, xx),              ppois(xx, dd$lambda),
         info = "cdf.Poisson not identical to ppois()")
-  expect_identical(cdf(dd, xx, log = TRUE),  ppois(xx, df$lambda, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE),  ppois(xx, dd$lambda, log = TRUE),
         info = "logarithm of cdf.Poisson not identical to ppois(..., log = TRUE)")
 })
 
 test_that("quantile.Poisson returns correct values", {
-  expect_identical(quantile(dd, pp), qpois(pp, df$lambda),
+  expect_identical(quantile(dd, pp), qpois(pp, dd$lambda),
         info = "quantile.Poisson not identical to qpois()")
 })
 
@@ -89,33 +86,33 @@ test_that("random.Poisson on edge case lambda = 0 works as stats::rpois", {
 
 ## Testing correctness of moments
 test_that("moments for Poisson distribution return correct values", {
-    expect_identical(mean(dd), df$lambda,
+    expect_identical(mean(dd), dd$lambda,
         info = "mean.Poisson incorrect")
-    expect_identical(variance(dd), df$lambda,
+    expect_identical(variance(dd), dd$lambda,
         info = "variance.Poisson incorrect")
-    expect_identical(skewness(dd), 1 / sqrt(df$lambda),
+    expect_identical(skewness(dd), 1 / sqrt(dd$lambda),
         info = "skewness.Poisson incorrect")
-    expect_identical(kurtosis(dd), 1 / df$lambda,
+    expect_identical(kurtosis(dd), 1 / dd$lambda,
         info = "kurtosis.Poisson incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Poisson distribution return correct values", {
     expect_identical(score(dd, xx, which = "lambda"),
-        xx / df$lambda - 1,
+        xx / dd$lambda - 1,
         info = "score for \"lambda\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Poisson distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "lambda", expected = FALSE),
-        -xx / df$lambda^2,
+        -xx / dd$lambda^2,
         info = "hessian for \"lambda\" returns incorrect values")
 })
 
 test_that("expected hessian for Poisson distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "lambda", expected = TRUE),
-        -1 / df$lambda,
+        -1 / dd$lambda,
         info = "hessian for \"lambda\" returns incorrect values")
 })
 

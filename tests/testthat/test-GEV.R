@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(GEV), as.pairlist(alist(mu = 0, sigma = 1, xi = 0)))
