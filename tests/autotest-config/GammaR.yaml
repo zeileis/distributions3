@@ -21,4 +21,5 @@ distributiontype:
   continuous: true
 
 tolerance:
+  variance: 1e-2
   crps: 1e-2

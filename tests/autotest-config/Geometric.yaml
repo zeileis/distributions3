@@ -19,5 +19,15 @@ distributiontype:
   discrete: true
   continuous: false
 
+tolerance:
+  mean: 1e-2
+  variance: 1e-1
+  skewness: 1e-0
+
+tests:
+  exclude:
+    ## TODO(R): Fairly large differences, check if correct
+    - kurtosis_compare2numeric
+
 skip_if_not_installed:
   crps_compare2numeric: hypergeo

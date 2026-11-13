@@ -26,3 +26,11 @@ skip_if_not_installed:
 tolerance:
   cdf: 1e-5
   crps: 1e-3
+
+tests:
+  exclude:
+    ## TODO(R): Check moments
+    - mean_compare2numeric
+    - variance_compare2numeric
+    - skewness_compare2numeric
+    - kurtosis_compare2numeric

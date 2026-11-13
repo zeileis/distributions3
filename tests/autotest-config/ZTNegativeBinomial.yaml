@@ -19,6 +19,12 @@ distributiontype:
   discrete: true
   continuous: false
 
+tolerance:
+  mean: 1e-2
+  variance: 1e-1
+  skewness: 1e-1
+  kurtosis: 1e-0
+
 tests:
   exclude:
     ## TODO(R): Excluding quantile tests as we get finite

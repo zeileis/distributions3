@@ -18,6 +18,10 @@ distributiontype:
   discrete: true
   continuous: false
 
+tolerance:
+  mean: 1e-3
+  variance: 1e-2
+
 ## Skipping a series of tests if the R package 'revdbayes' is not
 ## installed (suggested package).
 skip_if_not_installed:
@@ -27,6 +31,10 @@ skip_if_not_installed:
 
 tests:
   exclude:
+    ## On the edge (p = 0, p = 1) we get Inf from the analytic solution,
+    ## but not from the numeric approximation. Thus, excluded.
+    - skewness_compare2numeric
+    - kurtosis_compare2numeric
     ## With p = 0 and p = 1 (edge cases) these autotests fail,
     ## manual tests added to test-Bernoulli.R
     - score_compare2numeric

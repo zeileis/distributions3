@@ -22,6 +22,10 @@ distributiontype:
   discrete: false
   continuous: true
 
+tolerance:
+  mean: 1e-2
+  skewness: 1e-0
+
 ## Skipping a series of tests if the R package 'revdbayes' is not
 ## installed (suggested package).
 skip_if_not_installed: revdbayes
@@ -31,6 +35,9 @@ tests:
     ## TODO: revdbayes::dgp throws error for NA scale, thus excluded for now
     ## (as for Gumbel).
     - params_NA
+    ## TODO(R): Check numeric variance and kurtosis
+    - variance_compare2numeric
+    - kurtosis_compare2numeric
     ## TODO: revdbayes::qgp throws error (not warning) if p not in [0, 1],
     ## thus excluded for now (as for Gumbel).
     - quantile

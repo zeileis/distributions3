@@ -109,6 +109,11 @@ for (config in distconfig) {
     res <- append(res, autotest_skewness(config))
     res <- append(res, autotest_kurtosis(config))
 
+    res <- append(res, autotest_mean_compare2numeric(config))
+    res <- append(res, autotest_variance_compare2numeric(config))
+    res <- append(res, autotest_skewness_compare2numeric(config))
+    res <- append(res, autotest_kurtosis_compare2numeric(config))
+
     ## ----------- dpqr
     res <- append(res, autotest_dpqr_defaults(config)) # arguments/defaults
 
