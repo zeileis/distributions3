@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(Binomial), as.pairlist(alist(size = numeric(), p = 0.5)))
@@ -35,36 +32,36 @@ test_that("fit_mle.Binomial works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Binomial/log_pdf.Binomial returns correct values", {
-  expect_identical(pdf(dd, xx),             dbinom(xx, df$size, df$p),
+  expect_identical(pdf(dd, xx),             dbinom(xx, dd$size, dd$p),
         info = "pdf.Binomial not identical to dbinom()")
-  expect_identical(pdf(dd, xx, log = TRUE), dbinom(xx, df$size, df$p, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dbinom(xx, dd$size, dd$p, log = TRUE),
         info = "logarithm of pdf.Binomial not identical to dbinom(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dbinom(xx, df$size, df$p, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dbinom(xx, dd$size, dd$p, log = TRUE),
         info = "log_pdf.Binomial not identical to dbinom(..., log = TRUE)")
 })
 
 test_that("cdf.Binomial returns correct values", {
-  expect_identical(cdf(dd, xx),             pbinom(xx, df$size, df$p),
+  expect_identical(cdf(dd, xx),             pbinom(xx, dd$size, dd$p),
         info = "cdf.Binomial not identical to pbinom()")
-  expect_identical(cdf(dd, xx, log = TRUE), pbinom(xx, df$size, df$p, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), pbinom(xx, dd$size, dd$p, log = TRUE),
         info = "logarithm of cdf.Binomial not identical to pbinom(..., log = TRUE)")
 })
 
 test_that("quantile.Binomial returns correct values", {
-  expect_identical(quantile(dd, pp),        qbinom(pp, df$size, df$p),
+  expect_identical(quantile(dd, pp),        qbinom(pp, dd$size, dd$p),
         info = "quantile.Binomial not identical to qbinom()")
 })
 
 
 ## Testing correctness of moments
 test_that("moments for Binomial distribution return correct values", {
-    expect_identical(mean(dd), df$size * df$p,
+    expect_identical(mean(dd), dd$size * dd$p,
         info = "mean.Binomial incorrect")
-    expect_identical(variance(dd), df$size * df$p * (1 - df$p),
+    expect_identical(variance(dd), dd$size * dd$p * (1 - dd$p),
         info = "variance.Binomial incorrect")
-    expect_identical(skewness(dd), (1 - (2 * df$p)) / sqrt(df$size * df$p * (1 - df$p)),
+    expect_identical(skewness(dd), (1 - (2 * dd$p)) / sqrt(dd$size * dd$p * (1 - dd$p)),
         info = "skewness.Binomial incorrect")
-    expect_identical(kurtosis(dd), (1 - (6 * df$p * (1 - df$p))) / (df$size * df$p * (1 - df$p)),
+    expect_identical(kurtosis(dd), (1 - (6 * dd$p * (1 - dd$p))) / (dd$size * dd$p * (1 - dd$p)),
         info = "kurtosis.Binomial incorrect")
 })
 
@@ -83,7 +80,7 @@ test_that("score and hessian methods for Binomial have correct arguments/default
 ## Testing correctness of score
 test_that("score for Binomial distribution return correct values", {
     expect_identical(score(dd, xx, which = "p"),
-        (xx - df$size * df$p) / (df$p * (1 - df$p)),
+        (xx - dd$size * dd$p) / (dd$p * (1 - dd$p)),
         info = "score for \"p\" returns incorrect values")
 
     ## Defaults to 'p'
@@ -94,7 +91,7 @@ test_that("score for Binomial distribution return correct values", {
 ## Testing correctness of hessian
 test_that("observed hessian for Binomial distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "p", expected = FALSE),
-        -xx / df$p^2 - (df$size - xx) / (1 - df$p)^2,
+        -xx / dd$p^2 - (dd$size - xx) / (1 - dd$p)^2,
         info = "hessian for \"p\" returns incorrect values")
 
     ## Defaults to 'p'
@@ -104,7 +101,7 @@ test_that("observed hessian for Binomial distribution return correct values", {
 
 test_that("expected hessian for Binomial distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "p", expected = TRUE),
-        -df$size / (df$p * (1 - df$p)),
+        -dd$size / (dd$p * (1 - dd$p)),
         info = "hessian for \"p\" returns incorrect values")
 
     ## Defaults to 'p'

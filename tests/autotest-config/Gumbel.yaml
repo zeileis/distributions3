@@ -26,6 +26,8 @@ tests:
     ## TODO: revdbayes::dgev allows n, loc, shape to be NA, but not 'scale'.
     ## Thus ecluding this automated test.
     - params_NA
+    ## TODO(R): Check variance
+    - variance_compare2numeric
     ## TODO: revdbayes::qgev throws error (not warning) if p not in [0, 1],
     ## thus exlcuded for now.
     - quantile

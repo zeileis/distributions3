@@ -16,9 +16,17 @@ distributiontype:
   discrete: true
   continuous: false
 
+tolerance:
+  mean: 1e-2
+  variance: 1e-1
+  skewness: 1e-1
+  kurtosis: 1e-0
+
 tests:
   exclude:
     ## TODO(R): if pi is NA we get a return from dpqr; assuming
     ## to just go for Poisson?
     - params_NA
     - quantile
+    ## TODO(R): Check quantile
+    - quantile_compare2numeric

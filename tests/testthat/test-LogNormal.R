@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(LogNormal), as.pairlist(alist(log_mu = 0, log_sigma = 1)))
@@ -35,23 +32,23 @@ test_that("fit_mle.LogNormal works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.LogNormal/log_pdf.LogNormal returns correct values", {
-  expect_identical(pdf(dd, xx),             dlnorm(xx, df$log_mu, df$log_sigma),
+  expect_identical(pdf(dd, xx),             dlnorm(xx, dd$log_mu, dd$log_sigma),
         info = "pdf.LogNormal not identical to dlnorm()")
-  expect_identical(pdf(dd, xx, log = TRUE), dlnorm(xx, df$log_mu, df$log_sigma, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dlnorm(xx, dd$log_mu, dd$log_sigma, log = TRUE),
         info = "logarithm of pdf.LogNormal not identical to dlnorm(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dlnorm(xx, df$log_mu, df$log_sigma, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dlnorm(xx, dd$log_mu, dd$log_sigma, log = TRUE),
         info = "log_pdf.LogNormal not identical to dlnorm(..., log = TRUE)")
 })
 
 test_that("cdf.LogNormal returns correct values", {
-  expect_identical(cdf(dd, xx),             plnorm(xx, df$log_mu, df$log_sigma),
+  expect_identical(cdf(dd, xx),             plnorm(xx, dd$log_mu, dd$log_sigma),
         info = "cdf.LogNormal not identical to plnorm()")
-  expect_identical(cdf(dd, xx, log = TRUE), plnorm(xx, df$log_mu, df$log_sigma, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), plnorm(xx, dd$log_mu, dd$log_sigma, log = TRUE),
         info = "logarithm of cdf.LogNormal not identical to plnorm(..., log = TRUE)")
 })
 
 test_that("quantile.LogNormal returns correct values", {
-  expect_identical(quantile(dd, pp),        qlnorm(pp, df$log_mu, df$log_sigma),
+  expect_identical(quantile(dd, pp),        qlnorm(pp, dd$log_mu, dd$log_sigma),
         info = "quantile.LogNormal not identical to qlnorm()")
 })
 
@@ -83,26 +80,26 @@ test_that("random.LogNormal on edge case log_sd = 0 works as stats::rlnorm", {
 ## Testing correctness of moments
 test_that("moments for LogNormal distribution return correct values", {
     expect_identical(mean(dd),
-        exp(df$log_mu + df$log_sigm^2 / 2),
+        exp(dd$log_mu + dd$log_sigm^2 / 2),
         info = "mean.LogNormal incorrect")
     expect_identical(variance(dd),
-        (exp(df$log_sigma^2) - 1) * exp(2 * df$log_mu + df$log_sigma^2),
+        (exp(dd$log_sigma^2) - 1) * exp(2 * dd$log_mu + dd$log_sigma^2),
         info = "variance.LogNormal incorrect")
     expect_identical(skewness(dd),
-        (exp(df$log_sigma^2) + 2) * sqrt(exp(df$log_sigma^2) - 1),
+        (exp(dd$log_sigma^2) + 2) * sqrt(exp(dd$log_sigma^2) - 1),
         info = "skewness.LogNormal incorrect")
     expect_identical(kurtosis(dd),
-        exp(4 * df$log_sigma^2) + 2 * exp(3 * df$log_sigma^2) + 3 * exp(2 * df$log_sigma^2) - 6,
+        exp(4 * dd$log_sigma^2) + 2 * exp(3 * dd$log_sigma^2) + 3 * exp(2 * dd$log_sigma^2) - 6,
         info = "kurtosis.LogNormal incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for LogNormal distribution return correct values", {
     expect_identical(score(dd, xx, which = "log_mu"),
-        (log(xx) - df$log_mu) / df$log_sigma^2,
+        (log(xx) - dd$log_mu) / dd$log_sigma^2,
         info = "score for \"log_mu\" returns incorrect values")
     expect_identical(score(dd, xx, which = "log_sigma"),
-        (log(xx) - df$log_mu)^2 / df$log_sigma^3 - 1 / df$log_sigma,
+        (log(xx) - dd$log_mu)^2 / dd$log_sigma^3 - 1 / dd$log_sigma,
         info = "score for \"log_sigma\" returns incorrect values")
 })
 

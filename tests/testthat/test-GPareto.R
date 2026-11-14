@@ -11,9 +11,6 @@ xx <- c(-2, 2, 3, -5)            # values for testing d/p, ....
 pp <- c(0.25, 0.4, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(GPareto), as.pairlist(alist(mu = 0, sigma = 1, xi = 0)))
@@ -46,8 +43,8 @@ test_that("moments for GPareto distribution return correct values", {
 test_that("support.GPareto works as expected", {
     expect_silent(support(dd))
 
-    m <- cbind(min = df$mu, max = rep(Inf, nrow(df)))
-    m[df$xi < 0, 2] <- df$mu[df$xi < 0] - df$sigma[df$xi < 0] / df$xi[df$xi < 0]
+    m <- cbind(min = dd$mu, max = rep(Inf, length(dd)))
+    m[dd$xi < 0, 2] <- dd$mu[dd$xi < 0] - dd$sigma[dd$xi < 0] / dd$xi[dd$xi < 0]
     expect_identical(support(dd), m)
 });
 

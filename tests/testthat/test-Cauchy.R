@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(Cauchy), as.pairlist(alist(location = 0, scale = 1)))
@@ -32,23 +29,23 @@ test_that("fit_mle.Cauchy works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Cauchy/log_pdf.Cauchy returns correct values", {
-  expect_identical(pdf(dd, xx),             dcauchy(xx, df$location, df$scale),
+  expect_identical(pdf(dd, xx),             dcauchy(xx, dd$location, dd$scale),
         info = "pdf.Cauchy not identical to dcauchy()")
-  expect_identical(pdf(dd, xx, log = TRUE), dcauchy(xx, df$location, df$scale, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dcauchy(xx, dd$location, dd$scale, log = TRUE),
         info = "logarithm of pdf.Cauchy not identical to dcauchy(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dcauchy(xx, df$location, df$scale, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dcauchy(xx, dd$location, dd$scale, log = TRUE),
         info = "log_pdf.Cauchy not identical to dcauchy(..., log = TRUE)")
 })
 
 test_that("cdf.Cauchy returns correct values", {
-  expect_identical(cdf(dd, xx),             pcauchy(xx, df$location, df$scale),
+  expect_identical(cdf(dd, xx),             pcauchy(xx, dd$location, dd$scale),
         info = "cdf.Cauchy not identical to pcauchy()")
-  expect_identical(cdf(dd, xx, log = TRUE), pcauchy(xx, df$location, df$scale, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), pcauchy(xx, dd$location, dd$scale, log = TRUE),
         info = "logarithm of cdf.Cauchy not identical to pcauchy(..., log = TRUE)")
 })
 
 test_that("quantile.Cauchy returns correct values", {
-  expect_identical(quantile(dd, pp),        qcauchy(pp, df$location, df$scale),
+  expect_identical(quantile(dd, pp),        qcauchy(pp, dd$location, dd$scale),
         info = "quantile.Cauchy not identical to qcauchy()")
 })
 
@@ -93,28 +90,28 @@ test_that("moments for Cauchy distribution return correct values", {
 ## Testing correctness of score
 test_that("score for Cauchy distribution return correct values", {
     expect_identical(score(dd, xx, which = "location"),
-        2 * (xx - df$location) / (df$scale^2 + (xx - df$location)^2),
+        2 * (xx - dd$location) / (dd$scale^2 + (xx - dd$location)^2),
         info = "score for \"location\" returns incorrect values")
     expect_identical(score(dd, xx, which = "scale"),
-        -1 / df$scale + 2 * (xx - df$location)^2 / (df$scale * (df$scale^2 + (xx - df$location)^2)),
+        -1 / dd$scale + 2 * (xx - dd$location)^2 / (dd$scale * (dd$scale^2 + (xx - dd$location)^2)),
         info = "score for \"scale\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Cauchy distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "location", expected = FALSE),
-        -2 * (df$scale^2 - (xx - df$location)^2) / (df$scale^2 + (xx - df$location)^2)^2,
+        -2 * (dd$scale^2 - (xx - dd$location)^2) / (dd$scale^2 + (xx - dd$location)^2)^2,
         info = "hessian for \"location\" returns incorrect values")
     expect_identical(hessian(dd, xx, which = "scale", expected = FALSE),
-        1 / df$scale^2 - 2 * (xx - df$location)^2 * (3 * df$scale^2 + (xx - df$location)^2) / (df$scale^2 * (df$scale^2 + (xx - df$location)^2)^2),
+        1 / dd$scale^2 - 2 * (xx - dd$location)^2 * (3 * dd$scale^2 + (xx - dd$location)^2) / (dd$scale^2 * (dd$scale^2 + (xx - dd$location)^2)^2),
         info = "hessian for \"scale\" returns incorrect values")
 
     # Cross derivatives
     expect_identical(hessian(dd, xx, which = "scale:location", expected = FALSE),
-        -4 * (xx - df$location) * df$scale / (df$scale^2 + (xx - df$location)^2)^2,
+        -4 * (xx - dd$location) * dd$scale / (dd$scale^2 + (xx - dd$location)^2)^2,
         info = "hessian for \"scale:location\" returns incorrect values")
     expect_identical(hessian(dd, xx, which = "location:scale", expected = FALSE),
-        -4 * (xx - df$location) * df$scale / (df$scale^2 + (xx - df$location)^2)^2,
+        -4 * (xx - dd$location) * dd$scale / (dd$scale^2 + (xx - dd$location)^2)^2,
         info = "hessian for \"location:scale\" returns incorrect values")
 })
 

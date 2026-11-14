@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(Exponential), as.pairlist(alist(rate = 1)))
@@ -35,23 +32,23 @@ test_that("fit_mle.Exponential works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Exponential/log_pdf.Exponential returns correct values", {
-  expect_identical(pdf(dd, xx),             dexp(xx, df$rate),
+  expect_identical(pdf(dd, xx),             dexp(xx, dd$rate),
         info = "pdf.Exponential not identical to dexp()")
-  expect_identical(pdf(dd, xx, log = TRUE), dexp(xx, df$rate, log = TRUE),
+  expect_identical(pdf(dd, xx, log = TRUE), dexp(xx, dd$rate, log = TRUE),
         info = "logarithm of pdf.Exponential not identical to dexp(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dexp(xx, df$rate, log = TRUE),
+  expect_identical(log_pdf(dd, xx),         dexp(xx, dd$rate, log = TRUE),
         info = "log_pdf.Exponential not identical to dexp(..., log = TRUE)")
 })
 
 test_that("cdf.Exponential returns correct values", {
-  expect_identical(cdf(dd, xx),             pexp(xx, df$rate),
+  expect_identical(cdf(dd, xx),             pexp(xx, dd$rate),
         info = "cdf.Exponential not identical to pexp()")
-  expect_identical(cdf(dd, xx, log = TRUE), pexp(xx, df$rate, log = TRUE),
+  expect_identical(cdf(dd, xx, log = TRUE), pexp(xx, dd$rate, log = TRUE),
         info = "logarithm of cdf.Exponential not identical to pexp(..., log = TRUE)")
 })
 
 test_that("quantile.Exponential returns correct values", {
-  expect_identical(quantile(dd, pp),        qexp(pp, df$rate),
+  expect_identical(quantile(dd, pp),        qexp(pp, dd$rate),
         info = "quantile.Exponential not identical to qexp()")
 })
 
@@ -82,33 +79,33 @@ test_that("random.Exponential on edge case rate = 0 works as stats::rexp", {
 
 ## Testing correctness of moments
 test_that("moments for Exponential distribution return correct values", {
-    expect_identical(mean(dd), 1 / df$rate,
+    expect_identical(mean(dd), 1 / dd$rate,
         info = "mean.Exponential incorrect")
-    expect_identical(variance(dd), 1 / df$rate^2,
+    expect_identical(variance(dd), 1 / dd$rate^2,
         info = "variance.Exponential incorrect")
-    expect_identical(skewness(dd), rep(2, nrow(df)),
+    expect_identical(skewness(dd), rep(2, length(dd)),
         info = "skewness.Exponential incorrect")
-    expect_identical(kurtosis(dd), rep(6, nrow(df)),
+    expect_identical(kurtosis(dd), rep(6, length(dd)),
         info = "kurtosis.Exponential incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Exponential distribution return correct values", {
     expect_identical(score(dd, xx, which = "rate"),
-        1 / df$rate - xx,
+        1 / dd$rate - xx,
         info = "score for \"rate\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Exponential distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "rate", expected = FALSE),
-        -1 / df$rate^2,
+        -1 / dd$rate^2,
         info = "hessian for \"rate\" returns incorrect values")
 })
 
 test_that("expected hessian for Exponential distribution return correct values", {
     expect_identical(hessian(dd, xx, which = "rate", expected = TRUE),
-        -1 / df$rate^2,
+        -1 / dd$rate^2,
         info = "hessian for \"rate\" returns incorrect values")
 })
 

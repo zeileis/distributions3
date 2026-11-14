@@ -17,3 +17,7 @@ support:
 distributiontype:
   discrete: false
   continuous: true
+
+tolerance:
+  mean: 1e-3
+  variance: 1e-2

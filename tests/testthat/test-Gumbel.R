@@ -11,9 +11,6 @@ xx <- 1:3                        # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Prepare data frame for testing
-df <- as.data.frame(as.matrix(dd))
-
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
   expect_identical(formals(Gumbel), as.pairlist(alist(mu = 0, sigma = 1)))
@@ -39,38 +36,38 @@ test_that("fit_mle.Gumbel works correctly", {
 test_that("pdf.Gumbel/log_pdf.Gumbel returns correct values", {
   skip_if_not_installed("revdbayes")
   expect_identical(pdf(dd, xx),
-        revdbayes::dgev(xx, df$mu, df$sigma, shape = 0),
+        revdbayes::dgev(xx, dd$mu, dd$sigma, shape = 0),
         info = "pdf.Gumbel not identical to dnorm()")
   expect_identical(pdf(dd, xx, log = TRUE),
-        log(revdbayes::dgev(xx, df$mu, df$sigma, shape = 0)),
+        log(revdbayes::dgev(xx, dd$mu, dd$sigma, shape = 0)),
         info = "logarithm of pdf.Gumbel not identical to dnorm(..., log = TRUE)")
   expect_identical(log_pdf(dd, xx),
-        log(revdbayes::dgev(xx, df$mu, df$sigma, shape = 0)),
+        log(revdbayes::dgev(xx, dd$mu, dd$sigma, shape = 0)),
         info = "log_pdf.Gumbel not identical to dnorm(..., log = TRUE)")
 })
 
 test_that("cdf.Gumbel returns correct values", {
   skip_if_not_installed("revdbayes")
   expect_identical(cdf(dd, xx),
-        revdbayes::pgev(xx, df$mu, df$sigma, shape = 0),
+        revdbayes::pgev(xx, dd$mu, dd$sigma, shape = 0),
         info = "cdf.Gumbel not identical to pnorm()")
   expect_identical(cdf(dd, xx, log = TRUE),
-        log(revdbayes::pgev(xx, df$mu, df$sigma, shape = 0)),
+        log(revdbayes::pgev(xx, dd$mu, dd$sigma, shape = 0)),
         info = "logarithm of cdf.Gumbel not identical to pnorm(..., log = TRUE)")
 })
 
 test_that("quantile.Gumbel returns correct values", {
   skip_if_not_installed("revdbayes")
   expect_identical(quantile(dd, pp),
-        revdbayes::qgev(pp, df$mu, df$sigma, shape = 0),
+        revdbayes::qgev(pp, dd$mu, dd$sigma, shape = 0),
         info = "quantile.Gumbel not identical to qnorm()")
 })
 
 ## Testing correctness of moments
 test_that("moments for Gumbel distribution return correct values", {
-  expect_identical(mean(dd), df$mu + df$sigma * -digamma(1),
+  expect_identical(mean(dd), dd$mu + dd$sigma * -digamma(1),
       info = "mean.Gumbel incorrect")
-  expect_identical(variance(dd), pi^(2 / 6) * df$sigma^2,
+  expect_identical(variance(dd), pi^(2 / 6) * dd$sigma^2,
       info = "variance.Gumbel incorrect")
   expect_identical(skewness(dd),
       rep((12 * sqrt(6) * 1.20205690315959401459612) / pi^3, length(dd)),
@@ -84,10 +81,10 @@ test_that("moments for Gumbel distribution return correct values", {
 test_that("score for Gumbel distribution return correct values", {
   skip_if_not_installed("revdbayes")
   expect_identical(score(dd, xx, which = "mu"),
-      (1  - exp(-(xx - df$mu) / df$sigma)) / df$sigma,
+      (1  - exp(-(xx - dd$mu) / dd$sigma)) / dd$sigma,
       info = "score for \"mu\" returns incorrect values")
   expect_identical(score(dd, xx, which = "sigma"),
-      ((xx - df$mu) / df$sigma * (1 - exp(-(xx - df$mu) / df$sigma)) - 1) / df$sigma,
+      ((xx - dd$mu) / dd$sigma * (1 - exp(-(xx - dd$mu) / dd$sigma)) - 1) / dd$sigma,
       info = "score for \"sigma\" returns incorrect values")
 })
 
