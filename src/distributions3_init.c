@@ -24,9 +24,10 @@ SEXP c_dsinharcsinh(SEXP N, SEXP x, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP
 SEXP c_qsinharcsinh(SEXP N, SEXP p, SEXP mu, SEXP sigma, SEXP nu, SEXP tau, SEXP lower_tail, SEXP log_p, SEXP cores);
 double local_zeroin(double ax, double bx, double (*f)(double x, void *info), void *info, double tol);
 
-/* functions for ZIPoisson and ZTPoisson */
+/* functions for ZIPoisson, ZTPoisson, and HurdlePoisson */
 SEXP c_deriv_ZIPoisson(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP expected_sexp, SEXP ncores);
 SEXP c_deriv_ZTPoisson(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP expected_sexp, SEXP ncores);
+SEXP c_deriv_HurdlePoisson(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hessian_sexp, SEXP expected_sexp, SEXP ncores);
 
 static R_CallMethodDef CallEntries[] = {
   {"c_CRPS_numeric", (DL_FUNC) &c_CRPS_numeric, 5},
@@ -37,6 +38,7 @@ static R_CallMethodDef CallEntries[] = {
 
   {"c_deriv_ZIPoisson", (DL_FUNC) &c_deriv_ZIPoisson, 6},
   {"c_deriv_ZTPoisson", (DL_FUNC) &c_deriv_ZTPoisson, 6},
+  {"c_deriv_HurdlePoisson", (DL_FUNC) &c_deriv_HurdlePoisson, 6},
   {NULL, NULL, 0}
 };
 
