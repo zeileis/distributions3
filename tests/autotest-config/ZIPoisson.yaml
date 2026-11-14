@@ -5,8 +5,8 @@ name: ZIPoisson
 ## by row (equal lengths). 'pi' is the probability of a structural zero.
 parameters:
   valid:
-    lambda: [0.5, 2, 5, 10, 0.1]
     pi:     [0.1, 0.3, 0.8, 0.5, 0.05]
+    lambda: [0.5, 2, 5, 10, 0.1]
 
 support:
   lower: 0

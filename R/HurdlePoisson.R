@@ -2,7 +2,7 @@
 #'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-hurdle Poisson distribution with
-#' parameters \code{lambda} and \code{pi}.
+#' parameters \code{pi} and \code{lambda}.
 #'
 #' All functions follow the usual conventions of d/p/q/r functions
 #' in base R. In particular, all four \code{hpois} functions for the
@@ -19,8 +19,8 @@
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
-#' @param lambda vector of (non-negative) Poisson parameters.
 #' @param pi vector of zero-hurdle probabilities in the unit interval.
+#' @param lambda vector of (non-negative) Poisson parameters.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
@@ -31,18 +31,18 @@
 #' @examples
 #' ## theoretical probabilities for a hurdle Poisson distribution
 #' x <- 0:8
-#' p <- dhpois(x, lambda = 2.5, pi = 0.75)
+#' p <- dhpois(x, pi = 0.75, lambda = 2.5)
 #' plot(x, p, type = "h", lwd = 2)
 #'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
-#' y <- rhpois(500, lambda = 2.5, pi = 0.75)
+#' y <- rhpois(500, pi = 0.75, lambda = 2.5)
 #' hist(y, breaks = -1:max(y) + 0.5)
 #'
 #' @importFrom stats dpois ppois
 #' @rdname hpois
 #' @export
-dhpois <- function(x, lambda, pi, log = FALSE) {
+dhpois <- function(x, pi, lambda, log = FALSE) {
   rval <- dpois(x, lambda = lambda, log = TRUE) -
     ppois(0, lambda = lambda, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
@@ -53,7 +53,7 @@ dhpois <- function(x, lambda, pi, log = FALSE) {
 #' @importFrom stats dpois ppois
 #' @rdname hpois
 #' @export
-phpois <- function(q, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
+phpois <- function(q, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   rval <- log(pmax(0, ppois(q, lambda = lambda) - dpois(0L, lambda = lambda))) -
     ppois(0, lambda = lambda, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
@@ -68,7 +68,7 @@ phpois <- function(q, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats dpois ppois qpois
 #' @rdname hpois
 #' @export
-qhpois <- function(p, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
+qhpois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   if(log.p) p <- exp(p)
   if(!lower.tail) p <- 1 - p
   p[p < 1] <- p[p < 1] - .Machine$double.eps/2
@@ -92,8 +92,8 @@ qhpois <- function(p, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats runif
 #' @rdname hpois
 #' @export
-rhpois <- function(n, lambda, pi) {
-  qhpois(runif(n), lambda = lambda, pi = pi)
+rhpois <- function(n, pi, lambda) {
+  qhpois(runif(n), pi = pi, lambda = lambda)
 }
 
 #' Create a hurdle Poisson distribution
@@ -101,9 +101,9 @@ rhpois <- function(n, lambda, pi) {
 #' Hurdle Poisson distributions are frequently used to model counts
 #' with many zero observations.
 #'
+#' @param pi Zero-hurdle probability, can be any value in `[0, 1]`.
 #' @param lambda Parameter of the Poisson component of the distribution.
 #'   Can be any positive number.
-#' @param pi Zero-hurdle probability, can be any value in `[0, 1]`.
 #'
 #' @return A `HurdlePoisson` object.
 #' @export
@@ -116,8 +116,8 @@ rhpois <- function(n, lambda, pi) {
 #'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail.
 #'
-#'   In the following, let \eqn{X} be a hurdle Poisson random variable with parameter
-#'   `lambda` = \eqn{\lambda}.
+#'   In the following, let \eqn{X} be a hurdle Poisson random variable with parameters
+#'   `pi` = \eqn{\pi} and `lambda` = \eqn{\lambda}.
 #'
 #'   **Support**: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 #'
@@ -157,7 +157,7 @@ rhpois <- function(n, lambda, pi) {
 #'
 #' @examples
 #' ## set up a hurdle Poisson distribution
-#' X <- HurdlePoisson(lambda = 2.5, pi = 0.75)
+#' X <- HurdlePoisson(pi = 0.75, lambda = 2.5)
 #' X
 #'
 #' ## standard functions
@@ -175,17 +175,17 @@ rhpois <- function(n, lambda, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-HurdlePoisson <- function(lambda = numeric(), pi = numeric()) {
-  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+HurdlePoisson <- function(pi = numeric(), lambda = numeric()) {
   if (!is.numeric(pi)) pi <- as.numeric(pi)
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(lambda) == length(pi) | length(lambda) == 1 | length(pi) == 1,
-    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE),
-    "parameter 'p' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE)
+      length(lambda) == length(pi) | length(lambda) == 1L | length(pi) == 1L,
+    "parameter 'p' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE),
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE)
   )
 
-  d <- data.frame(lambda = lambda, pi = pi)
+  d <- data.frame(pi = pi, lambda = lambda)
   class(d) <- c("HurdlePoisson", "distribution")
   return(d)
 }
@@ -245,7 +245,7 @@ kurtosis.HurdlePoisson <- function(x, ...) {
 random.HurdlePoisson <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric(0L))
-  FUN <- function(at, d) rhpois(n = at, lambda = d$lambda, pi = d$pi)
+  FUN <- function(at, d) rhpois(n = at, pi = d$pi, lambda = d$lambda)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
@@ -274,7 +274,7 @@ random.HurdlePoisson <- function(x, n = 1L, drop = TRUE, ...) {
 #' @export
 #'
 pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dhpois(x = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) dhpois(x = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
@@ -282,7 +282,7 @@ pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 log_pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dhpois(x = at, lambda = d$lambda, pi = d$pi, log = TRUE)
+  FUN <- function(at, d) dhpois(x = at, pi = d$pi, lambda = d$lambda, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -311,7 +311,7 @@ log_pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 cdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) phpois(q = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) phpois(q = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
@@ -345,7 +345,7 @@ cdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 quantile.HurdlePoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  FUN <- function(at, d) qhpois(p = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) qhpois(p = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
@@ -394,8 +394,8 @@ score.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, ...) {
     ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
     x0 <- x == 0
     s <- switch(par,
-      "lambda" = ifelse(x0, 0, x / d$lambda - 1 - 1 / expm1(d$lambda)),
-      "pi"     = ifelse(x0, -1 / (1 - d$pi), 1 / d$pi))
+      "pi"     = ifelse(x0, -1 / (1 - d$pi), 1 / d$pi),
+      "lambda" = ifelse(x0, 0, x / d$lambda - 1 - 1 / expm1(d$lambda)))
     s[!ok] <- 0
     s
   }
@@ -421,9 +421,9 @@ hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FA
     ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
     x0 <- x == 0
     h <- switch(par,
-      "lambda" = ifelse(x0, 0, -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2),
       "pi"     = ifelse(x0, -1 / (1 - d$pi)^2, -1 / d$pi^2),
-      "lambda:pi" = 0 * x)
+      "lambda" = ifelse(x0, 0, -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2),
+      "pi:lambda" = 0 * x)
     h[!ok] <- 0
     h
   }

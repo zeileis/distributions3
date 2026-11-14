@@ -2,7 +2,7 @@
 #' 
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-inflated negative binomial distribution with
-#' parameters \code{mu}, \code{theta} (or \code{size}), and \code{pi}.
+#' parameters \code{pi}, \code{mu}, and \code{theta} (or \code{size}).
 #'
 #' All functions follow the usual conventions of d/p/q/r functions
 #' in base R. In particular, all four \code{zinbinom} functions for the
@@ -19,10 +19,10 @@
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
+#' @param pi vector of zero-inflation probabilities in the unit interval.
 #' @param mu vector of (non-negative) negative binomial location parameters.
 #' @param theta,size vector of (non-negative) negative binomial overdispersion parameters.
 #' Only \code{theta} or, equivalently, \code{size} may be specified.
-#' @param pi vector of zero-inflation probabilities in the unit interval.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
@@ -33,18 +33,18 @@
 #' @examples
 #' ## theoretical probabilities for a zero-inflated negative binomial distribution
 #' x <- 0:8
-#' p <- dzinbinom(x, mu = 2.5, theta = 1, pi = 0.25)
+#' p <- dzinbinom(x, pi = 0.25, mu = 2.5, theta = 1)
 #' plot(x, p, type = "h", lwd = 2)
 #' 
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
-#' y <- rzinbinom(500, mu = 2.5, theta = 1, pi = 0.25)
+#' y <- rzinbinom(500, pi = 0.25, mu = 2.5, theta = 1)
 #' hist(y, breaks = -1:max(y) + 0.5)
 #'
 #' @importFrom stats dnbinom
 #' @rdname zinbinom
 #' @export
-dzinbinom <- function(x, mu, theta, size, pi, log = FALSE) {
+dzinbinom <- function(x, pi, mu, theta, size, log = FALSE) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
@@ -56,7 +56,7 @@ dzinbinom <- function(x, mu, theta, size, pi, log = FALSE) {
 #' @importFrom stats pnbinom
 #' @rdname zinbinom
 #' @export
-pzinbinom <- function(q, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) {
+pzinbinom <- function(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
@@ -68,7 +68,7 @@ pzinbinom <- function(q, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) 
 #' @importFrom stats qnbinom
 #' @rdname zinbinom
 #' @export
-qzinbinom <- function(p, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) {
+qzinbinom <- function(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
@@ -82,7 +82,7 @@ qzinbinom <- function(p, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) 
 #' @importFrom stats rnbinom runif
 #' @rdname zinbinom
 #' @export
-rzinbinom <- function(n, mu, theta, size, pi) {
+rzinbinom <- function(n, pi, mu, theta, size) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
@@ -96,11 +96,11 @@ rzinbinom <- function(n, mu, theta, size, pi) {
 #' Zero-inflated negative binomial distributions are frequently used to model counts
 #' with overdispersion and many zero observations.
 #'
+#' @param pi Zero-inflation probability, can be any value in `[0, 1]`.
 #' @param mu Location parameter of the negative binomial component of the distribution.
 #'   Can be any positive number.
 #' @param theta Overdispersion parameter of the negative binomial component of the distribution.
 #'   Can be any positive number.
-#' @param pi Zero-inflation probability, can be any value in `[0, 1]`.
 #'
 #' @return A `ZINegativeBinomial` object.
 #' @export
@@ -114,7 +114,7 @@ rzinbinom <- function(n, mu, theta, size, pi) {
 #'   will render with additional detail.
 #'
 #'   In the following, let \eqn{X} be a zero-inflated negative binomial random variable with parameters
-#'   `mu` = \eqn{\mu} and `theta` = \eqn{\theta}.
+#'   `pi` = \eqn{\pi}, `mu` = \eqn{\mu}, and `theta` = \eqn{\theta}.
 #'
 #'   **Support**: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 #'
@@ -150,7 +150,7 @@ rzinbinom <- function(n, mu, theta, size, pi) {
 #'
 #' @examples
 #' ## set up a zero-inflated negative binomial distribution
-#' X <- ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)
+#' X <- ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)
 #' X
 #'
 #' ## standard functions
@@ -168,20 +168,21 @@ rzinbinom <- function(n, mu, theta, size, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-ZINegativeBinomial <- function(mu = numeric(), theta = numeric(), pi = numeric()) {
+ZINegativeBinomial <- function(pi = numeric(), mu = numeric(), theta = numeric()) {
+  if (!is.numeric(pi))    pi    <- as.numeric(pi)
   if (!is.numeric(mu))    mu    <- as.numeric(mu)
   if (!is.numeric(theta)) theta <- as.numeric(theta)
-  if (!is.numeric(pi))    pi    <- as.numeric(pi)
 
-  n <- c(mu = length(mu), theta = length(theta), pi = length(pi))
+  n <- c(pi = length(pi), mu = length(mu), theta = length(theta))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       all(n == n[[1L]]) || all(n == max(n) | n == 1L),
-    "parameter 'theta' must be in [0, Inf]" = all(theta >= 0, na.rm = TRUE),
-    "parameter 'pi' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE)
+    "parameter 'pi' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE),
+    "parameter 'mu' must be in [0, Inf]" = all(mu >= 0, na.rm = TRUE),
+    "parameter 'theta' must be in [0, Inf]" = all(theta >= 0, na.rm = TRUE)
   )
 
-  d <- data.frame(mu = mu, theta = theta, pi = pi)
+  d <- data.frame(pi = pi, mu = mu, theta = theta)
   class(d) <- c("ZINegativeBinomial", "distribution")
   return(d)
 }
@@ -258,7 +259,7 @@ random.ZINegativeBinomial <- function(x, n = 1L, drop = TRUE, ...) {
   if (n == 0L) {
     return(numeric(0L))
   }
-  FUN <- function(at, d) rzinbinom(n = at, mu = d$mu, theta = d$theta, pi = d$pi)
+  FUN <- function(at, d) rzinbinom(n = at, pi = d$pi, mu = d$mu, theta = d$theta)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
@@ -287,7 +288,7 @@ random.ZINegativeBinomial <- function(x, n = 1L, drop = TRUE, ...) {
 #' @export
 #'
 pdf.ZINegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dzinbinom(x = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
+  FUN <- function(at, d) dzinbinom(x = at, pi = d$pi, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
@@ -295,7 +296,7 @@ pdf.ZINegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 log_pdf.ZINegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dzinbinom(x = at, mu = d$mu, theta = d$theta, pi = d$pi, log = TRUE)
+  FUN <- function(at, d) dzinbinom(x = at, pi = d$pi, mu = d$mu, theta = d$theta, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -324,7 +325,7 @@ log_pdf.ZINegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ..
 #' @export
 #'
 cdf.ZINegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) pzinbinom(q = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
+  FUN <- function(at, d) pzinbinom(q = at, pi = d$pi, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
@@ -358,7 +359,7 @@ cdf.ZINegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 quantile.ZINegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  FUN <- function(at, d) qzinbinom(p = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
+  FUN <- function(at, d) qzinbinom(p = at, pi = d$pi, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
@@ -424,12 +425,12 @@ score.ZINegativeBinomial <- function(d, x, which = NULL, drop = TRUE, ...) {
     z  <- .nb_zero_derivs(d$mu, d$theta)
     p0 <- d$pi + (1 - d$pi) * z$f0
     s  <- switch(par,
+      "pi" = ifelse(x0, (1 - z$f0) / p0, -1 / (1 - d$pi)),
       "mu" = ifelse(x0, (1 - d$pi) * z$f0 * z$mu / p0,
         x / d$mu - (x + d$theta) / (d$mu + d$theta)),
       "theta" = ifelse(x0, (1 - d$pi) * z$f0 * z$theta / p0,
         digamma(x + d$theta) - digamma(d$theta) + log(d$theta) + 1 -
-          log(d$mu + d$theta) - (x + d$theta) / (d$mu + d$theta)),
-      "pi" = ifelse(x0, (1 - z$f0) / p0, -1 / (1 - d$pi)))
+          log(d$mu + d$theta) - (x + d$theta) / (d$mu + d$theta)))
     s[!ok] <- 0
     s
   }
@@ -455,7 +456,9 @@ hessian.ZINegativeBinomial <- function(d, x, which = NULL, drop = TRUE, expected
     ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
     x  <- ifelse(ok, x, 0) # keep special functions finite off the support
     x0 <- x == 0
-    mu <- d$mu; th <- d$theta; pi <- d$pi
+    mu <- d$mu
+    th <- d$theta
+    pi <- d$pi
 
     ## x = 0: log(pi + (1 - pi) f0), derivatives via chain rule on p0
     z    <- .nb_zero_derivs(mu, th)
@@ -470,22 +473,21 @@ hessian.ZINegativeBinomial <- function(d, x, which = NULL, drop = TRUE, expected
     p0pm <- -z$f0 * z$mu
     p0pt <- -z$f0 * z$theta
     h0 <- switch(par,
-      "mu"       = p0mm / p0 - (p0m / p0)^2,
-      "theta"    = p0tt / p0 - (p0t / p0)^2,
-      "mu:theta" = p0mt / p0 - p0m * p0t / p0^2,
       "pi"       = -(p0pi / p0)^2,
-      "mu:pi"    = p0pm / p0 - p0pi * p0m / p0^2,
-      "theta:pi" = p0pt / p0 - p0pi * p0t / p0^2)
+      "mu"       = p0mm / p0 - (p0m / p0)^2,
+      "pi:mu"    = p0pm / p0 - p0pi * p0m / p0^2,
+      "theta"    = p0tt / p0 - (p0t / p0)^2,
+      "pi:theta" = p0pt / p0 - p0pi * p0t / p0^2,
+      "mu:theta" = p0mt / p0 - p0m * p0t / p0^2)
 
     ## x > 0: log(1 - pi) + log f_nb(x)
     h1 <- switch(par,
-      "mu"       = -x / mu^2 + (x + th) / (mu + th)^2,
-      "theta"    = trigamma(x + th) - trigamma(th) + 1 / th - 2 / (mu + th) +
-        (x + th) / (mu + th)^2,
-      "mu:theta" = (x - mu) / (mu + th)^2,
       "pi"       = -1 / (1 - pi)^2 + 0 * x,
-      "mu:pi"    = 0 * x,
-      "theta:pi" = 0 * x)
+      "mu"       = -x / mu^2 + (x + th) / (mu + th)^2,
+      "pi:mu"    = 0 * x,
+      "theta"    = trigamma(x + th) - trigamma(th) + 1 / th - 2 / (mu + th) + (x + th) / (mu + th)^2,
+      "pi:theta" = 0 * x,
+      "mu:theta" = (x - mu) / (mu + th)^2)
 
     h <- ifelse(x0, h0, h1)
     h[!ok] <- 0

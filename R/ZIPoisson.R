@@ -19,8 +19,8 @@
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
-#' @param lambda vector of (non-negative) Poisson parameters.
 #' @param pi vector of zero-inflation probabilities in the unit interval.
+#' @param lambda vector of (non-negative) Poisson parameters.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
@@ -31,18 +31,18 @@
 #' @examples
 #' ## theoretical probabilities for a zero-inflated Poisson distribution
 #' x <- 0:8
-#' p <- dzipois(x, lambda = 2.5, pi = 0.25)
+#' p <- dzipois(x, pi = 0.25, lambda = 2.5)
 #' plot(x, p, type = "h", lwd = 2)
 #' 
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
-#' y <- rzipois(500, lambda = 2.5, pi = 0.25)
+#' y <- rzipois(500, pi = 0.25, lambda = 2.5)
 #' hist(y, breaks = -1:max(y) + 0.5)
 #'
 #' @importFrom stats dpois
 #' @rdname zipois
 #' @export
-dzipois <- function(x, lambda, pi, log = FALSE) {
+dzipois <- function(x, pi, lambda, log = FALSE) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   rval <- log(1 - pi) + dpois(x, lambda = lambda, log = TRUE)
   if(any(x0 <- (x == 0L))) rval[x0] <- log(exp(rval) + pi)[x0]
@@ -52,7 +52,7 @@ dzipois <- function(x, lambda, pi, log = FALSE) {
 #' @importFrom stats ppois
 #' @rdname zipois
 #' @export
-pzipois <- function(q, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
+pzipois <- function(q, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   rval <- log(1 - pi) + ppois(q, lambda = lambda, lower.tail = lower.tail, log.p = TRUE)
   if(any(q0 <- (is.finite(rval) & (lower.tail | q < 0)))) rval[q0] <- log(exp(rval) + pi)[q0]
@@ -62,7 +62,7 @@ pzipois <- function(q, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats qpois
 #' @rdname zipois
 #' @export
-qzipois <- function(p, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
+qzipois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   if(log.p) p <- exp(p)
   if(!lower.tail) p <- 1 - p
@@ -75,7 +75,7 @@ qzipois <- function(p, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats rpois runif
 #' @rdname zipois
 #' @export
-rzipois <- function(n, lambda, pi) {
+rzipois <- function(n, pi, lambda) {
   if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
   rval <- rpois(n, lambda = lambda)
   rval[runif(n) < pi] <- 0
@@ -87,9 +87,9 @@ rzipois <- function(n, lambda, pi) {
 #' Zero-inflated Poisson distributions are frequently used to model counts
 #' with many zero observations.
 #'
+#' @param pi Zero-inflation probability, can be any value in `[0, 1]`.
 #' @param lambda Parameter of the Poisson component of the distribution.
 #'   Can be any positive number.
-#' @param pi Zero-inflation probability, can be any value in `[0, 1]`.
 #'
 #' @return A `ZIPoisson` object.
 #' @export
@@ -102,8 +102,8 @@ rzipois <- function(n, lambda, pi) {
 #'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail.
 #'
-#'   In the following, let \eqn{X} be a zero-inflated Poisson random variable with parameter
-#'   `lambda` = \eqn{\lambda}.
+#'   In the following, let \eqn{X} be a zero-inflated Poisson random variable with parameters
+#'   `pi` = \eqn{\pi} and `lambda` = \eqn{\lambda}.
 #'
 #'   **Support**: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 #'
@@ -143,7 +143,7 @@ rzipois <- function(n, lambda, pi) {
 #'
 #' @examples
 #' ## set up a zero-inflated Poisson distribution
-#' X <- ZIPoisson(lambda = 2.5, pi = 0.25)
+#' X <- ZIPoisson(pi = 0.25, lambda = 2.5)
 #' X
 #'
 #' ## standard functions
@@ -161,17 +161,17 @@ rzipois <- function(n, lambda, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-ZIPoisson <- function(lambda = numeric(), pi = numeric()) {
-  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+ZIPoisson <- function(pi = numeric(), lambda = numeric()) {
   if (!is.numeric(pi))     pi     <- as.numeric(pi)
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(lambda) == length(pi) | length(lambda) == 1 | length(pi) == 1,
-    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE),
-    "parameter 'pi' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE)
+      length(lambda) == length(pi) | length(lambda) == 1L | length(pi) == 1L,
+    "parameter 'pi' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE),
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE)
   )
 
-  d <- data.frame(lambda = lambda, pi = pi)
+  d <- data.frame(pi = pi, lambda = lambda)
   class(d) <- c("ZIPoisson", "distribution")
   return(d)
 }
@@ -230,7 +230,7 @@ kurtosis.ZIPoisson <- function(x, ...) {
 random.ZIPoisson <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric(0L))
-  FUN <- function(at, d) rzipois(n = at, lambda = d$lambda, pi = d$pi)
+  FUN <- function(at, d) rzipois(n = at, pi = d$pi, lambda = d$lambda)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
@@ -259,7 +259,7 @@ random.ZIPoisson <- function(x, n = 1L, drop = TRUE, ...) {
 #' @export
 #'
 pdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dzipois(x = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) dzipois(x = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
@@ -267,7 +267,7 @@ pdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 log_pdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dzipois(x = at, lambda = d$lambda, pi = d$pi, log = TRUE)
+  FUN <- function(at, d) dzipois(x = at, pi = d$pi, lambda = d$lambda, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -296,7 +296,7 @@ log_pdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 cdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) pzipois(q = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) pzipois(q = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
@@ -330,7 +330,7 @@ cdf.ZIPoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 quantile.ZIPoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  FUN <- function(at, d) qzipois(p = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) qzipois(p = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
@@ -380,8 +380,8 @@ score.ZIPoisson <- function(d, x, which = NULL, drop = TRUE, ...) {
     q  <- exp(-d$lambda)
     p0 <- d$pi + (1 - d$pi) * q
     s <- switch(par,
-      "lambda" = ifelse(x > 0, x / d$lambda - 1, -(1 - d$pi) * q / p0),
-      "pi"     = ifelse(x > 0, -1 / (1 - d$pi), (1 - q) / p0))
+      "pi"     = ifelse(x > 0, -1 / (1 - d$pi), (1 - q) / p0),
+      "lambda" = ifelse(x > 0, x / d$lambda - 1, -(1 - d$pi) * q / p0))
     s[!ok] <- 0
     s
   }
@@ -409,9 +409,9 @@ hessian.ZIPoisson <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
     q  <- exp(-d$lambda)
     p0 <- d$pi + (1 - d$pi) * q
     h <- switch(par,
-      "lambda" = ifelse(x0, (1 - d$pi) * q / p0 - ((1 - d$pi) * q / p0)^2, -x / d$lambda^2),
       "pi"     = ifelse(x0, -((1 - q) / p0)^2, -1 / (1 - d$pi)^2),
-      "lambda:pi" = ifelse(x0, q / p0 + (1 - q) * (1 - d$pi) * q / p0^2, 0 * x))
+      "lambda" = ifelse(x0, (1 - d$pi) * q / p0 - ((1 - d$pi) * q / p0)^2, -x / d$lambda^2),
+      "pi:lambda" = ifelse(x0, q / p0 + (1 - q) * (1 - d$pi) * q / p0^2, 0 * x))
     h[!ok] <- 0
     h
   }
