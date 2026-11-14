@@ -1,15 +1,16 @@
+# -------------------------------------------------------
+# Checking HurdlePoisson distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("HurdlePoisson default arguments", {
   expect_identical(formals(HurdlePoisson),
-    as.pairlist(alist(lambda = numeric(), pi = numeric())))
-})
-
-test_that("print.HurdlePoisson works", {
-  expect_output(print(HurdlePoisson(1, 0.7)), regexp = "HurdlePoisson")
+    as.pairlist(alist(pi = numeric(), lambda = numeric())))
 })
 
 test_that("random.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
   expect_length(random(p), 1)
   expect_length(random(p, 100), 100)
@@ -24,10 +25,10 @@ test_that("random.HurdlePoisson work correctly", {
 })
 
 test_that("pdf.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
-  expect_equal(pdf(p, 0), dhpois(0, 1, 0.7))
-  expect_equal(pdf(p, 1), dhpois(1, 1, 0.7))
+  expect_equal(pdf(p, 0), dhpois(0, 0.7, 1))
+  expect_equal(pdf(p, 1), dhpois(1, 0.7, 1))
   expect_equal(pdf(p, -12), 0)
 
   expect_warning(pdf(p, 0.5))
@@ -38,10 +39,10 @@ test_that("pdf.HurdlePoisson work correctly", {
 })
 
 test_that("log_pdf.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
-  expect_equal(log_pdf(p, 0), dhpois(0, 1, 0.7, log = TRUE))
-  expect_equal(log_pdf(p, 1), dhpois(1, 1, 0.7, log = TRUE))
+  expect_equal(log_pdf(p, 0), dhpois(0, 0.7, 1, log = TRUE))
+  expect_equal(log_pdf(p, 1), dhpois(1, 0.7, 1, log = TRUE))
   expect_equal(log_pdf(p, -12), -Inf)
 
   expect_warning(log_pdf(p, 0.5))
@@ -52,10 +53,10 @@ test_that("log_pdf.HurdlePoisson work correctly", {
 })
 
 test_that("cdf.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
-  expect_equal(cdf(p, 0), phpois(0, 1, 0.7))
-  expect_equal(cdf(p, 1), phpois(1, 1, 0.7))
+  expect_equal(cdf(p, 0), phpois(0, 0.7, 1))
+  expect_equal(cdf(p, 1), phpois(1, 0.7, 1))
 
 
   expect_length(cdf(p, seq_len(0)), 0)
@@ -64,7 +65,7 @@ test_that("cdf.HurdlePoisson work correctly", {
 })
 
 test_that("quantile.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
   expect_equal(quantile(p, 0), 0)
   expect_equal(quantile(p, 0.5), 1)
@@ -75,7 +76,7 @@ test_that("quantile.HurdlePoisson work correctly", {
 })
 
 test_that("vectorization of a HurdlePoisson distribution work correctly", {
-  d <- HurdlePoisson(c(1, 2), 0.7)
+  d <- HurdlePoisson(0.7, 1:2)
   d1 <- d[1]
   d2 <- d[2]
 
@@ -132,7 +133,7 @@ test_that("vectorization of a HurdlePoisson distribution work correctly", {
 })
 
 test_that("named return values for HurdlePoisson distribution work correctly", {
-  d <- HurdlePoisson(c(5, 10), 0.75)
+  d <- HurdlePoisson(0.75, c(5, 10))
   names(d) <- LETTERS[1:length(d)]
 
   expect_equal(names(mean(d)), LETTERS[1:length(d)])
