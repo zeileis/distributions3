@@ -163,6 +163,9 @@ rztpois <- function(n, lambda) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 ZTPoisson <- function(lambda = numeric()) {
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  stopifnot("parameter 'lambda' must always be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE))
+
   d <- data.frame(lambda = lambda)
   class(d) <- c("ZTPoisson", "distribution")
   return(d)
@@ -180,6 +183,7 @@ mean.ZTPoisson <- function(x, ...) {
 
 #' @export
 variance.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m * (1 + x$lambda - m), names(x))
@@ -187,6 +191,7 @@ variance.ZTPoisson <- function(x, ...) {
 
 #' @export
 skewness.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s <- sqrt(m * (x$lambda + 1 - m))
@@ -197,6 +202,7 @@ skewness.ZTPoisson <- function(x, ...) {
 
 #' @export
 kurtosis.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s2 <- m * (x$lambda + 1 - m)
@@ -356,3 +362,148 @@ is_continuous.ZTPoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZTPoisson and suff_stat.ZTPoisson
+
+# ---------------------------------------------------------------------------
+# ZTPoisson: methods for score/hessian (formulas as in countreg::sztpois()
+# and countreg::hztpois(), written in terms of expm1() for stability)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, ..., cores = NULL) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  ## Shortcutting trough C
+  if (!is.null(cores)) {
+    return(deriv2.ZTPoisson(d, x, which.score = which, which.hessian = NA, drop = drop, expected = FALSE, cores = cores)$score)
+  }
+
+  scr <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 1) # keep expressions finite off the support
+    s  <- switch(par,
+      "lambda" = x / d$lambda - 1 - 1 / expm1(d$lambda))
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ..., cores = NULL) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## Shortcutting trough C
+  if (!is.null(cores)) {
+    return(deriv2.ZTPoisson(d, x, which.score = NA, which.hessian = which, drop = drop, expected = expected, cores = cores)$hessian)
+  }
+
+  ## observed Hessian, evaluated at x (support x >= 1, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 1)
+    h  <- switch(par,
+      "lambda" = -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 1:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}
+
+#' @useDynLib distributions3, .registration = TRUE
+deriv2.ZTPoisson <- function(d, x, which.score = NULL, which.hessian = NULL, drop = TRUE, expected = FALSE, cores = 1L, ...) {
+
+  n        <- max_length(d, x)
+  cores    <- as.integer(cores)[[1L]]
+  expected <- as.logical(expected)[[1L]]
+  stopifnot(
+    "argument 'cores' must evaluate to positive integer" =
+        is.integer(cores) && length(cores) == 1L && cores >= 1L,
+    "argument 'expected' must evaluate to TRUE or FALSE" =
+        isTRUE(expected) || isFALSE(expected)
+  )
+
+  ## generate names of all 'parameters' (derivatives).
+  params   <- names(unclass(d))
+  pscore   <- get_deriv_names(params, expand = FALSE)
+  phessian <- get_deriv_names(params, expand = TRUE)
+
+  ## If which.score is NULL or which.hessian is NULL: Take all available,
+  ## else ensure the user-specified parameters are valid/available.
+  if (!isTRUE(is.na(which.score)))
+    which.score   <- if (is.null(which.score))   pscore   else match.arg(which.score,   pscore,   several.ok = TRUE)
+  if (!isTRUE(is.na(which.hessian)))
+    which.hessian <- if (is.null(which.hessian)) phessian else match.arg(which.hessian, phessian, several.ok = TRUE)
+
+  ## Unique derivative names (the hessian is symmetric, so compute each pair once).
+  ws <- if (isTRUE(is.na(which.score))) NA else unique(names(which.score))
+  wh <- if (isTRUE(is.na(which.hessian))) NA else unique(names(which.hessian))
+
+  ## Setting up objects to be filled by the c code
+  ## Named list as expected by the C functions.
+  fn <- function(x, n) {
+      if (isTRUE(is.na(x))) return(NULL)
+      setNames(lapply(seq_along(x), function(n, ...) numeric(n), n = n), x)
+  }
+  score   <- fn(ws, n = n)
+  hessian <- fn(wh, n = n)
+
+  ## Note that .Call has no named arguments, they are only for orientation
+  .Call("c_deriv_ZTPoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
+        score_sexp = score, hessian_sexp = hessian,
+        expected = as.logical(expected), ncores = as.integer(cores))
+
+  ## Preparing return
+  if (!is.null(score)) {
+    if (drop && length(which.score) == 1L) {
+      score <- setNames(score[[1]], names(d))
+    } else {
+      score <- do.call("cbind", score)
+      dimnames(score) <- list(names(d), ws)
+      if (!identical(ws, which.score)) score <- score[, names(which.score), drop = FALSE]
+      colnames(score) <- unname(which.score)
+    }
+  }
+
+  if (!is.null(hessian)) {
+    if (drop && length(which.hessian) == 1L) {
+      hessian <- setNames(hessian[[1]], names(d))
+    } else {
+      hessian <- do.call("cbind", hessian)
+      dimnames(hessian) <- list(names(d), wh)
+      if (!identical(wh, which.hessian)) hessian <- hessian[, names(which.hessian), drop = FALSE]
+      colnames(hessian) <- unname(which.hessian)
+    }
+  }
+
+  return(list(score = score, hessian = hessian))
+}

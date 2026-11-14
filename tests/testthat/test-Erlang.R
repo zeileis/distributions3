@@ -1,218 +1,99 @@
 # -------------------------------------------------------
-# Checking ChiSquare distribution
-#
-# Compare: https://en.wikipedia.org/wiki/Erlang_distribution
-#
-# The Erlang distribution is a special case of the gamma distribution wherein
-# the shape (k) of the distribution is discretised.
+# Checking Erlang distribution
 # -------------------------------------------------------
+
 if (interactive()) { library("distributions3"); library("testthat") }
 
-test_that("Erlang default arguments", {
-  expect_identical(formals(Erlang),
-    as.pairlist(alist(k = numeric(), lambda = numeric())))
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- Erlang(3:1, 1:3)
+xx <- 1:3                        # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Erlang), as.pairlist(alist(k = numeric(), lambda = numeric())))
 })
 
-e <- Erlang(k = 3, lambda = 0.5)
-
-test_that("Erlang constructor works", {
-  expect_error(Erlang(k = 3.1, lambda = 0.5))
+## Sufficient statistics
+test_that("suff_stat.Erlang works correctly", {
+  expect_error(suff_stat(Erlang(1, 2), 1:5), regexp = "no applicable method")
 })
 
-test_that("print.Erlang works", {
-  expect_output(print(e), regexp = "Erlang")
+## Fitting
+test_that("fit_mle.Erlang works correctly", {
+  expect_error(fit_mle(Erlang(1, 2), 1:5), regexp = "no applicable method")
 })
 
-test_that("random.Erlang works correctly", {
-  set.seed(123)
-  r1 <- random(e, 3)
-  set.seed(123)
-  r2 <- rgamma(3, shape = 3, rate = 0.5)
-  expect_equal(unname(r1), r2)
-
-  expect_length(random(e), 1)
-  expect_length(random(e, 100), 100)
-  expect_length(random(e[-1], 1), 0)
-  expect_length(random(e, 0), 0)
-  expect_error(random(e, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(e, c(1, 2, 3)), 3)
-  expect_length(random(e, cbind(1, 2, 3)), 3)
-  expect_length(random(e, rbind(1, 2, 3)), 3)
+## Testing correctness of dpq methods
+test_that("pdf.Erlang/log_pdf.Erlang returns correct values", {
+  expect_identical(pdf(dd, xx),             dgamma(xx, dd$k, dd$lambda),
+        info = "pdf.Erlang not identical to dgamma()")
+  expect_identical(pdf(dd, xx, log = TRUE), dgamma(xx, dd$k, dd$lambda, log = TRUE),
+        info = "logarithm of pdf.Erlang not identical to dgamma(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dgamma(xx, dd$k, dd$lambda, log = TRUE),
+        info = "log_pdf.Erlang not identical to dgamma(..., log = TRUE)")
 })
 
-test_that("pdf.Erlang works correctly", {
-  expect_equal(pdf(e, 0), dgamma(0, shape = 3, rate = 0.5))
-  expect_equal(pdf(e, 1), dgamma(1, shape = 3, rate = 0.5))
-
-  expect_length(pdf(e, seq_len(0)), 0)
-  expect_length(pdf(e, seq_len(1)), 1)
-  expect_length(pdf(e, seq_len(10)), 10)
+test_that("cdf.Erlang returns correct values", {
+  expect_identical(cdf(dd, xx),             pgamma(xx, dd$k, dd$lambda),
+        info = "cdf.Erlang not identical to pgamma()")
+  expect_identical(cdf(dd, xx, log = TRUE), pgamma(xx, dd$k, dd$lambda, log = TRUE),
+        info = "logarithm of cdf.Erlang not identical to pgamma(..., log = TRUE)")
 })
 
-test_that("log_pdf.Erlang works correctly", {
-  expect_equal(log_pdf(e, 0), log(dgamma(0, shape = 3, rate = 0.5)))
-  expect_equal(log_pdf(e, 1), log(dgamma(1, shape = 3, rate = 0.5)))
-
-  expect_length(log_pdf(e, seq_len(0)), 0)
-  expect_length(log_pdf(e, seq_len(1)), 1)
-  expect_length(log_pdf(e, seq_len(10)), 10)
+test_that("quantile.Erlang returns correct values", {
+  expect_identical(quantile(dd, pp),        qgamma(pp, dd$k, dd$lambda),
+        info = "quantile.Erlang not identical to qgamma()")
 })
 
-test_that("cdf.Erlang works correctly", {
-  expect_equal(cdf(e, 0.3), pgamma(0.3, shape = 3, rate = 0.5))
-  expect_equal(cdf(e, 1), pgamma(1, shape = 3, rate = 0.5))
+## currently no analytic solution for moments
 
-  expect_equal(cdf(e, 0), 0)
-  expect_length(cdf(e, seq_len(0)), 0)
-  expect_length(cdf(e, seq_len(1)), 1)
-  expect_length(cdf(e, seq_len(10)), 10)
+## Testing correctness of score
+test_that("score for Erlang distribution return correct values", {
+    expect_identical(score(dd, xx, which = "k"),
+        log(dd$lambda) + log(xx) - digamma(dd$k),
+        info = "score for \"k\" returns incorrect values")
+    expect_identical(score(dd, xx, which = "lambda"),
+        dd$k / dd$lambda - xx,
+        info = "score for \"lambda\" returns incorrect values")
 })
 
-test_that("quantile.Erlang works correctly", {
-  expect_equal(quantile(e, 0.3), qgamma(0.3, shape = 3, rate = 0.5))
-  expect_equal(quantile(e, 1), qgamma(1, shape = 3, rate = 0.5))
+## Testing correctness of hessian
+test_that("observed hessian for Erlang distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "k", expected = FALSE),
+        -trigamma(dd$k),
+        info = "hessian for \"k\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "lambda", expected = FALSE),
+        -dd$k / dd$lambda^2,
+        info = "hessian for \"lambda\" returns incorrect values")
 
-  expect_equal(quantile(e, 0), 0)
-  expect_length(quantile(e, seq_len(1)), 1)
-  expect_length(quantile(e, seq(0.1, 0.9, by = 0.1)), 9)
+    # Cross derivatives
+    expect_identical(hessian(dd, xx, which = "lambda:k", expected = FALSE),
+        1 / dd$lambda,
+        info = "hessian for \"lambda:k\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "k:lambda", expected = FALSE),
+        1 / dd$lambda,
+        info = "hessian for \"k:lambda\" returns incorrect values")
 })
 
-test_that("support.Erlang works correctly", {
-  expect_equal(unname(support(e)), c(0, Inf))
+test_that("expected hessian for Erlang distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "k", expected = TRUE),
+        -trigamma(dd$k),
+        info = "hessian for \"k\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "lambda", expected = TRUE),
+        -dd$k / dd$lambda^2,
+        info = "hessian for \"lambda\" returns incorrect values")
+
+    # Cross derivatives
+    expect_identical(hessian(dd, xx, which = "lambda:k", expected = TRUE),
+        1 / dd$lambda,
+        info = "hessian for \"lambda:k\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "k:lambda", expected = TRUE),
+        1 / dd$lambda,
+        info = "hessian for \"k:lambda\" returns incorrect values")
 })
 
-test_that("vectorization of a Erlang distribution work correctly", {
-  d <- Erlang(3, c(0.5, 0.8))
-  d1 <- d[1]
-  d2 <- d[2]
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
-})
-
-test_that("named return values for Erlang distribution work correctly", {
-  d <- Erlang(3, c(0.5, 0.8))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
-})
-
-suppressPackageStartupMessages(library("scoringRules"))
-test_that("crps method for Binomial returns correct object", {
-  d <- Erlang(3, c(0.5, 0.8))
-  expect_silent(crps <- crps(d, 0.3))
-  expect_type(crps, "double")
-  expect_true(is.vector(crps))
-  expect_true(!all(is.na(crps)) & all(crps >= 0))
-})
-
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
-
-## Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
-
-test_that("score.ChiSquare works as expected", {
-    ## Objects used for testing
-    d <- Erlang(3:1, 1:3)
-    x <- 1:3
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic score vs. numeric approximation (score.distribution)
-    score_test_analytic_vs_numeric(d, x)
-})
-
-test_that("hessian.ChiSquare works as expected", {
-    ## Objects used for testing
-    d <- Erlang(3:1, 1:3)
-    x <- 1:3
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
-})
+## currently no dedicated analytic method for crps
 

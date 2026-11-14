@@ -171,6 +171,15 @@ rztnbinom <- function(n, mu, theta, size) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 ZTNegativeBinomial <- function(mu = numeric(), theta = numeric()) {
+  if (!is.numeric(mu))    mu    <- as.numeric(mu)
+  if (!is.numeric(theta)) theta <- as.numeric(theta)
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      length(mu) == length(theta) | length(mu) == 1 | length(theta) == 1,
+    "parameter 'mu' must be in [0, Inf]" = all(mu >= 0, na.rm = TRUE),
+    "parameter 'theta' must be in [0, Inf]" = all(theta >= 0, na.rm = TRUE)
+  )
+
   d <- data.frame(mu = mu, theta = theta)
   class(d) <- c("ZTNegativeBinomial", "distribution")
   return(d)
@@ -188,6 +197,7 @@ mean.ZTNegativeBinomial <- function(x, ...) {
 
 #' @export
 variance.ZTNegativeBinomial <- function(x, ...) {
+  if (!length(x)) return(numeric())
   m <- x$mu / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
   m[x$mu <= 0] <- 1
   v <- m * (x$mu/x$theta + x$mu + 1 - m)
@@ -196,28 +206,41 @@ variance.ZTNegativeBinomial <- function(x, ...) {
 
 #' @export
 skewness.ZTNegativeBinomial <- function(x, ...) {
-  stop("not implemented yet")
-  f <- 1 / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
-  m <- x$mu * f
-  s <- sqrt(m * (x$mu/x$theta + x$mu + 1 - m))
-  ## FIXME: E[X^3] would be needed here
-  rval <- (f * (x$mu + 3 * x$mu^2 + x$mu^3) - 3 * m * s^2 - m^3) / s^3
-  rval[x$mu <= 0] <- NaN
+  if (!length(x)) return(numeric())
+  ## raw moments of the truncated law: E[X^k] = E_nb[X^k] / (1 - P(X = 0))
+  f  <- 1 / (1 - dnbinom(0, mu = x$mu, size = x$theta))
+
+  mu2 <- x$mu^2
+
+  m1 <- x$mu * f
+  m2 <- (x$mu + mu2 + mu2 / x$theta) * f
+  m3 <- (x$mu^3 + 3 * x$mu^3 / x$theta + 2 * x$mu^3 / x$theta^2 + 3 * mu2 + 3 * mu2 / x$theta + x$mu) * f
+  k2 <- m2 - m1^2
+  k3 <- m3 - 3 * m1 * m2 + 2 * m1^3
+  rval <- k3 / k2^(3 / 2)
   setNames(rval, names(x))
 }
 
 #' @export
 kurtosis.ZTNegativeBinomial <- function(x, ...) {
-  stop("not implemented yet")
-  f <- 1 / pnbinom(0, mu = x$mu, size = x$theta, lower.tail = FALSE)
-  m <- x$mu * f
-  s2 <- m * (x$mu/x$theta + x$mu + 1 - m)
-  ## FIXME: E[X^4] would be needed here
-  rval <- ( f * (x$mu + 7 * x$mu^2 + 6 * x$mu^3 + x$mu^4)
-             - 4 * m * f * (x$mu + 3 * x$mu^2 + x$mu^3)
-             + 6 * m^2 * f * (x$mu + x$mu^2)
-             - 3 * m^4 ) / s2^2 - 3
-  rval[x$mu <= 0] <- NaN
+  if (!length(x)) return(numeric())
+  ## excess kurtosis, raw moments as in skewness.ZTNegativeBinomial()
+  f  <- 1 / (1 - dnbinom(0, mu = x$mu, size = x$theta))
+
+  mu2 <- x$mu^2
+  mu3 <- x$mu^3
+  mu4 <- x$mu^4
+  theta2 <- x$theta^2
+
+  m1 <- x$mu * f
+  m2 <- (x$mu + mu2 + mu2 / x$theta) * f
+  m3 <- (mu3 + 3 * mu3 / x$theta + 2 * mu3 / theta2 + 3 * mu2 + 3 * mu2 / x$theta + x$mu) * f
+  m4 <- (mu4 + 6 * mu4 / x$theta + 11 * mu4 / theta2 + 6 * mu4 / x$theta^3 +
+         6 * mu3 + 18 * mu3 / x$theta + 12 * mu3 / theta2 +
+         7 * mu2 + 7 * mu2 / x$theta + x$mu) * f
+  k2 <- m2 - m1^2
+  k4 <- m4 - 4 * m1 * m3 + 6 * m1^2 * m2 - 3 * m1^4
+  rval <- k4 / k2^2 - 3
   setNames(rval, names(x))
 }
 
@@ -369,3 +392,89 @@ is_continuous.ZTNegativeBinomial <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZTNegativeBinomial and suff_stat.ZTNegativeBinomial
+
+# ---------------------------------------------------------------------------
+# ZTNegativeBinomial: methods for score/hessian (mu, theta as in
+# dnbinom(mu = , size = theta)); log f = log f_nb(x) - log(1 - f0)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZTNegativeBinomial <- function(d, x, which = NULL, drop = TRUE, ...) {
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+  x      <- rep_len(x, n)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 0) # keep special functions finite off the support
+    z  <- .nb_zero_derivs(d$mu, d$theta)
+    ## truncation term: d/dv [-log(1 - f0)] = f0 g_v / (1 - f0)
+    s <- switch(par,
+      "mu" = x / d$mu - (x + d$theta) / (d$mu + d$theta) +
+        z$f0 * z$mu / (1 - z$f0),
+      "theta" = digamma(x + d$theta) - digamma(d$theta) + log(d$theta) + 1 -
+        log(d$mu + d$theta) - (x + d$theta) / (d$mu + d$theta) +
+        z$f0 * z$theta / (1 - z$f0))
+    s[!ok] <- 0
+    s
+  }
+
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZTNegativeBinomial <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+  x      <- rep_len(x, n)
+
+  ## observed Hessian, evaluated at x (support x >= 1, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 0) # keep special functions finite off the support
+
+    z  <- .nb_zero_derivs(d$mu, d$theta)
+    P  <- z$f0
+    ## second derivatives of -log(1 - P), with P_v = P g_v, P_vw = P (g_vw + g_v g_w)
+    Pm  <- P * z$mu
+    Pt  <- P * z$theta
+    Pmm <- P * (z$mumu + z$mu^2)
+    Ptt <- P * (z$thetatheta + z$theta^2)
+    Pmt <- P * (z$mutheta + z$mu * z$theta)
+    h <- switch(par,
+      "mu"       = -x / d$mu^2 + (x + d$theta) / (d$mu + d$theta)^2 +
+                   Pmm / (1 - P) + Pm^2 / (1 - P)^2,
+      "theta"    = trigamma(x + d$theta) - trigamma(d$theta) + 1 / d$theta - 2 / (d$mu + d$theta) +
+                   (x + d$theta) / (d$mu + d$theta)^2 + Ptt / (1 - P) + Pt^2 / (1 - P)^2,
+      "mu:theta" = (x - d$mu) / (d$mu + d$theta)^2 + Pmt / (1 - P) + Pm * Pt / (1 - P)^2
+    )
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess <- if (expected) {
+    function(par, d, x) {
+      vapply(seq_len(n), function(i) {
+        di <- d[i]
+        ks <- 1:quantile(di, 1 - 1e-12)
+        sum(hess_obs(par, di, ks) * pdf(di, ks))
+      }, numeric(1L))
+    }
+  } else {
+    hess_obs
+  }
+
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
+}

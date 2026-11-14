@@ -4,7 +4,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-##suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("SinhArcsinh exists and has correct defaults", {
     expect_true(is.function(SinhArcsinh))
@@ -19,11 +18,6 @@ test_that("Empirical unexpected input", {
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
     expect_error(SinhArcsinh(nu = 1:2, tau = 1:10),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
-
-    expect_error(SinhArcsinh(mu    = TRUE), regexp = "argument 'mu' must be numeric")
-    expect_error(SinhArcsinh(sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
-    expect_error(SinhArcsinh(nu    = TRUE), regexp = "argument 'nu' nust be numeric")
-    expect_error(SinhArcsinh(tau   = TRUE), regexp = "argument 'tau' taust be numeric")
 })
 
 test_that("Empirical construction works", {

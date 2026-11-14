@@ -1,5 +1,13 @@
-test_that("print.ZIPoisson works", {
-  expect_output(print(ZIPoisson(1, 0.2)), regexp = "ZIPoisson")
+# -------------------------------------------------------
+# Checking ZIPoisson distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(ZIPoisson),
+                   as.pairlist(alist(pi = numeric(), lambda = numeric())))
 })
 
 test_that("random.ZIPoisson work correctly", {
@@ -18,7 +26,7 @@ test_that("random.ZIPoisson work correctly", {
 })
 
 test_that("pdf.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(pdf(p, 0), 0.8 / exp(1) + 0.2)
   expect_equal(pdf(p, 1), 0.8 / exp(1))
@@ -32,7 +40,7 @@ test_that("pdf.ZIPoisson work correctly", {
 })
 
 test_that("log_pdf.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(log_pdf(p, 0), log(0.8 / exp(1) + 0.2))
   expect_equal(log_pdf(p, 1), log(0.8) - 1)
@@ -46,7 +54,7 @@ test_that("log_pdf.ZIPoisson work correctly", {
 })
 
 test_that("cdf.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(cdf(p, 0), 0.8 / exp(1) + 0.2)
   expect_equal(cdf(p, 1), 0.8 / exp(1) * 2 + 0.2)
@@ -58,7 +66,7 @@ test_that("cdf.ZIPoisson work correctly", {
 })
 
 test_that("quantile.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(quantile(p, 0), 0)
   expect_equal(quantile(p, 0.5), 1)
@@ -69,7 +77,7 @@ test_that("quantile.ZIPoisson work correctly", {
 })
 
 test_that("vectorization of a ZIPoisson distribution work correctly", {
-  d <- ZIPoisson(c(1, 2), 0.2)
+  d <- ZIPoisson(0.2, 1:2)
   d1 <- d[1]
   d2 <- d[2]
 
@@ -126,7 +134,7 @@ test_that("vectorization of a ZIPoisson distribution work correctly", {
 })
 
 test_that("named return values for ZIPoisson distribution work correctly", {
-  d <- ZIPoisson(c(5, 10), 0.25)
+  d <- ZIPoisson(0.25, c(5, 10))
   names(d) <- LETTERS[1:length(d)]
 
   expect_equal(names(mean(d)), LETTERS[1:length(d)])

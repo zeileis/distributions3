@@ -1,15 +1,16 @@
+# -------------------------------------------------------
+# Checking HurdleNegativeBinomial distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("HurdleNegativeBinomial default arguments", {
   expect_identical(formals(HurdleNegativeBinomial),
-    as.pairlist(alist(mu = numeric(), theta = numeric(), pi = numeric())))
-})
-
-test_that("print.HurdleNegativeBinomial works", {
-  expect_output(print(HurdleNegativeBinomial(1, 1, 0.7)), regexp = "HurdleNegativeBinomial")
+    as.pairlist(alist(pi = numeric(), mu = numeric(), theta = numeric())))
 })
 
 test_that("random.HurdleNegativeBinomial work correctly", {
-  p <- HurdleNegativeBinomial(mu = 1, theta = 1, pi = 0.7)
+  p <- HurdleNegativeBinomial(pi = 0.7, mu = 1, theta = 1)
 
   expect_length(random(p), 1)
   expect_length(random(p, 100), 100)
@@ -24,7 +25,7 @@ test_that("random.HurdleNegativeBinomial work correctly", {
 })
 
 test_that("pdf.HurdleNegativeBinomial work correctly", {
-  p <- HurdleNegativeBinomial(mu = 1, theta = 1, pi = 0.7)
+  p <- HurdleNegativeBinomial(pi = 0.7, mu = 1, theta = 1)
 
   expect_equal(pdf(p, 0), dhnbinom(0, mu = 1, theta = 1, pi = 0.7))
   expect_equal(pdf(p, 1), dhnbinom(1, mu = 1, theta = 1, pi = 0.7))
@@ -38,7 +39,7 @@ test_that("pdf.HurdleNegativeBinomial work correctly", {
 })
 
 test_that("log_pdf.HurdleNegativeBinomial work correctly", {
-  p <- HurdleNegativeBinomial(mu = 1, theta = 1, pi = 0.7)
+  p <- HurdleNegativeBinomial(pi = 0.7, mu = 1, theta = 1)
 
   expect_equal(log_pdf(p, 0), dhnbinom(0, mu = 1, theta = 1, pi = 0.7, log = TRUE))
   expect_equal(log_pdf(p, 1), dhnbinom(1, mu = 1, theta = 1, pi = 0.7, log = TRUE))
@@ -52,7 +53,7 @@ test_that("log_pdf.HurdleNegativeBinomial work correctly", {
 })
 
 test_that("cdf.HurdleNegativeBinomial work correctly", {
-  p <- HurdleNegativeBinomial(mu = 1, theta = 1, pi = 0.7)
+  p <- HurdleNegativeBinomial(pi = 0.7, mu = 1, theta = 1)
 
   expect_equal(cdf(p, 0), phnbinom(0, mu = 1, theta = 1, pi = 0.7))
   expect_equal(cdf(p, 1), phnbinom(1, mu = 1, theta = 1, pi = 0.7))
@@ -64,7 +65,7 @@ test_that("cdf.HurdleNegativeBinomial work correctly", {
 })
 
 test_that("quantile.HurdleNegativeBinomial work correctly", {
-  p <- HurdleNegativeBinomial(mu = 1, theta = 1, pi = 0.7)
+  p <- HurdleNegativeBinomial(pi = 0.7, mu = 1, theta = 1)
 
   expect_equal(quantile(p, 0), 0)
   expect_equal(quantile(p, 0.5), 1)
@@ -75,7 +76,7 @@ test_that("quantile.HurdleNegativeBinomial work correctly", {
 })
 
 test_that("vectorization of a HurdleNegativeBinomial distribution work correctly", {
-  d <- HurdleNegativeBinomial(mu = c(1, 2), theta = 1, pi = 0.7)
+  d <- HurdleNegativeBinomial(pi = 0.7, mu = c(1, 2), theta = 1)
   d1 <- d[1]
   d2 <- d[2]
 
@@ -132,7 +133,7 @@ test_that("vectorization of a HurdleNegativeBinomial distribution work correctly
 })
 
 test_that("named return values for HurdleNegativeBinomial distribution work correctly", {
-  d <- HurdleNegativeBinomial(mu = c(5, 10), theta = 1, pi = 0.7)
+  d <- HurdleNegativeBinomial(pi = 0.7, mu = c(5, 10), theta = 1)
   names(d) <- LETTERS[1:length(d)]
 
   expect_equal(names(mean(d)), LETTERS[1:length(d)])

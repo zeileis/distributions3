@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking RevWeibull distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("RevWeibull default arguments", {
   expect_identical(formals(RevWeibull),
@@ -34,6 +39,8 @@ x3 <- c(up, xvec)
 pvec <- c(0, 0.25, 0.5, 0.75, 1, NA)
 
 test_that("random.RevWeibull works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_length(random(g3), 1)
   expect_length(random(g3, 100), 100)
   expect_length(random(g3[-1], 1), 0)
@@ -47,6 +54,8 @@ test_that("random.RevWeibull works correctly", {
 })
 
 test_that("pdf.RevWeibull works correctly", {
+  skip_if_not_installed("revdbayes")
+
   p <- pvec[2:4]
   expect_equal(unname(pdf(g3, x3)), c(0, 0, exp(-1), 0, NA))
   expect_equal(unname(pdf(g3, quantile(g3, p))), (-log(p))^(1 + xi3) * p)
@@ -56,6 +65,8 @@ test_that("pdf.RevWeibull works correctly", {
 })
 
 test_that("log_pdf.RevWeibull works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(log_pdf(g3, x3)), c(-Inf, -Inf, -1, -Inf, NA))
   expect_length(log_pdf(g3, seq_len(0)), 0)
   expect_length(log_pdf(g3, seq_len(1)), 1)
@@ -63,6 +74,8 @@ test_that("log_pdf.RevWeibull works correctly", {
 })
 
 test_that("cdf.RevWeibull works correctly", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(cdf(g3, x3)), c(1, 0, exp(-1), 1, NA))
   expect_length(cdf(g3, seq_len(0)), 0)
   expect_length(cdf(g3, seq_len(1)), 1)
@@ -70,6 +83,8 @@ test_that("cdf.RevWeibull works correctly", {
 })
 
 test_that("quantile.RevWeibull works correctly", {
+  skip_if_not_installed("revdbayes")
+
   q3 <- ((-log(pvec[2:4]))^(-xi3) - 1) / xi3
   expect_equal(unname(quantile(g3, pvec)), c(-Inf, q3, up, NA))
   expect_length(quantile(g3, seq_len(0)), 0)
@@ -78,10 +93,14 @@ test_that("quantile.RevWeibull works correctly", {
 })
 
 test_that("cdf.RevWeibull and quantile.RevWeibull are consistent", {
+  skip_if_not_installed("revdbayes")
+
   expect_equal(unname(cdf(g3, quantile(g3, pvec))), pvec)
 })
 
 test_that("vectorization of a RevWeibull distribution work correctly", {
+  skip_if_not_installed("revdbayes")
+
   d <- RevWeibull(c(0, 1), c(1, 2))
   d1 <- d[1]
   d2 <- d[2]
@@ -144,6 +163,8 @@ test_that("vectorization of a RevWeibull distribution work correctly", {
 })
 
 test_that("named return values for RevWeibull distribution work correctly", {
+  skip_if_not_installed("revdbayes")
+
   d <- RevWeibull(c(0, 1), c(1, 2))
   names(d) <- LETTERS[1:length(d)]
 

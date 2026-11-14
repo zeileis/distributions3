@@ -11,9 +11,7 @@
 # -------------------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-
 suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("scoringRules"))
 
 
 ## Constructor function for new 'MyNormalQuantileCDF' distribution
@@ -77,15 +75,25 @@ n <- MyNormalQuantileCDF(4, 2.8)
 
 
 test_that("pdf.distribution (approximation) comparing MyNormalQuantileCDF and Normal", {
+    ## Using larger tolerance than in the test set below; testing
+    ## 'deriv.method = "numericDeriv"' which is the fallback if the
+    ## suggested package 'numDeriv' is not installed.
     x <- seq(-6, 14, by = 0.01)
     expect_silent(rd  <- pdf(d, x))
-    expect_silent(rn  <- pdf(n, x))
-    expect_equal(rd, rn,  tolerance = 1e-8)
-
-    ##plot(x,  rd, type = "l", col = "gray", lwd = 4)
-    ##lines(x, rn, type = "l", col = "tomato", lwd = 1)
+    expect_silent(rn  <- pdf(n, x, deriv.method = "numericDeriv"))
+    expect_equal(rd, rn,  tolerance = 1e-6)
 })
 
+test_that("pdf.distribution (approximation) comparing MyNormalQuantileCDF and Normal", {
+    ## If the suggested numDeriv is installed, it (by default)
+    ## uses numDeriv::grad with a slightly higher precision.
+    skip_if_not_installed("numDeriv")
+
+    x <- seq(-6, 14, by = 0.01)
+    expect_silent(rd  <- pdf(d, x))
+    expect_silent(rn  <- pdf(n, x))  # uses numDeriv::grad
+    expect_equal(rd, rn,  tolerance = 1e-8)
+})
 
 test_that("cdf.distribution (approximation) comparing MyNormalQuantileCDF and Normal", {
     x <- c(0.001, seq(0.01, 0.99, by = 0.01), 0.999)

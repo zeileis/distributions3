@@ -4,13 +4,13 @@
 \alias{ZIPoisson}
 \title{Create a zero-inflated Poisson distribution}
 \usage{
-ZIPoisson(lambda, pi)
+ZIPoisson(pi = numeric(), lambda = numeric())
 }
 \arguments{
+\item{pi}{Zero-inflation probability, can be any value in \verb{[0, 1]}.}
+
 \item{lambda}{Parameter of the Poisson component of the distribution.
 Can be any positive number.}
-
-\item{pi}{Zero-inflation probability, can be any value in \verb{[0, 1]}.}
 }
 \value{
 A \code{ZIPoisson} object.
@@ -24,8 +24,8 @@ We recommend reading this documentation on
 \url{https://zeileis.github.io/distributions3/}, where the math
 will render with additional detail.
 
-In the following, let \eqn{X} be a zero-inflated Poisson random variable with parameter
-\code{lambda} = \eqn{\lambda}.
+In the following, let \eqn{X} be a zero-inflated Poisson random variable with parameters
+\code{pi} = \eqn{\pi} and \code{lambda} = \eqn{\lambda}.
 
 \strong{Support}: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 
@@ -65,7 +65,7 @@ where \eqn{F(k; \lambda)} is the c.d.f. of the \code{\link{Poisson}} distributio
 }
 \examples{
 ## set up a zero-inflated Poisson distribution
-X <- ZIPoisson(lambda = 2.5, pi = 0.25)
+X <- ZIPoisson(pi = 0.25, lambda = 2.5)
 X
 
 ## standard functions

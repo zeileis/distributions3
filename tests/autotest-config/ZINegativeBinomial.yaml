@@ -1,0 +1,35 @@
+## Name of the distribution, also defines the name of the constructor function
+name: ZINegativeBinomial
+
+## Name of parameters and supported range/values. Parameters are zipped row
+## by row (equal lengths). 'pi' is the probability of a structural zero.
+parameters:
+  valid:
+    pi:    [0.1, 0.3, 0.7, 0.2, 0.5]
+    mu:    [0.5, 2, 5, 10, 3]
+    theta: [0.5, 1.5, 10, 2, 0.8]
+  invalid:
+    pi:    [-10, -0.00001, 1.00001, 10]
+    theta: [-10, -1, -0.00001]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: true
+  continuous: false
+
+tolerance:
+  mean: 1e-2
+  variance: 1e-1
+  skewness: 1e-1
+  kurtosis: 1e-0
+
+tests:
+  exclude:
+    ## dpqr methods throw warning if pi is out of range (NA),
+    ## random(ZINegativeBinomial(), ...) sometimes returns values
+    ## though we expect NaNs if `mu = NA` or `theta = NA`.
+    - params_NA
+    - quantile

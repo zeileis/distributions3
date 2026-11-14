@@ -157,10 +157,14 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Normal <- function(mu = 0, sigma = 1) {
+  if (!is.numeric(mu))    mu    <- as.numeric(mu)
+  if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1
+      length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1,
+    "parameter 'sigma' must be in [0, Inf]" = all(sigma >= 0, na.rm = TRUE)
   )
+
   d <- data.frame(mu = mu, sigma = sigma)
   class(d) <- c("Normal", "distribution")
   d
@@ -398,6 +402,15 @@ is_continuous.Normal <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Normal
+crps.Normal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
+  FUN <- function(at, d) scoringRules::crps_norm(y = at, mean = d$mu, sd = d$sigma)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # Normal: methods for score/hessian (documented on ?score-hessian for now)

@@ -4,13 +4,13 @@
 \alias{Gamma}
 \title{Create a Gamma distribution}
 \usage{
-Gamma(shape = numeric(), rate = 1)
+Gamma(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)
 }
 \arguments{
 \item{shape}{The shape parameter. Can be any positive number.}
 
 \item{rate}{The rate parameter. Can be any positive number. Defaults
-to \code{1}.}
+to \code{1} if \code{shape} is of length \verb{> 0L}.}
 }
 \value{
 A \code{Gamma} object.
@@ -44,7 +44,7 @@ with parameters
 
 \strong{Variance}: \eqn{\frac{\alpha}{\beta^2}}
 
-\strong{Probability density function (p.m.f)}:
+\strong{Probability density function (p.d.f)}:
 
 \deqn{
     f(x) = \frac{\beta^{\alpha}}{\Gamma(\alpha)} x^{\alpha - 1} e^{-\beta x}
@@ -55,9 +55,9 @@ with parameters
 \strong{Cumulative distribution function (c.d.f)}:
 
 \deqn{
-    f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}}
+    f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)}
   }{
-    f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}}
+    f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)}
   }
 
 \strong{Moment generating function (m.g.f)}:
@@ -93,10 +93,11 @@ Other continuous distributions:
 \code{\link[=ChiSquare]{ChiSquare()}},
 \code{\link[=Erlang]{Erlang()}},
 \code{\link[=Exponential]{Exponential()}},
+\code{\link[=ExponentialR]{ExponentialR()}},
 \code{\link[=FisherF]{FisherF()}},
 \code{\link[=Frechet]{Frechet()}},
 \code{\link[=GEV]{GEV()}},
-\code{\link[=GP]{GP()}},
+\code{\link[=GPareto]{GPareto()}},
 \code{\link[=Gumbel]{Gumbel()}},
 \code{\link[=LogNormal]{LogNormal()}},
 \code{\link[=Logistic]{Logistic()}},

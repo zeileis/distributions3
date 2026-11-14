@@ -1,0 +1,36 @@
+## Name of the distribution, also defines the name of the constructor function
+name: Geometric
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    ## boundary values 0 and 1 are excluded: the score is undefined there.
+    ## p >= 0.05: for smaller p the numeric reference for the observed hessian
+    ## (finite differences of the score) is not accurate enough.
+    p: [0.05, 0.1, 0.2, 0.3, 0.5, 0.7]
+  invalid:
+    p: [-1, -0.00001, 1.00001, 2]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: true
+  continuous: false
+
+tolerance:
+  mean: 1e-2
+  variance: 1e-1
+  skewness: 1e-0
+
+skip_if_not_installed:
+  crps_compare2numeric: hypergeo
+
+tests:
+  exclude:
+    ## TODO(R): Fairly large differences, check if correct
+    - kurtosis_compare2numeric
+    ## TODO(R): Check quantile
+    - quantile_compare2numeric
+

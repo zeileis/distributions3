@@ -113,15 +113,17 @@
 #' @family continuous distributions
 #' @export
 SinhArcsinh <- function(mu = 0, sigma = 1, nu = 1, tau = 1) {
+  if (!is.numeric(mu))    mu    <- as.numeric(mu)
+  if (!is.numeric(sigma)) sigma <- as.numeric(sigma)
+  if (!is.numeric(nu))    nu    <- as.numeric(nu)
+  if (!is.numeric(tau))   tau   <- as.numeric(tau)
+
   n <- c(mu = length(mu), sigma = length(sigma), nu = length(nu), tau = length(tau))
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      all(n == n[[1L]]) || all(n == max(n) | n == 1L),
-    "argument 'mu' must be numeric"       = is.numeric(mu),
-    "argument 'sigma' sigmast be numeric" = is.numeric(sigma),
-    "argument 'nu' nust be numeric"       = is.numeric(nu),
-    "argument 'tau' taust be numeric"     = is.numeric(tau)
+      all(n == n[[1L]]) || all(n == max(n) | n == 1L)
   )
+
   d <- data.frame(mu = as.double(mu), sigma = as.double(sigma),
                   nu = as.double(nu), tau   = as.double(tau))
   class(d) <- c("SinhArcsinh", "distribution")

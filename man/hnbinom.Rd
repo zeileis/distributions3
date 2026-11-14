@@ -7,23 +7,23 @@
 \alias{rhnbinom}
 \title{The hurdle negative binomial distribution}
 \usage{
-dhnbinom(x, mu, theta, size, pi, log = FALSE)
+dhnbinom(x, pi, mu, theta, size, log = FALSE)
 
-phnbinom(q, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE)
+phnbinom(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE)
 
-qhnbinom(p, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE)
+qhnbinom(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE)
 
-rhnbinom(n, mu, theta, size, pi)
+rhnbinom(n, pi, mu, theta, size)
 }
 \arguments{
 \item{x}{vector of (non-negative integer) quantiles.}
+
+\item{pi}{vector of zero-hurdle probabilities in the unit interval.}
 
 \item{mu}{vector of (non-negative) negative binomial location parameters.}
 
 \item{theta, size}{vector of (non-negative) negative binomial overdispersion parameters.
 Only \code{theta} or, equivalently, \code{size} may be specified.}
-
-\item{pi}{vector of zero-hurdle probabilities in the unit interval.}
 
 \item{log, log.p}{logical indicating whether probabilities p are given as log(p).}
 
@@ -38,7 +38,7 @@ Only \code{theta} or, equivalently, \code{size} may be specified.}
 \description{
 Density, distribution function, quantile function, and random
 generation for the zero-hurdle negative binomial distribution with
-parameters \code{mu}, \code{theta} (or \code{size}), and \code{pi}.
+parameters \code{pi}, \code{mu}, and \code{theta} (or \code{size}).
 }
 \details{
 All functions follow the usual conventions of d/p/q/r functions
@@ -53,12 +53,12 @@ are internally handled in levels and not in logs (even if \code{log.p = TRUE}).
 \examples{
 ## theoretical probabilities for a hurdle negative binomial distribution
 x <- 0:8
-p <- dhnbinom(x, mu = 2.5, theta = 1, pi = 0.75)
+p <- dhnbinom(x, pi = 0.75, mu = 2.5, theta = 1)
 plot(x, p, type = "h", lwd = 2)
 
 ## corresponding empirical frequencies from a simulated sample
 set.seed(0)
-y <- rhnbinom(500, mu = 2.5, theta = 1, pi = 0.75)
+y <- rhnbinom(500, pi = 0.75, mu = 2.5, theta = 1)
 hist(y, breaks = -1:max(y) + 0.5)
 
 }

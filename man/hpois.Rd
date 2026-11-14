@@ -7,20 +7,20 @@
 \alias{rhpois}
 \title{The hurdle Poisson distribution}
 \usage{
-dhpois(x, lambda, pi, log = FALSE)
+dhpois(x, pi, lambda, log = FALSE)
 
-phpois(q, lambda, pi, lower.tail = TRUE, log.p = FALSE)
+phpois(q, pi, lambda, lower.tail = TRUE, log.p = FALSE)
 
-qhpois(p, lambda, pi, lower.tail = TRUE, log.p = FALSE)
+qhpois(p, pi, lambda, lower.tail = TRUE, log.p = FALSE)
 
-rhpois(n, lambda, pi)
+rhpois(n, pi, lambda)
 }
 \arguments{
 \item{x}{vector of (non-negative integer) quantiles.}
 
-\item{lambda}{vector of (non-negative) Poisson parameters.}
-
 \item{pi}{vector of zero-hurdle probabilities in the unit interval.}
+
+\item{lambda}{vector of (non-negative) Poisson parameters.}
 
 \item{log, log.p}{logical indicating whether probabilities p are given as log(p).}
 
@@ -35,7 +35,7 @@ rhpois(n, lambda, pi)
 \description{
 Density, distribution function, quantile function, and random
 generation for the zero-hurdle Poisson distribution with
-parameters \code{lambda} and \code{pi}.
+parameters \code{pi} and \code{lambda}.
 }
 \details{
 All functions follow the usual conventions of d/p/q/r functions
@@ -50,12 +50,12 @@ are internally handled in levels and not in logs (even if \code{log.p = TRUE}).
 \examples{
 ## theoretical probabilities for a hurdle Poisson distribution
 x <- 0:8
-p <- dhpois(x, lambda = 2.5, pi = 0.75)
+p <- dhpois(x, pi = 0.75, lambda = 2.5)
 plot(x, p, type = "h", lwd = 2)
 
 ## corresponding empirical frequencies from a simulated sample
 set.seed(0)
-y <- rhpois(500, lambda = 2.5, pi = 0.75)
+y <- rhpois(500, pi = 0.75, lambda = 2.5)
 hist(y, breaks = -1:max(y) + 0.5)
 
 }

@@ -60,10 +60,14 @@
 #' cdf(X, 4)
 #' quantile(X, 0.7)
 LogNormal <- function(log_mu = 0, log_sigma = 1) {
+  if (!is.numeric(log_mu))    log_mu    <- as.numeric(log_mu)
+  if (!is.numeric(log_sigma)) log_sigma <- as.numeric(log_sigma)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(log_mu) == length(log_sigma) | length(log_mu) == 1 | length(log_sigma) == 1
+      length(log_mu) == length(log_sigma) | length(log_mu) == 1 | length(log_sigma) == 1,
+    "parameter 'log_sigma' must be in [0, Inf]" = all(log_sigma >= 0, na.rm = TRUE)
   )
+
   d <- data.frame(log_mu = log_mu, log_sigma = log_sigma)
   class(d) <- c("LogNormal", "distribution")
   d
@@ -297,6 +301,16 @@ is_continuous.LogNormal <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps LogNormal
+crps.LogNormal <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
+  FUN <- function(at, d) scoringRules::crps_lnorm(y = at, meanlog = d$log_mu, sdlog = d$log_sigma)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
+
 # ---------------------------------------------------------------------------
 # LogNormal: methods for score/hessian (documented on ?score-hessian for now)
 # ---------------------------------------------------------------------------
@@ -330,11 +344,6 @@ score.LogNormal <- function(d, x, which = NULL, drop = TRUE, ...) {
 #' @usage NULL
 #' @exportS3Method
 hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
-
-  ## TODO(R): double-check analytic solution for both observed and expected hessian
-  ## currently resort to numeric solution
-  return(NextMethod())
-
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
   if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
@@ -360,7 +369,7 @@ hessian.LogNormal <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
 
     function(par, d, x) switch(par,
       "log_mu"           = 0 * x - 1 / d$log_sigma^2,
-      "log_sigma"        = pmin(-3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2, -1e-15),
+      "log_sigma"        = -3 * z^2 / d$log_sigma^4 + 1 / d$log_sigma^2,
       -2 * z / d$log_sigma^3)
   }
 

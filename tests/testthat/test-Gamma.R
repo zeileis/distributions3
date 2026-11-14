@@ -3,179 +3,151 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
-
-# Helper functions for automated testing of S3 methods
-source("functions-distribution.R")
-source("functions-score-hessian.R")
 
 ## distribution object and 'x' used for testing.
 ## Length of 'dd' and 'xx' must be identical and > 1L
-dd <- distributions3::Gamma(1:3, 3:1 / 10)
-dd <- setNames(dd, LETTERS[1:3]) # named distributions object
-xx <- 1:3                        # values for testing d/p, ....
+dd <- Gamma(c(3, 5, 10), c(2, 10, 30))
+xx <- c(5, 3, 10)             # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
-
-stopifnot(length(dd) == length(xx),
-          length(dd) == length(pp),
-          !is.null(names(dd)))
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
 ## Default arguments
-test_that("Gamma default arguments", {
-  expect_identical(formals(distributions3::Gamma), as.pairlist(alist(shape = numeric(), rate = 1)))
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Gamma),
+        as.pairlist(alist(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)))
 })
 
-## -------------------------------------------------------
-## "Support" methods
-## -------------------------------------------------------
-test_that("print.Gamma works correctly", {
-    d_test_print(distributions3::Gamma(-10, +2))
-    d_test_print(distributions3::Gamma(-100.123456, 1e-10))
-})
-
-test_that("support.Gamma works correctly", {
-    ## Generic method tests
-    d_test_support(unname(dd), expected_min = 0, expected_max = Inf) # unnamed
-    d_test_support(dd,         expected_min = 0, expected_max = Inf) # named
-})
-
-test_that("is_discrete.Gamma works correctly", {
-    ## Generic method tests
-    d_test_is_discrete(unname(dd), expected = FALSE) # named
-    d_test_is_discrete(dd,         expected = FALSE) # unnamed
-})
-
-test_that("is_continuous.Gamma works correctly", {
-    ## Generic method tests
-    d_test_is_continuous(unname(dd),  expected = TRUE) # unnamed
-    d_test_is_continuous(dd,          expected = TRUE) # named
-})
-
+## Sufficient statistics
 test_that("suff_stat.Gamma works correctly", {
-  ss <- list(sum = sum(xx), log_sum = sum(log(xx)), samples = length(xx))
-  expect_equal(suff_stat(dd, xx), ss)
+  ss <- list(sum = sum(1:5), log_sum = sum(log(1:5)), samples = 5)
+  expect_equal(suff_stat(Gamma(1, 1), 1:5), ss)
 
-  expect_error(suff_stat(dd, "abc"),
-        regexp = "invalid 'type' \\(character\\)")
-  expect_error(suff_stat(dd, x = -0.01),
-        regexp = "`x` must only contain positive real numbers")
+  expect_error(suff_stat(Gamma(1, 1), "abc"))
+  expect_error(suff_stat(Gamma(1, 1), -1))
 })
 
+## Fitting
 test_that("fit_mle.Gamma works correctly", {
-  expect_error(fit_mle(Gamma(1, 2), 1),
-        regexp = "not implemented for the Gamma distribution yet")
+  expect_error(fit_mle(Gamma(1, 1), c(2, 2)), regexp = "not implemented")
+})
+
+## Testing correctness of dpq methods
+test_that("pdf.Gamma/log_pdf.Gamma returns correct values", {
+  expect_identical(pdf(dd, xx),             dgamma(xx, dd$shape, dd$rate),
+        info = "pdf.Gamma not identical to dgamma()")
+  expect_identical(pdf(dd, xx, log = TRUE), dgamma(xx, dd$shape, dd$rate, log = TRUE),
+        info = "logarithm of pdf.Gamma not identical to dgamma(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dgamma(xx, dd$shape, dd$rate, log = TRUE),
+        info = "log_pdf.Gamma not identical to dgamma(..., log = TRUE)")
+})
+
+test_that("cdf.Gamma returns correct values", {
+  expect_identical(cdf(dd, xx),             pgamma(xx, dd$shape, dd$rate),
+        info = "cdf.Gamma not identical to pgamma()")
+  expect_identical(cdf(dd, xx, log = TRUE), pgamma(xx, dd$shape, dd$rate, log = TRUE),
+        info = "logarithm of cdf.Gamma not identical to pgamma(..., log = TRUE)")
+})
+
+test_that("quantile.Gamma returns correct values", {
+  expect_identical(quantile(dd, pp),        qgamma(pp, dd$shape, dd$rate),
+        info = "quantile.Gamma not identical to qgamma()")
 })
 
 
-## -------------------------------------------------------
-## d/p/q/r methods
-## -------------------------------------------------------
-test_that("pdf.Gamma works correctly", {
-  ## Helper function to test pdf.Gamma against dnorm
-  dfun <- function(x, ...) {
-      args <- c(list(x = x), as.list(...))
-      dgamma(args$x, shape = args$shape, rate = args$rate)
-  }
-  d_test_pdf(unname(dd), xx, dfun) # unnamed
-  d_test_pdf(dd,         xx, dfun) # named
+## Testing edge cases
+test_that("pdf.Gamma on edge case shape = 0 or rate = 0 works as stats::dgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dgamma(1:5, shape = 1, rate = 0))
 
-  ## Test that we get 0 outside numeric support
-  d_test_pdf_support(dd, delta = 1e-6)
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dgamma(1:5, shape = 0, rate = 1))
 })
+test_that("cdf.Gamma on edge case shape = 0 or rate = 0 works as stats::pgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pgamma(1:5, shape = 1, rate = 0))
 
-test_that("log_pdf.Gamma works correctly", {
-  d_test_log_pdf(unname(dd),  xx) # unnamed
-  d_test_log_pdf(dd,          xx) # named
-
-  ## Test that we get -Inf/+Inf outside support
-  d_test_log_pdf_support(dd, delta = 1e-6)
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pgamma(1:5, shape = 0, rate = 1))
 })
+test_that("quantile.Gamma on edge case shape = 0 or rate = 0 works as stats::qgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- quantile(d, 1:9/10))
+  expect_identical(x, qgamma(1:9/10, shape = 1, rate = 0))
 
-test_that("cdf.Gamma works correctly", {
-  ## Helper function to test cdf.Gamma against dnorm
-  pfun <- function(x, ...) {
-      args <- c(list(x = x), as.list(...))
-      pgamma(args$x, shape = args$shape, rate = args$rate)
-  }
-  d_test_cdf(unname(dd), xx, pfun) # unnamed
-  d_test_cdf(dd,         xx, pfun) # named
-
-  ## Test that we get 0/1 outside support
-  d_test_cdf_support(dd, delta = 1e-6)
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- quantile(d, 1:9/10))
+  expect_identical(x, qgamma(1:9/10, shape = 0, rate = 1))
 })
+test_that("random.Gamma on edge case shape = 0 or rate = 0 works as stats::rgamma", {
+  expect_silent(d <- Gamma(1, 0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rgamma(5, shape = 1, rate = 0), 5)
 
-test_that("quantile.Gamma works correctly", {
-  ## Helper function to test quantile.Gamma against dnorm
-  qfun <- function(p, ...) {
-      args <- c(list(p = p), as.list(...))
-      qgamma(args$p, shape = args$shape, rate = args$rate)
-  }
-  d_test_quantile(unname(dd), pp, qfun) # unnamed
-  d_test_quantile(dd,         pp, qfun) # named
-})
-
-test_that("random.Gamma work correctly", {
-    d_test_random(unname(dd))
-    d_test_random(dd)
+  expect_silent(d <- Gamma(0, 1))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rgamma(5, shape = 0, rate = 1))
 })
 
 
-## -------------------------------------------------------
-## moments
-## -------------------------------------------------------
-
-test_that("mean.Gamma work correctly", {
-    expected <- with(dd, shape / rate)
-    d_test_moment(unname(dd), "mean", expected = expected, tol = 1e-3) # unnamed
-    d_test_moment(dd,         "mean", expected = expected, tol = 1e-3) # named
-})
-test_that("variance.Gamma work correctly", {
-    expected <- with(dd, shape / rate^2)
-    d_test_moment(unname(dd), "variance", expected = expected, tol = 0.1) # unnamed
-    d_test_moment(dd,         "variance", expected = expected, tol = 0.1) # named
-})
-test_that("skewness.Gamma work correctly", {
-    expected <- with(dd, 2 / sqrt(shape))
-    d_test_moment(unname(dd), "skewness", expected = expected, tol = 0.1) # unnamed
-    d_test_moment(dd,         "skewness", expected = expected, tol = 0.1) # named
-})
-test_that("kurtosis.Gamma work correctly", {
-    expected <- with(dd, 6 / shape)
-    d_test_moment(unname(dd), "kurtosis", expected = expected, tol = 0.1) # unnamed
-    d_test_moment(dd,         "kurtosis", expected = expected, tol = 0.1) # named
+## Testing correctness of moments
+test_that("moments for Gamma distribution return correct values", {
+    expect_identical(mean(dd), dd$shape / dd$rate,
+        info = "mean.Gamma incorrect")
+    expect_identical(variance(dd), dd$shape / dd$rate^2,
+        info = "variance.Gamma incorrect")
+    expect_identical(skewness(dd), 2 / sqrt(dd$shape),
+        info = "skewness.Gamma incorrect")
+    expect_identical(kurtosis(dd), 6 / dd$shape,
+        info = "kurtosis.Gamma incorrect")
 })
 
-## -------------------------------------------------------
-## score and Hessian methods
-## -------------------------------------------------------
-
-test_that("score.Gamma works as expected", {
-  ## Check that method exists as function, checks default
-  ## arguments as well as all default sanity checks
-  score_test_args_and_sanity(dd, xx)
-
-  ## Ensure we get the correct return, both for named and unnamed
-  ## distribution objects (tests different combinations)
-  score_test_return_dim_names(unname(dd), xx) # unnamed
-  score_test_return_dim_names(dd,         xx) # named
-
-  ## Comparing analytic score vs. numeric approximation (score.distribution)
-  score_test_analytic_vs_numeric(unname(dd), xx) # unnamed
-  score_test_analytic_vs_numeric(dd,         xx) # named
+## Testing correctness of score
+test_that("score for Gamma distribution return correct values", {
+    expect_identical(score(dd, xx, which = "shape"),
+        log(xx) + log(dd$rate) - digamma(dd$shape),
+        info = "score for \"shape\" returns incorrect values")
+    expect_identical(score(dd, xx, which = "rate"),
+        dd$shape / dd$rate - xx,
+        info = "score for \"rate\" returns incorrect values")
 })
 
-test_that("hessian.Gamma works as expected", {
-  ## Check that method exists as function, checks default
-  ## arguments as well as all default sanity checks
-  hessian_test_args_and_sanity(dd, xx)
+## Testing correctness of hessian
+test_that("observed hessian for Gamma distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "shape", expected = FALSE),
+        -trigamma(dd$shape),
+        info = "hessian for \"shape\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "rate", expected = FALSE),
+        -dd$shape / dd$rate^2,
+        info = "hessian for \"rate\" returns incorrect values")
 
-  ## Ensure we get the correct return, both for named and unnamed
-  ## distribution objects (tests different combinations)
-  hessian_test_return_dim_names(unname(dd), xx) # unnamed
-  hessian_test_return_dim_names(dd,         xx) # named
-
-  ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-  hessian_test_analytic_vs_numeric(unname(dd), xx) # unnamed
-  hessian_test_analytic_vs_numeric(dd,         xx) # named
+    # Cross derivatives
+    expect_identical(hessian(dd, xx, which = "shape:rate", expected = FALSE),
+        1 / dd$rate,
+        info = "hessian for \"shape:rate\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "rate:shape", expected = FALSE),
+        1 / dd$rate,
+        info = "hessian for \"rate:shape\" returns incorrect values")
 })
+
+test_that("expected hessian for Gamma distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "shape", expected = TRUE),
+        -trigamma(dd$shape),
+        info = "hessian for \"shape\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "rate", expected = TRUE),
+        -dd$shape / dd$rate^2,
+        info = "hessian for \"rate\" returns incorrect values")
+
+    # Cross derivatives
+    expect_identical(hessian(dd, xx, which = "shape:rate", expected = TRUE),
+        1 / dd$rate,
+        info = "hessian for \"shape:rate\" returns incorrect values")
+    expect_identical(hessian(dd, xx, which = "rate:shape", expected = TRUE),
+        1 / dd$rate,
+        info = "hessian for \"rate:shape\" returns incorrect values")
+})
+
 

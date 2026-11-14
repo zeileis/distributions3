@@ -3,7 +3,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("Empirical default arguments", {
   expect_identical(formals(Empirical),

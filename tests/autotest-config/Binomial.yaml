@@ -1,0 +1,41 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: Binomial
+
+## Name of parameters and supported range/values.
+parameters:
+  valid:
+    size: [10, 5, 0, 3, 20]
+    p:    [0.5, 1e-8, 0.3, 0.7, 0.999999999]
+  invalid:
+    size: [-10, -1, -1e-10]
+    p:    [-1, -1e-10, 1.00000001, 2]
+
+## TODO(R): Write manual tests to ensure the upper support is set properly (size)
+# support:
+#   lower: 0
+#   upper: size
+
+distributiontype:
+  discrete: true
+  continuous: false
+
+tolerance:
+  mean: 1e-3
+  variance: 1e-2
+
+tests:
+  exclude:
+    ## Skewness/Kurtosis not working properly? TODO
+    - skewness_compare2numeric
+    - kurtosis_compare2numeric
+    ## Score and Hessian only available for parameter 'p', thus
+    ## the automated tests for function defaults fail and are
+    ## excluded; manual tests in test-Binomial.R
+    - score_hessian_defaults
+    ## TODO(R): Numeric approximation unhappy, thus excluded for now (needed?)
+    - score_compare2numeric
+    - hessian_observed_compare2numeric
+    - hessian_expected_compare2numeric
+

@@ -184,8 +184,9 @@ test_that("named return values for Uniform distribution work correctly", {
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
-suppressPackageStartupMessages(library("scoringRules"))
 test_that("crps method for Uniform returns correct object", {
+  skip_if_not_installed("scoringRules"); library("scoringRules")
+
   d <- Uniform(c(0, 10), c(1, 20))
   expect_silent(crps <- crps(d, 5.5))
   expect_type(crps, "double")

@@ -4,218 +4,101 @@
 
 if (interactive()) { library("distributions3"); library("testthat") }
 
-test_that("ChiSquare default arguments", {
-  expect_identical(formals(ChiSquare),
-    as.pairlist(alist(df = numeric())))
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- ChiSquare(c(10, 3, 5))
+xx <- 1:3                        # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(ChiSquare), as.pairlist(alist(df = numeric())))
 })
 
-test_that("print.ChiSquare works", {
-  expect_output(print(ChiSquare(df = 1)), regexp = "ChiSquare")
+## Sufficient statistics
+test_that("suff_stat.ChiSquare works correctly", {
+  expect_error(suff_stat(ChiSquare(5), 1:5), regexp = "no applicable method")
 })
 
-test_that("random.ChiSquare work correctly", {
-  cs <- ChiSquare(1)
-
-  expect_length(random(cs), 1)
-  expect_length(random(cs, 100), 100)
-  expect_length(random(cs[-1], 1), 0)
-  expect_length(random(cs, 0), 0)
-  expect_error(random(cs, -2))
- 
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(cs, c(1, 2, 3)), 3)
-  expect_length(random(cs, cbind(1, 2, 3)), 3)
-  expect_length(random(cs, rbind(1, 2, 3)), 3)
+## Fitting
+test_that("fit_mle.ChiSquare works correctly", {
+  expect_error(fit_mle(ChiSquare(5), 10), regexp = "no applicable method")
 })
 
-test_that("pdf.ChiSquare work correctly", {
-  cs <- ChiSquare(1)
-
-  expect_equal(pdf(cs, 0), Inf)
-  expect_equal(pdf(cs, 1), dchisq(1, 1))
-  expect_equal(pdf(cs, -12), 0)
-
-  expect_length(pdf(cs, seq_len(0)), 0)
-  expect_length(pdf(cs, seq_len(1)), 1)
-  expect_length(pdf(cs, seq_len(10)), 10)
+## Testing correctness of dpq methods
+test_that("pdf.ChiSquare/log_pdf.ChiSquare returns correct values", {
+  expect_identical(pdf(dd, xx),             dchisq(xx, dd$df),
+        info = "pdf.ChiSquare not identical to dchisq()")
+  expect_identical(pdf(dd, xx, log = TRUE), dchisq(xx, dd$df, log = TRUE),
+        info = "logarithm of pdf.ChiSquare not identical to dchisq(..., log = TRUE)")
+  expect_identical(log_pdf(dd, xx),         dchisq(xx, dd$df, log = TRUE),
+        info = "log_pdf.ChiSquare not identical to dchisq(..., log = TRUE)")
 })
 
-test_that("log_pdf.ChiSquare work correctly", {
-  cs <- ChiSquare(1)
-
-  expect_equal(log_pdf(cs, 0), Inf)
-  expect_equal(log_pdf(cs, 1), log(dchisq(1, 1)))
-  expect_equal(log_pdf(cs, -12), log(0))
-
-  expect_length(log_pdf(cs, seq_len(0)), 0)
-  expect_length(log_pdf(cs, seq_len(1)), 1)
-  expect_length(log_pdf(cs, seq_len(10)), 10)
+test_that("cdf.ChiSquare returns correct values", {
+  expect_identical(cdf(dd, xx),             pchisq(xx, dd$df),
+        info = "cdf.ChiSquare not identical to pchisq()")
+  expect_identical(cdf(dd, xx, log = TRUE), pchisq(xx, dd$df, log = TRUE),
+        info = "logarithm of cdf.ChiSquare not identical to pchisq(..., log = TRUE)")
 })
 
-test_that("cdf.ChiSquare work correctly", {
-  cs <- ChiSquare(1)
-
-  expect_equal(cdf(cs, 0), 0)
-  expect_equal(cdf(cs, 1), pchisq(1, 1))
-
-
-  expect_length(cdf(cs, seq_len(0)), 0)
-  expect_length(cdf(cs, seq_len(1)), 1)
-  expect_length(cdf(cs, seq_len(10)), 10)
+test_that("quantile.ChiSquare returns correct values", {
+  expect_identical(quantile(dd, pp),        qchisq(pp, dd$df),
+        info = "quantile.ChiSquare not identical to qchisq()")
 })
 
-test_that("quantile.ChiSquare work correctly", {
-  cs <- ChiSquare(1)
 
-  expect_equal(quantile(cs, 0), 0)
-  expect_equal(quantile(cs, 0.5), qchisq(0.5, 1))
-
-
-  expect_length(quantile(cs, seq_len(0)), 0)
-  expect_length(quantile(cs, c(0, 1)), 2)
+## Testing edge cases
+test_that("pdf.ChiSquare on edge case df = 0 works as stats::dchisq", {
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- pdf(d, 1:5))
+  expect_identical(x, dchisq(1:5, df = 0))
+})
+test_that("cdf.ChiSquare on edge case df = 0 works as stats::pchisq", {
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- cdf(d, 1:5))
+  expect_identical(x, pchisq(1:5, df = 0))
+})
+test_that("quantile.ChiSquare on edge case df = 0 works as stats::qchisq", {
+  p <- seq(0.05, 0.95, by = 0.05)
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- quantile(d, p))
+  expect_identical(x, qchisq(p, df = 0))
+})
+test_that("random.ChiSquare on edge case df = 0 works as stats::rchisq", {
+  expect_silent(d <- ChiSquare(0))
+  expect_silent(x <- random(d, 5))
+  expect_identical(x, rep(0.0, 5))
 })
 
-test_that("{moments}.ChiSquare work correctly", {
-  df <- 5
-  cs <- ChiSquare(5)
-
-  expect_equal(mean(cs), df)
-  expect_equal(variance(cs), 2 * df)
-  expect_equal(skewness(cs), sqrt(8 / df))
-  expect_equal(kurtosis(cs), 12 / df)
+## Testing correctness of moments
+test_that("moments for ChiSquare distribution return correct values", {
+    expect_identical(mean(dd), dd$df,
+        info = "mean.ChiSquare incorrect")
+    expect_identical(variance(dd), dd$df * 2,
+        info = "variance.ChiSquare incorrect")
+    expect_identical(skewness(dd), sqrt(8 / dd$df),
+        info = "skewness.ChiSquare incorrect")
+    expect_identical(kurtosis(dd), 12 / dd$df,
+        info = "kurtosis.ChiSquare incorrect")
 })
 
-test_that("vectorization of a ChiSquare distribution work correctly", {
-  d <- ChiSquare(c(1, 5))
-  d1 <- d[1]
-  d2 <- d[2]
-
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
+## Testing correctness of score
+test_that("score for ChiSquare distribution return correct values", {
+    expect_identical(score(dd, xx, which = "df"),
+        0.5 * log(xx) - 0.5 * log(2) - 0.5 * digamma(dd$df / 2),
+        info = "score for \"df\" returns incorrect values")
 })
 
-test_that("named return values for ChiSquare distribution work correctly", {
-  d <- ChiSquare(c(3, 10))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
+## Testing correctness of hessian
+test_that("observed hessian for ChiSquare distribution return correct values", {
+    expect_identical(hessian(dd, xx, which = "df", expected = FALSE),
+        - 1 / 4 * trigamma(dd$df / 2),
+        info = "hessian for \"df\" returns incorrect values")
 })
 
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
+## currently no analytic solution for expected hessian (TODO)
 
-## Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
-
-test_that("score.ChiSquare works as expected", {
-    ## Objects used for testing
-    d <- ChiSquare(3:1)
-    x <- 1:3
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic score vs. numeric approximation (score.distribution)
-    score_test_analytic_vs_numeric(d, x)
-})
-
-test_that("hessian.ChiSquare works as expected", {
-    ## Objects used for testing
-    d <- ChiSquare(3:1)
-    x <- 1:3
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
-})
+## currently no analytic solution for crps (TODO)
 

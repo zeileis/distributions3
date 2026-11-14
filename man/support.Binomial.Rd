@@ -9,7 +9,7 @@
 \arguments{
 \item{d}{An \code{Binomial} object created by a call to \code{\link[=Binomial]{Binomial()}}.}
 
-\item{drop}{logical. Shoul the result be simplified to a vector if possible?}
+\item{drop}{logical. Should the result be simplified to a vector if possible?}
 
 \item{...}{Currently not used.}
 }
