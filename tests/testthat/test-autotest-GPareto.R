@@ -764,13 +764,28 @@ test_that("[autotest_score_hessian_defaults]: score and hessian methods for GPar
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_identical(formals(getFromNamespace("score.GPareto", ns = "distributions3")),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)),
-        info = "unexpected arguments/defaults for S3 method score.GPareto")
 
-    expect_identical(formals(getFromNamespace("hessian.GPareto", ns = "distributions3")),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)),
-        info = "unexpected arguments/defaults for S3 method hessian.GPareto")
+    ## TODO(R): This is a temporary fix and should be removed in the future!
+    if ("cores" %in% names(formals(getFromNamespace("score.GPareto", ns = "distributions3")))) {
+        expect_identical(formals(getFromNamespace("score.GPareto", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =, cores = NULL)),
+            info = "unexpected arguments/defaults for S3 method score.GPareto")
+    } else {
+        expect_identical(formals(getFromNamespace("score.GPareto", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)),
+            info = "unexpected arguments/defaults for S3 method score.GPareto")
+    }
+
+    ## TODO(R): This is a temporary fix and should be removed in the future!
+    if ("cores" %in% names(formals(getFromNamespace("hessian.GPareto", ns = "distributions3")))) {
+        expect_identical(formals(getFromNamespace("hessian.GPareto", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =, cores = NULL)),
+            info = "unexpected arguments/defaults for S3 method hessian.GPareto")
+    } else {
+        expect_identical(formals(getFromNamespace("hessian.GPareto", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)),
+            info = "unexpected arguments/defaults for S3 method hessian.GPareto")
+    }
 });
 
 

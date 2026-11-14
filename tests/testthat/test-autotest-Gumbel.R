@@ -798,13 +798,28 @@ test_that("[autotest_score_hessian_defaults]: score and hessian methods for Gumb
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_identical(formals(getFromNamespace("score.Gumbel", ns = "distributions3")),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)),
-        info = "unexpected arguments/defaults for S3 method score.Gumbel")
 
-    expect_identical(formals(getFromNamespace("hessian.Gumbel", ns = "distributions3")),
-        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)),
-        info = "unexpected arguments/defaults for S3 method hessian.Gumbel")
+    ## TODO(R): This is a temporary fix and should be removed in the future!
+    if ("cores" %in% names(formals(getFromNamespace("score.Gumbel", ns = "distributions3")))) {
+        expect_identical(formals(getFromNamespace("score.Gumbel", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =, cores = NULL)),
+            info = "unexpected arguments/defaults for S3 method score.Gumbel")
+    } else {
+        expect_identical(formals(getFromNamespace("score.Gumbel", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, ... =)),
+            info = "unexpected arguments/defaults for S3 method score.Gumbel")
+    }
+
+    ## TODO(R): This is a temporary fix and should be removed in the future!
+    if ("cores" %in% names(formals(getFromNamespace("hessian.Gumbel", ns = "distributions3")))) {
+        expect_identical(formals(getFromNamespace("hessian.Gumbel", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =, cores = NULL)),
+            info = "unexpected arguments/defaults for S3 method hessian.Gumbel")
+    } else {
+        expect_identical(formals(getFromNamespace("hessian.Gumbel", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =)),
+            info = "unexpected arguments/defaults for S3 method hessian.Gumbel")
+    }
 });
 
 
