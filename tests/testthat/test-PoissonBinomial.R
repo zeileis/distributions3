@@ -76,6 +76,13 @@ test_that("quantile.PoissonBinomial work correctly", {
   expect_length(quantile(pb, c(0, 1)), 2)
 })
 
+test_that("quantile.PoissonBinomial throws warning if p is out of range", {
+  skip_if_not_installed("PoissonBinomial")
+  pb <- PoissonBinomial(0.5, 0.3, 0.8)
+  expect_error(quantile(pb, -1e10))
+  expect_error(quantile(pb, 1 + 1e10))
+})
+
 test_that("vectorization of a PoissonBinomial distribution work correctly", {
   skip_if_not_installed("PoissonBinomial")
   d <- PoissonBinomial(c(0.5, 0.1), c(0.3, 0.9), c(0.8, 0.6))

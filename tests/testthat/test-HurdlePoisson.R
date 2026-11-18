@@ -75,6 +75,11 @@ test_that("quantile.HurdlePoisson work correctly", {
   expect_length(quantile(p, c(0, 1)), 2)
 })
 
+test_that("quantile.HurdlePoisson throws warning if p is out of range", {
+  expect_error(quantile(dd, -1e10))
+  expect_error(quantile(dd, 1 + 1e10))
+})
+
 test_that("vectorization of a HurdlePoisson distribution work correctly", {
   d <- HurdlePoisson(0.7, 1:2)
   d1 <- d[1]

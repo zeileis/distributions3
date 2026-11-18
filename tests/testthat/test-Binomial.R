@@ -52,6 +52,10 @@ test_that("quantile.Binomial returns correct values", {
         info = "quantile.Binomial not identical to qbinom()")
 })
 
+test_that("quantile.Binomial throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 ## Testing correctness of moments
 test_that("moments for Binomial distribution return correct values", {

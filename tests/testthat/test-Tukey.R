@@ -67,6 +67,11 @@ test_that("vectorization of a Tukey distribution work correctly", {
   expect_null(dim(support(d1)))
   expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
 })
+test_that("quantile.Tukey throws warning if p is out of range", {
+  d <- Tukey(3, 5, 2)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
 
 test_that("named return values for Tukey distribution work correctly", {
   d <- Tukey(c(3L, 4L), 16L, 2L)

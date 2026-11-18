@@ -59,6 +59,10 @@ test_that("quantile.Poisson returns correct values", {
         info = "quantile.Poisson not identical to qpois()")
 })
 
+test_that("quantile.Poisson throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 ## Testing edge cases
 test_that("pdf.Poisson on edge case lambda = 0 works as stats::dpois", {

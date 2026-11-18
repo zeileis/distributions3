@@ -12,7 +12,7 @@ test_that("SinhArcsinh exists and has correct defaults", {
         info = "arguments or default arguments not as expected")
 })
 
-test_that("Empirical unexpected input", {
+test_that("SinhArcsinh unexpected input", {
     # Testing length mismatch error (not all combinations are tested!)
     expect_error(SinhArcsinh(mu = 1:2, sigma = 1:3),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
@@ -20,7 +20,7 @@ test_that("Empirical unexpected input", {
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
 })
 
-test_that("Empirical construction works", {
+test_that("SinhArcsinh construction works", {
 
     ## Using defaults
     expect_silent(d <- SinhArcsinh())
@@ -59,7 +59,7 @@ test_that("Empirical construction works", {
     expect_identical(names(d), LETTERS[1:5])
 })
 
-test_that("Empirical support method works", {
+test_that("SinhArcsinh support method works", {
     # Checking defaults
     expect_identical(formals(distributions3:::support.SinhArcsinh),
         as.pairlist(alist(d =, drop = TRUE, ... =)))
@@ -253,8 +253,14 @@ test_that("quantile.SinhArcsinh works as expected", {
                      tolerance = 1e-5)
 })
 
+test_that("quantile.SinhArcsinh throws warning if p is out of range", {
+  d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
+             nu = c(1, 1, 0.5), tau = c(0.5, 1, 1))
+  expect_error(quantile(g3, -1e10))
+  expect_error(quantile(g3, 1 + 1e10))
+})
 
-test_that("random.Empirical works as expected", {
+test_that("random.SinhArcsinh works as expected", {
     d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
@@ -294,8 +300,8 @@ test_that("random.Empirical works as expected", {
 
 test_that("testing central moments of SinhArcsinh", {
     # Checking defaults
-    expect_identical(formals(distributions3:::mean.Empirical),
-            as.pairlist(alist(x =, ... =)))
+    expect_identical(formals(distributions3:::mean.SinhArcsinh),
+            as.pairlist(alist(x =, cores = NULL, ... =)))
 
     ## With SinhArcsinh(mu = 6, sigma = 5.5, nu = 1, tau = 1)
     ## the expectation (mean) should be 6, variance 5.5^2,

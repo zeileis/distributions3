@@ -74,6 +74,12 @@ test_that("quantile.ZTPoisson work correctly", {
   expect_length(quantile(p, c(0, 1)), 2)
 })
 
+test_that("quantile.ZTPoisson throws warning if p is out of range", {
+  d <- ZTPoisson(1:2)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
+
 test_that("vectorization of a ZTPoisson distribution work correctly", {
   d <- ZTPoisson(c(1, 2))
   d1 <- d[1]

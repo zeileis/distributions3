@@ -237,6 +237,10 @@ test_that("quantile.Empirical works as expected", {
 
 })
 
+test_that("quantile.Empirical throws warning if p is out of range", {
+  expect_error(quantile(d, -1e10), regexp = "outside")
+  expect_error(quantile(d, 1 + 1e10), regexp = "outside")
+})
 
 test_that("random.Empirical works as expected", {
     # Checking defaults

@@ -50,6 +50,10 @@ test_that("quantile.Normal returns correct values", {
   expect_identical(quantile(dd, pp),        qnorm(pp, dd$mu, dd$sigma),
         info = "quantile.Normal not identical to qnorm()")
 })
+test_that("quantile.Normal throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 
 ## Testing edge cases

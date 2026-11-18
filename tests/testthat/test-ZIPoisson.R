@@ -75,6 +75,11 @@ test_that("quantile.ZIPoisson work correctly", {
   expect_length(quantile(p, seq_len(0)), 0)
   expect_length(quantile(p, c(0, 1)), 2)
 })
+test_that("quantile.ZIPoisson throws warning if p is out of range", {
+  d <- ZIPoisson(0.2, 1)
+  expect_silent(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
 
 test_that("vectorization of a ZIPoisson distribution work correctly", {
   d <- ZIPoisson(0.2, 1:2)

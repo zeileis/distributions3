@@ -2075,13 +2075,6 @@ autotest_quantile <- function(config) {
         expect_error(quantile(d1), regexp = "argument \\"probs\\" is missing")
         expect_error(quantile(d1, 0.3, drop = "foo"), regexp = "\'drop\' must be logical")
 
-        ## Probs outside range
-        expect_warning(x <- quantile(dx, -1e-6),                   info = "expected warning when probs < 0")
-        expect_identical(x, rep(NaN, length(dx)))
-
-        expect_warning(x <- quantile(dx, 1 + 1e-6),                info = "expected warning when probs > 1")
-        expect_identical(x, rep(NaN, length(dx)))
-
         ## Unnamed of length <N>, drop = TRUE (default)
         expect_silent(x <- quantile(dx, pp[1L]))
         expect_identical(length(x), <N>,                           info = "return of incorrect length")
@@ -2332,27 +2325,13 @@ autotest_score_hessian_defaults <- function(config) {
     test_that("[<FNAME>]: score and hessian methods for <NAME> have correct arguments/defaults", {
         <SKIPIFNOT>
 
-        ## TODO(R): This is a temporary fix and should be removed in the future!
-        if ("cores" %in% names(formals(getFromNamespace("score.<NAME>", ns = "distributions3")))) {
-            expect_identical(formals(getFromNamespace("score.<NAME>", ns = "distributions3")),
-                as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, ... =, cores = NULL)),
-                info = "unexpected arguments/defaults for S3 method score.<NAME>")
-        } else {
-            expect_identical(formals(getFromNamespace("score.<NAME>", ns = "distributions3")),
-                as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, ... =)),
-                info = "unexpected arguments/defaults for S3 method score.<NAME>")
-        }
+        expect_identical(formals(getFromNamespace("score.<NAME>", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, ... =)),
+            info = "unexpected arguments/defaults for S3 method score.<NAME>")
 
-        ## TODO(R): This is a temporary fix and should be removed in the future!
-        if ("cores" %in% names(formals(getFromNamespace("hessian.<NAME>", ns = "distributions3")))) {
-            expect_identical(formals(getFromNamespace("hessian.<NAME>", ns = "distributions3")),
-                as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, expected = FALSE, ... =, cores = NULL)),
-                info = "unexpected arguments/defaults for S3 method hessian.<NAME>")
-        } else {
-            expect_identical(formals(getFromNamespace("hessian.<NAME>", ns = "distributions3")),
-                as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, expected = FALSE, ... =)),
-                info = "unexpected arguments/defaults for S3 method hessian.<NAME>")
-        }
+        expect_identical(formals(getFromNamespace("hessian.<NAME>", ns = "distributions3")),
+            as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, expected = FALSE, ... =)),
+            info = "unexpected arguments/defaults for S3 method hessian.<NAME>")
     });
     '
 

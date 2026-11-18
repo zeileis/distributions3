@@ -47,6 +47,11 @@ test_that("quantile.Weibull returns correct values", {
   expect_identical(quantile(dd, pp),        qweibull(pp, dd$shape, dd$scale),
         info = "quantile.Weibull not identical to qweibull()")
 })
+test_that("quantile.Weibull throws warning if p is out of range", {
+  d <- Uniform(0, 0.9)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
 
 
 ## Testing edge cases

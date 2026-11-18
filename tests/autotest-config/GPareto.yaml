@@ -32,15 +32,9 @@ skip_if_not_installed: revdbayes
 
 tests:
   exclude:
-    ## TODO: revdbayes::dgp throws error for NA scale, thus excluded for now
-    ## (as for Gumbel).
-    - params_NA
     ## TODO(R): Check numeric variance and kurtosis
     - variance_compare2numeric
     - kurtosis_compare2numeric
-    ## TODO: revdbayes::qgp throws error (not warning) if p not in [0, 1],
-    ## thus excluded for now (as for Gumbel).
-    - quantile
     ## The support depends on the parameters (lower end point mu, and mu - sigma / xi
     ## for xi < 0), so the fixed support above does not apply.
     - support

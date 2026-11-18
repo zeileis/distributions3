@@ -68,6 +68,10 @@ test_that("quantile.Logistic on edge case scale = 0 works as stats::qlogis", {
   expect_silent(x <- quantile(d, p))
   expect_identical(x, qlogis(p, location = l, scale = 0))
 })
+test_that("quantile.Logistic throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 test_that("random.Logistic on edge case scale = 0 works as stats::rlogis", {
   expect_silent(d <- Logistic(10.5, 0))
   expect_silent(x <- random(d, 5))

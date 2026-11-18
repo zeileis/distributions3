@@ -72,6 +72,12 @@ test_that("quantile.Beta work correctly", {
   expect_length(quantile(b, c(0, 1)), 2)
 })
 
+test_that("quantile.Beta throws warning if p is out of range", {
+  b <- Beta(1, 2)
+  expect_warning(quantile(b, -1e10))
+  expect_warning(quantile(b, 1 + 1e10))
+})
+
 test_that("{moments}.Beta work correctly", {
   b <- Beta(1, 1)
 

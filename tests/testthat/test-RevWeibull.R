@@ -92,6 +92,13 @@ test_that("quantile.RevWeibull works correctly", {
   expect_length(quantile(g3, seq_len(10) / 10), 10)
 })
 
+test_that("quantile.RevWeibull throws warning if p is out of range", {
+  skip_if_not_installed("revdbayes")
+
+  expect_error(quantile(g3, -1e10))
+  expect_error(quantile(g3, 1 + 1e10))
+})
+
 test_that("cdf.RevWeibull and quantile.RevWeibull are consistent", {
   skip_if_not_installed("revdbayes")
 

@@ -51,7 +51,10 @@ test_that("quantile.LogNormal returns correct values", {
   expect_identical(quantile(dd, pp),        qlnorm(pp, dd$log_mu, dd$log_sigma),
         info = "quantile.LogNormal not identical to qlnorm()")
 })
-
+test_that("quantile.LogNormal throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 ## Testing edge cases
 test_that("pdf.LogNormal on edge case log_sd = 0 works as stats::dlnorm", {

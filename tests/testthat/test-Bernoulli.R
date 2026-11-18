@@ -52,6 +52,10 @@ test_that("quantile.Bernoulli returns correct values", {
         info = "quantile.Bernoulli not identical to qbinom(..., size = 1)")
 })
 
+test_that("quantile.Bernoulli throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 ## Testing correctness of moments
 test_that("moments for Bernoulli distribution return correct values", {

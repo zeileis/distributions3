@@ -73,6 +73,11 @@ test_that("quantile.ZTNegativeBinomial work correctly", {
   expect_length(quantile(p, seq_len(0)), 0)
   expect_length(quantile(p, c(0, 1)), 2)
 })
+test_that("quantile.ZTNegativeBinomial throws warning if p is out of range", {
+  d <- ZTNegativeBinomial(mu = 1, theta = 1)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
 
 test_that("vectorization of a ZTNegativeBinomial distribution work correctly", {
   d <- ZTNegativeBinomial(mu = c(1, 2), theta = 1)

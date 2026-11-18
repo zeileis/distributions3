@@ -75,6 +75,11 @@ test_that("quantile.HurdleNegativeBinomial work correctly", {
   expect_length(quantile(p, c(0, 1)), 2)
 })
 
+test_that("quantile.HurdleNegativeBinomial throws warning if p is out of range", {
+  expect_error(quantile(dd, -1e10))
+  expect_error(quantile(dd, 1 + 1e10))
+})
+
 test_that("vectorization of a HurdleNegativeBinomial distribution work correctly", {
   d <- HurdleNegativeBinomial(pi = 0.7, mu = c(1, 2), theta = 1)
   d1 <- d[1]

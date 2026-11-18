@@ -183,6 +183,11 @@ test_that("quantile.GEV works correctly", {
   expect_length(quantile(g3, seq_len(10) / 10), 10)
 })
 
+test_that("quantile.GEV throws warning if p is out of range", {
+  expect_error(quantile(dd, -1e10))
+  expect_error(quantile(dd, 1 + 1e10))
+})
+
 test_that("cdf.GEV and quantile.GEV are consistent", {
   skip_if_not_installed("revdbayes")
 

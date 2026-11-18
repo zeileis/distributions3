@@ -52,6 +52,10 @@ test_that("quantile.Geometric returns correct values", {
         info = "quantile.Geometric not identical to qgeom()")
 })
 
+test_that("quantile.Geometric throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 ## Testing edge cases
 test_that("pdf.Geometric on edge case p = 0 or 1 works as stats::dgeom", {

@@ -52,6 +52,10 @@ test_that("quantile.ExponentialR returns correct values", {
         info = "quantile.ExponentialR not identical to qexp()")
 })
 
+test_that("quantile.ExponentialR throws warning if p is out of range", {              
+  expect_warning(quantile(dd, -1e10))                                           
+  expect_warning(quantile(dd, 1 + 1e10))                                        
+})
 
 ## Testing edge cases
 test_that("pdf.ExponentialR on edge case mu = 0 works as expected", {

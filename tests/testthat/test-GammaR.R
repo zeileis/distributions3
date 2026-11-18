@@ -56,6 +56,10 @@ test_that("quantile.GammaR returns correct values", {
         info = "quantile.GammaR not identical to qgamma()")
 })
 
+test_that("quantile.GammaR throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
 
 ## Testing correctness of moments
 test_that("moments for GammaR distribution return correct values", {

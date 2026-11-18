@@ -67,6 +67,11 @@ test_that("quantile.StudentsT on edge case sigma = 0 works as stats::qt", {
   expect_silent(x <- suppressWarnings(quantile(d, p)))
   expect_identical(x, suppressWarnings(qt(p, df = 0)))
 })
+test_that("quantile.StudentT throws warning if p is out of range", {
+  d <- StudentsT(1:5)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
 test_that("random.StudentsT on edge case sigma = 0 works as stats::rt", {
   expect_silent(d <- StudentsT(0))
   expect_silent(x <- suppressWarnings(random(d, 5)))

@@ -63,6 +63,11 @@ test_that("quantile.Gumbel returns correct values", {
         info = "quantile.Gumbel not identical to qnorm()")
 })
 
+test_that("quantile.Gumbel throws warning if p is out of range", {
+  expect_error(quantile(dd, -1e10))
+  expect_error(quantile(dd, 1 + 1e10))
+})
+
 ## Testing correctness of moments
 test_that("moments for Gumbel distribution return correct values", {
   expect_identical(mean(dd), dd$mu + dd$sigma * -digamma(1),

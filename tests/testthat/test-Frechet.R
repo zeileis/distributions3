@@ -87,6 +87,12 @@ test_that("quantile.Frechet works correctly", {
   expect_length(quantile(g1, seq_len(10) / 10), 10)
 })
 
+test_that("quantile.Frechet throws warning if p is out of range", {
+  d <- Frechet(-10, 10, 5)
+  expect_error(quantile(d, -1e10))
+  expect_error(quantile(d, 1 + 1e10))
+})
+
 test_that("cdf.Frechet and quantile.Frechet are consistent", {
   skip_if_not_installed("revdbayes")
 

@@ -82,6 +82,12 @@ test_that("quantile.Gamma on edge case shape = 0 or rate = 0 works as stats::qga
   expect_silent(x <- quantile(d, 1:9/10))
   expect_identical(x, qgamma(1:9/10, shape = 0, rate = 1))
 })
+test_that("quantile.Gamma throws warning if p is out of range", {
+  expect_silent(d <- Gamma(0, 1))
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
+
 test_that("random.Gamma on edge case shape = 0 or rate = 0 works as stats::rgamma", {
   expect_silent(d <- Gamma(1, 0))
   expect_silent(x <- random(d, 5))

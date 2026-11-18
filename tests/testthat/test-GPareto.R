@@ -133,6 +133,11 @@ test_that("pdf.GPareto works correctly", {
   expect_length(pdf(g3, seq_len(10)), 10)
 })
 
+test_that("quantile.GPareto throws warning if p is out of range", {
+  expect_error(quantile(dd, -1e10))
+  expect_error(quantile(dd, 1 + 1e10))
+})
+
 test_that("log_pdf.GPareto works correctly", {
   skip_if_not_installed("revdbayes")
 

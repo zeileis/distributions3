@@ -33,12 +33,6 @@ tests:
     ## The support depends on the parameters (see above), so the fixed support
     ## above does not apply.
     - support
-    ## TODO: revdbayes::qgev throws error (not warning) if p not in [0, 1],
-    ## thus excluded for now (as for Gumbel).
-    - quantile
-    ## TODO: revdbayes::dgev throws error for NA scale, thus excluded for now
-    ## (as for Gumbel).
-    - params_NA
     ## TODO: the numeric fallback for the expected hessian (stats::integrate over
     ## the density, truncated at the 1e-6 quantile) is inaccurate for this bounded
     ## or heavy-tailed support (errors of several percent).

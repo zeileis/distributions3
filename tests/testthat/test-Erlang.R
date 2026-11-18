@@ -48,6 +48,11 @@ test_that("quantile.Erlang returns correct values", {
         info = "quantile.Erlang not identical to qgamma()")
 })
 
+test_that("quantile.Erlang throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
+})
+
 ## currently no analytic solution for moments
 
 ## Testing correctness of score

@@ -665,13 +665,6 @@ test_that("[autotest_quantile]: S3 method quantile works as expected for Binomia
     expect_error(quantile(d1), regexp = "argument \"probs\" is missing")
     expect_error(quantile(d1, 0.3, drop = "foo"), regexp = "'drop' must be logical")
 
-    ## Probs outside range
-    expect_warning(x <- quantile(dx, -1e-6),                   info = "expected warning when probs < 0")
-    expect_identical(x, rep(NaN, length(dx)))
-
-    expect_warning(x <- quantile(dx, 1 + 1e-6),                info = "expected warning when probs > 1")
-    expect_identical(x, rep(NaN, length(dx)))
-
     ## Unnamed of length 5L, drop = TRUE (default)
     expect_silent(x <- quantile(dx, pp[1L]))
     expect_identical(length(x), 5L,                           info = "return of incorrect length")

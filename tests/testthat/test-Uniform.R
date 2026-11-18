@@ -84,6 +84,12 @@ test_that("quantile.Uniform work correctly", {
   expect_length(quantile(u, c(0, 1)), 2)
 })
 
+test_that("quantile.Uniform throws warning if p is out of range", {
+  d <- Uniform(0, 0.9)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
+
 test_that("{moments}.Uniform work correctly", {
   u <- Uniform()
 
