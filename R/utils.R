@@ -637,3 +637,45 @@ median.distribution <- function(x, na.rm = FALSE, ...) {
     quantile(x, probs = 0.5, ...)
 }
 
+#' Prepare Return of deriv2 Methods
+#'
+#' Auxilary function preparing the final object returned by the `deriv2` methods.
+#'
+#' @param x `NULL` or a named list with calculated scores/Hessian.
+#' @param which named character vector, where the names of the vector correspond
+#'        to the calculated derivatives, the content to the requested derivatives.
+#'        See also [get_deriv_names()].
+#' @param drop logical.
+#' @param distribution_names `NULL` or character vector, names of the distribution
+#'        object the scores are calculated for.
+#'
+#' @return If `drop = TRUE` and only one derivative is present/requested (i.e.,
+#' `length(x) == length(which) == 1L`) a numeric vector is returned. Else
+#' a matrix is returned containing the corresponding derivatives.
+prep_deriv2_return <- function(x, which, drop, distribution_names) {
+  if (is.null(x)) return(NULL)
+  ## If drop equals TRUE and only one derivative was calculated
+  if (drop && length(which) == 1L) return(setNames(x[[1]], distribution_names))
+  ## Else combine to matrix and prepare return
+  x <- do.call("cbind", x)
+  dimnames(x) <- list(distribution_names, colnames(x))
+  if (!identical(colnames(x), which)) x <- x[, names(which), drop = FALSE]
+  colnames(x) <- unname(which)
+  return(x)
+}
+
+#' Get Parameters to be Calculated in deriv2
+#'
+#' @param d object of class distribution.
+#' @param which `NULL` or character vector. If `NULL` all available parameters
+#'        will returned. If character, the user-specified parameters are returned.
+#' @param expand logical. To be set `FALSE` for score, `TRUE` for Hessian.
+#'
+#' @return Named character vector with the parameters (derivatives) to be calculated
+#' by the deriv2 method. The values correspond to the user-exposed derivatives,
+#' the names of the vector of names used internally.
+get_deriv2_params <- function(d, which, expand) {
+    params <- get_deriv_names(names(unclass(d)), expand = expand)
+    if (is.null(which)) params else match.arg(which, params, several.ok = TRUE)
+}
+

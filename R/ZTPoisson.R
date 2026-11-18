@@ -439,6 +439,7 @@ hessian.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, expected = FA
   return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
 
+#' @exportS3Method
 #' @useDynLib distributions3, .registration = TRUE
 deriv2.ZTPoisson <- function(d, x, which.score = NULL, which.hessian = NULL, drop = TRUE, expected = FALSE, cores = 1L, ...) {
 

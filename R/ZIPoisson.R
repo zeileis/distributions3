@@ -442,6 +442,7 @@ hessian.ZIPoisson <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
   return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
 
+#' @exportS3Method
 #' @useDynLib distributions3, .registration = TRUE
 deriv2.ZIPoisson <- function(d, x, which.score = NULL, which.hessian = NULL, drop = TRUE, expected = FALSE, cores = 1L, ...) {
 

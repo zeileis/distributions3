@@ -385,15 +385,15 @@ is_continuous.HurdlePoisson <- function(d, ...) {
 #' @usage NULL
 #' @exportS3Method
 score.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, ..., cores = NULL) {
+
+  ## Shortcutting trough C
+  if (!is.null(cores)) return(deriv2.HurdlePoisson(d, x, which, order = 1L, drop = drop))
+
+  ######################################################
   n      <- max_length(d, x)
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
   x      <- rep_len(x, n)
-
-  ## Shortcutting trough C
-  if (!is.null(cores)) {
-    return(deriv2.HurdlePoisson(d, x, which.score = which, which.hessian = NA, drop = drop, cores = cores)$score)
-  }
 
   scr <- function(par, d, x) {
     ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
@@ -416,15 +416,14 @@ hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FA
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
   if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
+  ## Shortcutting trough C
+  if (!is.null(cores)) return(deriv2.HurdlePoisson(d, x, which = which, order = 2L, drop = drop, expected = expected))
+
+  ######################################################
   n      <- max_length(d, x)
   params <- names(unclass(d))
   which  <- get_deriv_names(params, which = which, expand = TRUE)
   x      <- rep_len(x, n)
-
-  ## Shortcutting trough C
-  if (!is.null(cores)) {
-    return(deriv2.HurdlePoisson(d, x, which.score = NA, which.hessian = which, drop = drop, expected = expected, cores = cores)$hessian)
-  }
 
   ## observed Hessian, evaluated at x (integer support only, 0 elsewhere)
   hess_obs <- function(par, d, x) {
@@ -454,71 +453,58 @@ hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FA
   return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }
 
+
+#' @exportS3Method
 #' @useDynLib distributions3, .registration = TRUE
-deriv2.HurdlePoisson <- function(d, x, which.score = NULL, which.hessian = NULL, drop = TRUE, expected = FALSE, cores = 1L, ...) {
+deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  ## If order == 2 and expected == TRUE we allow x to be NULL or missing (as
+  ## the expected Hessian does ont depend on x).
+  order <- unique(as.integer(order))
+  if (identical(order, 2L) && expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
   n        <- max_length(d, x)
   cores    <- as.integer(cores)[[1L]]
   expected <- as.logical(expected)[[1L]]
+
   stopifnot(
     "argument 'cores' must evaluate to positive integer" =
         is.integer(cores) && length(cores) == 1L && cores >= 1L,
     "argument 'expected' must evaluate to TRUE or FALSE" =
-        isTRUE(expected) || isFALSE(expected)
+        isTRUE(expected) || isFALSE(expected),
+    "argument 'order' must evaluate to 1, 2, or 1:2" =
+        length(order) > 0 && all(order %in% 1:2)
   )
 
-  ## generate names of all 'parameters' (derivatives).
-  params   <- names(unclass(d))
-  pscore   <- get_deriv_names(params, expand = FALSE)
-  phessian <- get_deriv_names(params, expand = TRUE)
+  ## List w/ two logical values, whether or not 'scores' and/or 'Hessian' has to be calculated
+  calc <- list(score = 1L %in% order, hessian = 2L %in% order)
 
-  ## If which.score is NULL or which.hessian is NULL: Take all available,
-  ## else ensure the user-specified parameters are valid/available.
-  if (!isTRUE(is.na(which.score)))
-    which.score   <- if (is.null(which.score))   pscore   else match.arg(which.score,   pscore,   several.ok = TRUE)
-  if (!isTRUE(is.na(which.hessian)))
-    which.hessian <- if (is.null(which.hessian)) phessian else match.arg(which.hessian, phessian, several.ok = TRUE)
-
-  ## Unique derivative names (the hessian is symmetric, so compute each pair once).
-  ws <- if (isTRUE(is.na(which.score))) NA else unique(names(which.score))
-  wh <- if (isTRUE(is.na(which.hessian))) NA else unique(names(which.hessian))
+  ## Which parameters to return
+  which.score   <- if (!calc$score)   NA else get_deriv2_params(d, which, expand = FALSE)
+  which.hessian <- if (!calc$hessian) NA else get_deriv2_params(d, which, expand = TRUE)
 
   ## Setting up objects to be filled by the c code
   ## Named list as expected by the C functions.
   fn <- function(x, n) {
       if (isTRUE(is.na(x))) return(NULL)
+      x <- unique(names(x))
       setNames(lapply(seq_along(x), function(n, ...) numeric(n), n = n), x)
   }
-  score   <- fn(ws, n = n)
-  hessian <- fn(wh, n = n)
+  score   <- fn(which.score,   n = n)
+  hessian <- fn(which.hessian, n = n)
 
   ## Note that .Call has no named arguments, they are only for orientation
   .Call("c_deriv_HurdlePoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
         score_sexp = score, hessian_sexp = hessian,
         expected = as.logical(expected), ncores = as.integer(cores))
 
-  ## Preparing return
-  if (!is.null(score)) {
-    if (drop && length(which.score) == 1L) {
-      score <- setNames(score[[1]], names(d))
-    } else {
-      score <- do.call("cbind", score)
-      dimnames(score) <- list(names(d), ws)
-      if (!identical(ws, which.score)) score <- score[, names(which.score), drop = FALSE]
-      colnames(score) <- unname(which.score)
-    }
-  }
+  ## Combining and preparing results returned by the C function
+  res <- list(score   = prep_deriv2_return(score,   which.score,   drop = drop, distribution_names = names(d)),
+              hessian = prep_deriv2_return(hessian, which.hessian, drop = drop, distribution_names = names(d)))
 
-  if (!is.null(hessian)) {
-    if (drop && length(which.hessian) == 1L) {
-      hessian <- setNames(hessian[[1]], names(d))
-    } else {
-      hessian <- do.call("cbind", hessian)
-      dimnames(hessian) <- list(names(d), wh)
-      if (!identical(wh, which.hessian)) hessian <- hessian[, names(which.hessian), drop = FALSE]
-      colnames(hessian) <- unname(which.hessian)
-    }
-  }
-
-  return(list(score = score, hessian = hessian))
+  ## Either return list with $score and $hessian if order is 1:2, else only the
+  ## content of the corresponding list element.
+  return(if (calc$score && calc$hessian) res else if (calc$score) res$score else res$hessian)
 }
+
+
