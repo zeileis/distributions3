@@ -476,12 +476,9 @@ deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, e
         length(order) > 0 && all(order %in% 1:2)
   )
 
-  ## List w/ two logical values, whether or not 'scores' and/or 'Hessian' has to be calculated
-  calc <- list(score = 1L %in% order, hessian = 2L %in% order)
-
   ## Which parameters to return
-  which.score   <- if (!calc$score)   NA else get_deriv2_params(d, which, expand = FALSE)
-  which.hessian <- if (!calc$hessian) NA else get_deriv2_params(d, which, expand = TRUE)
+  which.score   <- if (1L %in% order) get_deriv2_params(d, which, expand = FALSE) else NA
+  which.hessian <- if (2L %in% order) get_deriv2_params(d, which, expand = TRUE)  else NA
 
   ## Setting up objects to be filled by the c code
   ## Named list as expected by the C functions.
@@ -495,8 +492,8 @@ deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, e
 
   ## Note that .Call has no named arguments, they are only for orientation
   .Call("c_deriv_HurdlePoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
-        score_sexp = score, hessian_sexp = hessian,
-        expected = as.logical(expected), ncores = as.integer(cores))
+        score_sexp   = score, hessian_sexp = hessian, # <- score/hessian are filled by the C
+        expected     = as.logical(expected), ncores = as.integer(cores))
 
   ## Combining and preparing results returned by the C function
   res <- list(score   = prep_deriv2_return(score,   which.score,   drop = drop, distribution_names = names(d)),
@@ -504,7 +501,7 @@ deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, e
 
   ## Either return list with $score and $hessian if order is 1:2, else only the
   ## content of the corresponding list element.
-  return(if (calc$score && calc$hessian) res else if (calc$score) res$score else res$hessian)
+  return(if (identical(order, 1:2)) res else if (identical(order, 1L)) res$score else res$hessian)
 }
 
 
