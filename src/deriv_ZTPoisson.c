@@ -101,16 +101,15 @@ SEXP c_deriv_ZTPoisson(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hess
 
         // Calculating score and hessian
         double q  = exp(-lambda);
-        double om = 1 - q;          // 1 - q
-        double r  = q / om;         // 1 / (1 - q)
-        bool   x0 = round(x) == 0;
+        double om = 1 - q;
+        bool   ok = x >= 1.0 && fabs(x - round(x)) < eps;
 
-        // Calculating score:  x / lambda - 1 - q / (1 - q)
+        // Calculating score
         if (req_scores & PARAM_LAMBDA) {
             if (ISNAN(x)) {
-                s_lambda[i] = R_NaN;
-            } else {
-                s_lambda[i] = x0 ? 0.0: x / lambda - 1 - r;
+                s_lambda[i] = R_NaN; // x is NaN
+            } else if (ok) {
+                s_lambda[i] = x / lambda - 1 - 1 / expm1(lambda);
             }
         }
 
@@ -119,14 +118,7 @@ SEXP c_deriv_ZTPoisson(SEXP x_sexp, SEXP params_sexp, SEXP score_sexp, SEXP hess
             if (expected) {
                 h_lambda_lambda[i] = q / (om * om) - 1 / (lambda * om);
             } else {
-                // Observed case: x < 1 or non-integer gives 0 (outside support).
-                // Nothing has to be done as s_lambda and h_lambda_lambda were initialized with zeros.
-                if (x < 1 || fabs(x - round(x)) > eps) {
-                    h_lambda_lambda[i] = 0.0;
-                } else {
-                    // hessian: -x / lambda^2 + q / (1 - q)^2
-                    h_lambda_lambda[i] = -x / (lambda * lambda) + q / (om * om);
-                }
+                if (ok) { h_lambda_lambda[i] = -x / (lambda * lambda) + q / (om * om); }
             }
         }
     }

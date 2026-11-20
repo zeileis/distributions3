@@ -391,7 +391,7 @@ test_that("quantile.distributions default arguments", {
                      as.pairlist(alist(x =, probs =, drop = TRUE, elementwise = NULL,
                                        lower = -1 / sqrt(.Machine$double.eps),
                                        upper = +1 / sqrt(.Machine$double.eps),
-                                       tol = .Machine$double.eps^0.5, maxit = 1e3, ... = )))
+                                       tol   = sqrt(.Machine$double.eps), maxit = 1e3, ... = )))
 })
 
 

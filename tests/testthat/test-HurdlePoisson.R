@@ -148,8 +148,8 @@ test_that("hessian.HurdlePoisson works corrrectly", {
   expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
   expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
 
-  ## Expected hessian: x = 0
-  x <- rep(0, length(d))
+  ## Expected hessian: (does not depend on x)
+  x <- seq_along(d)
   expect_silent(h <- hessian(d, x, expected = TRUE))
   expect_equal(h[, "pi"],        hess_exp("pi", d, x))
   expect_equal(h[, "lambda"],    hess_exp("lambda", d, x))
