@@ -15,6 +15,8 @@ library("testthat")
 library("distributions3")
 source("autotest-functions.R")
 
+
+
 ## ------------------------------------------------------------------
 ## For testing; allows to call this script from command line,
 ## specifying which yaml files to process.
@@ -45,6 +47,7 @@ if (requireNamespace("argparse", quietly = TRUE)) {
 ## ------------------------------------------------------------------
 ## Output directory where to put the automated test sets/test files
 OUTDIR <- "testthat"
+dir.create(GAMLSSOUTDIR <- "test-gamlss.dist", showWarnings = FALSE)
 
 ## Loading all available autotest config files and checking content
 distconfig <- lapply(load_autotest_config(), check_autotest_config)

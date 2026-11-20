@@ -105,6 +105,18 @@ check_autotest_config <- function(x, verbose = TRUE) {
         })
     }
 
+    ## Extra parameters
+    if (!is.null(x$parameters$extra)) {
+        tmp <- x$parameters$extra
+        if (!is.list(tmp) || is.null(names(tmp)))
+            stop("'parameters > extra' must evaluate to a named list")
+        lapply(names(tmp), function(n) {
+            if (!is.atomic(tmp[[n]]) && !is.null(tmp[[n]])) {
+                stop("'parameters > extra > ", n, "' must be atomic or 'null'")
+            }
+        })
+    }
+
     ## --------------------------------------
     ## Support (optional)
     ## --------------------------------------
@@ -205,6 +217,39 @@ check_autotest_config <- function(x, verbose = TRUE) {
             "'tests > include' or 'tests > exclude' must be character vector of length > 0" =
                 is.character(x$tests[[1L]]) && length(x$tests[[1L]]) > 0L
         )
+    }
+
+    ## --------------------------------------
+    ## Special section for testing GAMLSS
+    ## (gamlss.dist) integration into distributions3
+    ## --------------------------------------
+
+    ## Store logical flag 
+    x$gamlss <- x$name == "GAMLSS"
+
+    ## In case the name equals GAMLSS we do have a couple of requirements
+    ## and additional checks.
+    if (x$gamlss) {
+        tmp <- x$parameters
+        if (is.null(tmp$extra$family)) {
+            stop("an autotest config for 'name: GAMLSS' requires ",
+                 "'parameters > extra > family'")
+        }
+        if (!is.character(tmp$extra$family) || !length(tmp$extra$family) == 1L) {
+            stop("an autotest config for 'name: GAMLSS' requires ",
+                 "'parameters > extra > family' to be character of length 1")
+        }
+
+        ## Both valid and invalid parameters MUSt be mu, sigma, nu, or tau
+        allowed <- c("mu", "sigma", "mu", "tau")
+        if (!is.null(tmp$valid)) {
+            if (any(!names(tmp$valid) %in% allowed))
+                stop("'parameters > valid' for autotests 'name: GAMLSS' ",
+                     "must all be either mu, sigma, tau, or nu")
+            if (any(!names(tmp$invalid) %in% allowed))
+                stop("'parameters > invalid' for autotests 'name: GAMLSS' ",
+                     "must be one of mu, sigma, tau, or nu")
+        }
     }
 
     return(x)
