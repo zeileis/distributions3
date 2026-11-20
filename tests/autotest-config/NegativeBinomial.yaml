@@ -25,11 +25,12 @@ tolerance:
 
 tests:
   exclude:
-    ## TODO(R): Getting -Inf from analytic CRPS but positive
-    ## value from numeric approximation for some combinations;
-    ## thus excluded for now.
-    ##     d <- NegativeBinomial(0.5, 0.2)
-    ##     crps(d, 1) ## [1] -Inf
-    ##     distributions3:::crps.distribution(d, 1) ##[1] 0.4981778
+    ## TODO(R): Potential issue in scoringRules::crps_nbinom()
+    ##    size <- seq(0.1, 100, by = 0.1)
+    ##    d    <- NegativeBinomial(size, 0.8)
+    ##    analytic <- crps(d, 1)
+    ##    numeric  <- distributions3:::crps.distribution(d, 1)
+    ##    bad      <- which(is.infinite(analytic) | abs(analytic - numeric) > 0.00001)
+    ##    data.frame(size = size[bad], analytic = analytic[bad], numeric = numeric[bad])
     - crps_compare2numeric
 

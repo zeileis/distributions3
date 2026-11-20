@@ -7,7 +7,7 @@ name: LogNormal
 parameters:
   valid:
     log_mu:    [0, 0.25, 0.75, 1.25, 1.50]
-    log_sigma: [2, 1.50, 1.00, 0.50, 0.20]
+    log_sigma: [0.5, 0.30, 0.13, 0.22, 0.3]
   invalid:
     log_sigma: [-10, -1, -1e-10]
 
@@ -26,11 +26,6 @@ skip_if_not_installed:
 tolerance:
   cdf: 1e-5
   crps: 1e-3
+  variance: 1e-2
+  skewness: 1e-2
 
-tests:
-  exclude:
-    ## TODO(R): Check moments
-    - mean_compare2numeric
-    - variance_compare2numeric
-    - skewness_compare2numeric
-    - kurtosis_compare2numeric

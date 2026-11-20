@@ -32,14 +32,18 @@ skip_if_not_installed: revdbayes
 
 tests:
   exclude:
-    ## TODO(R): Check numeric variance and kurtosis
+    ## TODO(R): Analytic solution for mean if xi < 1, for variance if xi < 1/2,
+    ##          for skewness if xi < 1/3, and for kurtosis xi < 1/4. Excluding
+    ##          these for now as our tests above use xi > 1/3
     - variance_compare2numeric
     - kurtosis_compare2numeric
     ## The support depends on the parameters (lower end point mu, and mu - sigma / xi
     ## for xi < 0), so the fixed support above does not apply.
     - support
-    ## TODO: the numeric fallback for the expected hessian (stats::integrate over
-    ## the density, truncated at the 1e-6 quantile) is inaccurate for this bounded
-    ## or heavy-tailed support (errors up to 6%).
+    ## TODO(R): Potentially same issue as with moments, having to extreme test
+    ##          parameters defined above? The numeric fallback for the expected
+    ##          hessian (stats::integrate over the density, truncated at the 1e-6
+    ##          quantile) is inaccurate for this bounded or heavy-tailed support (errors
+    ##          up to 6%).
     - hessian_expected_compare2numeric
 
