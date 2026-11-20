@@ -118,7 +118,7 @@ double c_moments_calculate_discrete(int i, double* p, int np, double* q, int nq,
 
     //// Calculating mean
     double mean = 0.0;
-    for (int j = 0; j < (k - 1); j++) {
+    for (int j = 0; j < k; j++) {
         mean += mids->values[j] * dens->values[j];
     }
     mean = mean / cdfint; // Normalize
@@ -127,7 +127,7 @@ double c_moments_calculate_discrete(int i, double* p, int np, double* q, int nq,
 
     // Calculating variance
     double variance = 0.0;
-    for (int j = 0; j < (k - 1); j++) {
+    for (int j = 0; j < k; j++) {
         variance += pow(mids->values[j] - mean, 2.0) * dens->values[j];
     }
     variance = variance / cdfint; // Normalize
@@ -137,7 +137,7 @@ double c_moments_calculate_discrete(int i, double* p, int np, double* q, int nq,
     double powexp = (double)what;   // Define power parameter (3 for skewness, 4 = kurtosis)
     double res = 0.0;
 
-    for (int j = 0; j < (k - 1); j++) {
+    for (int j = 0; j < k; j++) {
        res += pow(mids->values[j] - mean, powexp) * dens->values[j];
     }
     res = res / cdfint / pow(variance, powexp / 2.0); // Normalize and divide

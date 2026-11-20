@@ -1003,8 +1003,12 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
 
   ## Manually enforcing 'method = "cdf"' for discrete distributions if possible as 'method = "quantile"'
   ## can lead to inaccurate results if the range the values span is < gridsize.
+  ## Manually enforcing 'method = "cdf"' for discrete distributions if possible as 'method = "quantile"'
+  ## can lead to inaccurate results if the range the values span is < gridsize. This is only possible
+  ## if a 'cdf' method exists; otherwise the quantile-based approximation is kept (with a warning).
   if (discrete && method == "quantile" && gridsize >= abs(diff(xrange))) {
-      if (get_auto_method(x) == "cdf") {
+      has_cdf <- hasS3method("cdf", class(x)[!class(x) == "distribution"])
+      if (has_cdf) {
           warning("switching to method = \"cdf\" (method = \"quantile\" can result in inaccurate results)")
           method <- "cdf"
       } else {
