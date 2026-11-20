@@ -80,6 +80,84 @@ test_that("quantile.HurdlePoisson throws warning if p is out of range", {
   expect_error(quantile(dd, 1 + 1e10))
 })
 
+test_that("score.HurdlePoisson works corrrectly", {
+  d <- HurdlePoisson(1:4/5, 1:4)
+
+  ## Original R implementation to test against
+  scr <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    s <- switch(par,
+      "pi"     = ifelse(x0, -1 / (1 - d$pi), 1 / d$pi),
+      "lambda" = ifelse(x0, 0, x / d$lambda - 1 - 1 / expm1(d$lambda)))
+    s[!ok] <- 0
+    s
+  }
+
+  ## Score with x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- score(d, x))
+  expect_equal(h[, "pi"],        scr("pi", d, x))
+  expect_equal(h[, "lambda"],    scr("lambda", d, x))
+
+  ## Score with x > 0
+  x <- seq_along(d)
+  expect_silent(h <- score(d, x))
+  expect_equal(h[, "pi"],        scr("pi", d, x))
+  expect_equal(h[, "lambda"],    scr("lambda", d, x))
+
+})
+
+test_that("hessian.HurdlePoisson works corrrectly", {
+  d <- HurdlePoisson(1:4/5, 1:4)
+
+  ## Original R implementation to test against
+  ## observed Hessian, evaluated at x (integer support only, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    h <- switch(par,
+      "pi"     = ifelse(x0, -1 / (1 - d$pi)^2, -1 / d$pi^2),
+      "lambda" = ifelse(x0, 0, -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2),
+      "pi:lambda" = 0 * x)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess_exp <- function(par, d, x) {
+    vapply(seq_along(d), function(i) {
+      ks <- 0:quantile(d[i], 1 - 1e-12)
+      sum(hess_obs(par, d[i], ks) * pdf(d[i], ks))
+    }, numeric(1L))
+  }
+
+  ## Observed Hessian; x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- hessian(d, x, expected = FALSE))
+  expect_equal(h[, "pi"],        hess_obs("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_obs("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+
+  ## Observed Hessian; x > 0
+  x <- seq_along(d)
+  expect_silent(h <- hessian(d, x, expected = FALSE))
+  expect_equal(h[, "pi"],        hess_obs("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_obs("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+
+  ## Expected hessian: x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- hessian(d, x, expected = TRUE))
+  expect_equal(h[, "pi"],        hess_exp("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_exp("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_exp("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_exp("pi:lambda", d, x))
+})
+
+
 test_that("vectorization of a HurdlePoisson distribution work correctly", {
   d <- HurdlePoisson(0.7, 1:2)
   d1 <- d[1]
