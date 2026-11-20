@@ -505,7 +505,7 @@ log_pdf.distribution <- function(d, x, ...) pdf(d, x, log = TRUE, ...)
 quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
                                   lower = -1 / sqrt(.Machine$double.eps),
                                   upper = +1 / sqrt(.Machine$double.eps),
-                                  tol   = .Machine$double.eps^0.5, maxit = 1e3, ...) {
+                                  tol   = sqrt(.Machine$double.eps), maxit = 1e3, ...) {
     check_dots_used()
     if (!length(x)) return(numeric())
 
