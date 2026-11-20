@@ -406,8 +406,8 @@ hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FA
 #' @useDynLib distributions3, .registration = TRUE
 deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
   stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-  ## If order == 2 and expected == TRUE we allow x to be NULL or missing (as
-  ## the expected Hessian does ont depend on x).
+
+  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
   order <- unique(as.integer(order))
   if (identical(order, 2L) && expected && (missing(x) || is.null(x))) x <- 0 # dummy
 
