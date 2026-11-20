@@ -24,9 +24,7 @@ tolerance:
 
 tests:
   exclude:
-    ## TODO(R): if pi is NA we get a return from dpqr; assuming
-    ## to just go for Poisson?
+    ## TODO(R): Enforcing p to be in [0, 1], i.e., NA is not allowed for pi
     - params_NA
+    ## TODO(R): if pi is NA we get a return from dpqr; assuming
     - quantile
-    ## TODO(R): Check quantile
-    - quantile_compare2numeric

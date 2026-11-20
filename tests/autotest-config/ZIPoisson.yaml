@@ -24,8 +24,5 @@ tolerance:
 
 tests:
   exclude:
-    ## dpqr methods throw warning if pi is out of range (NA),
-    ## random(ZINegativeBinomial(), ...) sometimes returns values
-    ## though we expect NaNs if `mu = NA` or `theta = NA`.
+    ## TODO(R): Enforcing p to be in [0, 1], i.e., NA is not allowed for pi
     - params_NA
-    - quantile
