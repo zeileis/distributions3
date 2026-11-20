@@ -124,8 +124,6 @@ for (config in distconfig) {
 
     res <- append(res, autotest_cdf(config))
     res <- append(res, autotest_cdf_support(config))
-    # TODO: when having e.g., sigma = 0 or lamgda = 0 we get a cdf of 1 vs. 0 (numeric)
-    #       and subsequently log(cdf) of 0 vs. -Inf (numeric)
     ## TODO(R): NEEDED? res <- append(res, autotest_cdf_compare2numeric(config))
 
     res <- append(res, autotest_quantile(config))

@@ -22,6 +22,3 @@ distributiontype:
   discrete: false
   continuous: true
 
-#tests:
-#  exclude:
-#    - crps_defaults

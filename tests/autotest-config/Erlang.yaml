@@ -20,15 +20,3 @@ distributiontype:
   discrete: false
   continuous: true
 
-tests:
-  exclude:
-    ## Not implemented, uses numeric fallback
-    - moments_defaults
-    - mean
-    - variance
-    - skewness
-    - kurtosis
-    - mean_compare2numeric
-    - variance_compare2numeric
-    - skewness_compare2numeric
-    - kurtosis_compare2numeric
