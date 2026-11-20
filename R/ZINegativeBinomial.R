@@ -221,21 +221,21 @@ skewness.ZINegativeBinomial <- function(x, ...) {
 #' @export
 kurtosis.ZINegativeBinomial <- function(x, ...) {
   if (!length(x)) return(numeric())
-  ## excess kurtosis, see skewness.ZINegativeBinomial() for the cumulants
+  ## excess kurtosis = kappa_4 / kappa_2^2, with variance kappa_2 = (1 - pi) mu D / theta and
+  ## fourth cumulant kappa_4 = (1 - pi) mu N / theta^3, where D = mu pi theta + mu + theta.
+  ## Verified against exact sums over the pmf.
   mu2    <- x$mu^2
   mu3    <- x$mu^3
   theta2 <- x$theta^2
   theta3 <- x$theta^3
-  pi3    <- x$pi^3
 
-  k2 <- (1 - x$pi) * x$mu * (1 + (x$pi + 1 / x$theta) * x$mu)
-  k4 <- (1 - x$pi) * x$mu * (
-    6 * mu3 * pi3 * theta3 - 6 * mu3 * pi3 * theta3 + 12 * mu3 * pi3 * theta2 +
-    mu3 * x$pi * theta3 - 6 * mu3 * x$pi * theta2 + 11 * mu3 * x$pi * x$theta + 6 * mu3 +
-    12 * mu2 * pi3 * theta3 - 6 * mu2 * x$pi * theta3 + 18 * mu2 * x$pi * theta2 +
-    12 * mu2 * x$theta + 7 * x$mu * x$pi * theta3 + 7 * x$mu * theta2 + theta3) / theta3
+  D <- x$mu * x$pi * x$theta + x$mu + x$theta
+  N <- 6 * mu3 * x$pi^3 * theta3 - 6 * mu3 * x$pi^2 * theta3 + 12 * mu3 * x$pi^2 * theta2 + mu3 * x$pi * theta3 -
+    6 * mu3 * x$pi * theta2 + 11 * mu3 * x$pi * x$theta + 6 * mu3 +
+    12 * mu2 * x$pi^2 * theta3 - 6 * mu2 * x$pi * theta3 + 18 * mu2 * x$pi * theta2 + 12 * mu2 * x$theta +
+    7 * x$mu * x$pi * theta3 + 7 * x$mu * theta2 + theta3
 
-  rval <- k4 / k2^2
+  rval <- N / (x$mu * x$theta * (1 - x$pi) * D^2)
   setNames(rval, names(x))
 }
 

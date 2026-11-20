@@ -17,12 +17,6 @@ distributiontype:
   discrete: true
   continuous: false
 
-tolerance:
-  mean: 1e-3
-  variance: 1e-1
-  skewness: 1e-1
-  kurtosis: 1e-0
-
 tests:
   exclude:
     ## TODO(R): Potential issue in scoringRules::crps_nbinom()

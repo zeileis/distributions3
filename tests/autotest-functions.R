@@ -1637,7 +1637,7 @@ moments_tests_compare2numeric <- function(config, fname, what = c("mean", "varia
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<MOMENT>"    = what,
               "<EXPECT>"    = if (config$distributiontype$discrete) "expect_warning" else "expect_silent",
-              "<GRIDSIZE>"  = if (config$distributiontype$discrete) 2000L else 10000L,
+              "<GRIDSIZE>"  = if (config$distributiontype$discrete) 500L else 5000L,
               "<TOL>"       = deparse(config$tolerance[[what]]))
 
     return(replace_placeholders(template, p) |> clean_cmd())

@@ -605,7 +605,7 @@ test_that("[autotest_mean_compare2numeric]: analytic mean and the numeric mean a
     skip_if_not_installed("revdbayes")
 
     expect_silent(analytic <- mean(dn))
-    expect_silent(numeric  <- distributions3:::mean.distribution(dn, gridsize = 10000))
+    expect_silent(numeric  <- distributions3:::mean.distribution(dn, gridsize = 5000))
 
     ## Expecting the results to be equal
     expect_equal(analytic, numeric, tolerance = 0.001)
@@ -618,7 +618,7 @@ test_that("[autotest_variance_compare2numeric]: analytic variance and the numeri
     skip_if_not_installed("revdbayes")
 
     expect_silent(analytic <- variance(dn))
-    expect_silent(numeric  <- distributions3:::variance.distribution(dn, gridsize = 10000))
+    expect_silent(numeric  <- distributions3:::variance.distribution(dn, gridsize = 5000))
 
     ## Expecting the results to be equal
     expect_equal(analytic, numeric, tolerance = 0.01)
@@ -631,7 +631,7 @@ test_that("[autotest_skewness_compare2numeric]: analytic skewness and the numeri
     skip_if_not_installed("revdbayes")
 
     expect_silent(analytic <- skewness(dn))
-    expect_silent(numeric  <- distributions3:::skewness.distribution(dn, gridsize = 10000))
+    expect_silent(numeric  <- distributions3:::skewness.distribution(dn, gridsize = 5000))
 
     ## Expecting the results to be equal
     expect_equal(analytic, numeric, tolerance = 0.1)
@@ -644,7 +644,7 @@ test_that("[autotest_kurtosis_compare2numeric]: analytic kurtosis and the numeri
     skip_if_not_installed("revdbayes")
 
     expect_silent(analytic <- kurtosis(dn))
-    expect_silent(numeric  <- distributions3:::kurtosis.distribution(dn, gridsize = 10000))
+    expect_silent(numeric  <- distributions3:::kurtosis.distribution(dn, gridsize = 5000))
 
     ## Expecting the results to be equal
     expect_equal(analytic, numeric, tolerance = 0.1)

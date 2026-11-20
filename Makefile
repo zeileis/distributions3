@@ -39,7 +39,7 @@ autotest:
 	(cd tests && Rscript autotest-generate.R) && \
 		make test
 test: document
-	Rscript -e "testthat::test_local()"
+	Rscript -e "testthat::set_max_fails(Inf); testthat::test_local()"
 
 .PHONY: coverage
 coverage: install

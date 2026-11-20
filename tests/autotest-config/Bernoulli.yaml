@@ -18,10 +18,6 @@ distributiontype:
   discrete: true
   continuous: false
 
-tolerance:
-  mean: 1e-3
-  variance: 1e-2
-
 ## Skipping a series of tests if the R package 'revdbayes' is not
 ## installed (suggested package).
 skip_if_not_installed:
