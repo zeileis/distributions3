@@ -664,18 +664,55 @@ prep_deriv2_return <- function(x, which, drop, distribution_names) {
   return(x)
 }
 
-#' Get Parameters to be Calculated in deriv2
+#' Prepare Object for Calculations in deriv2 Methods
+#'
+#' Setting up the object (a named list) used by the `deriv2` methods
+#' for calculating score and hessian.
 #'
 #' @param d object of class distribution.
+#' @param n number of observations (length of score/Hessian vectors).
 #' @param which `NULL` or character vector. If `NULL` all available parameters
 #'        will returned. If character, the user-specified parameters are returned.
-#' @param expand logical. To be set `FALSE` for score, `TRUE` for Hessian.
+#' @param order defines the order of derivatives to be calculated and returned.
+#'        `1` (scores), `2` (Hessian), or `1:2` (both).
 #'
-#' @return Named character vector with the parameters (derivatives) to be calculated
-#' by the deriv2 method. The values correspond to the user-exposed derivatives,
-#' the names of the vector of names used internally.
-get_deriv2_params <- function(d, which, expand) {
-    params <- get_deriv_names(names(unclass(d)), expand = expand)
-    if (is.null(which)) params else match.arg(which, params, several.ok = TRUE)
+#' @return Named list with three elements. `$which` is a named list of length 2
+#' containing a named character vector with the derivatives to be calculated for
+#' both score and Hessian, or `NULL` if not required.
+#'
+#' Similarely, `$score` and `$hessian` are `NULL` if no first or second derivative
+#' is requested by the user. Else these two elements contain a named list with
+#' empty numeric vectors of length `n` later on filled by the corresponding
+#' C function.
+prep_deriv2_object <- function(d, n, which, order) {
+  dp <- names(unclass(d)) # Parameters of the distribution
+
+  ## By default, assume both to be NULL
+  which.score <- which.hessian <- NULL
+
+  ## Preparing score parameters (if required)
+  if (1 %in% order) {
+      which.score <- get_deriv_names(dp, expand = FALSE)
+      which.score <- if (is.null(which)) which.score else match.arg(which, which.score, several.ok = TRUE)
+  }
+
+  ## Preparing score parameters (if required)
+  if (2 %in% order) {
+      which.hessian <- get_deriv_names(dp, expand = TRUE)
+      which.hessian <- if (is.null(which)) which.hessian else match.arg(which, which.hessian, several.ok = TRUE)
+  }
+
+  ## Setting up objects to be filled by the c code
+  ## Named list as expected by the C functions.
+  fn <- function(x, n) {
+      if (is.null(x)) return(NULL)
+      x <- unique(names(x))
+      setNames(lapply(seq_along(x), function(n, ...) numeric(n), n = n), x)
+  }
+
+  ## Preparing return
+  list(which   = list(score = which.score, hessian = which.hessian),
+       score   = fn(which.score,   n = n),
+       hessian = fn(which.hessian, n = n))
 }
 
