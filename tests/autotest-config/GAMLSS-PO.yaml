@@ -20,3 +20,12 @@ distributiontype:
   discrete: true
   continuous: false
 
+tests:
+  exclude:
+    ## GAMLSS does not allow this
+    - params_NA
+    ## not yet implemented
+    - skewness
+    - skewness_compare2numeric
+    - kurtosis
+    - kurtosis_compare2numeric

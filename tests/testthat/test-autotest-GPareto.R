@@ -256,9 +256,9 @@ test_that("[autotest_params_incorrect_type]: constructor GPareto() fails when in
     ## Skip if suggested package is missing
     skip_if_not_installed("revdbayes")
 
-    expect_error(GPareto(mu = list(), sigma = c(1, 2, 5, 100, 0.5, 20, 0.5), xi = c(-0.4, -0.1, 0, 0.1, 0.3, -0.4, 0.2)), regexp = "parameter lengths do not match")
-    expect_error(GPareto(mu = c(-1, 0, 0.5, -1, 0, -10, -5), sigma = list(), xi = c(-0.4, -0.1, 0, 0.1, 0.3, -0.4, 0.2)), regexp = "parameter lengths do not match")
-    expect_error(GPareto(mu = c(-1, 0, 0.5, -1, 0, -10, -5), sigma = c(1, 2, 5, 100, 0.5, 20, 0.5), xi = list()), regexp = "parameter lengths do not match")
+    expect_error(GPareto(mu = list(), sigma = c(1, 2, 5, 100, 0.5, 20, 0.5), xi = c(-0.4, -0.1, 0, 0.1, 0.3, -0.4, 0.2)), regexp = "(parameter lengths do not match|arguments imply differing number)")
+    expect_error(GPareto(mu = c(-1, 0, 0.5, -1, 0, -10, -5), sigma = list(), xi = c(-0.4, -0.1, 0, 0.1, 0.3, -0.4, 0.2)), regexp = "(parameter lengths do not match|arguments imply differing number)")
+    expect_error(GPareto(mu = c(-1, 0, 0.5, -1, 0, -10, -5), sigma = c(1, 2, 5, 100, 0.5, 20, 0.5), xi = list()), regexp = "(parameter lengths do not match|arguments imply differing number)")
 });
 
 
@@ -268,7 +268,8 @@ test_that("[autotest_params_length_mismatch]: constructor GPareto() throws error
     skip_if_not_installed("revdbayes")
 
     ## Parameters not all of length 1 or N
-    expect_error(GPareto(c(-1, 0, 0.5, -1, 0, -10, -5, -1, 0, 0.5, -1, 0, -10, -5), c(1, 2, 5, 100, 0.5, 20, 0.5), c(-0.4, -0.1, 0, 0.1, 0.3, -0.4, 0.2)), regexp = "lengths do not match",
+    expect_error(suppressWarnings(GPareto(c("c(-1, 0, 0.5, -1, 0, -10, -5, -1, 0, 0.5, -1, 0, -10, -5, -1, ", "0, 0.5)"), c(1, 2, 5, 100, 0.5, 20, 0.5), c(-0.4, -0.1, 0, 0.1, 0.3, -0.4, 0.2))),
+                 regexp = "(lengths do not match|arguments imply differing number of rows)",
                  info = "expected error, but on error was thrown")
 });
 

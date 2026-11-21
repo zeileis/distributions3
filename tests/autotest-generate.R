@@ -31,7 +31,7 @@ if (requireNamespace("argparse", quietly = TRUE)) {
     parser$add_argument("--devel", "-d", action = "store_true", default = FALSE,
                        help = "should devtools::load_all be called before running tests?")
     parser$add_argument("--gamlss", "-g", action = "store_true", default = FALSE,
-                       help = "should GAMLSS distribution tests be written?")
+                       help = "should GAMLSS distribution tests be written? Ignored if -f/--file is specified.")
 
     args <- parser$parse_args()
 
@@ -61,13 +61,13 @@ distconfig <- lapply(load_autotest_config(), check_autotest_config)
 if (!is.null(dorun)) {
     distconfig <- distconfig[names(distconfig) %in% dorun]
     stopifnot("no yaml files found matching input --file/-f" = length(distconfig) > 0)
-}
-
-## Filter for gamlss autoconfigs (or all the others) depending on argument --gamlss
-if (gamlss) {
-    distconfig <- distconfig[sapply(distconfig, function(config) config$name == "GAMLSS")]
 } else {
-    distconfig <- distconfig[sapply(distconfig, function(config) config$name != "GAMLSS")]
+    ## Filter for gamlss autoconfigs (or all the others) depending on argument --gamlss
+    if (gamlss) {
+        distconfig <- distconfig[sapply(distconfig, function(config) config$name == "GAMLSS")]
+    } else {
+        distconfig <- distconfig[sapply(distconfig, function(config) config$name != "GAMLSS")]
+    }
 }
 
 delete_autotest_files(distconfig)

@@ -41,7 +41,8 @@ autotest:
 
 gamlsstest:
 	(cd tests && Rscript autotest-generate.R --gamlss) && \
-		Rscript -e "testthat::set_max_fails(Inf); testthat::test_dir('tests/test-gamlss.dist')"
+		Rscript -e "testthat::set_max_fails(Inf); testthat::test_dir('tests/test-gamlss.dist', package = 'distributions3')"
+
 test: document
 	Rscript -e "testthat::set_max_fails(Inf); testthat::test_local()"
 

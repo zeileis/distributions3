@@ -22,7 +22,11 @@ load_autotest_config <- function(dir = "autotest-config", verbose = FALSE) {
             error = function(e) stop("Problems reading \"", file, "\": ", e))
         ## Appending 'testfile' (the output file name), add class, return
         res$yamlfile <- file
-        res$testfile <- sprintf("test-autotest-%s", gsub("\\.yaml$", ".R", file))
+        if (res$name == "GAMLSS") {
+            res$testfile <- sprintf("test-gamlss-autotest-%s", gsub("\\.yaml$", ".R", file))
+        } else {
+            res$testfile <- sprintf("test-autotest-%s", gsub("\\.yaml$", ".R", file))
+        }
         res |> structure(class = "autotest_config")
     }
 
@@ -238,7 +242,7 @@ check_autotest_config <- function(x, verbose = TRUE) {
         }
 
         ## Both valid and invalid parameters MUSt be mu, sigma, nu, or tau
-        allowed <- c("mu", "sigma", "mu", "tau")
+        allowed <- c("mu", "sigma", "nu", "tau")
         if (!is.null(tmp$valid)) {
             if (any(!names(tmp$valid) %in% allowed))
                 stop("'parameters > valid' for autotests 'name: GAMLSS' ",
@@ -1009,17 +1013,21 @@ autotest_params_length_mismatch <- function(config) {
     test_that("[<FNAME>]: constructor <NAME>() throws error when lengths of parameters mismatch", {
         <SKIPIFNOT>
         ## Parameters not all of length 1 or N
-        expect_error(<NAME>(<ARGS>), regexp = "lengths do not match",
+        expect_error(suppressWarnings(<NAME>(<GAMLSSFAM><ARGS>)),
+                     regexp = "(lengths do not match|arguments imply differing number of rows)",
                      info = "expected error, but on error was thrown")
     });
     '
 
+    gamlssfam <- if (!is.gamlss(config)) "" else sprintf("\"%s\", ", config$parameters$extra$family)
+
     ## Putting to gether arguments for testing
     args <- config$parameters$valid
-    args[[1L]] <- rep(args[[1L]], 2L)
+    args[[1L]] <- c(args[[1L]], rep_len(args[[1]], length(args[[1]]) * 1.5))
 
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<GAMLSSFAM>" = gamlssfam,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<ARGS>"      = paste(lapply(args, deparse), collapse = ", "))
 
@@ -1172,12 +1180,16 @@ autotest_params_invalid <- function(config) {
     ## with one of the specified invalid parameters and create command(s).
     cmd_invalid <- c()
     valid <- sapply(config$parameters$valid, head, n = 1) |> setNames(names(config$parameters$valid))
+
+    gamlssfamily <- if (!is.gamlss(config)) "" else sprintf("\"%s\", ", config$parameters$extra$family)
+
     for (n in names(config$parameters$invalid)) {
         for (inv in config$parameters$invalid[[n]]) {
             tmp <- valid
             tmp[[n]] <- inv
-            tmp <- sprintf("<INDENT>expect_error(%s(%s), info = \"expected error to be thrown using '%s = %s'\")",
-                           config$name, paste(names(tmp), sapply(tmp, deparse), sep = " = ", collapse = ", "),
+            tmp <- sprintf("<INDENT>expect_error(%s(%s%s), info = \"expected error to be thrown using '%s = %s'\")",
+                           config$name, gamlssfamily,
+                           paste(names(tmp), sapply(tmp, deparse), sep = " = ", collapse = ", "),
                            n, deparse1(inv))
             cmd_invalid <- append(cmd_invalid, tmp)
         }
@@ -1215,17 +1227,20 @@ autotest_params_incorrect_type <- function(config) {
     });
     '
 
-    cmds <- c()
+    gamlssfam    <- if (!is.gamlss(config)) "" else sprintf("\"%s\", ", config$parameters$extra$family)
+    regexpattern <- "(parameter lengths do not match|arguments imply differing number)"
 
     ## If number of parameters equal one, we hand over an empty list which
     ## is converted to numeric length 0, should throw a length mismatch error.
+    cmds <- c()
     if (length(config$parameter$valid) > 1L) {
         for (i in seq_along(config$parameters$valid)) {
             tmp <- config$parameters$valid
             tmp[[i]] <- list()
-            cmds <- c(cmds, sprintf("<INDENT>expect_error(%s(%s), regexp = \"parameter lengths do not match\")",
-                config$name, 
-                paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", ")))
+            cmds <- c(cmds, sprintf("<INDENT>expect_error(%s(%s%s), regexp = \"%s\")",
+                config$name, gamlssfam,
+                paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", "),
+                regexpattern))
         }
     }
 
@@ -1872,7 +1887,7 @@ autotest_moments_defaults <- function(config) {
 autotest_mean <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     ## No dedicated mean.<NAME> method? Ignore test (not writing test set)
-    if (!distributions3:::hasS3method("mean", config$name)) return(NULL)
+    if (isFALSE(get_method("mean", config))) return(NULL)
     return(moments_tests(config, fname, "mean"))
 }
 
@@ -1880,21 +1895,21 @@ autotest_mean <- function(config) {
 autotest_variance <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     ## No dedicated variance.<NAME> method? Ignore test (not writing test set)
-    if (!distributions3:::hasS3method("variance", config$name)) return(NULL)
+    if (isFALSE(get_method("variance", config))) return(NULL)
     return(moments_tests(config, fname, "variance"))
 }
 #' @rdname autotest_moments
 autotest_skewness <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     ## No dedicated skewness.<NAME> method? Ignore test (not writing test set)
-    if (!distributions3:::hasS3method("skewness", config$name)) return(NULL)
+    if (isFALSE(get_method("skewness", config))) return(NULL)
     return(moments_tests(config, fname, "skewness"))
 }
 #' @rdname autotest_moments
 autotest_kurtosis <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     ## No dedicated kurtosis.<NAME> method? Ignore test (not writing test set)
-    if (!distributions3:::hasS3method("kurtosis", config$name)) return(NULL)
+    if (isFALSE(get_method("kurtosis", config))) return(NULL)
     return(moments_tests(config, fname, "kurtosis"))
 }
 
