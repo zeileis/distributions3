@@ -1,0 +1,22 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: GAMLSS
+
+## Name of parameters and supported range/values.
+parameters:
+  extra:
+    family: PO
+  valid:
+    mu: [0.1, 1.5, 2, 5.5, 100]
+  invalid:
+    mu: [-10, -1e-10]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: true
+  continuous: false
+

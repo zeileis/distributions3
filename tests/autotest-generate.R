@@ -30,17 +30,22 @@ if (requireNamespace("argparse", quietly = TRUE)) {
                        help = "should the test be executed after generation?")
     parser$add_argument("--devel", "-d", action = "store_true", default = FALSE,
                        help = "should devtools::load_all be called before running tests?")
+    parser$add_argument("--gamlss", "-g", action = "store_true", default = FALSE,
+                       help = "should GAMLSS distribution tests be written?")
 
     args <- parser$parse_args()
 
     dorun     <- if (!is.null(args$files)) basename(args$files) else NULL
     run_tests <- args$run
+    gamlss    <- args$gamlss
 
     if (args$devel) devtools::load_all()
 } else {
     dorun     <- NULL
     run_tests <- FALSE
+    gamlss    <- FALSE
 }
+
 
 ## ------------------------------------------------------------------
 ## Reading config files check YAML content, and subset (if --file/-f is used)
@@ -58,6 +63,13 @@ if (!is.null(dorun)) {
     stopifnot("no yaml files found matching input --file/-f" = length(distconfig) > 0)
 }
 
+## Filter for gamlss autoconfigs (or all the others) depending on argument --gamlss
+if (gamlss) {
+    distconfig <- distconfig[sapply(distconfig, function(config) config$name == "GAMLSS")]
+} else {
+    distconfig <- distconfig[sapply(distconfig, function(config) config$name != "GAMLSS")]
+}
+
 delete_autotest_files(distconfig)
 
 ## ------------------------------------------------------------------
@@ -70,7 +82,11 @@ for (config in distconfig) {
     ## List to store all the tests required which will be written to the
     ## test file defined by OUTFILE above.
     res <- list()
-    res <- append(res, autotest_setup(config))
+    if (is.gamlss(config)) {
+        res <- append(res, autotest_setup_gamlss(config))
+    } else {
+        res <- append(res, autotest_setup(config))
+    }
     res <- append(res, autotest_constructor(config))
 
     ## Testing default arguments of support, is_discrete, and is_continuous.
@@ -137,10 +153,12 @@ for (config in distconfig) {
     res <- append(res, autotest_random_support(config))
 
     ## ----------- score and hessian
-    res <- append(res, autotest_score_hessian_defaults(config)) # arguments/defaults
+    res <- append(res, autotest_score_defaults(config)) # arguments/defaults
 
     res <- append(res, autotest_score(config))
     res <- append(res, autotest_score_compare2numeric(config))
+
+    res <- append(res, autotest_hessian_defaults(config)) # arguments/defaults
 
     res <- append(res, autotest_hessian_observed(config))
     res <- append(res, autotest_hessian_observed_compare2numeric(config))
@@ -156,8 +174,13 @@ for (config in distconfig) {
     ## --------------------------------------------------------------
     ## Write test sets to test file and execute if needed (development)
     ## --------------------------------------------------------------
-    writeLines(unlist(res), con = file.path(OUTDIR, config$testfile))
-    if (run_tests) test_file(file.path(OUTDIR, config$testfile))
+    testfile <- if (is.gamlss(config)) {
+        file.path(GAMLSSOUTDIR, config$testfile)
+    } else {
+        file.path(OUTDIR, config$testfile)
+    }
+    writeLines(unlist(res), con = testfile)
+    if (run_tests) test_file(testfile)
 }
 
 

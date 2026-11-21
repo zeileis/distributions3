@@ -224,12 +224,9 @@ check_autotest_config <- function(x, verbose = TRUE) {
     ## (gamlss.dist) integration into distributions3
     ## --------------------------------------
 
-    ## Store logical flag 
-    x$gamlss <- x$name == "GAMLSS"
-
     ## In case the name equals GAMLSS we do have a couple of requirements
     ## and additional checks.
-    if (x$gamlss) {
+    if (x$name == "GAMLSS") {
         tmp <- x$parameters
         if (is.null(tmp$extra$family)) {
             stop("an autotest config for 'name: GAMLSS' requires ",
@@ -262,20 +259,48 @@ check_autotest_config <- function(x, verbose = TRUE) {
 #'
 #' @param x list of autotest_config objects.
 #' @param dir testthat directory.
-delete_autotest_files <- function(x, dir = "testthat") {
+delete_autotest_files <- function(x, dir = "testthat", gamlssdir = "test-gamlss.dist") {
     stopifnot(
         "argument 'x' must be a list" = is.list(x),
         "elements in 'x' must all be of class \"autotest_config\"" =
             all(sapply(x, class) == "autotest_config")
     )
 
-    f <- file.path(dir, sapply(x, function(x) x$testfile))
+    f <- sapply(x, function(x) file.path(if (is.gamlss(x)) gamlssdir else dir, x$testfile))
     # Remove files if existing
     f <- f[file.exists(f)]
     file.remove(f)
     invisible(f)
 }
 
+
+#' Loading S3 Method
+#'
+#' Auxilary function to check if a specific S3 method for the
+#' family exists. If `config` contains a GAMLSS distribution object,
+#' the S3 method is expected to exist in the package `gamlss.dist`.
+#' Else we are searching in `distributions3`.
+#'
+#' @param name string, name of the method.
+#' @param config object of class `"autotest_config"`.
+#'
+#' @return Function (method) or FALSE if not found.
+get_method <- function(name, config) {
+    stopifnot(
+        "argument 'name' must be character of length 1" = 
+            is.character(name) && length(name) == 1L && nchar(name) > 0,
+        "argument 'config' must be of class 'autotest_config'" =
+            inherits(config, "autotest_config")
+    )
+
+    ## Searching for method, returning FALSE if not found.
+    pkg <- if (is.gamlss(config)) "gamlss.dist" else "distributions3"
+    ns  <- getNamespace(pkg)
+    tryCatch(getS3method(name, config$name, envir = ns),
+             error = function(e) return(FALSE))
+}
+
+is.gamlss <- function(config) config$name == "GAMLSS"
 
 #' Get Command to Skip Tests if Package is Not Installed
 #'
@@ -448,7 +473,7 @@ replace_placeholders <- function(template, x, indentation = 8) {
     return(template)
 }
 
-#' Setting up Autotest 
+#' Setting up Autotest for distributions3 distributions
 #'
 #' @param x object of class `autotest_config`.
 #'
@@ -457,6 +482,10 @@ autotest_setup <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
+    ## This is the wrong setup if 'config' is a GAMLSS dist
+    if (is.gamlss(config)) stop("use autotest_setup_gamlss for GAMLSS distributions!")
+
+    ## Setting up test file header, loading packages (if interactive) for testing
     template <- '
     ## --- this file is auto-generated, do not change ---
     ##
@@ -527,8 +556,6 @@ autotest_setup <- function(config) {
     valid  <- config$parameters$valid # For convenience
     cmd_d1 <- sprintf("%s(%s)", config$name,
                       paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
-    cmd_d1 <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
     cmd_dx <- sprintf("%s(%s)", config$name,
                       paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
 
@@ -544,6 +571,96 @@ autotest_setup <- function(config) {
               "<YAMLFILE>"   = config$yamlfile,
               "<PARAMVEC>"   = deparse1(names(config$parameters$valid)),
               "<PARAMTXT>"   = paste0(names(config$parameters$valid), collapse = ", "),
+              "<CMD_D1>"     = cmd_d1,
+              "<CMD_DX>"     = cmd_dx,
+              "<CMD_DN>"     = cmd_dn)
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+#' Setting up Autotest for GAMLSS distributions (gamlss.dist)
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Character vector with commands for test set.
+autotest_setup_gamlss <- function(config) {
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
+    stopifnot("only use autotest_setup_gamlss for GAMLSS distributions!" = is.gamlss(config))
+
+    ## Setting up test file header, loading packages (if interactive) for testing
+    template <- '
+    ## --- this file is auto-generated, do not change ---
+    ##
+    ## Automated tests for distribution "<NAME>" generated by
+    ## generated by `../autotest-generate.R` based on the YAML
+    ## config file `../autotest-config/<YAMLFILE>`.
+
+    ## For interactive use (testing the tests)
+    if (interactive()) { library(\"testthat\"); }
+
+    ## Must be installed
+    library(\"gamlss.dist\"); library(\"distributions3\")
+
+    ## Test that all parameters defined are arguments to the constructor function
+    test_that("[<FNAME>]: constructor <NAME>() has arguments <PARAMTXT>", {
+        args <- names(formals(getFromNamespace("<NAME>", "gamlss.dist")))
+        expect_true(all(!is.na(match(<PARAMVEC>, args))), info = "not all parameters are arguments to constructor function")
+    });
+
+    ## Setting up a series of "global" objects for testing,
+    ## Intialized with NULL and set by the test set below.
+    d1 <- dn <- dx <- NULL
+    xx <- xxLong         <- NULL
+    pp <- ppLong         <- NULL
+
+    ## Quantile vectors for testing
+    test_that("[<FNAME>]: constructor <NAME> runs silent with parameter inputs", {
+        <SKIPIFNOT>
+        ## Call constructor function with the pre-defined arguments in
+        ## parameters$valid to create four objects for testing:
+        ## - d1 (unnamed distribution object with one distribution)
+        ## - dx (unnamed distributions object with as many distributions as defined in parameters$valid)
+        ## - dn (named version of dx)
+        expect_silent(d1 <<- <CMD_D1>)
+        expect_silent(dx <<- <CMD_DX>)
+        expect_silent(dn <<- <CMD_DN>)
+
+        ## Response vectors for testing
+        ## - xx (same length as dn/dx)
+        ## - xxLong (longer than dn/dx for testing !elementwise/drops)
+        n      <-  length(dx)
+        pp     <<- seq(1 / (n + 1), n / (n + 1), length.out = n)
+        expect_silent(xx   <<- round(quantile(dx, pp), 4))
+
+        n      <-  as.integer(pmax(length(dn) * 1.3, 20))
+        ppLong <<- seq(0.05, 0.95, length.out = n)
+        expect_silent(xxLong <<- quantile(d1, ppLong))
+    });
+    '
+
+    ## Parameters
+    params <- c(config$parameters$valid, config$parameters$extra)
+
+    ## Commands to create the test objects d1, dx, dn
+    deparseone <- function(x) deparse(head(x, 1))
+    cmd_d1 <- sprintf("%s(%s)", config$name,
+                      paste(paste(names(params), "=", sapply(params, deparseone), collapse = ", ")))
+    cmd_dx <- sprintf("%s(%s)", config$name,
+                      paste(paste(names(params), "=", sapply(params, deparse)), collapse = ", "))
+
+    ## Same as cmd_dx but with named parameters, which should result in a named distributions object
+    names(params[[1L]]) <- LETTERS[seq_along(params[[1L]])] ## Naming first parameter set
+    cmd_dn <- sprintf("%s(%s)", config$name,
+                      paste(paste(names(params), "=", sapply(params, deparse)), collapse = ", "))
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"       = config$name,
+              "<FNAME>"      = fname,
+              "<SKIPIFNOT>"  = get_skipifnot(fname, config),
+              "<YAMLFILE>"   = config$yamlfile,
+              "<PARAMVEC>"   = deparse1(names(params)),
+              "<PARAMTXT>"   = paste0(names(params), collapse = ", "),
               "<CMD_D1>"     = cmd_d1,
               "<CMD_DX>"     = cmd_dx,
               "<CMD_DN>"     = cmd_dn)
@@ -567,47 +684,84 @@ autotest_constructor <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
-    template <- '
-    ## --- test set generated by <FNAME>
-    test_that("[<FNAME>]: constructor returns expected object: unnamed, length 1", {
-        <SKIPIFNOT>
-        ## Class
-        expect_s3_class(d0, c("<NAME>", "distribution"), exact = TRUE)
-        expect_s3_class(d1, c("<NAME>", "distribution"), exact = TRUE)
-        expect_s3_class(dn, c("<NAME>", "distribution"), exact = TRUE)
-        expect_s3_class(dx, c("<NAME>", "distribution"), exact = TRUE)
+    if (is.gamlss(config)) {
+        template <- '
+        ## --- test set generated by <FNAME>
+        test_that("[<FNAME>]: constructor returns expected object: unnamed, length 1", {
+            <SKIPIFNOT>
+            ## Class
+            expect_s3_class(d1, c("<NAME>", "distribution"), exact = TRUE)
+            expect_s3_class(dn, c("<NAME>", "distribution"), exact = TRUE)
+            expect_s3_class(dx, c("<NAME>", "distribution"), exact = TRUE)
 
-        ## Converting to data frame for testing
-        dd0 <- as.data.frame(as.matrix(d0))
-        dd1 <- as.data.frame(as.matrix(d1))
-        ddx <- as.data.frame(as.matrix(dx))
-        ddn <- as.data.frame(as.matrix(dn))
+            ## Converting to data frame for testing
+            dd1 <- as.data.frame(as.matrix(d1))
+            ddx <- as.data.frame(as.matrix(dx))
+            ddn <- as.data.frame(as.matrix(dn))
 
-        ## Dimension and names/dimension names
-        expect_identical(dim(dd1),      c(1L, NCOL(as.matrix(d0))))
-        expect_identical(names(dd1),    names(dd0))
-        expect_null(names(d1))
+            ## Dimension and names/dimension names
+            expect_identical(dim(ddx),      c(<N>, NCOL(as.matrix(d1))))
+            expect_identical(names(ddx),    names(dd1))
+            expect_null(names(dx))
 
-        expect_identical(dim(ddx),      c(<N>, NCOL(as.matrix(d0))))
-        expect_identical(names(ddx),    names(dd0))
-        expect_null(names(dx))
+            expect_identical(names(ddn),    names(ddn))
+            expect_identical(names(dn),     LETTERS[seq_len(<N>)])
+            expect_identical(rownames(ddn), LETTERS[seq_len(<N>)])
 
-        expect_identical(dim(ddn),      c(<N>, NCOL(as.matrix(d0))))
-        expect_identical(names(ddn),    names(ddn))
-        expect_identical(names(dn),     LETTERS[seq_len(<N>)])
-        expect_identical(rownames(ddn), LETTERS[seq_len(<N>)])
+            ## Checking values
+            <CMD_VALUES>
 
-        ## Checking values
-        <CMD_VALUES>
+            ## Also testing overwriting names
+            tmp <- dx
+            tmpn <- sample(letters, length(dx))
+            expect_silent(names(tmp) <- tmpn)
+            expect_identical(names(tmp), tmpn, info = "names not properly overwritten")
+            rm(tmp)
+        });
+        '
+    } else {
+        template <- '
+        ## --- test set generated by <FNAME>
+        test_that("[<FNAME>]: constructor returns expected object: unnamed, length 1", {
+            <SKIPIFNOT>
+            ## Class
+            expect_s3_class(d0, c("<NAME>", "distribution"), exact = TRUE)
+            expect_s3_class(d1, c("<NAME>", "distribution"), exact = TRUE)
+            expect_s3_class(dn, c("<NAME>", "distribution"), exact = TRUE)
+            expect_s3_class(dx, c("<NAME>", "distribution"), exact = TRUE)
 
-        ## Also testing overwriting names
-        tmp <- dx
-        tmpn <- sample(letters, length(dx))
-        expect_silent(names(tmp) <- tmpn)
-        expect_identical(names(tmp), tmpn, info = "names not properly overwritten")
-        rm(tmp)
-    });
-    '
+            ## Converting to data frame for testing
+            dd0 <- as.data.frame(as.matrix(d0))
+            dd1 <- as.data.frame(as.matrix(d1))
+            ddx <- as.data.frame(as.matrix(dx))
+            ddn <- as.data.frame(as.matrix(dn))
+
+            ## Dimension and names/dimension names
+            expect_identical(dim(dd1),      c(1L, NCOL(as.matrix(d0))))
+            expect_identical(names(dd1),    names(dd0))
+            expect_null(names(d1))
+
+            expect_identical(dim(ddx),      c(<N>, NCOL(as.matrix(d0))))
+            expect_identical(names(ddx),    names(dd0))
+            expect_null(names(dx))
+
+            expect_identical(dim(ddn),      c(<N>, NCOL(as.matrix(d0))))
+            expect_identical(names(ddn),    names(ddn))
+            expect_identical(names(dn),     LETTERS[seq_len(<N>)])
+            expect_identical(rownames(ddn), LETTERS[seq_len(<N>)])
+
+            ## Checking values
+            <CMD_VALUES>
+
+            ## Also testing overwriting names
+            tmp <- dx
+            tmpn <- sample(letters, length(dx))
+            expect_silent(names(tmp) <- tmpn)
+            expect_identical(names(tmp), tmpn, info = "names not properly overwritten")
+            rm(tmp)
+        });
+        '
+    }
 
     ## Generating commands to test the values of the parameters
     cmd_values <- with(config$parameters,
@@ -620,7 +774,7 @@ autotest_constructor <- function(config) {
               "<N>"          = deparse1(length(config$parameters$valid[[1L]])),
               "<CMD_VALUES>" = paste(cmd_values, collapse = "\n"))
 
-    return(replace_placeholders(template, p) |> clean_cmd())
+    return(replace_placeholders(template, p, indentation = 12) |> clean_cmd(spaces = 8))
 }
 
 
@@ -642,7 +796,7 @@ autotest_S3_defaults <- function(config) {
     test_that("[<FNAME>]: testing arguments and defaults of a series of S3 methods", {
         <SKIPIFNOT>
         ## Helper function to get formals of S3 method
-        get_formals <- function(x) formals(getFromNamespace(x, ns = "distributions3"))
+        get_formals <- function(x) formals(getFromNamespace(x, ns = "<PACKAGE>"))
 
         expect_identical(get_formals("support.<NAME>"),
             as.pairlist(alist(d =, drop = TRUE, ... =)),
@@ -658,6 +812,7 @@ autotest_S3_defaults <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<PACKAGE>"   = if (is.gamlss(config)) "gamlss.dist" else "distributions3",
               "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -676,7 +831,7 @@ autotest_S3_defaults <- function(config) {
 autotest_crps_defaults <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
 
-    ## No dedicated crps.<NAME> method? Skipping test
+    ## No dedicated crps.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("crps", config$name)) return(NULL)
 
     template <- '
@@ -895,7 +1050,7 @@ autotest_params_nonnumeric <- function(config) {
     '
 
     ## Putting to gether arguments for testing
-    args <- config$parameters$valid
+    args <- c(config$parameters$extra$family, config$parameters$valid)
     args_chr <- lapply(args, as.character)
 
     p <- list("<NAME>"      = config$name,
@@ -925,7 +1080,7 @@ autotest_params_NA <- function(config) {
     test_that("[<FNAME>]: <NAME>() allows for parameters set NA", {
         <SKIPIFNOT>
         ## Calling constructor function
-        expect_silent(d <- <NAME>(<ARGS_NA>))
+        expect_silent(d <- <NAME>(<GAMLSSFAM><ARGS_NA>))
 
         ## Check we have missing values where expected
         expect_silent(m <- as.matrix(d))
@@ -978,7 +1133,10 @@ autotest_params_NA <- function(config) {
     ## to return missing values when calling the S3 methods.
     idx_na <- unique(unlist(lapply(args, function(k) which(is.na(k)))))
 
+    gamlssfam <- if (is.gamlss(config)) sprintf("\"%s\", ", config$parameters$extra$family) else ""
+
     p <- list("<NAME>"      = config$name,
+              "<GAMLSSFAM>" = gamlssfam,
               "<FNAME>"     = fname,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<ARGS_NA>"   = paste(lapply(args, deparse), collapse = ", "),
@@ -1092,6 +1250,8 @@ autotest_params_incorrect_type <- function(config) {
 #' containing the test sets (R commands).
 autotest_params_empty <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Skipped for GAMLSS distributions entirely
+    if (is.gamlss(config)) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
@@ -1178,7 +1338,7 @@ autotest_format <- function(config) {
     test_that("[<FNAME>]: S3 methods format and print work as expected for <NAME> distribution", {
         <SKIPIFNOT>
         ## Generating pattern
-        p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
+        p <- sprintf("<GREPNAME>\\\\(%s\\\\)", paste(names(as.list(d1)), "<PATTERN>", sep = " = ", collapse = ", "))
 
         ## Testing format() (unnamed length 1)
         expect_silent(x <- format(d1))
@@ -1199,8 +1359,12 @@ autotest_format <- function(config) {
     });
     '
 
+    ## Name for grep (checking string)
+    gname <- if (is.gamlss(config)) paste("GAMLSS", config$parameters$extra$family) else config$name
+
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
+              "<GREPNAME>"  = gname,
               "<FNAME>"     = fname,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<N>"         = deparse1(length(config$parameters$valid[[1L]])),
@@ -1227,7 +1391,7 @@ autotest_as.character <- function(config) {
     test_that("[<FNAME>]: S3 method as.character works as expected for <NAME> distribution", {
         <SKIPIFNOT>
         ## Generating pattern
-        p <- sprintf("<NAME>\\\\(%s\\\\)", paste(names(as.list(d0)), "<PATTERN>", sep = " = ", collapse = ", "))
+        p <- sprintf("<GREPNAME>\\\\(%s\\\\)", paste(names(as.list(d1)), "<PATTERN>", sep = " = ", collapse = ", "))
 
         ## Testing as.character() (unnamed length 1)
         expect_silent(x <- as.character(d1))
@@ -1248,8 +1412,12 @@ autotest_as.character <- function(config) {
     });
     '
 
+    ## Name for grep (checking string)
+    gname <- if (is.gamlss(config)) paste("GAMLSS", config$parameters$extra$family) else config$name
+
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
+              "<GREPNAME>"  = gname,
               "<FNAME>"     = fname,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<N>"         = deparse1(length(config$parameters$valid[[1L]])),
@@ -1276,15 +1444,13 @@ autotest_as.list <- function(config) {
         <SKIPIFNOT>
         ## Converting unnamed distributions object
         expect_silent(x <- as.list(dx))
-        expect_identical(x, <EXPECTED_LIST>)
+        expect_identical(x, <EXPECTED_LIST>, ignore_attr = TRUE)
 
         ## Converting named distributions object
-        expect_silent(x <- as.list(dx))
-        expect_identical(x, <EXPECTED_LIST>)
+        expect_silent(x <- as.list(dn))
+        expect_identical(x, <EXPECTED_LIST>, ignore_attr = TRUE)
     });
     '
-
-    ## Expecting the following (unnamed) list to be created
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"           = config$name,
@@ -1383,21 +1549,32 @@ autotest_dim <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     if (is.null(config$parameters$invalid)) return(NULL) # no support defined
 
-    template <- '
-    ## --- test set generated by <FNAME>
-    test_that("[<FNAME>]: S3 method dim works as expected for <NAME> distribution", {
-        <SKIPIFNOT>
-        expect_null(dim(d0), info = "expected dim() to return NULL")
-        expect_null(dim(d1), info = "expected dim() to return NULL")
-        expect_null(dim(dx), info = "expected dim() to return NULL")
-    });
-    '
+    if (is.gamlss(config)) {
+        template <- '
+        ## --- test set generated by <FNAME>
+        test_that("[<FNAME>]: S3 method dim works as expected for <NAME> distribution", {
+            <SKIPIFNOT>
+            expect_null(dim(d1), info = "expected dim() to return NULL")
+            expect_null(dim(dx), info = "expected dim() to return NULL")
+        });
+        '
+    } else {
+        template <- '
+        ## --- test set generated by <FNAME>
+        test_that("[<FNAME>]: S3 method dim works as expected for <NAME> distribution", {
+            <SKIPIFNOT>
+            expect_null(dim(d0), info = "expected dim() to return NULL")
+            expect_null(dim(d1), info = "expected dim() to return NULL")
+            expect_null(dim(dx), info = "expected dim() to return NULL")
+        });
+        '
+    }
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
               "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
-    return(replace_placeholders(template, p) |> clean_cmd())
+    return(replace_placeholders(template, p, indentation = 12) |> clean_cmd(spaces = 8))
 }
 
 
@@ -1694,7 +1871,7 @@ autotest_moments_defaults <- function(config) {
 #' @rdname autotest_moments
 autotest_mean <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated mean.<NAME> method? Skipping test
+    ## No dedicated mean.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("mean", config$name)) return(NULL)
     return(moments_tests(config, fname, "mean"))
 }
@@ -1702,21 +1879,21 @@ autotest_mean <- function(config) {
 #' @rdname autotest_moments
 autotest_variance <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated variance.<NAME> method? Skipping test
+    ## No dedicated variance.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("variance", config$name)) return(NULL)
     return(moments_tests(config, fname, "variance"))
 }
 #' @rdname autotest_moments
 autotest_skewness <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated skewness.<NAME> method? Skipping test
+    ## No dedicated skewness.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("skewness", config$name)) return(NULL)
     return(moments_tests(config, fname, "skewness"))
 }
 #' @rdname autotest_moments
 autotest_kurtosis <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated kurtosis.<NAME> method? Skipping test
+    ## No dedicated kurtosis.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("kurtosis", config$name)) return(NULL)
     return(moments_tests(config, fname, "kurtosis"))
 }
@@ -1753,7 +1930,7 @@ moments_tests_compare2numeric <- function(config, fname, what = c("mean", "varia
 #' @rdname autotest_moments
 autotest_mean_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated mean.<NAME> method? Skipping test
+    ## No dedicated mean.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("mean", config$name)) return(NULL)
     return(moments_tests_compare2numeric(config, fname, "mean"))
 }
@@ -1761,21 +1938,21 @@ autotest_mean_compare2numeric <- function(config) {
 #' @rdname autotest_moments
 autotest_variance_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated variance.<NAME> method? Skipping test
+    ## No dedicated variance.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("variance", config$name)) return(NULL)
     return(moments_tests_compare2numeric(config, fname, "variance"))
 }
 #' @rdname autotest_moments
 autotest_skewness_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated kurtosis.<NAME> method? Skipping test
+    ## No dedicated kurtosis.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("kurtosis", config$name)) return(NULL)
     return(moments_tests_compare2numeric(config, fname, "skewness"))
 }
 #' @rdname autotest_moments
 autotest_kurtosis_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
-    ## No dedicated kurtosis.<NAME> method? Skipping test
+    ## No dedicated kurtosis.<NAME> method? Ignore test (not writing test set)
     if (!distributions3:::hasS3method("kurtosis", config$name)) return(NULL)
     return(moments_tests_compare2numeric(config, fname, "kurtosis"))
 }
@@ -1797,7 +1974,7 @@ autotest_dpqr_defaults <- function(config) {
     test_that("[<FNAME>]: dpqr methods for <NAME> have correct arguments/defaults", {
         <SKIPIFNOT>
         ## Helper function to get formals of S3 method
-        get_formals <- function(x) formals(getFromNamespace(x, ns = "distributions3"))
+        get_formals <- function(x) formals(getFromNamespace(x, ns = "<PACKAGE>"))
 
         expect_identical(get_formals("pdf.<NAME>"),
             as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)),
@@ -1819,6 +1996,7 @@ autotest_dpqr_defaults <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<PACKAGE>"   = if (is.gamlss(config)) "gamlss.dist" else "distributions3",
               "<SKIPIFNOT>" = get_skipifnot(fname, config))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -2433,19 +2611,53 @@ autotest_random_support <- function(config) {
 #'
 #' @return Returns `NULL` if the test is excluded, or a character vector
 #' containing the test sets (R commands).
-autotest_score_hessian_defaults <- function(config) {
+autotest_score_defaults <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (isFALSE(get_method("score", config))) return(NULL)
 
     template <- '
     ## --- test set generated by <FNAME>
-    test_that("[<FNAME>]: score and hessian methods for <NAME> have correct arguments/defaults", {
+    test_that("[<FNAME>]: score method for <NAME> has correct arguments/defaults", {
         <SKIPIFNOT>
 
-        expect_identical(formals(getFromNamespace("score.<NAME>", ns = "distributions3")),
+        expect_identical(formals(getFromNamespace("score.<NAME>", ns = "<PACKAGE>")),
             as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, ... =)),
             info = "unexpected arguments/defaults for S3 method score.<NAME>")
+    });
+    '
 
-        expect_identical(formals(getFromNamespace("hessian.<NAME>", ns = "distributions3")),
+    ## Distributions with only one parameter are expected to have S3 methods
+    ## where which is specified with that one parameter (e.g., which = "lambda" for Poisson).
+    ## Else which is expected to be NULL
+    params <- names(config$parameters$valid)
+    which <- if (length(params) == 1L) params else NULL
+
+    ## List of values/placeholders to replace
+    p <- list("<NAME>"      = config$name,
+              "<FNAME>"     = fname,
+              "<PACKAGE>"   = if (is.gamlss(config)) "gamlss.dist" else "distributions3",
+              "<SKIPIFNOT>" = get_skipifnot(fname, config),
+              "<DEFAULT>"   = deparse1(which))
+
+    return(replace_placeholders(template, p) |> clean_cmd())
+}
+
+#' Autotests for Arguments and Defaults of S3 Method hessian
+#'
+#' @param x object of class `autotest_config`.
+#'
+#' @return Returns `NULL` if the test is excluded, or a character vector
+#' containing the test sets (R commands).
+autotest_hessian_defaults <- function(config) {
+    if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    if (isFALSE(get_method("score", config))) return(NULL)
+
+    template <- '
+    ## --- test set generated by <FNAME>
+    test_that("[<FNAME>]: hessian method for <NAME> has correct arguments/defaults", {
+        <SKIPIFNOT>
+
+        expect_identical(formals(getFromNamespace("hessian.<NAME>", ns = "<PACKAGE>")),
             as.pairlist(alist(d =, x =, which = <DEFAULT>, drop = TRUE, expected = FALSE, ... =)),
             info = "unexpected arguments/defaults for S3 method hessian.<NAME>")
     });
@@ -2460,6 +2672,7 @@ autotest_score_hessian_defaults <- function(config) {
     ## List of values/placeholders to replace
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
+              "<PACKAGE>"   = if (is.gamlss(config)) "gamlss.dist" else "distributions3",
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
               "<DEFAULT>"   = deparse1(which))
 
@@ -2474,10 +2687,12 @@ autotest_score_hessian_defaults <- function(config) {
 #' containing the test sets (R commands).
 autotest_score <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Loading method. If not found, skip entire test
+    if (isFALSE(method <- get_method("score", config))) return(NULL)
 
     ## Some methods have a default argument 'what'. If found,
     ## take it as is. Else we auto-generate all available derivatives.
-    f <- formals(getS3method("score", config$name, envir = getNamespace("distributions3")))
+    f <- formals(method)
     deriv <- if (!is.null(f$which)) {
         f$which
     } else {
@@ -2530,6 +2745,8 @@ autotest_score <- function(config) {
 #' @rdname autotest_score
 autotest_score_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Loading method. If not found, skip entire test
+    if (isFALSE(method <- get_method("score", config))) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
     ## if the default S3 method does return the analytic solution.
@@ -2567,10 +2784,12 @@ autotest_score_compare2numeric <- function(config) {
 #' containing the test sets (R commands).
 autotest_hessian_observed <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Loading method. If not found, skip entire test
+    if (isFALSE(method <- get_method("hessian", config))) return(NULL)
 
     ## Some methods have a default argument 'what'. If found,
     ## take it as is. Else we auto-generate all available derivatives.
-    f <- formals(getS3method("score", config$name, envir = getNamespace("distributions3")))
+    f <- formals(method)
     deriv <- if (!is.null(f$which)) {
         f$which
     } else {
@@ -2626,10 +2845,12 @@ autotest_hessian_observed <- function(config) {
 #' @rdname autotest_hessian_observed
 autotest_hessian_expected <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Loading method. If not found, skip entire test
+    if (isFALSE(method <- get_method("hessian", config))) return(NULL)
 
     ## Some methods have a default argument 'what'. If found,
     ## take it as is. Else we auto-generate all available derivatives.
-    f <- formals(getS3method("score", config$name, envir = getNamespace("distributions3")))
+    f <- formals(method)
     deriv <- if (!is.null(f$which)) {
         f$which
     } else {
@@ -2681,6 +2902,8 @@ autotest_hessian_expected <- function(config) {
 #' @rdname autotest_hessian_observed
 autotest_hessian_observed_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Loading method. If not found, skip entire test
+    if (isFALSE(get_method("hessian", config))) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
     ## if the default S3 method does return the analytic solution.
@@ -2710,6 +2933,8 @@ autotest_hessian_observed_compare2numeric <- function(config) {
 #' @rdname autotest_hessian_observed
 autotest_hessian_expected_compare2numeric <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
+    ## Loading method. If not found, skip entire test
+    if (isFALSE(get_method("hessian", config))) return(NULL)
 
     ## Compare analytic to numeric solution. This is only useful
     ## if the default S3 method does return the analytic solution.
