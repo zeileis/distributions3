@@ -11,9 +11,7 @@
 # -------------------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-
 suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("scoringRules"))
 
 
 ## Constructor function for new 'MyNormalPDF' distribution
@@ -39,10 +37,12 @@ test_that("distribution prototype via pdf-only should only throw errors", {
     expect_error(skewness(n),      regexp = pattern)
     expect_error(kurtosis(n),      regexp = pattern)
     expect_error(quantile(n, 0.5), regexp = pattern)
-    expect_error(crps(n, 5),       regexp = pattern)
 })
 
-
+test_that("distribution crps prototype via pdf-only should only throw errors", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+    expect_error(crps(n, 5),       regexp = pattern)
+})
 
 test_that("pdf.distribution (approximation) comparing MyNormalCDF and Normal", {
     x <- seq(-5, 20, by = 0.05)

@@ -4,16 +4,16 @@
 \alias{HurdleNegativeBinomial}
 \title{Create a hurdle negative binomial distribution}
 \usage{
-HurdleNegativeBinomial(mu = numeric(), theta = numeric(), pi = numeric())
+HurdleNegativeBinomial(pi = numeric(), mu = numeric(), theta = numeric())
 }
 \arguments{
+\item{pi}{Zero-hurdle probability, can be any value in \verb{[0, 1]}.}
+
 \item{mu}{Location parameter of the negative binomial component of the distribution.
 Can be any positive number.}
 
 \item{theta}{Overdispersion parameter of the negative binomial component of the distribution.
 Can be any positive number.}
-
-\item{pi}{Zero-hurdle probability, can be any value in \verb{[0, 1]}.}
 }
 \value{
 A \code{HurdleNegativeBinomial} object.
@@ -28,7 +28,7 @@ We recommend reading this documentation on
 will render with additional detail.
 
 In the following, let \eqn{X} be a hurdle negative binomial random variable with parameters
-\code{mu} = \eqn{\mu} and \code{theta} = \eqn{\theta}.
+\verb{\\pi} = \eqn{\pi}, \code{mu} = \eqn{\mu}, and \code{theta} = \eqn{\theta}.
 
 \strong{Support}: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 
@@ -75,7 +75,7 @@ Omitted for now.
 }
 \examples{
 ## set up a hurdle negative binomial distribution
-X <- HurdleNegativeBinomial(mu = 2.5, theta = 1, pi = 0.75)
+X <- HurdleNegativeBinomial(pi = 0.75, mu = 2.5, theta = 1)
 X
 
 ## standard functions

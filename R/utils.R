@@ -637,3 +637,82 @@ median.distribution <- function(x, na.rm = FALSE, ...) {
     quantile(x, probs = 0.5, ...)
 }
 
+#' Prepare Return of deriv2 Methods
+#'
+#' Auxilary function preparing the final object returned by the `deriv2` methods.
+#'
+#' @param x `NULL` or a named list with calculated scores/Hessian.
+#' @param which named character vector, where the names of the vector correspond
+#'        to the calculated derivatives, the content to the requested derivatives.
+#'        See also [get_deriv_names()].
+#' @param drop logical.
+#' @param distribution_names `NULL` or character vector, names of the distribution
+#'        object the scores are calculated for.
+#'
+#' @return If `drop = TRUE` and only one derivative is present/requested (i.e.,
+#' `length(x) == length(which) == 1L`) a numeric vector is returned. Else
+#' a matrix is returned containing the corresponding derivatives.
+prep_deriv2_return <- function(x, which, drop, distribution_names) {
+  if (is.null(x)) return(NULL)
+  ## If drop equals TRUE and only one derivative was calculated
+  if (drop && length(which) == 1L) return(setNames(x[[1]], distribution_names))
+  ## Else combine to matrix and prepare return
+  x <- do.call("cbind", x)
+  dimnames(x) <- list(distribution_names, colnames(x))
+  if (!identical(colnames(x), which)) x <- x[, names(which), drop = FALSE]
+  colnames(x) <- unname(which)
+  return(x)
+}
+
+#' Prepare Object for Calculations in deriv2 Methods
+#'
+#' Setting up the object (a named list) used by the `deriv2` methods
+#' for calculating score and hessian.
+#'
+#' @param d object of class distribution.
+#' @param n number of observations (length of score/Hessian vectors).
+#' @param which `NULL` or character vector. If `NULL` all available parameters
+#'        will returned. If character, the user-specified parameters are returned.
+#' @param order defines the order of derivatives to be calculated and returned.
+#'        `1` (scores), `2` (Hessian), or `1:2` (both).
+#'
+#' @return Named list with three elements. `$which` is a named list of length 2
+#' containing a named character vector with the derivatives to be calculated for
+#' both score and Hessian, or `NULL` if not required.
+#'
+#' Similarely, `$score` and `$hessian` are `NULL` if no first or second derivative
+#' is requested by the user. Else these two elements contain a named list with
+#' empty numeric vectors of length `n` later on filled by the corresponding
+#' C function.
+prep_deriv2_object <- function(d, n, which, order) {
+  dp <- names(unclass(d)) # Parameters of the distribution
+
+  ## By default, assume both to be NULL
+  which.score <- which.hessian <- NULL
+
+  ## Preparing score parameters (if required)
+  if (1 %in% order) {
+      which.score <- get_deriv_names(dp, expand = FALSE)
+      which.score <- if (is.null(which)) which.score else match.arg(which, which.score, several.ok = TRUE)
+  }
+
+  ## Preparing score parameters (if required)
+  if (2 %in% order) {
+      which.hessian <- get_deriv_names(dp, expand = TRUE)
+      which.hessian <- if (is.null(which)) which.hessian else match.arg(which, which.hessian, several.ok = TRUE)
+  }
+
+  ## Setting up objects to be filled by the c code
+  ## Named list as expected by the C functions.
+  fn <- function(x, n) {
+      if (is.null(x)) return(NULL)
+      x <- unique(names(x))
+      setNames(lapply(seq_along(x), function(n, ...) numeric(n), n = n), x)
+  }
+
+  ## Preparing return
+  list(which   = list(score = which.score, hessian = which.hessian),
+       score   = fn(which.score,   n = n),
+       hessian = fn(which.hessian, n = n))
+}
+

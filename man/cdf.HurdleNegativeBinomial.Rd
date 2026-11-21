@@ -36,7 +36,7 @@ Evaluate the cumulative distribution function of a hurdle negative binomial dist
 }
 \examples{
 ## set up a hurdle negative binomial distribution
-X <- HurdleNegativeBinomial(mu = 2.5, theta = 1, pi = 0.75)
+X <- HurdleNegativeBinomial(pi = 0.75, mu = 2.5, theta = 1)
 X
 
 ## standard functions

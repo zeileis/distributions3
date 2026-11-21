@@ -14,7 +14,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
 
 ## Once get and store the entire namespace of the package
 ns <- ls(getNamespace("distributions3"))
@@ -302,6 +301,8 @@ test_that("mean S3methods correctly use check_dots_used()", {
 # crps
 # -------------------------------------------------------
 test_that("crps S3methods correctly use check_dots_used()", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     ## Ensure this is a generic function exported/provided by distributions3
     expect_false("crps" %in% ns)
 

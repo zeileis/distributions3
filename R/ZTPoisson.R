@@ -163,6 +163,9 @@ rztpois <- function(n, lambda) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 ZTPoisson <- function(lambda = numeric()) {
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  stopifnot("parameter 'lambda' must always be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE))
+
   d <- data.frame(lambda = lambda)
   class(d) <- c("ZTPoisson", "distribution")
   return(d)
@@ -180,6 +183,7 @@ mean.ZTPoisson <- function(x, ...) {
 
 #' @export
 variance.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m * (1 + x$lambda - m), names(x))
@@ -187,6 +191,7 @@ variance.ZTPoisson <- function(x, ...) {
 
 #' @export
 skewness.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s <- sqrt(m * (x$lambda + 1 - m))
@@ -197,6 +202,7 @@ skewness.ZTPoisson <- function(x, ...) {
 
 #' @export
 kurtosis.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s2 <- m * (x$lambda + 1 - m)
@@ -356,3 +362,68 @@ is_continuous.ZTPoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZTPoisson and suff_stat.ZTPoisson
+
+# ---------------------------------------------------------------------------
+# ZTPoisson: methods for score/hessian (formulas as in countreg::sztpois()
+# and countreg::hztpois(), written in terms of expm1() for stability)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
+  ## Calculating scores via the deriv2 method
+  deriv2(d, x, which, order = 1L, drop = drop, ...)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculating Hessian via the deriv2 method
+  deriv2(d, x, which = which, order = 2L, drop = drop, expected = expected, ...)
+}
+
+#' @exportS3Method
+#' @useDynLib distributions3, .registration = TRUE
+deriv2.ZTPoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+
+  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
+  order <- unique(as.integer(order))
+  if (identical(order, 2L) && expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n        <- max_length(d, x)
+  cores    <- as.integer(cores)[1L]
+  expected <- as.logical(expected)[1L]
+
+  stopifnot(
+    "argument 'cores' must evaluate to positive integer" = is.integer(cores) && length(cores) == 1L && cores >= 1L,
+    "argument 'order' must evaluate to 1, 2, or 1:2"     = length(order) > 0 && all(order %in% 1:2)
+  )
+
+  ## Compute which derivatives to be calculated, and setting up the named lists
+  ## used by the C code to store the corresponding results
+  deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
+
+  ## Note that .Call has no named arguments, they are only for orientation
+  .Call("c_deriv_ZTPoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
+        score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
+        expected     = as.logical(expected), ncores = as.integer(cores))
+
+  ## Prepare return. If only score/only hessian was requested,
+  ## returning matrix or vector. Else a named list is returned.
+  if (identical(order, 1L)) {
+    prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d))
+  } else if (identical(order, 2L)) {
+    prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d))
+  } else {
+    list(score   = prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d)),
+         hessian = prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d)))
+  }
+}

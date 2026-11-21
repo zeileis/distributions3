@@ -2,7 +2,7 @@
 #'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-hurdle Poisson distribution with
-#' parameters \code{lambda} and \code{pi}.
+#' parameters \code{pi} and \code{lambda}.
 #'
 #' All functions follow the usual conventions of d/p/q/r functions
 #' in base R. In particular, all four \code{hpois} functions for the
@@ -19,8 +19,8 @@
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
-#' @param lambda vector of (non-negative) Poisson parameters.
 #' @param pi vector of zero-hurdle probabilities in the unit interval.
+#' @param lambda vector of (non-negative) Poisson parameters.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
@@ -31,18 +31,18 @@
 #' @examples
 #' ## theoretical probabilities for a hurdle Poisson distribution
 #' x <- 0:8
-#' p <- dhpois(x, lambda = 2.5, pi = 0.75)
+#' p <- dhpois(x, pi = 0.75, lambda = 2.5)
 #' plot(x, p, type = "h", lwd = 2)
 #'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
-#' y <- rhpois(500, lambda = 2.5, pi = 0.75)
+#' y <- rhpois(500, pi = 0.75, lambda = 2.5)
 #' hist(y, breaks = -1:max(y) + 0.5)
 #'
 #' @importFrom stats dpois ppois
 #' @rdname hpois
 #' @export
-dhpois <- function(x, lambda, pi, log = FALSE) {
+dhpois <- function(x, pi, lambda, log = FALSE) {
   rval <- dpois(x, lambda = lambda, log = TRUE) -
     ppois(0, lambda = lambda, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
@@ -53,7 +53,7 @@ dhpois <- function(x, lambda, pi, log = FALSE) {
 #' @importFrom stats dpois ppois
 #' @rdname hpois
 #' @export
-phpois <- function(q, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
+phpois <- function(q, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   rval <- log(pmax(0, ppois(q, lambda = lambda) - dpois(0L, lambda = lambda))) -
     ppois(0, lambda = lambda, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
@@ -68,7 +68,7 @@ phpois <- function(q, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats dpois ppois qpois
 #' @rdname hpois
 #' @export
-qhpois <- function(p, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
+qhpois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   if(log.p) p <- exp(p)
   if(!lower.tail) p <- 1 - p
   p[p < 1] <- p[p < 1] - .Machine$double.eps/2
@@ -92,8 +92,8 @@ qhpois <- function(p, lambda, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats runif
 #' @rdname hpois
 #' @export
-rhpois <- function(n, lambda, pi) {
-  qhpois(runif(n), lambda = lambda, pi = pi)
+rhpois <- function(n, pi, lambda) {
+  qhpois(runif(n), pi = pi, lambda = lambda)
 }
 
 #' Create a hurdle Poisson distribution
@@ -101,9 +101,9 @@ rhpois <- function(n, lambda, pi) {
 #' Hurdle Poisson distributions are frequently used to model counts
 #' with many zero observations.
 #'
+#' @param pi Zero-hurdle probability, can be any value in `[0, 1]`.
 #' @param lambda Parameter of the Poisson component of the distribution.
 #'   Can be any positive number.
-#' @param pi Zero-hurdle probability, can be any value in `[0, 1]`.
 #'
 #' @return A `HurdlePoisson` object.
 #' @export
@@ -116,8 +116,8 @@ rhpois <- function(n, lambda, pi) {
 #'   <https://zeileis.github.io/distributions3/>, where the math
 #'   will render with additional detail.
 #'
-#'   In the following, let \eqn{X} be a hurdle Poisson random variable with parameter
-#'   `lambda` = \eqn{\lambda}.
+#'   In the following, let \eqn{X} be a hurdle Poisson random variable with parameters
+#'   `pi` = \eqn{\pi} and `lambda` = \eqn{\lambda}.
 #'
 #'   **Support**: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 #'
@@ -157,7 +157,7 @@ rhpois <- function(n, lambda, pi) {
 #'
 #' @examples
 #' ## set up a hurdle Poisson distribution
-#' X <- HurdlePoisson(lambda = 2.5, pi = 0.75)
+#' X <- HurdlePoisson(pi = 0.75, lambda = 2.5)
 #' X
 #'
 #' ## standard functions
@@ -175,8 +175,17 @@ rhpois <- function(n, lambda, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-HurdlePoisson <- function(lambda = numeric(), pi = numeric()) {
-  d <- data.frame(lambda = lambda, pi = pi)
+HurdlePoisson <- function(pi = numeric(), lambda = numeric()) {
+  if (!is.numeric(pi)) pi <- as.numeric(pi)
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      length(lambda) == length(pi) | length(lambda) == 1L | length(pi) == 1L,
+    "parameter 'p' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE),
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE)
+  )
+
+  d <- data.frame(pi = pi, lambda = lambda)
   class(d) <- c("HurdlePoisson", "distribution")
   return(d)
 }
@@ -236,7 +245,7 @@ kurtosis.HurdlePoisson <- function(x, ...) {
 random.HurdlePoisson <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric(0L))
-  FUN <- function(at, d) rhpois(n = at, lambda = d$lambda, pi = d$pi)
+  FUN <- function(at, d) rhpois(n = at, pi = d$pi, lambda = d$lambda)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
@@ -265,7 +274,7 @@ random.HurdlePoisson <- function(x, n = 1L, drop = TRUE, ...) {
 #' @export
 #'
 pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dhpois(x = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) dhpois(x = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
@@ -273,7 +282,7 @@ pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 log_pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dhpois(x = at, lambda = d$lambda, pi = d$pi, log = TRUE)
+  FUN <- function(at, d) dhpois(x = at, pi = d$pi, lambda = d$lambda, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -302,7 +311,7 @@ log_pdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @export
 #'
 cdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) phpois(q = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) phpois(q = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
@@ -336,7 +345,7 @@ cdf.HurdlePoisson <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 quantile.HurdlePoisson <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  FUN <- function(at, d) qhpois(p = at, lambda = d$lambda, pi = d$pi, ...)
+  FUN <- function(at, d) qhpois(p = at, pi = d$pi, lambda = d$lambda, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 
@@ -366,3 +375,70 @@ is_continuous.HurdlePoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.HurdlePoisson and suff_stat.HurdlePoisson
+
+# ---------------------------------------------------------------------------
+# HurdlePoisson: methods for score/hessian (pi = P(X > 0), as in countreg)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculating scores via the deriv2 method
+  deriv2(d, x, which, order = 1L, drop = drop, ...)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculating Hessian via the deriv2 method
+  deriv2(d, x, which = which, order = 2L, drop = drop, expected = expected, ...)
+}
+
+
+#' @exportS3Method
+#' @useDynLib distributions3, .registration = TRUE
+deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+
+  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
+  order <- unique(as.integer(order))
+  if (identical(order, 2L) && expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n        <- max_length(d, x)
+  cores    <- as.integer(cores)[1L]
+  expected <- as.logical(expected)[1L]
+
+  stopifnot(
+    "argument 'cores' must evaluate to positive integer" = is.integer(cores) && length(cores) == 1L && cores >= 1L,
+    "argument 'order' must evaluate to 1, 2, or 1:2"     = length(order) > 0 && all(order %in% 1:2)
+  )
+
+  ## Compute which derivatives to be calculated, and setting up the named lists
+  ## used by the C code to store the corresponding results
+  deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
+
+  ## Note that .Call has no named arguments, they are only for orientation
+  .Call("c_deriv_HurdlePoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
+        score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
+        expected     = as.logical(expected), ncores = as.integer(cores))
+
+  ## Prepare return. If only score/only hessian was requested,
+  ## returning matrix or vector. Else a named list is returned.
+  if (identical(order, 1L)) {
+    prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d))
+  } else if (identical(order, 2L)) {
+    prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d))
+  } else {
+    list(score   = prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d)),
+         hessian = prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d)))
+  }
+}
+
+

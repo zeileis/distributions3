@@ -5,10 +5,10 @@
 #' a well defined mean or variance. Cauchy distributions often appear
 #' as priors in Bayesian contexts due to their heavy tails.
 #'
-#' @param location The location parameter. Can be any real number. Defaults
-#'   to `0`.
-#' @param scale The scale parameter. Must be greater than zero (?). Defaults
-#'   to `1`.
+#' @param location The location parameter. Can be any real number.
+#'   Defaults to `0`.
+#' @param scale The scale parameter. Must be greater greater or equal to zero.
+#'   Defaults to `1`.
 #'
 #' @return A `Cauchy` object.
 #' @export
@@ -74,9 +74,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Cauchy <- function(location = 0, scale = 1) {
+  if (!is.numeric(location)) location <- as.numeric(location)
+  if (!is.numeric(scale)) scale <- as.numeric(scale)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(location) == length(scale) | length(location) == 1 | length(scale) == 1
+      length(location) == length(scale) | length(location) == 1 | length(scale) == 1,
+    "parameter 'scale' must be in [0, Inf]" = all(scale >= 0, na.rm = TRUE)
   )
 
   d <- data.frame(location = location, scale = scale)
@@ -277,7 +280,7 @@ score.Cauchy <- function(d, x, which = NULL, drop = TRUE, ...) {
   which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
 
   ## pre-compute 'denom', scoped in scr function!
-  denom <- denom <- d$scale^2 + (x - d$location)^2
+  denom <- d$scale^2 + (x - d$location)^2
 
   ## compute scores
   scr <- function(par, d, x) {
@@ -310,7 +313,7 @@ hessian.Cauchy <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ..
     return(NextMethod())
   } else {
     ## pre-compute 'denom', scoped in hess functions!
-    denom <- denom <- d$scale^2 + (x - d$location)^2
+    denom <- d$scale^2 + (x - d$location)^2
 
     hess <- function(par, d, x) {
         switch(par,

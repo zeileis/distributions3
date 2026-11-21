@@ -76,6 +76,12 @@ test_that("quantile.HyperGeometric work correctly", {
   expect_length(quantile(h, c(0, 1)), 2)
 })
 
+test_that("quantile.HyperGeometric throws warning if p is out of range", {
+  h <- HyperGeometric(1, 1, 1)
+  expect_warning(quantile(h, -1e10))
+  expect_warning(quantile(h, 1 + 1e10))
+})
+
 test_that("vectorization of a HyperGeometric distribution work correctly", {
   d <- HyperGeometric(1, c(1, 3), 1)
   d1 <- d[1]
@@ -167,8 +173,9 @@ test_that("named return values for HyperGeometric distribution work correctly", 
   expect_equal(rownames(support(d)), LETTERS[1:length(d)])
 })
 
-suppressPackageStartupMessages(library("scoringRules"))
 test_that("crps method for HyperGeometric returns correct object", {
+  skip_if_not_installed("scoringRules"); library("scoringRules")
+
   d <- HyperGeometric(6, c(5, 7), 5)
   expect_silent(crps <- crps(d, 3))
   expect_type(crps, "double")

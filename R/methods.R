@@ -305,3 +305,11 @@ support <- function(d, drop = TRUE, ...) {
   if (!length(d)) return(numeric())
   UseMethod("support")
 }
+
+
+## Currently not exported! Could be added to
+## @score-hessian
+deriv2 <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = TRUE, cores = 1L, ...) {
+    if (!length(d)) return(numeric())
+    UseMethod("deriv2")
+}

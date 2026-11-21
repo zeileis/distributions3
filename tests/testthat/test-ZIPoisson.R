@@ -1,5 +1,13 @@
-test_that("print.ZIPoisson works", {
-  expect_output(print(ZIPoisson(1, 0.2)), regexp = "ZIPoisson")
+# -------------------------------------------------------
+# Checking ZIPoisson distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(ZIPoisson),
+                   as.pairlist(alist(pi = numeric(), lambda = numeric())))
 })
 
 test_that("random.ZIPoisson work correctly", {
@@ -18,7 +26,7 @@ test_that("random.ZIPoisson work correctly", {
 })
 
 test_that("pdf.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(pdf(p, 0), 0.8 / exp(1) + 0.2)
   expect_equal(pdf(p, 1), 0.8 / exp(1))
@@ -32,7 +40,7 @@ test_that("pdf.ZIPoisson work correctly", {
 })
 
 test_that("log_pdf.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(log_pdf(p, 0), log(0.8 / exp(1) + 0.2))
   expect_equal(log_pdf(p, 1), log(0.8) - 1)
@@ -46,7 +54,7 @@ test_that("log_pdf.ZIPoisson work correctly", {
 })
 
 test_that("cdf.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(cdf(p, 0), 0.8 / exp(1) + 0.2)
   expect_equal(cdf(p, 1), 0.8 / exp(1) * 2 + 0.2)
@@ -58,7 +66,7 @@ test_that("cdf.ZIPoisson work correctly", {
 })
 
 test_that("quantile.ZIPoisson work correctly", {
-  p <- ZIPoisson(1, 0.2)
+  p <- ZIPoisson(0.2, 1)
 
   expect_equal(quantile(p, 0), 0)
   expect_equal(quantile(p, 0.5), 1)
@@ -67,9 +75,92 @@ test_that("quantile.ZIPoisson work correctly", {
   expect_length(quantile(p, seq_len(0)), 0)
   expect_length(quantile(p, c(0, 1)), 2)
 })
+test_that("quantile.ZIPoisson throws warning if p is out of range", {
+  d <- ZIPoisson(0.2, 1)
+  expect_silent(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
+
+test_that("score.ZIPoisson works corrrectly", {
+  d <- ZIPoisson(1:4/5, 1:4)
+
+  ## Original R implementation to test against
+  scr <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    q  <- exp(-d$lambda)
+    p0 <- d$pi + (1 - d$pi) * q
+    s <- switch(par,
+      "pi"     = ifelse(x > 0, -1 / (1 - d$pi), (1 - q) / p0),
+      "lambda" = ifelse(x > 0, x / d$lambda - 1, -(1 - d$pi) * q / p0))
+    s[!ok] <- 0
+    s
+  }
+
+  ## Score with x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- score(d, x))
+  expect_equal(h[, "pi"],        scr("pi", d, x))
+  expect_equal(h[, "lambda"],    scr("lambda", d, x))
+
+  ## Score with x > 0
+  x <- seq_along(d)
+  expect_silent(h <- score(d, x))
+  expect_equal(h[, "pi"],        scr("pi", d, x))
+  expect_equal(h[, "lambda"],    scr("lambda", d, x))
+})
+
+test_that("hessian.ZIPoisson works corrrectly", {
+  d <- ZIPoisson(1:4/5, 1:4)
+
+  ## Original R implementation to test against
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    q  <- exp(-d$lambda)
+    p0 <- d$pi + (1 - d$pi) * q
+    h <- switch(par,
+      "pi"        = ifelse(x0, -((1 - q) / p0)^2, -1 / (1 - d$pi)^2),
+      "lambda"    = ifelse(x0, (1 - d$pi) * q / p0 - ((1 - d$pi) * q / p0)^2, -x / d$lambda^2),
+      "pi:lambda" = ifelse(x0, q / p0 + (1 - q) * (1 - d$pi) * q / p0^2, 0 * x))
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess_exp <- function(par, d, x) {
+    vapply(seq_along(d), function(i) {
+      ks <- 0:quantile(d[i], 1 - 1e-12)
+      sum(hess_obs(par, d[i], ks) * pdf(d[i], ks))
+    }, numeric(1L))
+  }
+
+  ## Observed Hessian; x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- hessian(d, x, expected = FALSE))
+  expect_equal(h[, "pi"],        hess_obs("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_obs("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+
+  ## Observed Hessian; x > 0
+  x <- seq_along(d)
+  expect_silent(h <- hessian(d, x, expected = FALSE))
+  expect_equal(h[, "pi"],        hess_obs("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_obs("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+
+  ## Expected hessian: (does not depend on x)
+  x <- seq_along(d)
+  expect_silent(h <- hessian(d, x, expected = TRUE))
+  expect_equal(h[, "pi"],        hess_exp("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_exp("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_exp("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_exp("pi:lambda", d, x))
+})
 
 test_that("vectorization of a ZIPoisson distribution work correctly", {
-  d <- ZIPoisson(c(1, 2), 0.2)
+  d <- ZIPoisson(0.2, 1:2)
   d1 <- d[1]
   d2 <- d[2]
 
@@ -126,7 +217,7 @@ test_that("vectorization of a ZIPoisson distribution work correctly", {
 })
 
 test_that("named return values for ZIPoisson distribution work correctly", {
-  d <- ZIPoisson(c(5, 10), 0.25)
+  d <- ZIPoisson(0.25, c(5, 10))
   names(d) <- LETTERS[1:length(d)]
 
   expect_equal(names(mean(d)), LETTERS[1:length(d)])

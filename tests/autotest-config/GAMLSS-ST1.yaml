@@ -1,0 +1,41 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: GAMLSS
+
+## Name of parameters and supported range/values.
+parameters:
+  extra:
+    family: ST1
+  valid:
+    mu:    [-1,  10,   -5,   0,   1]
+    sigma: [ 1,   3,  2.5,   2,   5]
+    nu:    [ 0,   2,    2,   0,   3]
+    tau:   [ 7, 3.3,  1.5, 0.8, 1.5]
+  invalid:
+    sigma: [-10, -1e-10]
+    tau:   [-10, -1e-10]
+
+support:
+  lower: -.inf
+  upper: .inf
+
+distributiontype:
+  discrete: false
+  continuous: true
+
+tests:
+  exclude:
+    ## GAMLSS does not allow this
+    - params_NA
+    ## not yet implemented
+    - mean
+    - mean_compare2numeric
+    - variance
+    - variance_compare2numeric
+    - skewness
+    - skewness_compare2numeric
+    - kurtosis
+    - kurtosis_compare2numeric
+    ## TODO(R): integral divergent, crps.distribution does not work for ST1
+    - crps_compare2numeric

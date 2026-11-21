@@ -36,7 +36,7 @@ possible combinations.
 }
 \examples{
 ## set up a hurdle Poisson distribution
-X <- HurdlePoisson(lambda = 2.5, pi = 0.75)
+X <- HurdlePoisson(pi = 0.75, lambda = 2.5)
 X
 
 ## standard functions

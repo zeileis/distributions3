@@ -9,9 +9,7 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-
 suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("scoringRules"))
 
 
 # -------------------------------------------------------
@@ -26,6 +24,8 @@ test_that("constructor function Empirical() runs silent and returns correct obje
 })
 
 test_that("generic function crps and S3 method crps.distribution exist", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_true(is.function(crps)) # scoringRules
     expect_true(is.function(crps.distribution))
 })
@@ -39,6 +39,8 @@ d1 <- Empirical(rnorm(50, 10, 4))
 x  <- runif(25, 0, 20) # Where to evaluate
 
 test_that("crps.distribution runs silently and returns correct object", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps.distribution(d1, x))
     expect_true(is.vector(crps))
     expect_true(is.double(crps))
@@ -46,6 +48,8 @@ test_that("crps.distribution runs silently and returns correct object", {
 })
 
 test_that("crps.distribution returns matrix if drop = FALSE", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps.distribution(d1, x, drop = FALSE))
     expect_true(is.matrix(crps))
     expect_true(is.double(crps))
@@ -60,6 +64,8 @@ test_that("crps.distribution returns matrix if drop = FALSE", {
 x <- matrix(runif(50 * 20), ncol = 20L)
 
 test_that("crps.Empirical on multiple distributions, single observation", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(x))
     expect_silent(crps <- crps(d, 5))
     expect_true(is.vector(crps))
@@ -68,6 +74,8 @@ test_that("crps.Empirical on multiple distributions, single observation", {
 })
 
 test_that("crps.Empirical on multiple distributions, multiple observations, non-matching length i.e., elementwise = FALSE (auto)", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(x))
     expect_silent(crps <- crps(d, 5:11))
     expect_true(is.matrix(crps))
@@ -76,6 +84,8 @@ test_that("crps.Empirical on multiple distributions, multiple observations, non-
 })
 
 test_that("crps.Empirical on multiple distributions, multiple observations, matching length i.e., elementwise = TRUE (auto)", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(x))
     expect_silent(crps <- crps(d, runif(50, 0, 20)))
     expect_true(is.vector(crps))
@@ -84,6 +94,8 @@ test_that("crps.Empirical on multiple distributions, multiple observations, matc
 })
 
 test_that("crps.Empirical on multiple distributions, multiple observations, matching length explicitly with elementwise = FALSE", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(x))
 
     y <- runif(50, 0, 20)
@@ -126,6 +138,8 @@ test_that("as.matrix.Empirical, named", {
 })
 
 test_that("crps.Empirical, two empirical distributions of unequal length, unnamed", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(list(rnorm(10, 0, 1), rnorm(15, 5, 3))))
     expect_silent(crps <- crps(d, 2:3))
     expect_true(is.vector(crps))
@@ -135,6 +149,8 @@ test_that("crps.Empirical, two empirical distributions of unequal length, unname
 })
 
 test_that("crps.Empirical, two empirical distributions of unequal length, named", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(list(a = rnorm(10, 0, 1), b = rnorm(15, 5, 3))))
     expect_silent(crps <- crps(d, 2:3))
     expect_true(is.vector(crps))
@@ -145,6 +161,8 @@ test_that("crps.Empirical, two empirical distributions of unequal length, named"
 
 
 test_that("crps.Empirical, two empirical distributions of unequal length, named, elementwise = FALSE", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Empirical(list(a = rnorm(10, 0, 1), b = rnorm(15, 5, 3))))
     expect_silent(crps <- crps(d, 2:3, elementwise = FALSE))
     expect_true(is.matrix(crps))

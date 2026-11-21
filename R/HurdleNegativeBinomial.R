@@ -2,7 +2,7 @@
 #'
 #' Density, distribution function, quantile function, and random
 #' generation for the zero-hurdle negative binomial distribution with
-#' parameters \code{mu}, \code{theta} (or \code{size}), and \code{pi}.
+#' parameters \code{pi}, \code{mu}, and \code{theta} (or \code{size}).
 #'
 #' All functions follow the usual conventions of d/p/q/r functions
 #' in base R. In particular, all four \code{hnbinom} functions for the
@@ -19,10 +19,10 @@
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of random values to return.
+#' @param pi vector of zero-hurdle probabilities in the unit interval.
 #' @param mu vector of (non-negative) negative binomial location parameters.
 #' @param theta,size vector of (non-negative) negative binomial overdispersion parameters.
 #' Only \code{theta} or, equivalently, \code{size} may be specified.
-#' @param pi vector of zero-hurdle probabilities in the unit interval.
 #' @param log,log.p logical indicating whether probabilities p are given as log(p).
 #' @param lower.tail logical indicating whether probabilities are \eqn{P[X \le x]} (lower tail) or \eqn{P[X > x]} (upper tail).
 #'
@@ -33,18 +33,18 @@
 #' @examples
 #' ## theoretical probabilities for a hurdle negative binomial distribution
 #' x <- 0:8
-#' p <- dhnbinom(x, mu = 2.5, theta = 1, pi = 0.75)
+#' p <- dhnbinom(x, pi = 0.75, mu = 2.5, theta = 1)
 #' plot(x, p, type = "h", lwd = 2)
 #'
 #' ## corresponding empirical frequencies from a simulated sample
 #' set.seed(0)
-#' y <- rhnbinom(500, mu = 2.5, theta = 1, pi = 0.75)
+#' y <- rhnbinom(500, pi = 0.75, mu = 2.5, theta = 1)
 #' hist(y, breaks = -1:max(y) + 0.5)
 #'
 #' @importFrom stats dnbinom pnbinom
 #' @rdname hnbinom
 #' @export
-dhnbinom <- function(x, mu, theta, size, pi, log = FALSE) {
+dhnbinom <- function(x, pi, mu, theta, size, log = FALSE) {
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- dnbinom(x, mu = mu, size = theta, log = TRUE) -
@@ -57,7 +57,7 @@ dhnbinom <- function(x, mu, theta, size, pi, log = FALSE) {
 #' @importFrom stats dnbinom pnbinom
 #' @rdname hnbinom
 #' @export
-phnbinom <- function(q, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) {
+phnbinom <- function(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- log(pmax(0, pnbinom(q, mu = mu, size = theta) - dnbinom(0L, mu = mu, size = theta))) -
@@ -73,7 +73,7 @@ phnbinom <- function(q, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) {
 
 #' @rdname hnbinom
 #' @export
-qhnbinom <- function(p, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) {
+qhnbinom <- function(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   if(log.p) p <- exp(p)
@@ -88,7 +88,7 @@ qhnbinom <- function(p, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE) {
 #' @importFrom stats runif
 #' @rdname hnbinom
 #' @export
-rhnbinom <- function(n, mu, theta, size, pi) {
+rhnbinom <- function(n, pi, mu, theta, size) {
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   qhnbinom(runif(n), mu = mu, theta = theta, pi = pi)
@@ -99,11 +99,11 @@ rhnbinom <- function(n, mu, theta, size, pi) {
 #' Hurdle negative binomial distributions are frequently used to model counts
 #' with overdispersion and many zero observations.
 #'
+#' @param pi Zero-hurdle probability, can be any value in `[0, 1]`.
 #' @param mu Location parameter of the negative binomial component of the distribution.
 #'   Can be any positive number.
 #' @param theta Overdispersion parameter of the negative binomial component of the distribution.
 #'   Can be any positive number.
-#' @param pi Zero-hurdle probability, can be any value in `[0, 1]`.
 #'
 #' @return A `HurdleNegativeBinomial` object.
 #' @export
@@ -117,7 +117,7 @@ rhnbinom <- function(n, mu, theta, size, pi) {
 #'   will render with additional detail.
 #'
 #'   In the following, let \eqn{X} be a hurdle negative binomial random variable with parameters
-#'   `mu` = \eqn{\mu} and `theta` = \eqn{\theta}.
+#'   `\pi` = \eqn{\pi}, `mu` = \eqn{\mu}, and `theta` = \eqn{\theta}.
 #'
 #'   **Support**: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 #'
@@ -164,7 +164,7 @@ rhnbinom <- function(n, mu, theta, size, pi) {
 #'
 #' @examples
 #' ## set up a hurdle negative binomial distribution
-#' X <- HurdleNegativeBinomial(mu = 2.5, theta = 1, pi = 0.75)
+#' X <- HurdleNegativeBinomial(pi = 0.75, mu = 2.5, theta = 1)
 #' X
 #'
 #' ## standard functions
@@ -182,8 +182,8 @@ rhnbinom <- function(n, mu, theta, size, pi) {
 #' set.seed(0)
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
-HurdleNegativeBinomial <- function(mu = numeric(), theta = numeric(), pi = numeric()) {
-  d <- data.frame(mu = mu, theta = theta, pi = pi)
+HurdleNegativeBinomial <- function(pi = numeric(), mu = numeric(), theta = numeric()) {
+  d <- data.frame(pi = pi, mu = mu, theta = theta)
   class(d) <- c("HurdleNegativeBinomial", "distribution")
   return(d)
 }
@@ -247,7 +247,7 @@ kurtosis.HurdleNegativeBinomial <- function(x, ...) {
 random.HurdleNegativeBinomial <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
   if (n == 0L) return(numeric(0L))
-  FUN <- function(at, d) rhnbinom(n = at, mu = d$mu, theta = d$theta, pi = d$pi)
+  FUN <- function(at, d) rhnbinom(n = at, pi = d$pi, mu = d$mu, theta = d$theta)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
 
@@ -276,7 +276,7 @@ random.HurdleNegativeBinomial <- function(x, n = 1L, drop = TRUE, ...) {
 #' @export
 #'
 pdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dhnbinom(x = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
+  FUN <- function(at, d) dhnbinom(x = at, pi = d$pi, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "density", drop = drop, elementwise = elementwise)
 }
 
@@ -284,7 +284,7 @@ pdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ..
 #' @export
 #'
 log_pdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) dhnbinom(x = at, mu = d$mu, theta = d$theta, pi = d$pi, log = TRUE)
+  FUN <- function(at, d) dhnbinom(x = at, pi = d$pi, mu = d$mu, theta = d$theta, log = TRUE)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "logLik", drop = drop, elementwise = elementwise)
 }
 
@@ -313,7 +313,7 @@ log_pdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL
 #' @export
 #'
 cdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
-  FUN <- function(at, d) phnbinom(q = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
+  FUN <- function(at, d) phnbinom(q = at, pi = d$pi, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = d, FUN = FUN, at = x, type = "probability", drop = drop, elementwise = elementwise)
 }
 
@@ -347,7 +347,7 @@ cdf.HurdleNegativeBinomial <- function(d, x, drop = TRUE, elementwise = NULL, ..
 quantile.HurdleNegativeBinomial <- function(x, probs, drop = TRUE, elementwise = NULL, ...) {
   check_dots_used()
   if (!length(x)) return(numeric())
-  FUN <- function(at, d) qhnbinom(p = at, mu = d$mu, theta = d$theta, pi = d$pi, ...)
+  FUN <- function(at, d) qhnbinom(p = at, pi = d$pi, mu = d$mu, theta = d$theta, ...)
   apply_dpqr(d = x, FUN = FUN, at = probs, type = "quantile", drop = drop, elementwise = elementwise)
 }
 

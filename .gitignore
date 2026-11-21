@@ -7,6 +7,8 @@ test/.DS_Store
 inst/doc
 revdep
 
+tests/test-gamlss.dist
+
 ## Compiled and compiled shared objects
 src/*.so
 src/*.o

@@ -4,13 +4,13 @@
 \alias{HurdlePoisson}
 \title{Create a hurdle Poisson distribution}
 \usage{
-HurdlePoisson(lambda = numeric(), pi = numeric())
+HurdlePoisson(pi = numeric(), lambda = numeric())
 }
 \arguments{
+\item{pi}{Zero-hurdle probability, can be any value in \verb{[0, 1]}.}
+
 \item{lambda}{Parameter of the Poisson component of the distribution.
 Can be any positive number.}
-
-\item{pi}{Zero-hurdle probability, can be any value in \verb{[0, 1]}.}
 }
 \value{
 A \code{HurdlePoisson} object.
@@ -24,8 +24,8 @@ We recommend reading this documentation on
 \url{https://zeileis.github.io/distributions3/}, where the math
 will render with additional detail.
 
-In the following, let \eqn{X} be a hurdle Poisson random variable with parameter
-\code{lambda} = \eqn{\lambda}.
+In the following, let \eqn{X} be a hurdle Poisson random variable with parameters
+\code{pi} = \eqn{\pi} and \code{lambda} = \eqn{\lambda}.
 
 \strong{Support}: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 
@@ -65,7 +65,7 @@ Omitted for now.
 }
 \examples{
 ## set up a hurdle Poisson distribution
-X <- HurdlePoisson(lambda = 2.5, pi = 0.75)
+X <- HurdlePoisson(pi = 0.75, lambda = 2.5)
 X
 
 ## standard functions

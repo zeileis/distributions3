@@ -65,12 +65,12 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 Gumbel <- function(mu = 0, sigma = 1) {
-  if (any(sigma <= 0)) {
-    stop("sigma must be positive")
-  }
+  if (!is.numeric(mu)) mu <- as.numeric(mu)
+  if (!is.numeric(sigma))    sigma    <- as.numeric(sigma)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1
+      length(mu) == length(sigma) | length(mu) == 1 | length(sigma) == 1,
+    "parameter 'sigma' must be in (0, Inf]" = all(sigma > 0, na.rm = TRUE)
   )
 
   d <- data.frame(mu = mu, sigma = sigma)
@@ -123,9 +123,7 @@ kurtosis.Gumbel <- function(x, ...) {
 #'
 random.Gumbel <- function(x, n = 1L, drop = TRUE, ...) {
   n <- make_positive_integer(n)
-  if (n == 0L) {
-    return(numeric(0L))
-  }
+  if (n == 0L) return(numeric(0L))
   FUN <- function(at, d) revdbayes::rgev(n = at, loc = d$mu, scale = d$sigma, shape = 0)
   apply_dpqr(d = x, FUN = FUN, at = n, type = "random", drop = drop)
 }
@@ -256,4 +254,79 @@ is_discrete.Gumbel <- function(d, ...) {
 #' @exportS3Method
 is_continuous.Gumbel <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
+}
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Gumbel
+crps.Gumbel <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
+  FUN <- function(at, d) scoringRules::crps_gev(y = at, location = d$mu, scale = d$sigma, shape = 0)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
+
+# ---------------------------------------------------------------------------
+# Gumbel: methods for score/hessian (documented on ?score-hessian for now)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.Gumbel <- function(d, x, which = NULL, drop = TRUE, ...) {
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = FALSE, check = FALSE)
+
+  ## compute scores
+  scr <- function(par, d, x) {
+    z <- (x - d$mu) / d$sigma
+    switch(par,
+      "mu" = (1 - exp(-z)) / d$sigma,
+      "sigma"    = (z * (1 - exp(-z)) - 1) / d$sigma)
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = scr, which = which, drop = drop, check = FALSE))
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.Gumbel <- function(d, x, which = NULL, drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculate max length 'n' (plus input sanity check), get parameter names of
+  ## the distribution 'd', and evaluate available/check requested derivative names
+  n      <- max_length(d, x)
+  params <- names(unclass(d))
+  which  <- get_deriv_names(params, which = which, expand = TRUE)
+
+  ## function for computing Hessian elements (expected or observed)
+  ## with w = exp(-z) and z ~ standard Gumbel (maximum type), w ~ Exp(1), so
+  ## expected: E(w) = 1, E(z w) = gamma - 1, E(z^2 w) = (1 - gamma)^2 + pi^2 / 6 - 1
+  gam <- -digamma(1)
+  hess <- if (expected) {
+    function(par, d, x) switch(par,
+      "mu" = 0 * x - 1 / d$sigma^2,
+      "sigma" = 0 * x - ((1 - gam)^2 + pi^2 / 6) / d$sigma^2,
+      0 * x + (1 - gam) / d$sigma^2)
+  } else {
+    function(par, d, x) {
+      z <- (x - d$mu) / d$sigma
+      w <- exp(-z)
+      switch(par,
+        "mu" = -w / d$sigma^2,
+        "sigma" = (1 - 2 * z + w * (2 * z - z^2)) / d$sigma^2,
+        (w * (1 - z) - 1) / d$sigma^2)
+    }
+  }
+
+  ## Calculate derivatives, prepare return object
+  return(apply_deriv(d, x, FUN = hess, which = which, drop = drop, check = FALSE))
 }

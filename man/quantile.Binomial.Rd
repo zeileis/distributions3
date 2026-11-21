@@ -11,7 +11,7 @@
 
 \item{probs}{A vector of probabilities.}
 
-\item{drop}{logical. Shoul the result be simplified to a vector if possible?}
+\item{drop}{logical. Should the result be simplified to a vector if possible?}
 
 \item{elementwise}{logical. Should each distribution in \code{x} be evaluated
 at all elements of \code{probs} (\code{elementwise = FALSE}, yielding a matrix)?

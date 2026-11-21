@@ -36,7 +36,7 @@ Evaluate the cumulative distribution function of a zero-inflated negative binomi
 }
 \examples{
 ## set up a zero-inflated negative binomial distribution
-X <- ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)
+X <- ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)
 X
 
 ## standard functions

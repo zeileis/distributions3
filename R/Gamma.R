@@ -14,7 +14,7 @@
 #'
 #' @param shape The shape parameter. Can be any positive number.
 #' @param rate The rate parameter. Can be any positive number. Defaults
-#'   to `1`.
+#'   to `1` if `shape` is of length `> 0L`.
 #'
 #' @return A `Gamma` object.
 #' @export
@@ -38,7 +38,7 @@
 #'
 #'   **Variance**: \eqn{\frac{\alpha}{\beta^2}}
 #'
-#'   **Probability density function (p.m.f)**:
+#'   **Probability density function (p.d.f)**:
 #'
 #'   \deqn{
 #'     f(x) = \frac{\beta^{\alpha}}{\Gamma(\alpha)} x^{\alpha - 1} e^{-\beta x}
@@ -49,9 +49,9 @@
 #'   **Cumulative distribution function (c.d.f)**:
 #'
 #'   \deqn{
-#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}}
+#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)}
 #'   }{
-#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}}
+#'     f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)}
 #'   }
 #'
 #'   **Moment generating function (m.g.f)**:
@@ -79,12 +79,16 @@
 #'
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
-Gamma <- function(shape = numeric(), rate = 1) {
-  if (identical(shape, numeric())) rate <- numeric()
+Gamma <- function(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1) {
+  if (!is.numeric(shape)) shape <- as.numeric(shape)
+  if (!is.numeric(rate)) rate <- as.numeric(rate)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1
+      length(shape) == length(rate) | length(shape) == 1 | length(rate) == 1,
+    "parameter 'shape' must be in [0, Inf]" = all(shape >= 0, na.rm = TRUE),
+    "parameter 'rate' must be in [0, Inf]" = all(rate >= 0, na.rm = TRUE)
   )
+
   d <- data.frame(shape = shape, rate = rate)
   class(d) <- c("Gamma", "distribution")
   d
@@ -290,6 +294,16 @@ is_discrete.Gamma <- function(d, ...) {
 #' @exportS3Method
 is_continuous.Gamma <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
+}
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Gamma
+crps.Gamma <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
+  FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$shape, rate = d$rate)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 # ---------------------------------------------------------------------------

@@ -505,7 +505,7 @@ log_pdf.distribution <- function(d, x, ...) pdf(d, x, log = TRUE, ...)
 quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
                                   lower = -1 / sqrt(.Machine$double.eps),
                                   upper = +1 / sqrt(.Machine$double.eps),
-                                  tol   = .Machine$double.eps^0.5, maxit = 1e3, ...) {
+                                  tol   = sqrt(.Machine$double.eps), maxit = 1e3, ...) {
     check_dots_used()
     if (!length(x)) return(numeric())
 
@@ -718,6 +718,8 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
 cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail = TRUE, ...) {
     if (!length(d)) return(numeric())
 
+    args <- list(...)
+
     # To be able to numerically approximate the cdf the object must have
     # a pdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
@@ -802,6 +804,10 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
     } else if (n == 1L && drop) {
         res <- as.vector(res)
     }
+
+    ## Logarithm?
+    if (isTRUE(args$log)) res <- log(res)
+
     return(res)
 }
 
@@ -997,8 +1003,12 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
 
   ## Manually enforcing 'method = "cdf"' for discrete distributions if possible as 'method = "quantile"'
   ## can lead to inaccurate results if the range the values span is < gridsize.
+  ## Manually enforcing 'method = "cdf"' for discrete distributions if possible as 'method = "quantile"'
+  ## can lead to inaccurate results if the range the values span is < gridsize. This is only possible
+  ## if a 'cdf' method exists; otherwise the quantile-based approximation is kept (with a warning).
   if (discrete && method == "quantile" && gridsize >= abs(diff(xrange))) {
-      if (get_auto_method(x) == "cdf") {
+      has_cdf <- hasS3method("cdf", class(x)[!class(x) == "distribution"])
+      if (has_cdf) {
           warning("switching to method = \"cdf\" (method = \"quantile\" can result in inaccurate results)")
           method <- "cdf"
       } else {

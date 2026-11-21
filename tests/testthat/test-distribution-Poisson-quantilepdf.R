@@ -10,9 +10,7 @@
 # -------------------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-
 suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("scoringRules"))
 
 
 ## Constructor function for new 'MyPoissonQuantilePDF' distribution
@@ -33,7 +31,7 @@ lambda <- c(0.5, 1, 4, 20)
 expect_silent(d <- Poisson(lambda)) # Analytic version
 expect_silent(n <- MyPoissonQuantilePDF(lambda)) # Minimal prototype
 
-pattern <- "approximating moments for discrete distributions based on the quantile function may result in inaccurate results"
+pattern <- "switching to method = \"cdf\""
 
 # -------------------------------------------------------------------
 # Testing moments
@@ -42,7 +40,7 @@ test_that("mean.distribution (approximation) comparing MyPoissonQuantilePDF and 
     expect_silent(rd <- mean(d))
     expect_warning(rn <- mean(n), regexp = pattern)
     expect_identical(lambda, rd)
-    expect_equal(rd, rn, tolerance = 1e-2)
+    expect_equal(rd, rn)
 })
 
 
@@ -50,21 +48,21 @@ test_that("variance.distribution (approximation) comparing MyPoissonQuantilePDF 
     expect_silent(rd  <- variance(d))
     expect_warning(rn  <- variance(n), regexp = pattern)
     expect_identical(lambda, rd)
-    expect_equal(rd, rn,  tolerance = 1e-1)
+    expect_equal(rd, rn)
 })
 
 
 test_that("skewness.distribution (approximation) comparing MyPoissonQuantilePDF and Poisson", {
     expect_silent(rd  <- skewness(d))
     expect_warning(rn  <- skewness(n), regexp = pattern)
-    expect_equal(rd, rn,  tolerance = 1e-1)
+    expect_equal(rd, rn)
 })
 
 
 test_that("kurtosis.distribution (approximation) comparing MyPoissonQuantilePDF and Poisson", {
     expect_silent(rd  <- kurtosis(d))
     expect_warning(rn  <- kurtosis(n), regexp = pattern)
-    expect_equal(rd, rn,  tolerance = 0.5)
+    expect_equal(rd, rn)
 })
 
 

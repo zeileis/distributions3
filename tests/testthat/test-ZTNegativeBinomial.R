@@ -73,6 +73,11 @@ test_that("quantile.ZTNegativeBinomial work correctly", {
   expect_length(quantile(p, seq_len(0)), 0)
   expect_length(quantile(p, c(0, 1)), 2)
 })
+test_that("quantile.ZTNegativeBinomial throws warning if p is out of range", {
+  d <- ZTNegativeBinomial(mu = 1, theta = 1)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
 
 test_that("vectorization of a ZTNegativeBinomial distribution work correctly", {
   d <- ZTNegativeBinomial(mu = c(1, 2), theta = 1)
@@ -82,8 +87,8 @@ test_that("vectorization of a ZTNegativeBinomial distribution work correctly", {
   ## moments
   expect_equal(mean(d), c(mean(d1), mean(d2)))
   expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_error(skewness(d)) ## not yet implemented
-  expect_error(kurtosis(d)) ## not yet implemented
+  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
+  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
 
   ## pdf, log_pdf, cdf
   expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))

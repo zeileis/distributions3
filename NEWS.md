@@ -3,6 +3,11 @@
 - Streamline dots `...` handling in `prodist` generic/methods (#140 and #141
   by Achim Zeileis).
 
+- Change order of parameters/arguments for zero-inflated and hurdle count
+  distributions (Poisson and negative binomial) to list the probability `pi`
+  (for zero-inflation or hurdle crossing, respectively) before the count
+  parameters `lambda` or `mu`/`theta`, respectively (#149 by Achim Zeileis).
+
 
 # distributions3 0.3.0
 
