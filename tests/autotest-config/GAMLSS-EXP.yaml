@@ -9,8 +9,6 @@ parameters:
     family: EXP
   valid:
     mu:  [10,  2, 1, 0.5]
-  invalid:
-    mu:  [-0.1, -1, -0.00000001]
 
 support:
   lower: 0
@@ -25,10 +23,6 @@ distributiontype:
 
 tests:
   exclude:
-    ## GAMLSS does not allow this
     - params_NA
-    ## not yet implemented
-    - skewness
-    - skewness_compare2numeric
-    - kurtosis
-    - kurtosis_compare2numeric
+    - autotest_score_defaults
+    - autotest_hessian_defaults

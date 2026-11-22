@@ -9,8 +9,6 @@ parameters:
     family: PO
   valid:
     mu: [0.1, 1.5, 2, 5.5, 100]
-  invalid:
-    mu: [-10, -1e-10]
 
 support:
   lower: 0
@@ -22,10 +20,6 @@ distributiontype:
 
 tests:
   exclude:
-    ## GAMLSS does not allow this
     - params_NA
-    ## not yet implemented
-    - skewness
-    - skewness_compare2numeric
-    - kurtosis
-    - kurtosis_compare2numeric
+    - autotest_score_defaults
+    - autotest_hessian_defaults

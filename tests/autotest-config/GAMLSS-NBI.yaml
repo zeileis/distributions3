@@ -1,0 +1,24 @@
+
+
+## Name of the distribution, also defines the name of the constructor function
+name: GAMLSS
+
+## Name of parameters and supported range/values.
+parameters:
+  extra:
+    family: "NBI"
+  valid:
+    mu:    [ 1.0, 1, 3.0, 3, 10.0, 10]
+    sigma: [ 0.2, 5, 0.2, 5,  0.2,  1]
+
+support:
+  lower: 0
+  upper: .inf
+
+distributiontype:
+  discrete: true
+  continuous: false
+
+tests:
+  exclude:
+    - params_NA

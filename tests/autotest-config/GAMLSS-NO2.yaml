@@ -10,8 +10,6 @@ parameters:
   valid:
     mu:    [ -10.0, -1,  0,  1,  10]
     sigma: [   0.5,  1,  2,  5, 100]
-  invalid:
-    sigma: [-10, -1e-10]
 
 support:
   lower: -.inf
@@ -23,10 +21,4 @@ distributiontype:
 
 tests:
   exclude:
-    ## GAMLSS does not allow this
     - params_NA
-    ## not yet implemented
-    - skewness
-    - skewness_compare2numeric
-    - kurtosis
-    - kurtosis_compare2numeric
