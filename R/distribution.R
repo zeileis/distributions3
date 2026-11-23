@@ -1222,4 +1222,45 @@ kurtosis.distribution <- function(x, ...) {
     distribution_calculate_moments(x = x, what = 4L, ...)
 }
 
+#' @exportS3Method
+#' @useDynLib distributions3, .registration = TRUE
+deriv2.distribution <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
 
+  ## check availability of c_deriv_* function
+  c_deriv <- paste("c_deriv", class(d)[1L], sep = "_")
+  c_deriv <- getDLLRegisteredRoutines("distributions3")[[".Call"]][[c_deriv]]
+  if (is.null(c_deriv)) {
+    stop(sprintf("no deriv2() method and no c_deriv infrastructure available for '%s' distribution", paste(setdiff(class(d)[1L], "distribution"), collapse = "/")))
+  }
+
+  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
+  order <- unique(as.integer(order))
+  if (identical(order, 2L) && isTRUE(expected) && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n        <- max_length(d, x)
+  cores    <- as.integer(cores)[1L]
+  expected <- as.logical(expected)[1L]
+
+  stopifnot(
+    "argument 'cores' must evaluate to positive integer" = is.integer(cores) && length(cores) == 1L && cores >= 1L,
+    "argument 'order' must evaluate to 1, 2, or 1:2"     = length(order) > 0 && all(order %in% 1:2),
+    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected)
+ )
+
+  ## Compute which derivatives to be calculated, and setting up the named lists
+  ## used by the C code to store the corresponding results
+  deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
+
+  ## Note that .Call has no named arguments, they are only for orientation
+  .Call(c_deriv, x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
+        score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
+        expected     = as.logical(expected), ncores = as.integer(cores),
+        PACKAGE = "distributions3")
+
+  ## return score or hessian or list of both
+  rval <- list()
+  rval$score   <- prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d))
+  rval$hessian <- prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d))
+  if (length(rval) == 1L) rval <- rval[[1L]]
+  return(rval)
+}
