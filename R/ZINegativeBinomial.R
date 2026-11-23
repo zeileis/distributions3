@@ -87,7 +87,7 @@ rzinbinom <- function(n, pi, mu, theta, size) {
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- rnbinom(n, mu = mu, size = theta)
-  rval[which(runif(n) < pi)] <- 0
+  rval[which(!is.na(rval) & runif(n) < pi)] <- 0
   rval[is.na(pi)] <- NA
   rval[is.nan(rval)] <- NA
   rval

@@ -78,7 +78,7 @@ qzipois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
 rzipois <- function(n, pi, lambda) {
   if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   rval <- rpois(n, lambda = lambda)
-  rval[which(runif(n) < pi)] <- 0
+  rval[which(!is.na(rval) & runif(n) < pi)] <- 0
   rval[is.na(pi)] <- NA
   rval
 }
