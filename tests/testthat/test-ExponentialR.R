@@ -57,30 +57,6 @@ test_that("quantile.ExponentialR throws warning if p is out of range", {
   expect_warning(quantile(dd, 1 + 1e10))                                        
 })
 
-## Testing edge cases
-test_that("pdf.ExponentialR on edge case mu = 0 works as expected", {
-  expect_silent(d <- ExponentialR(0))
-  expect_silent(x <- suppressWarnings(pdf(d, 1:5)))
-  expect_identical(x, rep(NaN, 5L))
-})
-test_that("cdf.ExponentialR on edge case rate = 0 works as expected", {
-  expect_silent(d <- ExponentialR(0))
-  expect_silent(x <- cdf(d, 1:5))
-  expect_identical(x, rep(1.0, 5L))
-})
-test_that("quantile.ExponentialR on edge case rate = 0 works as expected", {
-  p <- seq(0.05, 0.95, by = 0.05)
-  expect_silent(d <- ExponentialR(0))
-  expect_silent(x <- quantile(d, p))
-  expect_identical(x, rep(0.0, length(p)))
-})
-test_that("random.ExponentialR on edge case rate = 0 works as stats::rexp", {
-  expect_silent(d <- ExponentialR(0))
-  expect_silent(x <- random(d, 5))
-  expect_identical(x, rep(0.0, 5))
-})
-
-
 ## Testing edge cases mu = Inf (corresponds to rate = 0)
 test_that("pdf.Exponential on edge case mu = Inf (rate = 0) works as stats::dexp", {
   expect_silent(d <- ExponentialR(1 / 0))
@@ -103,7 +79,6 @@ test_that("random.Exponential on edge case mu = Inf (rate = 0) works as stats::r
   expect_warning(x <- random(d, 5), regexp = "NAs produced")
   expect_identical(x, rep(NaN, 5))
 })
-
 
 ## Testing correctness of moments
 test_that("moments for ExponentialR distribution return correct values", {

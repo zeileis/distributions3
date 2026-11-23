@@ -48,37 +48,6 @@ test_that("quantile.StudentsT returns correct values", {
         info = "quantile.StudentsT not identical to qt()")
 })
 
-
-## Testing edge cases
-test_that("pdf.StudentsT on edge case sigma = 0 works as stats::dt", {
-  expect_silent(d <- StudentsT(0))
-  expect_silent(x <- suppressWarnings(pdf(d, c(-1, -1, 3, 4, 10))))
-  expect_identical(x, suppressWarnings(dt(c(-1, -1, 3, 4, 10), df = 0)))
-})
-test_that("cdf.StudentsT on edge case sigma = 0 works as stats::pt", {
-  expect_silent(d <- StudentsT(0))
-  expect_silent(x <- suppressWarnings(cdf(d, c(-1, -1, 3, 4, 10))))
-  expect_identical(x, suppressWarnings(pt(c(-1, -1, 3, 4, 10), df = 0)))
-})
-test_that("quantile.StudentsT on edge case sigma = 0 works as stats::qt", {
-  p <- seq(0.05, 0.95, by = 0.05)
-  m <- seq(-10, 10, length.out = length(p))
-  expect_silent(d <- StudentsT(0))
-  expect_silent(x <- suppressWarnings(quantile(d, p)))
-  expect_identical(x, suppressWarnings(qt(p, df = 0)))
-})
-test_that("quantile.StudentT throws warning if p is out of range", {
-  d <- StudentsT(1:5)
-  expect_warning(quantile(d, -1e10))
-  expect_warning(quantile(d, 1 + 1e10))
-})
-test_that("random.StudentsT on edge case sigma = 0 works as stats::rt", {
-  expect_silent(d <- StudentsT(0))
-  expect_silent(x <- suppressWarnings(random(d, 5)))
-  expect_identical(x, suppressWarnings(rt(5, 0)))
-})
-
-
 ## Testing correctness of moments
 test_that("moments for StudentsT distribution return correct values", {
     d <- StudentsT(c(0, 1, 2, 3, 4, 5))

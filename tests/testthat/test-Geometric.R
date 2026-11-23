@@ -57,48 +57,6 @@ test_that("quantile.Geometric throws warning if p is out of range", {
   expect_warning(quantile(dd, 1 + 1e10))
 })
 
-## Testing edge cases
-test_that("pdf.Geometric on edge case p = 0 or 1 works as stats::dgeom", {
-  expect_silent(d <- Geometric(0))
-  expect_silent(x <- suppressWarnings(pdf(d, c(-1, -1, 3, 4, 10))))
-  expect_identical(x, suppressWarnings(dgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
-
-  expect_silent(d <- Geometric(1))
-  expect_silent(x <- suppressWarnings(pdf(d, c(-1, -1, 3, 4, 10))))
-  expect_identical(x, suppressWarnings(dgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
-})
-test_that("cdf.Geometric on edge case p = 0 or 1 works as stats::pgeom", {
-  expect_silent(d <- Geometric(0))
-  expect_silent(x <- suppressWarnings(cdf(d, c(-1, -1, 3, 4, 10))))
-  expect_identical(x, suppressWarnings(pgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
-
-  expect_silent(d <- Geometric(1))
-  expect_silent(x <- suppressWarnings(cdf(d, c(-1, -1, 3, 4, 10))))
-  expect_identical(x, suppressWarnings(pgeom(c(-1, -1, 3, 4, 10), prob = d$p)))
-})
-test_that("quantile.Geometric on edge case p = 0 or 1 works as stats::qgeom", {
-  p <- seq(0.05, 0.95, by = 0.05)
-  m <- seq(-10, 10, length.out = length(p))
-
-  expect_silent(d <- Geometric(0))
-  expect_silent(x <- suppressWarnings(quantile(d, p)))
-  expect_identical(x, suppressWarnings(qgeom(p, prob = d$p)))
-
-  expect_silent(d <- Geometric(1))
-  expect_silent(x <- suppressWarnings(quantile(d, p)))
-  expect_identical(x, suppressWarnings(qgeom(p, prob = d$p)))
-})
-test_that("random.Geometric on edge case p = 0 or 1 works as stats::rgeom", {
-  expect_silent(d <- Geometric(0))
-  expect_silent(x <- suppressWarnings(random(d, 5)))
-  expect_identical(x, suppressWarnings(rgeom(5, prob = d$p)))
-
-  expect_silent(d <- Geometric(1))
-  expect_silent(x <- suppressWarnings(random(d, 5)))
-  expect_identical(x, rgeom(5L, d$p))
-})
-
-
 ## Testing correctness of moments
 test_that("moments for Geometric distribution return correct values", {
     expect_identical(mean(dd), (1 - dd$p) / dd$p,

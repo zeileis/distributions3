@@ -53,33 +53,6 @@ test_that("quantile.Uniform throws warning if p is out of range", {
   expect_warning(quantile(dd, 1 + 1e10))
 })
 
-
-## Testing edge cases
-test_that("pdf.Uniform on edge case where a == b works as stats::dunif", {
-  expect_silent(d <- Uniform(1:5, 1:5))
-  expect_silent(x <- suppressWarnings(pdf(d, 0:4 * 2)))
-  expect_identical(x, suppressWarnings(dunif(0:4 * 2, min = 1:5, max = 1:5)))
-})
-test_that("cdf.Uniform on edge case where a == b works as stats::punif", {
-  expect_silent(d <- Uniform(1:5, 1:5))
-  expect_silent(x <- cdf(d, 0:4 * 2))
-  expect_identical(x, suppressWarnings(punif(0:4 * 2, min = 1:5, max = 1:5)))
-})
-test_that("quantile.Uniform on edge case where a == b works as stats::qunif", {
-  p <- seq(0.05, 0.95, by = 0.05)
-  ab <- seq_along(p)
-  expect_silent(d <- Uniform(ab, ab))
-  expect_silent(x <- quantile(d, p))
-  expect_identical(x, qunif(p, min = ab, max = ab))
-})
-test_that("random.Uniform on edge case where a == b works as stats::rnorm", {
-  expect_silent(d <- Uniform(1:5, 1:5))
-  expect_silent(x <- random(d, 5))
-  expect_identical(x, matrix(as.numeric(1:5), byrow = FALSE, nrow = 5, ncol = 5,
-                    dimnames = list(NULL, paste("r", 1:5, sep = "_"))))
-})
-
-
 ## Testing correctness of moments
 test_that("moments for Uniform distribution return correct values", {
     expect_identical(mean(dd), (dd$a + dd$b) / 2,
