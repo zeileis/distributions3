@@ -162,14 +162,14 @@ reference:
       - quantile.GEV
       - random.GEV
       - support.GEV
-  - title: "Generalized Pareto (GP) distribution"
+  - title: "Generalized Pareto (GPareto) distribution"
     contents:
-      - GP
-      - cdf.GP
-      - pdf.GP
-      - quantile.GP
-      - random.GP
-      - support.GP
+      - GPareto
+      - cdf.GPareto
+      - pdf.GPareto
+      - quantile.GPareto
+      - random.GPareto
+      - support.GPareto
   - title: "Gamma distribution"
     contents:
       - Gamma
