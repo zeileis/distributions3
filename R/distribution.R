@@ -1252,10 +1252,11 @@ deriv2.distribution <- function(d, x, which = NULL, order = 1:2, drop = TRUE, ex
   deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
 
   ## Note that .Call has no named arguments, they are only for orientation
-  .Call(c_deriv, x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
+  do.call(.Call, c(list(c_deriv), list(
+        x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
         score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
         expected     = as.logical(expected), ncores = as.integer(cores),
-        PACKAGE = "distributions3")
+        PACKAGE = "distributions3")))
 
   ## return score or hessian or list of both
   rval <- list()
