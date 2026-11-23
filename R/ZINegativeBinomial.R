@@ -45,11 +45,11 @@
 #' @rdname zinbinom
 #' @export
 dzinbinom <- function(x, pi, mu, theta, size, log = FALSE) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- log(1 - pi) + dnbinom(x, mu = mu, size = theta, log = TRUE)
-  if(any(x0 <- (x == 0L))) rval[x0] <- log(exp(rval) + pi)[x0]
+  if(any(x0 <- (x == 0L), na.rm = TRUE)) rval[x0] <- log(exp(rval) + pi)[x0]
   if(log) rval else exp(rval)
 }
 
@@ -57,11 +57,11 @@ dzinbinom <- function(x, pi, mu, theta, size, log = FALSE) {
 #' @rdname zinbinom
 #' @export
 pzinbinom <- function(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- log(1 - pi) + pnbinom(q, mu = mu, size = theta, lower.tail = lower.tail, log.p = TRUE)
-  if(any(q0 <- (is.finite(rval) & (lower.tail | q < 0)))) rval[q0] <- log(exp(rval) + pi)[q0]
+  if(any(q0 <- (is.finite(rval) & (lower.tail | q < 0)), na.rm = TRUE)) rval[q0] <- log(exp(rval) + pi)[q0]
   if(log.p) rval else exp(rval)
 }
 
@@ -69,7 +69,7 @@ pzinbinom <- function(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) 
 #' @rdname zinbinom
 #' @export
 qzinbinom <- function(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   if(log.p) p <- exp(p)
@@ -83,11 +83,13 @@ qzinbinom <- function(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) 
 #' @rdname zinbinom
 #' @export
 rzinbinom <- function(n, pi, mu, theta, size) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- rnbinom(n, mu = mu, size = theta)
-  rval[runif(n) < pi] <- 0
+  rval[which(runif(n) < pi)] <- 0
+  rval[is.na(pi)] <- NA
+  rval[is.nan(rval)] <- NA
   rval
 }
 

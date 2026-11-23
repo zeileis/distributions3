@@ -47,9 +47,9 @@ dztnbinom <- function(x, mu, theta, size, log = FALSE) {
   if(!missing(theta) & !missing(size)) stop("only 'theta' or 'size' may be specified")
   if(!missing(size)) theta <- size
   rval <- dnbinom(x, mu = mu, size = theta, log = TRUE) - pnbinom(0, mu = mu, size = theta, lower.tail = FALSE, log.p = TRUE)
-  rval[x < 1] <- -Inf
-  rval[mu <= 0] <- -Inf
-  rval[(mu <= 0) & (x == 1)] <- 0
+  rval[which(x < 1)] <- -Inf
+  rval[which(mu <= 0)] <- -Inf
+  rval[which((mu <= 0) & (x == 1))] <- 0
   if(log) rval else exp(rval)
 }
 
@@ -61,7 +61,7 @@ pztnbinom <- function(q, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   if(!missing(size)) theta <- size
   rval <- log(pnbinom(q, mu = mu, size = theta, lower.tail = lower.tail, log.p = FALSE) - dnbinom(0, mu = mu, size = theta)) -
     pnbinom(0, mu = mu, size = theta, lower.tail = FALSE, log.p = TRUE)
-  rval[q < 1] <- if(lower.tail) -Inf else 0
+  rval[which(q < 1)] <- if(lower.tail) -Inf else 0
   if(log.p) rval else exp(rval)
 }
 
@@ -76,7 +76,7 @@ qztnbinom <- function(p, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   p <- p + pnbinom(0, mu = mu, size = theta, lower.tail = FALSE, log.p = TRUE)
   p <- exp(p) + dnbinom(0, mu = mu, size = theta)
   rval <- qnbinom(p, mu = mu, size = theta, lower.tail = lower.tail, log.p = FALSE)
-  if(lower.tail) rval[p_orig < dztnbinom(1, mu = mu, theta = theta, log = log.p)] <- 1
+  if(lower.tail) rval[which(p_orig < dztnbinom(1, mu = mu, theta = theta, log = log.p))] <- 1
   rval
 }
 
@@ -175,7 +175,7 @@ ZTNegativeBinomial <- function(mu = numeric(), theta = numeric()) {
   if (!is.numeric(theta)) theta <- as.numeric(theta)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(mu) == length(theta) | length(mu) == 1 | length(theta) == 1,
+      length(mu) == length(theta) | length(mu) == 1L | length(theta) == 1L,
     "parameter 'mu' must be in [0, Inf]" = all(mu >= 0, na.rm = TRUE),
     "parameter 'theta' must be in [0, Inf]" = all(theta >= 0, na.rm = TRUE)
   )

@@ -6,6 +6,8 @@ name: ZTPoisson
 parameters:
   valid:
     lambda: [0.5, 1.5, 3, 10, 0.1]
+  invalid:
+    lambda: [-10, -1, -0.001]
 
 support:
   lower: 1

@@ -43,9 +43,9 @@
 #' @rdname zipois
 #' @export
 dzipois <- function(x, pi, lambda, log = FALSE) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   rval <- log(1 - pi) + dpois(x, lambda = lambda, log = TRUE)
-  if(any(x0 <- (x == 0L))) rval[x0] <- log(exp(rval) + pi)[x0]
+  if(any(x0 <- (x == 0L), na.rm = TRUE)) rval[x0] <- log(exp(rval) + pi)[x0]
   if(log) rval else exp(rval)
 }
 
@@ -53,9 +53,9 @@ dzipois <- function(x, pi, lambda, log = FALSE) {
 #' @rdname zipois
 #' @export
 pzipois <- function(q, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   rval <- log(1 - pi) + ppois(q, lambda = lambda, lower.tail = lower.tail, log.p = TRUE)
-  if(any(q0 <- (is.finite(rval) & (lower.tail | q < 0)))) rval[q0] <- log(exp(rval) + pi)[q0]
+  if(any(q0 <- (is.finite(rval) & (lower.tail | q < 0)), na.rm = TRUE)) rval[q0] <- log(exp(rval) + pi)[q0]
   if(log.p) rval else exp(rval)
 }
 
@@ -63,7 +63,7 @@ pzipois <- function(q, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
 #' @rdname zipois
 #' @export
 qzipois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   if(log.p) p <- exp(p)
   if(!lower.tail) p <- 1 - p
   p[p < 1] <- p[p < 1] - .Machine$double.eps/2
@@ -76,9 +76,10 @@ qzipois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
 #' @rdname zipois
 #' @export
 rzipois <- function(n, pi, lambda) {
-  if(any(pi < 0) | any(pi > 1))  warning("'pi' must be in [0, 1]")
+  if(any(pi < 0, na.rm = TRUE) | any(pi > 1, na.rm = TRUE))  warning("'pi' must be in [0, 1]")
   rval <- rpois(n, lambda = lambda)
-  rval[runif(n) < pi] <- 0
+  rval[which(runif(n) < pi)] <- 0
+  rval[is.na(pi)] <- NA
   rval
 }
 
@@ -384,44 +385,5 @@ hessian.ZIPoisson <- function(d, x, which = NULL, drop = TRUE, expected = FALSE,
 
   ## Calculating Hessian via the deriv2 method
   deriv2(d, x, which = which, order = 2L, drop = drop, expected = expected, ...)
-}
-
-#' @exportS3Method
-#' @useDynLib distributions3, .registration = TRUE
-deriv2.ZIPoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
-  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-
-  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
-  order <- unique(as.integer(order))
-  if (identical(order, 2L) && expected && (missing(x) || is.null(x))) x <- 0 # dummy
-
-  n        <- max_length(d, x)
-  cores    <- as.integer(cores)[1L]
-  expected <- as.logical(expected)[1L]
-
-  stopifnot(
-    "argument 'cores' must evaluate to positive integer" = is.integer(cores) && length(cores) == 1L && cores >= 1L,
-    "argument 'order' must evaluate to 1, 2, or 1:2"     = length(order) > 0 && all(order %in% 1:2)
-  )
-
-  ## Compute which derivatives to be calculated, and setting up the named lists
-  ## used by the C code to store the corresponding results
-  deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
-
-  ## Note that .Call has no named arguments, they are only for orientation
-  .Call("c_deriv_ZIPoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
-        score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
-        expected     = as.logical(expected), ncores = as.integer(cores))
-
-  ## Prepare return. If only score/only hessian was requested,
-  ## returning matrix or vector. Else a named list is returned.
-  if (identical(order, 1L)) {
-    prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d))
-  } else if (identical(order, 2L)) {
-    prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d))
-  } else {
-    list(score   = prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d)),
-         hessian = prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d)))
-  }
 }
 

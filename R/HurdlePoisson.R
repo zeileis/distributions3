@@ -46,7 +46,7 @@ dhpois <- function(x, pi, lambda, log = FALSE) {
   rval <- dpois(x, lambda = lambda, log = TRUE) -
     ppois(0, lambda = lambda, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
-  rval[x == 0L] <- log(1 - rep_len(pi, length(rval)))[x == 0L]
+  rval[!is.na(rval) & x == 0L] <- log(1 - rep_len(pi, length(rval)))[!is.na(rval) & x == 0L]
   if(log) rval else exp(rval)
 }
 
@@ -58,9 +58,9 @@ phpois <- function(q, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
     ppois(0, lambda = lambda, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
   rval <- exp(rval)
-  rval[q == 0L] <- 0
+  rval[!is.na(rval) & q == 0L] <- 0
   rval <- rval + (1 - pi)
-  rval[q < 0] <- 0
+  rval[!is.na(rval) & q < 0] <- 0
   if(!lower.tail) rval <- 1 - rval
   if(log.p) log(rval) else rval
 }
@@ -81,11 +81,11 @@ qhpois <- function(p, pi, lambda, lower.tail = TRUE, log.p = FALSE) {
   rval <- qpois(pzt, lambda, lower.tail = TRUE, log.p = FALSE)
   ## correct for density at hurdle
   d <- dpois(1, lambda, log = TRUE) - ppois(0, lambda, lower.tail = FALSE, log.p = TRUE)
-  d[lambda <= 0] <- 0
-  rval[p < d] <- 1
+  d[!is.na(d) & lambda <= 0] <- 0
+  rval[which(p < d)] <- 1
   ## catch other corner cases
-  rval[!is.finite(p)] <- 0L
-  rval[pi < 0 | pi > 1] <- NaN
+  rval[!is.na(rval) & !is.finite(p)] <- 0L
+  rval[which(pi < 0 | pi > 1)] <- NaN
   rval
 }
 
@@ -400,45 +400,4 @@ hessian.HurdlePoisson <- function(d, x, which = NULL, drop = TRUE, expected = FA
   ## Calculating Hessian via the deriv2 method
   deriv2(d, x, which = which, order = 2L, drop = drop, expected = expected, ...)
 }
-
-
-#' @exportS3Method
-#' @useDynLib distributions3, .registration = TRUE
-deriv2.HurdlePoisson <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
-  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
-
-  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
-  order <- unique(as.integer(order))
-  if (identical(order, 2L) && expected && (missing(x) || is.null(x))) x <- 0 # dummy
-
-  n        <- max_length(d, x)
-  cores    <- as.integer(cores)[1L]
-  expected <- as.logical(expected)[1L]
-
-  stopifnot(
-    "argument 'cores' must evaluate to positive integer" = is.integer(cores) && length(cores) == 1L && cores >= 1L,
-    "argument 'order' must evaluate to 1, 2, or 1:2"     = length(order) > 0 && all(order %in% 1:2)
-  )
-
-  ## Compute which derivatives to be calculated, and setting up the named lists
-  ## used by the C code to store the corresponding results
-  deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
-
-  ## Note that .Call has no named arguments, they are only for orientation
-  .Call("c_deriv_HurdlePoisson", x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
-        score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
-        expected     = as.logical(expected), ncores = as.integer(cores))
-
-  ## Prepare return. If only score/only hessian was requested,
-  ## returning matrix or vector. Else a named list is returned.
-  if (identical(order, 1L)) {
-    prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d))
-  } else if (identical(order, 2L)) {
-    prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d))
-  } else {
-    list(score   = prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d)),
-         hessian = prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d)))
-  }
-}
-
 

@@ -50,7 +50,7 @@ dhnbinom <- function(x, pi, mu, theta, size, log = FALSE) {
   rval <- dnbinom(x, mu = mu, size = theta, log = TRUE) -
     pnbinom(0, mu = mu, size = theta, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
-  rval[x == 0L] <- log(1 - rep_len(pi, length(rval)))[x == 0L]
+  rval[!is.na(rval) & x == 0L] <- log(1 - rep_len(pi, length(rval)))[!is.na(rval) & x == 0L]
   if(log) rval else exp(rval)
 }
 
@@ -64,9 +64,9 @@ phnbinom <- function(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
     pnbinom(0, mu = mu, size = theta, lower.tail = FALSE, log.p = TRUE) + 
     log(pi)
   rval <- exp(rval)
-  rval[q == 0L] <- 0
+  rval[!is.na(rval) & q == 0L] <- 0
   rval <- rval + (1 - pi)
-  rval[q < 0] <- 0
+  rval[!is.na(rval) & q < 0] <- 0
   if(!lower.tail) rval <- 1 - rval
   if(log.p) log(rval) else rval
 }
@@ -80,8 +80,8 @@ qhnbinom <- function(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE) {
   if(!lower.tail) p <- 1 - p
   p <- log(pmax(0, p + pi - 1)) - log(pi)
   rval <- qztnbinom(p, mu = mu, theta = theta, lower.tail = TRUE, log.p = TRUE)
-  rval[!is.finite(p)] <- 0L
-  rval[pi < 0 | pi > 1] <- NaN
+  rval[!is.na(rval) & !is.finite(p)] <- 0L
+  rval[which(pi < 0 | pi > 1)] <- NaN
   rval
 }
 
@@ -183,6 +183,19 @@ rhnbinom <- function(n, pi, mu, theta, size) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 HurdleNegativeBinomial <- function(pi = numeric(), mu = numeric(), theta = numeric()) {
+  if (!is.numeric(pi))    pi    <- as.numeric(pi)
+  if (!is.numeric(mu))    mu    <- as.numeric(mu)
+  if (!is.numeric(theta)) theta <- as.numeric(theta)
+
+  n <- c(pi = length(pi), mu = length(mu), theta = length(theta))
+  stopifnot(
+    "parameter lengths do not match (only scalars are allowed to be recycled)" =
+      all(n == n[[1L]]) || all(n == max(n) | n == 1L),
+    "parameter 'pi' must be in [0, 1]" = all(pi >= 0 & pi <= 1, na.rm = TRUE),
+    "parameter 'mu' must be in [0, Inf]" = all(mu >= 0, na.rm = TRUE),
+    "parameter 'theta' must be in [0, Inf]" = all(theta >= 0, na.rm = TRUE)
+  )
+
   d <- data.frame(pi = pi, mu = mu, theta = theta)
   class(d) <- c("HurdleNegativeBinomial", "distribution")
   return(d)
@@ -201,31 +214,6 @@ mean.HurdleNegativeBinomial <- function(x, ...) {
 variance.HurdleNegativeBinomial <- function(x, ...) {
   m <- x$mu * x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
   rval <- m * (1 + x$mu/x$theta + x$mu - m)
-  setNames(rval, names(x))
-}
-
-#' @export
-skewness.HurdleNegativeBinomial <- function(x, ...) {
-  stop("not implemented yet")
-  f <- x$pi / pnbinom(0, size = x$theta, mu = x$mu, lower.tail = FALSE)
-  m <- x$mu * f
-  s <- sqrt(m * (1 + x$mu/x$theta + x$mu - m))
-  ## FIXME: E[X^3] would be needed here
-  rval <- (f * (x$mu + 3 * x$mu^2 + x$mu^3) - 3 * m * s^2 - m^3) / s^3  
-  setNames(rval, names(x))
-}
-
-#' @export
-kurtosis.HurdleNegativeBinomial <- function(x, ...) {
-  stop("not implemented yet")
-  f <- x$pi / (1 - exp(-x$mu))
-  m <- x$mu * f
-  s2 <- m * (x$mu + 1 - m)
-  ## FIXME: E[X^4] would be needed here
-  rval <- ( f * (x$mu + 7 * x$mu^2 + 6 * x$mu^3 + x$mu^4)
-             - 4 * m * f * (x$mu + 3 * x$mu^2 + x$mu^3)
-             + 6 * m^2 * f * (x$mu + x$mu^2)
-             - 3 * m^4 ) / s2^2 - 3
   setNames(rval, names(x))
 }
 
