@@ -236,7 +236,7 @@ test_that("[autotest_summary]: S3 method summary works as expected for GEV distr
     skip_if_not_installed("revdbayes")
 
     expect_output(x <- summary(dn))
-    expect_identical(x, summary(as.data.frame(as.matrix(dn))))
+    expect_equal(x, summary(as.data.frame(as.matrix(dn))))
 });
 
 

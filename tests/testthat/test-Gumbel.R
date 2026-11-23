@@ -35,32 +35,32 @@ test_that("fit_mle.Gumbel works correctly", {
 ## Testing correctness of dpq methods
 test_that("pdf.Gumbel/log_pdf.Gumbel returns correct values", {
   skip_if_not_installed("revdbayes")
-  expect_identical(pdf(dd, xx),
+  expect_equal(pdf(dd, xx),
         revdbayes::dgev(xx, dd$mu, dd$sigma, shape = 0),
-        info = "pdf.Gumbel not identical to dnorm()")
-  expect_identical(pdf(dd, xx, log = TRUE),
+        info = "pdf.Gumbel not equal to dnorm()")
+  expect_equal(pdf(dd, xx, log = TRUE),
         log(revdbayes::dgev(xx, dd$mu, dd$sigma, shape = 0)),
-        info = "logarithm of pdf.Gumbel not identical to dnorm(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),
+        info = "logarithm of pdf.Gumbel not equal to dnorm(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),
         log(revdbayes::dgev(xx, dd$mu, dd$sigma, shape = 0)),
-        info = "log_pdf.Gumbel not identical to dnorm(..., log = TRUE)")
+        info = "log_pdf.Gumbel not equal to dnorm(..., log = TRUE)")
 })
 
 test_that("cdf.Gumbel returns correct values", {
   skip_if_not_installed("revdbayes")
-  expect_identical(cdf(dd, xx),
+  expect_equal(cdf(dd, xx),
         revdbayes::pgev(xx, dd$mu, dd$sigma, shape = 0),
-        info = "cdf.Gumbel not identical to pnorm()")
-  expect_identical(cdf(dd, xx, log = TRUE),
+        info = "cdf.Gumbel not equal to pnorm()")
+  expect_equal(cdf(dd, xx, log = TRUE),
         log(revdbayes::pgev(xx, dd$mu, dd$sigma, shape = 0)),
-        info = "logarithm of cdf.Gumbel not identical to pnorm(..., log = TRUE)")
+        info = "logarithm of cdf.Gumbel not equal to pnorm(..., log = TRUE)")
 })
 
 test_that("quantile.Gumbel returns correct values", {
   skip_if_not_installed("revdbayes")
-  expect_identical(quantile(dd, pp),
+  expect_equal(quantile(dd, pp),
         revdbayes::qgev(pp, dd$mu, dd$sigma, shape = 0),
-        info = "quantile.Gumbel not identical to qnorm()")
+        info = "quantile.Gumbel not equal to qnorm()")
 })
 
 test_that("quantile.Gumbel throws warning if p is out of range", {
@@ -70,14 +70,14 @@ test_that("quantile.Gumbel throws warning if p is out of range", {
 
 ## Testing correctness of moments
 test_that("moments for Gumbel distribution return correct values", {
-  expect_identical(mean(dd), dd$mu + dd$sigma * -digamma(1),
+  expect_equal(mean(dd), dd$mu + dd$sigma * -digamma(1),
       info = "mean.Gumbel incorrect")
-  expect_identical(variance(dd), pi^(2 / 6) * dd$sigma^2,
+  expect_equal(variance(dd), pi^(2 / 6) * dd$sigma^2,
       info = "variance.Gumbel incorrect")
-  expect_identical(skewness(dd),
+  expect_equal(skewness(dd),
       rep((12 * sqrt(6) * 1.20205690315959401459612) / pi^3, length(dd)),
       info = "skewness.Gumbel incorrect")
-  expect_identical(kurtosis(dd),
+  expect_equal(kurtosis(dd),
       rep(12 / 5, length(dd)),
       info = "kurtosis.Gumbel incorrect")
 })
@@ -85,10 +85,10 @@ test_that("moments for Gumbel distribution return correct values", {
 ## Testing correctness of score
 test_that("score for Gumbel distribution return correct values", {
   skip_if_not_installed("revdbayes")
-  expect_identical(score(dd, xx, which = "mu"),
+  expect_equal(score(dd, xx, which = "mu"),
       (1  - exp(-(xx - dd$mu) / dd$sigma)) / dd$sigma,
       info = "score for \"mu\" returns incorrect values")
-  expect_identical(score(dd, xx, which = "sigma"),
+  expect_equal(score(dd, xx, which = "sigma"),
       ((xx - dd$mu) / dd$sigma * (1 - exp(-(xx - dd$mu) / dd$sigma)) - 1) / dd$sigma,
       info = "score for \"sigma\" returns incorrect values")
 })

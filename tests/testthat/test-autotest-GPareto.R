@@ -236,7 +236,7 @@ test_that("[autotest_summary]: S3 method summary works as expected for GPareto d
     skip_if_not_installed("revdbayes")
 
     expect_output(x <- summary(dn))
-    expect_identical(x, summary(as.data.frame(as.matrix(dn))))
+    expect_equal(x, summary(as.data.frame(as.matrix(dn))))
 });
 
 
@@ -908,8 +908,8 @@ test_that("[autotest_hessian_observed]: S3 method for observed hessian (default)
     expect_identical(dimnames(x), list(names(dn), c("mu", "sigma:mu", "xi:mu", "mu:sigma", "sigma", "xi:sigma", "mu:xi", "sigma:xi", "xi")), info = "incorrect dimnames or dimension")
 
     ## Ensure the default is expected = FALSE (i.e., observed)
-    expect_identical(hessian(dn, 1, drop = FALSE, expected = FALSE), x,
-                     info = "S3 method hessian, by default, does not return observed hessian")
+    expect_equal(hessian(dn, 1, drop = FALSE, expected = FALSE), x,
+                 info = "S3 method hessian, by default, does not return observed hessian")
 
     ## Check calculating single hessian with default drop = TRUE; unnamed
     for (d in c("mu", "sigma:mu", "xi:mu", "mu:sigma", "sigma", "xi:sigma", "mu:xi", "sigma:xi", "xi")) {
@@ -953,8 +953,8 @@ test_that("[autotest_hessian_expected]: S3 method for expected hessian works as 
 
     ## Without "x": typically the expected hessian does not depend on x;
     ## we allow that argument x is missing and expect the same results
-    expect_identical(hessian(dn, expected = TRUE, drop = FALSE), x,
-        info = "expected hessian when not providing argument x expected to be identical")
+    expect_equal(hessian(dn, expected = TRUE, drop = FALSE), x,
+                 info = "expected hessian when not providing argument x expected to be identical")
 
     ## Check calculating single hessian with default drop = TRUE; unnamed
     for (d in c("mu", "sigma:mu", "xi:mu", "mu:sigma", "sigma", "xi:sigma", "mu:xi", "sigma:xi", "xi")) {

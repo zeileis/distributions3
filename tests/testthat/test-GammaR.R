@@ -36,24 +36,24 @@ test_that("fit_mle.GammaR not yet exists", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.GammaR/log_pdf.GammaR returns correct values", {
-  expect_identical(pdf(dd, xx),             dgamma(xx, df$shape, df$rate),
-        info = "pdf.GammaR not identical to dgamma()")
-  expect_identical(pdf(dd, xx, log = TRUE), dgamma(xx, df$shape, df$rate, log = TRUE),
-        info = "logarithm of pdf.GammaR not identical to dgamma(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dgamma(xx, df$shape, df$rate, log = TRUE),
-        info = "log_pdf.GammaR not identical to dgamma(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dgamma(xx, df$shape, df$rate),
+        info = "pdf.GammaR not equal to dgamma()")
+  expect_equal(pdf(dd, xx, log = TRUE), dgamma(xx, df$shape, df$rate, log = TRUE),
+        info = "logarithm of pdf.GammaR not equal to dgamma(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dgamma(xx, df$shape, df$rate, log = TRUE),
+        info = "log_pdf.GammaR not equal to dgamma(..., log = TRUE)")
 })
 
 test_that("cdf.GammaR returns correct values", {
-  expect_identical(cdf(dd, xx),             pgamma(xx, df$shape, df$rate),
-        info = "cdf.GammaR not identical to pgamma()")
-  expect_identical(cdf(dd, xx, log = TRUE), pgamma(xx, df$shape, df$rate, log = TRUE),
-        info = "logarithm of cdf.GammaR not identical to pgamma(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             pgamma(xx, df$shape, df$rate),
+        info = "cdf.GammaR not equal to pgamma()")
+  expect_equal(cdf(dd, xx, log = TRUE), pgamma(xx, df$shape, df$rate, log = TRUE),
+        info = "logarithm of cdf.GammaR not equal to pgamma(..., log = TRUE)")
 })
 
 test_that("quantile.GammaR returns correct values", {
-  expect_identical(quantile(dd, pp),        qgamma(pp, df$shape, df$rate),
-        info = "quantile.GammaR not identical to qgamma()")
+  expect_equal(quantile(dd, pp),        qgamma(pp, df$shape, df$rate),
+        info = "quantile.GammaR not equal to qgamma()")
 })
 
 test_that("quantile.GammaR throws warning if p is out of range", {

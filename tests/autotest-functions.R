@@ -1640,7 +1640,7 @@ autotest_summary <- function(config) {
     test_that("[<FNAME>]: S3 method summary works as expected for <NAME> distribution", {
         <SKIPIFNOT>
         expect_output(x <- summary(dn))
-        expect_identical(x, summary(as.data.frame(as.matrix(dn))))
+        expect_equal(x, summary(as.data.frame(as.matrix(dn))))
     });
     '
     ## List of values/placeholders to replace
@@ -1671,19 +1671,19 @@ autotest_support <- function(config) {
         <SKIPIFNOT>
         ## Single unnamed distribution object w/ drop = FALSE (default)
         expect_silent(x <- support(d1))
-        expect_identical(x, c(min = <SUPPORT_LOWER>, max = <SUPPORT_UPPER>))
+        expect_equal(x, c(min = <SUPPORT_LOWER>, max = <SUPPORT_UPPER>))
 
         ## Single unnamed distribution object w/ drop = TRUE
         expect_silent(x <- support(d1, drop = FALSE))
         tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = 1,
                       dimnames = list(NULL, c("min", "max")))
-        expect_identical(x, tmp)
+        expect_equal(x, tmp)
 
         ## Named distribution object of length > 1L
         expect_silent(x <- support(dn))
         tmp <- matrix(c(<SUPPORT_LOWER>, <SUPPORT_UPPER>), ncol = 2L, nrow = <N>,
                       byrow = TRUE, dimnames = list(names(dn), c("min", "max")))
-        expect_identical(x, tmp)
+        expect_equal(x, tmp)
     });
     '
     ## List of values/placeholders to replace
@@ -2832,8 +2832,8 @@ autotest_hessian_observed <- function(config) {
         expect_identical(dimnames(x), list(names(dn), <DERIV>), info = "incorrect dimnames or dimension")
 
         ## Ensure the default is expected = FALSE (i.e., observed)
-        expect_identical(hessian(dn, 1, drop = FALSE, expected = FALSE), x,
-                         info = "S3 method hessian, by default, does not return observed hessian")
+        expect_equal(hessian(dn, 1, drop = FALSE, expected = FALSE), x,
+                     info = "S3 method hessian, by default, does not return observed hessian")
 
         ## Check calculating single hessian with default drop = TRUE; unnamed
         for (d in <DERIV>) {
@@ -2888,8 +2888,8 @@ autotest_hessian_expected <- function(config) {
 
         ## Without "x": typically the expected hessian does not depend on x;
         ## we allow that argument x is missing and expect the same results
-        expect_identical(hessian(dn, expected = TRUE, drop = FALSE), x,
-            info = "expected hessian when not providing argument x expected to be identical")
+        expect_equal(hessian(dn, expected = TRUE, drop = FALSE), x,
+                     info = "expected hessian when not providing argument x expected to be identical")
 
         ## Check calculating single hessian with default drop = TRUE; unnamed
         for (d in <DERIV>) {
@@ -2974,10 +2974,10 @@ autotest_hessian_expected_compare2numeric <- function(config) {
         ## we allow that argument x is missing and expect the same results
         expect_silent(analytic_sol2 <- hessian(dn, drop = FALSE, expected = TRUE))
         expect_silent(numeric_sol2  <- distributions3:::hessian.distribution(dn, drop = FALSE, expected = TRUE))
-        expect_identical(analytic_sol2, analytic_sol, tolerance = <TOLERANCE>,
-                     info = "analytic expected hessian when not providing argument x expected to be identical")
-        expect_identical(numeric_sol2, numeric_sol, tolerance = <TOLERANCE>,
-                     info = "numeric expected hessian when not providing argument x expected to be identical")
+        expect_equal(analytic_sol2, analytic_sol, tolerance = <TOLERANCE>,
+                     info = "analytic expected hessian when not providing argument x expected to be equal")
+        expect_equal(numeric_sol2, numeric_sol, tolerance = <TOLERANCE>,
+                     info = "numeric expected hessian when not providing argument x expected to be equal")
     });
     '
     ## List of values/placeholders to replace

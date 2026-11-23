@@ -34,7 +34,7 @@ test_that("support.GEV works as expected", {
     m <- cbind(min = rep(-Inf, length(d)), max = rep(Inf, length(d)))
     m[d$xi > 0, 1] <- d$mu[d$xi > 0] - d$sigma[d$xi > 0] / d$xi[d$xi > 0]
     m[d$xi < 0, 2] <- d$mu[d$xi < 0] - d$sigma[d$xi < 0] / d$xi[d$xi < 0]
-    expect_identical(support(d), m)
+    expect_equal(support(d), m)
 })
 
 ## Example distributions

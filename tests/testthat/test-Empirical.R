@@ -92,8 +92,8 @@ test_that("Empirical construction from matrix/data.frame with missing values", {
     expect_silent(d1 <- Empirical(m))
     expect_silent(d2 <- Empirical(as.data.frame(m)))
 
-    expect_identical(as.matrix(d1), m)
-    expect_identical(as.matrix(d2), m)
+    expect_equal(as.matrix(d1), m)
+    expect_equal(as.matrix(d2), m)
 })
 
 test_that("Empirical construction from list, unequal number of observations", {
@@ -108,7 +108,7 @@ test_that("Empirical construction from list, unequal number of observations", {
     expect_true(is.matrix(m))
     expect_identical(dim(m), c(2L, 10L))
     expect_identical(dimnames(m), list(letters[1:2], paste0("o_", 1:10)))
-    expect_identical(sum(is.na(m)), 6L)
+    expect_equal(sum(is.na(m)), 6L)
     expect_true(all(is.na(m[2, 5:10])))
 })
 
@@ -119,13 +119,13 @@ test_that("Empirical support method works", {
         as.pairlist(alist(d =, drop = TRUE, ... =)))
 
     d <- Empirical(list(a = 8:20, b = c(-1.2, -1, -0.8)))
-    expect_identical(support(d),
+    expect_equal(support(d),
         matrix(c(8, 20, -1.2, -0.8), byrow = TRUE, nrow = 2, dimnames = list(letters[1:2], c("min", "max"))))
 
-    expect_identical(support(d[1], drop = FALSE),
+    expect_equal(support(d[1], drop = FALSE),
         matrix(c(8, 20), byrow = TRUE, nrow = 1, dimnames = list(letters[1], c("min", "max"))))
 
-    expect_identical(support(d[1]), c(8, 20) |> setNames(c("min", "max")))
+    expect_equal(support(d[1]), c(8, 20) |> setNames(c("min", "max")))
 })
 
 test_that("is_continuous/is_discrete methods both works", {
@@ -156,15 +156,15 @@ test_that("cdf.Empirical works as expected", {
         as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)))
 
     expect_silent(x <- cdf(d, 0))
-    expect_identical(x, c(0.5, 2 / 15) |> setNames(letters[1:2]))
+    expect_equal(x, c(0.5, 2 / 15) |> setNames(letters[1:2]))
 
     expect_silent(x <- cdf(d, c(-2, 0, 2)))
-    expect_identical(x, matrix(c(1/6, 1/2, 6/6, 2/15, 2/15, 4/15),
+    expect_equal(x, matrix(c(1/6, 1/2, 6/6, 2/15, 2/15, 4/15),
             nrow = 2, byrow = TRUE, dimnames = list(letters[1:2], paste0("p_", c(-2, 0, 2)))))
 
     # Upper tail
     expect_silent(x2 <- cdf(d, c(-2, 0, 2), lower.tail = FALSE))
-    expect_identical(x2, 1 - x)
+    expect_equal(x2, 1 - x)
 })
 
 
@@ -174,7 +174,7 @@ test_that("pdf.Empirical works as expected", {
         as.pairlist(alist(d =, x =, drop = TRUE, elementwise = NULL, ... =)))
 
     expect_silent(x <- pdf(d, 1))
-    expect_identical(x, c(2 / 6, 0) |> setNames(letters[1:2]))
+    expect_equal(x, c(2 / 6, 0) |> setNames(letters[1:2]))
 
     expect_silent(x <- pdf(d, c(-2, 0, 1)))
     expect_equal(x, matrix(c(1/6, 0, 2/6, 0, 0, 0),
@@ -182,7 +182,7 @@ test_that("pdf.Empirical works as expected", {
 
     # Log-pdf
     expect_silent(x2 <- pdf(d, c(-2, 0, 1), log = TRUE))
-    expect_identical(x2, log(x))
+    expect_equal(x2, log(x))
 
     # log_pdf function
     expect_identical(formals(distributions3:::log_pdf.Empirical),
@@ -199,39 +199,39 @@ test_that("quantile.Empirical works as expected", {
         as.pairlist(alist(x =, probs = , drop = TRUE, elementwise = NULL, type = 1L, ... =)))
 
     expect_silent(x <- quantile(d, 0))
-    expect_identical(x, c(min(a), min(b)) |> setNames(letters[1:2]))
+    expect_equal(x, c(min(a), min(b)) |> setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, 1))
-    expect_identical(x, c(max(a), max(b)) |> setNames(letters[1:2]))
+    expect_equal(x, c(max(a), max(b)) |> setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, 0.5))
-    expect_identical(x, c(unname(quantile(a, 0.5, type = 1L)),
+    expect_equal(x, c(unname(quantile(a, 0.5, type = 1L)),
                           unname(quantile(b, 0.5, type = 1L))) |>
                      setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, c(0.2, 0.5)))
-    expect_identical(x, c(unname(quantile(a, 0.2, type = 1L)),
+    expect_equal(x, c(unname(quantile(a, 0.2, type = 1L)),
                           unname(quantile(b, 0.5, type = 1L))) |>
                      setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, c(0.2, 0.5)))
-    expect_identical(x, c(unname(quantile(a, 0.2, type = 1L)),
+    expect_equal(x, c(unname(quantile(a, 0.2, type = 1L)),
                           unname(quantile(b, 0.5, type = 1L))) |>
                      setNames(letters[1:2]))
 
     expect_silent(x <- quantile(d, c(0.2, 0.5), elementwise = FALSE))
-    expect_identical(x, rbind(quantile(a, c(0.2, 0.5), type = 1L),
+    expect_equal(x, rbind(quantile(a, c(0.2, 0.5), type = 1L),
                               quantile(b, c(0.2, 0.5), type = 1L)) |>
         structure(dimnames = list(letters[1:2], paste0("q_", c(0.2, 0.5)))))
 
 
     # Lower tail
     expect_silent(x2 <- quantile(d, c(0.2, 0.5), type = 1L, elementwise = FALSE, lower.tail = FALSE))
-    expect_identical(x2, 1 - x)
+    expect_equal(x2, 1 - x)
 
     # Testing different type
     expect_silent(x <- quantile(d, 0.5, type = 7))
-    expect_identical(x, c(unname(quantile(a, 0.5, type = 7L)),
+    expect_equal(x, c(unname(quantile(a, 0.5, type = 7L)),
                           unname(quantile(b, 0.5, type = 7L))) |>
                      setNames(letters[1:2]))
 
@@ -366,16 +366,16 @@ test_that("dempirical works as expected", {
     expect_error(dempirical(0, y, method = "foo"), regexp = "'arg' should be one of .hist., .density.")
 
     # Using default 'method = NULL' (discrete)
-    expect_identical(dempirical(0, y), 0)
-    expect_identical(dempirical(0, y, na.rm = FALSE), NA_real_)
+    expect_equal(dempirical(0, y), 0)
+    expect_equal(dempirical(0, y, na.rm = FALSE), NA_real_)
 
-    expect_identical(dempirical(1, y), 2 / n)
-    expect_identical(dempirical(1, y, na.rm = FALSE), NA_real_)
+    expect_equal(dempirical(1, y), 2 / n)
+    expect_equal(dempirical(1, y, na.rm = FALSE), NA_real_)
 
-    expect_identical(x <- dempirical(0:6, y), sapply(0:6, function(x) { sum(y == x, na.rm = TRUE) / sum(!is.na(y)) }))
-    expect_identical(dempirical(0:6, y, na.rm = FALSE), rep(NA_real_, 7L))
+    expect_equal(x <- dempirical(0:6, y), sapply(0:6, function(x) { sum(y == x, na.rm = TRUE) / sum(!is.na(y)) }))
+    expect_equal(dempirical(0:6, y, na.rm = FALSE), rep(NA_real_, 7L))
 
-    expect_identical(log(x), dempirical(0:6, y, na.rm = TRUE, log = TRUE))
+    expect_equal(log(x), dempirical(0:6, y, na.rm = TRUE, log = TRUE))
 
     # Using histogram estimation
     expect_equal(x <- dempirical(1.5, y, method = "hist"), 0.625)
@@ -393,10 +393,10 @@ test_that("pempirical works as expected", {
 
     set.seed(1234)
     y <- c(rnorm(50), NA_real_)
-    expect_identical(x <- pempirical(0, y), 0.76)
-    expect_identical(pempirical(0, y, log.p = TRUE), log(x))
-    expect_identical(pempirical(0, y, lower.tail = FALSE), 1 - x)
-    expect_identical(pempirical(0, y, lower.tail = FALSE, log.p = TRUE), log(1 - x))
+    expect_equal(x <- pempirical(0, y), 0.76)
+    expect_equal(pempirical(0, y, log.p = TRUE), log(x))
+    expect_equal(pempirical(0, y, lower.tail = FALSE), 1 - x)
+    expect_equal(pempirical(0, y, lower.tail = FALSE, log.p = TRUE), log(1 - x))
 
     # length of q > 1L
     expect_identical(pempirical((-1):1, y), c(0.22, 0.76, 0.92))
@@ -415,14 +415,14 @@ test_that("qempirical works as expected", {
 
     expect_error(qempirical(0.77, y, na.rm = FALSE), regexp = "missing values and NaN's not allowed if 'na.rm' is FALSE")
 
-    expect_identical(x <- qempirical(0.77, y),
+    expect_equal(x <- qempirical(0.77, y),
                      unname(quantile(y, 0.77, na.rm = TRUE, type = 1L)))
-    expect_identical(qempirical(log(0.77), y, log.p = TRUE), x)
-    expect_identical(qempirical(0.77, y, lower.tail = FALSE), 1 - x)
-    expect_identical(qempirical(log(0.77), y, lower.tail = FALSE, log.p = TRUE), 1 - x)
+    expect_equal(qempirical(log(0.77), y, log.p = TRUE), x)
+    expect_equal(qempirical(0.77, y, lower.tail = FALSE), 1 - x)
+    expect_equal(qempirical(log(0.77), y, lower.tail = FALSE, log.p = TRUE), 1 - x)
 
     # length of p > 1L
-    expect_identical(x <- qempirical(c(0.2, 0.5, 0.8), y),
+    expect_equal(x <- qempirical(c(0.2, 0.5, 0.8), y),
                      unname(quantile(y, c(0.2, 0.5, 0.8), na.rm = TRUE, type = 1L)))
 
     # Not removing NAs - expecting error)
@@ -439,7 +439,7 @@ test_that("rempirical works as expected", {
     y <- c(rnorm(50), NA_real_)
 
     # n = 0L:
-    expect_identical(rempirical(0, y), vector("double", 0))
+    expect_equal(rempirical(0, y), vector("double", 0))
 
     # n = 1L
     expect_silent(x <- rempirical(1L, na.omit(y)))

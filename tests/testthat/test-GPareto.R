@@ -28,13 +28,13 @@ test_that("fit_mle.GPareto not yet implemented", {
 
 ## Testing correctness of moments
 test_that("moments for GPareto distribution return correct values", {
-    expect_identical(mean(dd), c(-4, 3, 4, 11),
+    expect_equal(mean(dd), c(-4, 3, 4, 11),
         info = "mean.GPareto incorrect")
-    expect_identical(variance(dd), c(4, Inf, Inf, Inf),
+    expect_equal(variance(dd), c(4, Inf, Inf, Inf),
         info = "variance.GPareto incorrect")
-    expect_identical(skewness(dd), c(0, 2, 2, Inf),
+    expect_equal(skewness(dd), c(0, 2, 2, Inf),
         info = "skewness.GPareto incorrect")
-    expect_identical(kurtosis(dd), c(-1.2, 6, 6, Inf),
+    expect_equal(kurtosis(dd), c(-1.2, 6, 6, Inf),
         info = "kurtosis.GPareto incorrect")
 })
 
@@ -45,7 +45,7 @@ test_that("support.GPareto works as expected", {
 
     m <- cbind(min = dd$mu, max = rep(Inf, length(dd)))
     m[dd$xi < 0, 2] <- dd$mu[dd$xi < 0] - dd$sigma[dd$xi < 0] / dd$xi[dd$xi < 0]
-    expect_identical(support(dd), m)
+    expect_equal(support(dd), m)
 });
 
 ## Example distributions

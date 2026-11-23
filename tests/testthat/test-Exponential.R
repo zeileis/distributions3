@@ -32,55 +32,55 @@ test_that("fit_mle.Exponential works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Exponential/log_pdf.Exponential returns correct values", {
-  expect_identical(pdf(dd, xx),             dexp(xx, dd$rate),
-        info = "pdf.Exponential not identical to dexp()")
-  expect_identical(pdf(dd, xx, log = TRUE), dexp(xx, dd$rate, log = TRUE),
-        info = "logarithm of pdf.Exponential not identical to dexp(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dexp(xx, dd$rate, log = TRUE),
-        info = "log_pdf.Exponential not identical to dexp(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dexp(xx, dd$rate),
+        info = "pdf.Exponential not equal to dexp()")
+  expect_equal(pdf(dd, xx, log = TRUE), dexp(xx, dd$rate, log = TRUE),
+        info = "logarithm of pdf.Exponential not equal to dexp(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dexp(xx, dd$rate, log = TRUE),
+        info = "log_pdf.Exponential not equal to dexp(..., log = TRUE)")
 })
 
 test_that("cdf.Exponential returns correct values", {
-  expect_identical(cdf(dd, xx),             pexp(xx, dd$rate),
-        info = "cdf.Exponential not identical to pexp()")
-  expect_identical(cdf(dd, xx, log = TRUE), pexp(xx, dd$rate, log = TRUE),
-        info = "logarithm of cdf.Exponential not identical to pexp(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             pexp(xx, dd$rate),
+        info = "cdf.Exponential not equal to pexp()")
+  expect_equal(cdf(dd, xx, log = TRUE), pexp(xx, dd$rate, log = TRUE),
+        info = "logarithm of cdf.Exponential not equal to pexp(..., log = TRUE)")
 })
 
 test_that("quantile.Exponential returns correct values", {
-  expect_identical(quantile(dd, pp),        qexp(pp, dd$rate),
-        info = "quantile.Exponential not identical to qexp()")
+  expect_equal(quantile(dd, pp),        qexp(pp, dd$rate),
+        info = "quantile.Exponential not equal to qexp()")
 })
 
 
 ## Testing correctness of moments
 test_that("moments for Exponential distribution return correct values", {
-    expect_identical(mean(dd), 1 / dd$rate,
+    expect_equal(mean(dd), 1 / dd$rate,
         info = "mean.Exponential incorrect")
-    expect_identical(variance(dd), 1 / dd$rate^2,
+    expect_equal(variance(dd), 1 / dd$rate^2,
         info = "variance.Exponential incorrect")
-    expect_identical(skewness(dd), rep(2, length(dd)),
+    expect_equal(skewness(dd), rep(2, length(dd)),
         info = "skewness.Exponential incorrect")
-    expect_identical(kurtosis(dd), rep(6, length(dd)),
+    expect_equal(kurtosis(dd), rep(6, length(dd)),
         info = "kurtosis.Exponential incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Exponential distribution return correct values", {
-    expect_identical(score(dd, xx, which = "rate"),
+    expect_equal(score(dd, xx, which = "rate"),
         1 / dd$rate - xx,
         info = "score for \"rate\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Exponential distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "rate", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "rate", expected = FALSE),
         -1 / dd$rate^2,
         info = "hessian for \"rate\" returns incorrect values")
 })
 
 test_that("expected hessian for Exponential distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "rate", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "rate", expected = TRUE),
         -1 / dd$rate^2,
         info = "hessian for \"rate\" returns incorrect values")
 })

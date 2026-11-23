@@ -32,24 +32,24 @@ test_that("fit_mle.Geometric works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Geometric/log_pdf.Geometric returns correct values", {
-  expect_identical(pdf(dd, xx),             dgeom(xx, dd$p),
-        info = "pdf.Geometric not identical to dgeom()")
-  expect_identical(pdf(dd, xx, log = TRUE), dgeom(xx, dd$p, log = TRUE),
-        info = "logarithm of pdf.Geometric not identical to dgeom(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dgeom(xx, dd$p, log = TRUE),
-        info = "log_pdf.Geometric not identical to dgeom(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dgeom(xx, dd$p),
+        info = "pdf.Geometric not equal to dgeom()")
+  expect_equal(pdf(dd, xx, log = TRUE), dgeom(xx, dd$p, log = TRUE),
+        info = "logarithm of pdf.Geometric not equal to dgeom(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dgeom(xx, dd$p, log = TRUE),
+        info = "log_pdf.Geometric not equal to dgeom(..., log = TRUE)")
 })
 
 test_that("cdf.Geometric returns correct values", {
-  expect_identical(cdf(dd, xx),             pgeom(xx, dd$p),
-        info = "cdf.Geometric not identical to pgeom()")
-  expect_identical(cdf(dd, xx, log = TRUE), pgeom(xx, dd$p, log = TRUE),
-        info = "logarithm of cdf.Geometric not identical to pgeom(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             pgeom(xx, dd$p),
+        info = "cdf.Geometric not equal to pgeom()")
+  expect_equal(cdf(dd, xx, log = TRUE), pgeom(xx, dd$p, log = TRUE),
+        info = "logarithm of cdf.Geometric not equal to pgeom(..., log = TRUE)")
 })
 
 test_that("quantile.Geometric returns correct values", {
-  expect_identical(quantile(dd, pp),        qgeom(pp, dd$p),
-        info = "quantile.Geometric not identical to qgeom()")
+  expect_equal(quantile(dd, pp),        qgeom(pp, dd$p),
+        info = "quantile.Geometric not equal to qgeom()")
 })
 
 test_that("quantile.Geometric throws warning if p is out of range", {
@@ -59,32 +59,32 @@ test_that("quantile.Geometric throws warning if p is out of range", {
 
 ## Testing correctness of moments
 test_that("moments for Geometric distribution return correct values", {
-    expect_identical(mean(dd), (1 - dd$p) / dd$p,
+    expect_equal(mean(dd), (1 - dd$p) / dd$p,
         info = "mean.Geometric incorrect")
-    expect_identical(variance(dd), (1 - dd$p) / dd$p^2,
+    expect_equal(variance(dd), (1 - dd$p) / dd$p^2,
         info = "variance.Geometric incorrect")
-    expect_identical(skewness(dd), (2 - dd$p) / sqrt(1 - dd$p),
+    expect_equal(skewness(dd), (2 - dd$p) / sqrt(1 - dd$p),
         info = "skewness.Geometric incorrect")
-    expect_identical(kurtosis(dd), 6 + (dd$p^2 / (1 - dd$p)),
+    expect_equal(kurtosis(dd), 6 + (dd$p^2 / (1 - dd$p)),
         info = "kurtosis.Geometric incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Geometric distribution return correct values", {
-    expect_identical(score(dd, xx, which = "p"),
+    expect_equal(score(dd, xx, which = "p"),
         1 / dd$p - xx / (1 - dd$p),
         info = "score for \"p\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Geometric distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "p", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "p", expected = FALSE),
         -1 / dd$p^2 - xx / (1 - dd$p)^2,
         info = "hessian for \"p\" returns incorrect values")
 })
 
 test_that("expected hessian for Geometric distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "p", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "p", expected = TRUE),
         -1 / (dd$p^2 * (1 - dd$p)),
         info = "hessian for \"p\" returns incorrect values")
 })

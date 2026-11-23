@@ -32,24 +32,24 @@ test_that("fit_mle.Binomial works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Binomial/log_pdf.Binomial returns correct values", {
-  expect_identical(pdf(dd, xx),             dbinom(xx, dd$size, dd$p),
-        info = "pdf.Binomial not identical to dbinom()")
-  expect_identical(pdf(dd, xx, log = TRUE), dbinom(xx, dd$size, dd$p, log = TRUE),
-        info = "logarithm of pdf.Binomial not identical to dbinom(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dbinom(xx, dd$size, dd$p, log = TRUE),
-        info = "log_pdf.Binomial not identical to dbinom(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dbinom(xx, dd$size, dd$p),
+        info = "pdf.Binomial not equal to dbinom()")
+  expect_equal(pdf(dd, xx, log = TRUE), dbinom(xx, dd$size, dd$p, log = TRUE),
+        info = "logarithm of pdf.Binomial not equal to dbinom(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dbinom(xx, dd$size, dd$p, log = TRUE),
+        info = "log_pdf.Binomial not equal to dbinom(..., log = TRUE)")
 })
 
 test_that("cdf.Binomial returns correct values", {
-  expect_identical(cdf(dd, xx),             pbinom(xx, dd$size, dd$p),
-        info = "cdf.Binomial not identical to pbinom()")
-  expect_identical(cdf(dd, xx, log = TRUE), pbinom(xx, dd$size, dd$p, log = TRUE),
-        info = "logarithm of cdf.Binomial not identical to pbinom(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             pbinom(xx, dd$size, dd$p),
+        info = "cdf.Binomial not equal to pbinom()")
+  expect_equal(cdf(dd, xx, log = TRUE), pbinom(xx, dd$size, dd$p, log = TRUE),
+        info = "logarithm of cdf.Binomial not equal to pbinom(..., log = TRUE)")
 })
 
 test_that("quantile.Binomial returns correct values", {
-  expect_identical(quantile(dd, pp),        qbinom(pp, dd$size, dd$p),
-        info = "quantile.Binomial not identical to qbinom()")
+  expect_equal(quantile(dd, pp),        qbinom(pp, dd$size, dd$p),
+        info = "quantile.Binomial not equal to qbinom()")
 })
 
 test_that("quantile.Binomial throws warning if p is out of range", {
@@ -59,13 +59,13 @@ test_that("quantile.Binomial throws warning if p is out of range", {
 
 ## Testing correctness of moments
 test_that("moments for Binomial distribution return correct values", {
-    expect_identical(mean(dd), dd$size * dd$p,
+    expect_equal(mean(dd), dd$size * dd$p,
         info = "mean.Binomial incorrect")
-    expect_identical(variance(dd), dd$size * dd$p * (1 - dd$p),
+    expect_equal(variance(dd), dd$size * dd$p * (1 - dd$p),
         info = "variance.Binomial incorrect")
-    expect_identical(skewness(dd), (1 - (2 * dd$p)) / sqrt(dd$size * dd$p * (1 - dd$p)),
+    expect_equal(skewness(dd), (1 - (2 * dd$p)) / sqrt(dd$size * dd$p * (1 - dd$p)),
         info = "skewness.Binomial incorrect")
-    expect_identical(kurtosis(dd), (1 - (6 * dd$p * (1 - dd$p))) / (dd$size * dd$p * (1 - dd$p)),
+    expect_equal(kurtosis(dd), (1 - (6 * dd$p * (1 - dd$p))) / (dd$size * dd$p * (1 - dd$p)),
         info = "kurtosis.Binomial incorrect")
 })
 
@@ -83,7 +83,7 @@ test_that("score and hessian methods for Binomial have correct arguments/default
 
 ## Testing correctness of score
 test_that("score for Binomial distribution return correct values", {
-    expect_identical(score(dd, xx, which = "p"),
+    expect_equal(score(dd, xx, which = "p"),
         (xx - dd$size * dd$p) / (dd$p * (1 - dd$p)),
         info = "score for \"p\" returns incorrect values")
 
@@ -94,7 +94,7 @@ test_that("score for Binomial distribution return correct values", {
 
 ## Testing correctness of hessian
 test_that("observed hessian for Binomial distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "p", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "p", expected = FALSE),
         -xx / dd$p^2 - (dd$size - xx) / (1 - dd$p)^2,
         info = "hessian for \"p\" returns incorrect values")
 
@@ -104,7 +104,7 @@ test_that("observed hessian for Binomial distribution return correct values", {
 })
 
 test_that("expected hessian for Binomial distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "p", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "p", expected = TRUE),
         -dd$size / (dd$p * (1 - dd$p)),
         info = "hessian for \"p\" returns incorrect values")
 

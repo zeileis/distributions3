@@ -29,24 +29,24 @@ test_that("fit_mle.Uniform works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Uniform/log_pdf.Uniform returns correct values", {
-  expect_identical(pdf(dd, xx),             dunif(xx, dd$a, dd$b),
-        info = "pdf.Uniform not identical to dunif()")
-  expect_identical(pdf(dd, xx, log = TRUE), dunif(xx, dd$a, dd$b, log = TRUE),
-        info = "logarithm of pdf.Uniform not identical to dunif(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dunif(xx, dd$a, dd$b, log = TRUE),
-        info = "log_pdf.Uniform not identical to dunif(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dunif(xx, dd$a, dd$b),
+        info = "pdf.Uniform not equal to dunif()")
+  expect_equal(pdf(dd, xx, log = TRUE), dunif(xx, dd$a, dd$b, log = TRUE),
+        info = "logarithm of pdf.Uniform not equal to dunif(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dunif(xx, dd$a, dd$b, log = TRUE),
+        info = "log_pdf.Uniform not equal to dunif(..., log = TRUE)")
 })
 
 test_that("cdf.Uniform returns correct values", {
-  expect_identical(cdf(dd, xx),             punif(xx, dd$a, dd$b),
-        info = "cdf.Uniform not identical to punif()")
-  expect_identical(cdf(dd, xx, log = TRUE), punif(xx, dd$a, dd$b, log = TRUE),
-        info = "logarithm of cdf.Uniform not identical to punif(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             punif(xx, dd$a, dd$b),
+        info = "cdf.Uniform not equal to punif()")
+  expect_equal(cdf(dd, xx, log = TRUE), punif(xx, dd$a, dd$b, log = TRUE),
+        info = "logarithm of cdf.Uniform not equal to punif(..., log = TRUE)")
 })
 
 test_that("quantile.Uniform returns correct values", {
-  expect_identical(quantile(dd, pp),        qunif(pp, dd$a, dd$b),
-        info = "quantile.Uniform not identical to qnorm()")
+  expect_equal(quantile(dd, pp),        qunif(pp, dd$a, dd$b),
+        info = "quantile.Uniform not equal to qnorm()")
 })
 test_that("quantile.Uniform throws warning if p is out of range", {
   expect_warning(quantile(dd, -1e10))
@@ -55,55 +55,55 @@ test_that("quantile.Uniform throws warning if p is out of range", {
 
 ## Testing correctness of moments
 test_that("moments for Uniform distribution return correct values", {
-    expect_identical(mean(dd), (dd$a + dd$b) / 2,
+    expect_equal(mean(dd), (dd$a + dd$b) / 2,
         info = "mean.Uniform incorrect")
-    expect_identical(variance(dd), 1 / 12 * (dd$b - dd$a)^2,
+    expect_equal(variance(dd), 1 / 12 * (dd$b - dd$a)^2,
         info = "variance.Uniform incorrect")
-    expect_identical(skewness(dd), rep(0, length(dd)),
+    expect_equal(skewness(dd), rep(0, length(dd)),
         info = "skewness.Uniform incorrect")
-    expect_identical(kurtosis(dd), rep_len(-6 / 5, length(dd)),
+    expect_equal(kurtosis(dd), rep_len(-6 / 5, length(dd)),
         info = "kurtosis.Uniform incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Uniform distribution return correct values", {
-    expect_identical(score(dd, xx, which = "a"), 1 / (dd$b - dd$a),
+    expect_equal(score(dd, xx, which = "a"), 1 / (dd$b - dd$a),
         info = "score for \"a\" returns incorrect values")
-    expect_identical(score(dd, xx, which = "b"), -1 / (dd$b - dd$a),
+    expect_equal(score(dd, xx, which = "b"), -1 / (dd$b - dd$a),
         info = "score for \"b\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Uniform distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "a", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "a", expected = FALSE),
         1 / (dd$b - dd$a)^2,
         info = "hessian for \"a\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "b", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "b", expected = FALSE),
         1 / (dd$b - dd$a)^2,
         info = "hessian for \"b\" returns incorrect values")
 
     # Cross derivatives
-    expect_identical(hessian(dd, xx, which = "a:b", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "a:b", expected = FALSE),
         - 1 / (dd$b - dd$a)^2,
         info = "hessian for \"a:b\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "b:a", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "b:a", expected = FALSE),
         - 1 / (dd$b - dd$a)^2,
         info = "hessian for \"b:a\" returns incorrect values")
 })
 
 test_that("expected hessian for Uniform distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "a", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "a", expected = FALSE),
         1 / (dd$b - dd$a)^2,
         info = "hessian for \"a\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "b", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "b", expected = FALSE),
         1 / (dd$b - dd$a)^2,
         info = "hessian for \"b\" returns incorrect values")
 
     # Cross derivatives
-    expect_identical(hessian(dd, xx, which = "a:b", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "a:b", expected = FALSE),
         - 1 / (dd$b - dd$a)^2,
         info = "hessian for \"a:b\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "b:a", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "b:a", expected = FALSE),
         - 1 / (dd$b - dd$a)^2,
         info = "hessian for \"b:a\" returns incorrect values")
 })

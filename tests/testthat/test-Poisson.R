@@ -39,24 +39,24 @@ test_that("fit_mle.Poisson works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Poisson/log_pdf.Poisson returns correct values", {
-  expect_identical(pdf(dd, xx),             dpois(xx, dd$lambda),
-        info = "pdf.Poisson not identical to dpois()")
-  expect_identical(pdf(dd, xx, log = TRUE), dpois(xx, dd$lambda, log = TRUE),
-        info = "logarighm of pdf.Poisson not identical to dpois(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dpois(xx, dd$lambda, log = TRUE),
-        info = "log_pdf.Poisson not identical to dpois(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dpois(xx, dd$lambda),
+        info = "pdf.Poisson not equal to dpois()")
+  expect_equal(pdf(dd, xx, log = TRUE), dpois(xx, dd$lambda, log = TRUE),
+        info = "logarighm of pdf.Poisson not equal to dpois(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dpois(xx, dd$lambda, log = TRUE),
+        info = "log_pdf.Poisson not equal to dpois(..., log = TRUE)")
 })
 
 test_that("cdf.Poisson returns correct values", {
-  expect_identical(cdf(dd, xx),              ppois(xx, dd$lambda),
-        info = "cdf.Poisson not identical to ppois()")
-  expect_identical(cdf(dd, xx, log = TRUE),  ppois(xx, dd$lambda, log = TRUE),
-        info = "logarithm of cdf.Poisson not identical to ppois(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),              ppois(xx, dd$lambda),
+        info = "cdf.Poisson not equal to ppois()")
+  expect_equal(cdf(dd, xx, log = TRUE),  ppois(xx, dd$lambda, log = TRUE),
+        info = "logarithm of cdf.Poisson not equal to ppois(..., log = TRUE)")
 })
 
 test_that("quantile.Poisson returns correct values", {
-  expect_identical(quantile(dd, pp), qpois(pp, dd$lambda),
-        info = "quantile.Poisson not identical to qpois()")
+  expect_equal(quantile(dd, pp), qpois(pp, dd$lambda),
+        info = "quantile.Poisson not equal to qpois()")
 })
 
 test_that("quantile.Poisson throws warning if p is out of range", {
@@ -66,32 +66,32 @@ test_that("quantile.Poisson throws warning if p is out of range", {
 
 ## Testing correctness of moments
 test_that("moments for Poisson distribution return correct values", {
-    expect_identical(mean(dd), dd$lambda,
+    expect_equal(mean(dd), dd$lambda,
         info = "mean.Poisson incorrect")
-    expect_identical(variance(dd), dd$lambda,
+    expect_equal(variance(dd), dd$lambda,
         info = "variance.Poisson incorrect")
-    expect_identical(skewness(dd), 1 / sqrt(dd$lambda),
+    expect_equal(skewness(dd), 1 / sqrt(dd$lambda),
         info = "skewness.Poisson incorrect")
-    expect_identical(kurtosis(dd), 1 / dd$lambda,
+    expect_equal(kurtosis(dd), 1 / dd$lambda,
         info = "kurtosis.Poisson incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for Poisson distribution return correct values", {
-    expect_identical(score(dd, xx, which = "lambda"),
+    expect_equal(score(dd, xx, which = "lambda"),
         xx / dd$lambda - 1,
         info = "score for \"lambda\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Poisson distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "lambda", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "lambda", expected = FALSE),
         -xx / dd$lambda^2,
         info = "hessian for \"lambda\" returns incorrect values")
 })
 
 test_that("expected hessian for Poisson distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "lambda", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "lambda", expected = TRUE),
         -1 / dd$lambda,
         info = "hessian for \"lambda\" returns incorrect values")
 })

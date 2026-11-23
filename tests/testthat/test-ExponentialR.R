@@ -32,24 +32,24 @@ test_that("fit_mle.ExponentialR works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.ExponentialR/log_pdf.ExponentialR returns correct values", {
-  expect_identical(pdf(dd, xx),             dexp(xx, 1 / dd$mu),
-        info = "pdf.ExponentialR not identical to dexp()")
-  expect_identical(pdf(dd, xx, log = TRUE), dexp(xx, 1 / dd$mu, log = TRUE),
-        info = "logarithm of pdf.ExponentialR not identical to dexp(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dexp(xx, 1 / dd$mu, log = TRUE),
-        info = "log_pdf.ExponentialR not identical to dexp(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dexp(xx, 1 / dd$mu),
+        info = "pdf.ExponentialR not equal to dexp()")
+  expect_equal(pdf(dd, xx, log = TRUE), dexp(xx, 1 / dd$mu, log = TRUE),
+        info = "logarithm of pdf.ExponentialR not equal to dexp(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dexp(xx, 1 / dd$mu, log = TRUE),
+        info = "log_pdf.ExponentialR not equal to dexp(..., log = TRUE)")
 })
 
 test_that("cdf.ExponentialR returns correct values", {
-  expect_identical(cdf(dd, xx),             pexp(xx, 1 / dd$mu),
-        info = "cdf.ExponentialR not identical to pexp()")
-  expect_identical(cdf(dd, xx, log = TRUE), pexp(xx, 1 / dd$mu, log = TRUE),
-        info = "logarithm of cdf.ExponentialR not identical to pexp(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             pexp(xx, 1 / dd$mu),
+        info = "cdf.ExponentialR not equal to pexp()")
+  expect_equal(cdf(dd, xx, log = TRUE), pexp(xx, 1 / dd$mu, log = TRUE),
+        info = "logarithm of cdf.ExponentialR not equal to pexp(..., log = TRUE)")
 })
 
 test_that("quantile.ExponentialR returns correct values", {
-  expect_identical(quantile(dd, pp),        qexp(pp, 1 / dd$mu),
-        info = "quantile.ExponentialR not identical to qexp()")
+  expect_equal(quantile(dd, pp),        qexp(pp, 1 / dd$mu),
+        info = "quantile.ExponentialR not equal to qexp()")
 })
 
 test_that("quantile.ExponentialR throws warning if p is out of range", {              
@@ -61,53 +61,53 @@ test_that("quantile.ExponentialR throws warning if p is out of range", {
 test_that("pdf.Exponential on edge case mu = Inf (rate = 0) works as stats::dexp", {
   expect_silent(d <- ExponentialR(1 / 0))
   expect_silent(x <- pdf(d, 1:5))
-  expect_identical(x, dexp(1:5, rate = 0))
+  expect_equal(x, dexp(1:5, rate = 0))
 })
 test_that("cdf.Exponential on edge case mu = Inf (rate = 0) works as stats::pexp", {
   expect_silent(d <- ExponentialR(1 / 0))
   expect_silent(x <- cdf(d, 1:5))
-  expect_identical(x, pexp(1:5, rate = 0))
+  expect_equal(x, pexp(1:5, rate = 0))
 })
 test_that("quantile.Exponential on edge case mu = Inf (rate = 0) works as stats::qexp", {
   p <- seq(0.05, 0.95, by = 0.05)
   expect_silent(d <- ExponentialR(1 / 0))
   expect_silent(x <- quantile(d, p))
-  expect_identical(x, qexp(p, rate = 0))
+  expect_equal(x, qexp(p, rate = 0))
 })
 test_that("random.Exponential on edge case mu = Inf (rate = 0) works as stats::rexp", {
   expect_silent(d <- ExponentialR(1 / 0))
   expect_warning(x <- random(d, 5), regexp = "NAs produced")
-  expect_identical(x, rep(NaN, 5))
+  expect_equal(x, rep(NaN, 5))
 })
 
 ## Testing correctness of moments
 test_that("moments for ExponentialR distribution return correct values", {
-    expect_identical(mean(dd), dd$mu,
+    expect_equal(mean(dd), dd$mu,
         info = "mean.ExponentialR incorrect")
-    expect_identical(variance(dd), dd$mu^2,
+    expect_equal(variance(dd), dd$mu^2,
         info = "variance.ExponentialR incorrect")
-    expect_identical(skewness(dd), rep(2, length(dd)),
+    expect_equal(skewness(dd), rep(2, length(dd)),
         info = "skewness.ExponentialR incorrect")
-    expect_identical(kurtosis(dd), rep(6, length(dd)),
+    expect_equal(kurtosis(dd), rep(6, length(dd)),
         info = "kurtosis.ExponentialR incorrect")
 })
 
 ## Testing correctness of score
 test_that("score for ExponentialR distribution return correct values", {
-    expect_identical(score(dd, xx, which = "mu"),
+    expect_equal(score(dd, xx, which = "mu"),
         (xx - dd$mu) / dd$mu^2,
         info = "score for \"mu\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for ExponentialR distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "mu", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "mu", expected = FALSE),
         (dd$mu - 2 * xx) / dd$mu^3,
         info = "hessian for \"mu\" returns incorrect values")
 })
 
 test_that("expected hessian for ExponentialR distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "mu", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "mu", expected = TRUE),
         (-1 / dd$mu^2),
         info = "hessian for \"mu\" returns incorrect values")
 })

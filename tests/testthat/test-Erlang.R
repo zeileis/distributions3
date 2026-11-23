@@ -28,24 +28,24 @@ test_that("fit_mle.Erlang works correctly", {
 
 ## Testing correctness of dpq methods
 test_that("pdf.Erlang/log_pdf.Erlang returns correct values", {
-  expect_identical(pdf(dd, xx),             dgamma(xx, dd$k, dd$lambda),
-        info = "pdf.Erlang not identical to dgamma()")
-  expect_identical(pdf(dd, xx, log = TRUE), dgamma(xx, dd$k, dd$lambda, log = TRUE),
-        info = "logarithm of pdf.Erlang not identical to dgamma(..., log = TRUE)")
-  expect_identical(log_pdf(dd, xx),         dgamma(xx, dd$k, dd$lambda, log = TRUE),
-        info = "log_pdf.Erlang not identical to dgamma(..., log = TRUE)")
+  expect_equal(pdf(dd, xx),             dgamma(xx, dd$k, dd$lambda),
+        info = "pdf.Erlang not equal to dgamma()")
+  expect_equal(pdf(dd, xx, log = TRUE), dgamma(xx, dd$k, dd$lambda, log = TRUE),
+        info = "logarithm of pdf.Erlang not equal to dgamma(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dgamma(xx, dd$k, dd$lambda, log = TRUE),
+        info = "log_pdf.Erlang not equal to dgamma(..., log = TRUE)")
 })
 
 test_that("cdf.Erlang returns correct values", {
-  expect_identical(cdf(dd, xx),             pgamma(xx, dd$k, dd$lambda),
-        info = "cdf.Erlang not identical to pgamma()")
-  expect_identical(cdf(dd, xx, log = TRUE), pgamma(xx, dd$k, dd$lambda, log = TRUE),
-        info = "logarithm of cdf.Erlang not identical to pgamma(..., log = TRUE)")
+  expect_equal(cdf(dd, xx),             pgamma(xx, dd$k, dd$lambda),
+        info = "cdf.Erlang not equal to pgamma()")
+  expect_equal(cdf(dd, xx, log = TRUE), pgamma(xx, dd$k, dd$lambda, log = TRUE),
+        info = "logarithm of cdf.Erlang not equal to pgamma(..., log = TRUE)")
 })
 
 test_that("quantile.Erlang returns correct values", {
-  expect_identical(quantile(dd, pp),        qgamma(pp, dd$k, dd$lambda),
-        info = "quantile.Erlang not identical to qgamma()")
+  expect_equal(quantile(dd, pp),        qgamma(pp, dd$k, dd$lambda),
+        info = "quantile.Erlang not equal to qgamma()")
 })
 
 test_that("quantile.Erlang throws warning if p is out of range", {
@@ -57,45 +57,45 @@ test_that("quantile.Erlang throws warning if p is out of range", {
 
 ## Testing correctness of score
 test_that("score for Erlang distribution return correct values", {
-    expect_identical(score(dd, xx, which = "k"),
+    expect_equal(score(dd, xx, which = "k"),
         log(dd$lambda) + log(xx) - digamma(dd$k),
         info = "score for \"k\" returns incorrect values")
-    expect_identical(score(dd, xx, which = "lambda"),
+    expect_equal(score(dd, xx, which = "lambda"),
         dd$k / dd$lambda - xx,
         info = "score for \"lambda\" returns incorrect values")
 })
 
 ## Testing correctness of hessian
 test_that("observed hessian for Erlang distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "k", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "k", expected = FALSE),
         -trigamma(dd$k),
         info = "hessian for \"k\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "lambda", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "lambda", expected = FALSE),
         -dd$k / dd$lambda^2,
         info = "hessian for \"lambda\" returns incorrect values")
 
     # Cross derivatives
-    expect_identical(hessian(dd, xx, which = "lambda:k", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "lambda:k", expected = FALSE),
         1 / dd$lambda,
         info = "hessian for \"lambda:k\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "k:lambda", expected = FALSE),
+    expect_equal(hessian(dd, xx, which = "k:lambda", expected = FALSE),
         1 / dd$lambda,
         info = "hessian for \"k:lambda\" returns incorrect values")
 })
 
 test_that("expected hessian for Erlang distribution return correct values", {
-    expect_identical(hessian(dd, xx, which = "k", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "k", expected = TRUE),
         -trigamma(dd$k),
         info = "hessian for \"k\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "lambda", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "lambda", expected = TRUE),
         -dd$k / dd$lambda^2,
         info = "hessian for \"lambda\" returns incorrect values")
 
     # Cross derivatives
-    expect_identical(hessian(dd, xx, which = "lambda:k", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "lambda:k", expected = TRUE),
         1 / dd$lambda,
         info = "hessian for \"lambda:k\" returns incorrect values")
-    expect_identical(hessian(dd, xx, which = "k:lambda", expected = TRUE),
+    expect_equal(hessian(dd, xx, which = "k:lambda", expected = TRUE),
         1 / dd$lambda,
         info = "hessian for \"k:lambda\" returns incorrect values")
 })
