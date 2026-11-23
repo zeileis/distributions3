@@ -81,6 +81,12 @@ test_that("quantile.FisherF work correctly", {
   expect_length(quantile(s, c(0, 1)), 2)
 })
 
+test_that("quantile.FisherF throws warning if p is out of range", {
+  d <- FisherF(c(5, 10), c(5, 10))
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
+
 test_that("vectorization of a FisherF distribution work correctly", {
   d <- FisherF(c(5, 10), c(5, 10))
   d1 <- d[1]

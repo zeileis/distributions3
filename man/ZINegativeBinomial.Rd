@@ -4,16 +4,16 @@
 \alias{ZINegativeBinomial}
 \title{Create a zero-inflated negative binomial distribution}
 \usage{
-ZINegativeBinomial(mu, theta, pi)
+ZINegativeBinomial(pi = numeric(), mu = numeric(), theta = numeric())
 }
 \arguments{
+\item{pi}{Zero-inflation probability, can be any value in \verb{[0, 1]}.}
+
 \item{mu}{Location parameter of the negative binomial component of the distribution.
 Can be any positive number.}
 
 \item{theta}{Overdispersion parameter of the negative binomial component of the distribution.
 Can be any positive number.}
-
-\item{pi}{Zero-inflation probability, can be any value in \verb{[0, 1]}.}
 }
 \value{
 A \code{ZINegativeBinomial} object.
@@ -28,7 +28,7 @@ We recommend reading this documentation on
 will render with additional detail.
 
 In the following, let \eqn{X} be a zero-inflated negative binomial random variable with parameters
-\code{mu} = \eqn{\mu} and \code{theta} = \eqn{\theta}.
+\code{pi} = \eqn{\pi}, \code{mu} = \eqn{\mu}, and \code{theta} = \eqn{\theta}.
 
 \strong{Support}: \eqn{\{0, 1, 2, 3, ...\}}{{0, 1, 2, 3, ...}}
 
@@ -64,7 +64,7 @@ Omitted for now.
 }
 \examples{
 ## set up a zero-inflated negative binomial distribution
-X <- ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)
+X <- ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)
 X
 
 ## standard functions

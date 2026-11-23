@@ -4,236 +4,107 @@
 
 if (interactive()) { library("distributions3"); library("testthat") }
 
-test_that("Uniform default arguments", {
-  expect_identical(formals(Uniform),
-    as.pairlist(alist(a = 0, b = 1)))
+## distribution object and 'x' used for testing.
+## Length of 'dd' and 'xx' must be identical and > 1L
+dd <- Uniform(c(0, 0, 5), c(1, 10, 15))
+xx <- c(0.5, 1, 7.5)             # values for testing d/p, ....
+pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
+stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
+
+## Default arguments
+test_that("testing that constructor function has correct arguments and defaults", {
+  expect_identical(formals(Uniform), as.pairlist(alist(a = 0, b = 1)))
 })
 
-test_that("print.Uniform works", {
-  expect_output(print(Uniform(1, 1)), regexp = "Uniform")
+## Sufficient statistics
+test_that("suff_stat.Uniform is missing at the moment", {
+  ss <- list(mu = 0, sigma = 0, samples = 2)
+  expect_error(suff_stat(Uniform(), 0:1), regexp = "no applicable method")
 })
 
-test_that("likelihood.Uniform and log_likelihood.Uniform work correctly", {
-  u <- Uniform()
-  x <- c(1, 1, 0)
-
-  expect_equal(likelihood(u, 1), dunif(1))
-  expect_equal(likelihood(u, x), dunif(1) * dunif(1) * dunif(0))
-
-  expect_equal(log_likelihood(u, 1), log(dunif(1)))
-  expect_equal(log_likelihood(u, x), log(dunif(1) * dunif(1) * dunif(0)))
+## Fitting
+test_that("fit_mle.Uniform works correctly", {
+  expect_error(fit_mle(Uniform(), 0:1), regexp = "no applicable method")
 })
 
-test_that("random.Uniform work correctly", {
-  u <- Uniform()
-
-  expect_length(random(u), 1)
-  expect_length(random(u, 100), 100)
-  expect_length(random(u[-1], 1), 0)
-  expect_length(random(u, 0), 0)
-  expect_error(random(u, -2))
-
-  # consistent with base R, using the `length` as number of samples to draw
-  expect_length(random(u, c(1, 2, 3)), 3)
-  expect_length(random(u, cbind(1, 2, 3)), 3)
-  expect_length(random(u, rbind(1, 2, 3)), 3)
+## Testing correctness of dpq methods
+test_that("pdf.Uniform/log_pdf.Uniform returns correct values", {
+  expect_equal(pdf(dd, xx),             dunif(xx, dd$a, dd$b),
+        info = "pdf.Uniform not equal to dunif()")
+  expect_equal(pdf(dd, xx, log = TRUE), dunif(xx, dd$a, dd$b, log = TRUE),
+        info = "logarithm of pdf.Uniform not equal to dunif(..., log = TRUE)")
+  expect_equal(log_pdf(dd, xx),         dunif(xx, dd$a, dd$b, log = TRUE),
+        info = "log_pdf.Uniform not equal to dunif(..., log = TRUE)")
 })
 
-test_that("pdf.Uniform work correctly", {
-  u <- Uniform()
-
-  expect_equal(pdf(u, 0), dunif(0, 0, 1))
-  expect_equal(pdf(u, 1), dunif(1, 0, 1))
-
-  expect_length(pdf(u, seq_len(0)), 0)
-  expect_length(pdf(u, seq_len(1)), 1)
-  expect_length(pdf(u, seq_len(10)), 10)
+test_that("cdf.Uniform returns correct values", {
+  expect_equal(cdf(dd, xx),             punif(xx, dd$a, dd$b),
+        info = "cdf.Uniform not equal to punif()")
+  expect_equal(cdf(dd, xx, log = TRUE), punif(xx, dd$a, dd$b, log = TRUE),
+        info = "logarithm of cdf.Uniform not equal to punif(..., log = TRUE)")
 })
 
-test_that("log_pdf.Uniform work correctly", {
-  u <- Uniform()
-
-  expect_equal(log_pdf(u, 0), log(dunif(0, 0, 1)))
-  expect_equal(log_pdf(u, 1), log(dunif(1, 0, 1)))
-
-  expect_length(log_pdf(u, seq_len(0)), 0)
-  expect_length(log_pdf(u, seq_len(1)), 1)
-  expect_length(log_pdf(u, seq_len(10)), 10)
+test_that("quantile.Uniform returns correct values", {
+  expect_equal(quantile(dd, pp),        qunif(pp, dd$a, dd$b),
+        info = "quantile.Uniform not equal to qnorm()")
+})
+test_that("quantile.Uniform throws warning if p is out of range", {
+  expect_warning(quantile(dd, -1e10))
+  expect_warning(quantile(dd, 1 + 1e10))
 })
 
-test_that("cdf.Uniform work correctly", {
-  u <- Uniform()
-
-  expect_equal(cdf(u, 0), punif(0, 0, 1))
-  expect_equal(cdf(u, 1), punif(1, 0, 1))
-
-
-  expect_length(cdf(u, seq_len(0)), 0)
-  expect_length(cdf(u, seq_len(1)), 1)
-  expect_length(cdf(u, seq_len(10)), 10)
+## Testing correctness of moments
+test_that("moments for Uniform distribution return correct values", {
+    expect_equal(mean(dd), (dd$a + dd$b) / 2,
+        info = "mean.Uniform incorrect")
+    expect_equal(variance(dd), 1 / 12 * (dd$b - dd$a)^2,
+        info = "variance.Uniform incorrect")
+    expect_equal(skewness(dd), rep(0, length(dd)),
+        info = "skewness.Uniform incorrect")
+    expect_equal(kurtosis(dd), rep_len(-6 / 5, length(dd)),
+        info = "kurtosis.Uniform incorrect")
 })
 
-test_that("quantile.Uniform work correctly", {
-  u <- Uniform()
-
-  expect_equal(quantile(u, 0), qunif(0, 0, 1))
-  expect_equal(quantile(u, 1), qunif(1, 0, 1))
-
-
-  expect_length(quantile(u, seq_len(0)), 0)
-  expect_length(quantile(u, c(0, 1)), 2)
+## Testing correctness of score
+test_that("score for Uniform distribution return correct values", {
+    expect_equal(score(dd, xx, which = "a"), 1 / (dd$b - dd$a),
+        info = "score for \"a\" returns incorrect values")
+    expect_equal(score(dd, xx, which = "b"), -1 / (dd$b - dd$a),
+        info = "score for \"b\" returns incorrect values")
 })
 
-test_that("{moments}.Uniform work correctly", {
-  u <- Uniform()
+## Testing correctness of hessian
+test_that("observed hessian for Uniform distribution return correct values", {
+    expect_equal(hessian(dd, xx, which = "a", expected = FALSE),
+        1 / (dd$b - dd$a)^2,
+        info = "hessian for \"a\" returns incorrect values")
+    expect_equal(hessian(dd, xx, which = "b", expected = FALSE),
+        1 / (dd$b - dd$a)^2,
+        info = "hessian for \"b\" returns incorrect values")
 
-  expect_equal(mean(u), 0.5)
-  expect_equal(variance(u), 1 / 12)
-  expect_equal(skewness(u), 0)
-  expect_equal(kurtosis(u), -6 / 5)
+    # Cross derivatives
+    expect_equal(hessian(dd, xx, which = "a:b", expected = FALSE),
+        - 1 / (dd$b - dd$a)^2,
+        info = "hessian for \"a:b\" returns incorrect values")
+    expect_equal(hessian(dd, xx, which = "b:a", expected = FALSE),
+        - 1 / (dd$b - dd$a)^2,
+        info = "hessian for \"b:a\" returns incorrect values")
 })
 
-test_that("vectorization of a Uniform distribution work correctly", {
-  d <- Uniform(c(0, 10), c(1, 20))
-  d1 <- d[1]
-  d2 <- d[2]
+test_that("expected hessian for Uniform distribution return correct values", {
+    expect_equal(hessian(dd, xx, which = "a", expected = FALSE),
+        1 / (dd$b - dd$a)^2,
+        info = "hessian for \"a\" returns incorrect values")
+    expect_equal(hessian(dd, xx, which = "b", expected = FALSE),
+        1 / (dd$b - dd$a)^2,
+        info = "hessian for \"b\" returns incorrect values")
 
-  ## moments
-  expect_equal(mean(d), c(mean(d1), mean(d2)))
-  expect_equal(variance(d), c(variance(d1), variance(d2)))
-  expect_equal(skewness(d), c(skewness(d1), skewness(d2)))
-  expect_equal(kurtosis(d), c(kurtosis(d1), kurtosis(d2)))
-
-  ## random
-  set.seed(123)
-  r1 <- random(d)
-  set.seed(123)
-  r2 <- c(random(d1), random(d2))
-  expect_equal(r1, r2)
-
-  ## pdf, log_pdf, cdf
-  expect_equal(pdf(d, 0), c(pdf(d1, 0), pdf(d2, 0)))
-  expect_equal(log_pdf(d, 0), c(log_pdf(d1, 0), log_pdf(d2, 0)))
-  expect_equal(cdf(d, 0.5), c(cdf(d1, 0.5), cdf(d2, 0.5)))
-
-  ## quantile
-  expect_equal(quantile(d, 0.5), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(quantile(d, c(0.5, 0.5)), c(quantile(d1, 0.5), quantile(d2, 0.5)))
-  expect_equal(
-    quantile(d, c(0.1, 0.5, 0.9)),
-    matrix(
-      rbind(quantile(d1, c(0.1, 0.5, 0.9)), quantile(d2, c(0.1, 0.5, 0.9))),
-      ncol = 3, dimnames = list(NULL, c("q_0.1", "q_0.5", "q_0.9"))
-    )
-  )
-
-  ## elementwise
-  expect_equal(
-    pdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(pdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    cdf(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(cdf(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-  expect_equal(
-    quantile(d, c(0.25, 0.75), elementwise = TRUE),
-    diag(quantile(d, c(0.25, 0.75), elementwise = FALSE))
-  )
-
-  ## support
-  expect_equal(
-    support(d),
-    matrix(
-      c(support(d1)[1], support(d2)[1], support(d1)[2], support(d2)[2]),
-      ncol = 2, dimnames = list(names(d), c("min", "max"))
-    )
-  )
-  expect_true(!any(is_discrete(d)))
-  expect_true(all(is_continuous(d)))
-  expect_true(is.numeric(support(d1)))
-  expect_true(is.numeric(support(d1, drop = FALSE)))
-  expect_null(dim(support(d1)))
-  expect_equal(dim(support(d1, drop = FALSE)), c(1L, 2L))
-})
-
-test_that("named return values for Uniform distribution work correctly", {
-  d <- Uniform(c(0, 10), c(1, 20))
-  names(d) <- LETTERS[1:length(d)]
-
-  expect_equal(names(mean(d)), LETTERS[1:length(d)])
-  expect_equal(names(variance(d)), LETTERS[1:length(d)])
-  expect_equal(names(skewness(d)), LETTERS[1:length(d)])
-  expect_equal(names(kurtosis(d)), LETTERS[1:length(d)])
-  expect_equal(names(random(d, 1)), LETTERS[1:length(d)])
-  expect_equal(rownames(random(d, 3)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(log_pdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(log_pdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(cdf(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(cdf(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, 0.5)), LETTERS[1:length(d)])
-  expect_equal(names(quantile(d, c(0.5, 0.7))), LETTERS[1:length(d)])
-  expect_equal(rownames(quantile(d, c(0.5, 0.7, 0.9))), LETTERS[1:length(d)])
-  expect_equal(names(support(d[1])), c("min", "max"))
-  expect_equal(colnames(support(d)), c("min", "max"))
-  expect_equal(rownames(support(d)), LETTERS[1:length(d)])
-})
-
-suppressPackageStartupMessages(library("scoringRules"))
-test_that("crps method for Uniform returns correct object", {
-  d <- Uniform(c(0, 10), c(1, 20))
-  expect_silent(crps <- crps(d, 5.5))
-  expect_type(crps, "double")
-  expect_true(is.vector(crps))
-  expect_true(!all(is.na(crps)) & all(crps >= 0))
-})
-
-## ------------------------------------------------------------------
-## Score and hessian
-## ------------------------------------------------------------------
-
-# Helper functions for automated testing of S3 methods
-source("functions-score-hessian.R")
-
-test_that("score.Normal works as expected", {
-    ## Objects used for testing
-    d <- Uniform(c(0.2, 0.4, 0.6), c(0.5, 1, 2))
-    x <- c(0.4, 0.1, 0.8)
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    score_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    score_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Step function, numeric approximation of score not possible with
-    ## score.distribution but also not required, comparison skipped.
-    ## score_test_analytic_vs_numeric(d, x)
-})
-
-test_that("hessian.Normal works as expected", {
-    ## Objects used for testing
-    d <- Uniform(c(0.2, 0.4, 0.6), c(0.5, 1, 2))
-    x <- c(0.4, 0.1, 0.8)
-
-    ## Check that method exists as function, checks default
-    ## arguments as well as all default sanity checks
-    hessian_test_args_and_sanity(d, x)
-
-    ## Ensure we get the correct return, both for named and unnamed
-    ## distribution objects (tests different combinations)
-    hessian_test_return_dim_names(d, x)
-    score_test_return_dim_names(d |> setNames(LETTERS[1:length(d)]), x)
-
-    ## Comparing analytic Hessian vs. numeric approximation (hessian.distribution)
-    hessian_test_analytic_vs_numeric(d, x)
+    # Cross derivatives
+    expect_equal(hessian(dd, xx, which = "a:b", expected = FALSE),
+        - 1 / (dd$b - dd$a)^2,
+        info = "hessian for \"a:b\" returns incorrect values")
+    expect_equal(hessian(dd, xx, which = "b:a", expected = FALSE),
+        - 1 / (dd$b - dd$a)^2,
+        info = "hessian for \"b:a\" returns incorrect values")
 })
 

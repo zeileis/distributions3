@@ -10,16 +10,18 @@
 
 if (interactive()) { library("distributions3"); library("testthat") }
 suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("scoringRules"))
 
 # -------------------------------------------------------
 # Ensure method is available
 # -------------------------------------------------------
 test_that("generic function crps and S3 method crps.distribution exist", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
     expect_true(is.function(crps.distribution))
 })
 
 test_that("crps.distribution sanity checks/incorrect use", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     d <- Normal(1, 1)
     # Argument y
     expect_error(crps.distribution(structure(d, class = "foo"),
@@ -106,6 +108,8 @@ test_that("crps.distribution sanity checks/incorrect use", {
 set.seed(1234)
 x <- runif(500, 4 - 50, 4 + 50)               # Sequnece where to evaluate the CRPS
 test_that("constructor function Normal() runs silent and returns correct object", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(d <- Normal(4, 2))
     expect_s3_class(d, "Normal")
     expect_s3_class(d, "distribution")
@@ -114,6 +118,8 @@ test_that("constructor function Normal() runs silent and returns correct object"
 
 # Testing incorrect use
 test_that("testing basic interface and misuse of crps function", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     # Testing default arguments
     expect_identical(formals(scoringRules::crps),  as.pairlist(alist(y =, ... = )))
     # Incorrect uses: Non-numeric input
@@ -123,6 +129,8 @@ test_that("testing basic interface and misuse of crps function", {
 
 # Testing special cases
 test_that("testing function defaults and exceptions", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     # Special cases: Input of length 0
     expect_silent(crps <- crps(Normal(), numeric(0)))
     expect_true(is.matrix(crps))
@@ -137,6 +145,8 @@ test_that("testing function defaults and exceptions", {
 
 
 test_that("recycling observations if required", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     # elementwise = TRUE with multiple distributions and one observation:
     # evaluate all at the same observation.
     expect_silent(crps1 <- crps(Normal(1:3), 1.5))
@@ -146,6 +156,8 @@ test_that("recycling observations if required", {
 
 
 test_that("crps.distribution with single distribution, multiple observations, drop = TRUE (default) -> vector", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(1), 1:5))
     expect_true(is.vector(crps))
     expect_identical(length(crps), 5L)
@@ -153,6 +165,8 @@ test_that("crps.distribution with single distribution, multiple observations, dr
 })
 
 test_that("crps.distribution with single distribution, multiple observations, drop = FALSE -> matrix", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(1), 1:5, drop = FALSE))
     expect_true(is.matrix(crps))
     expect_identical(dim(crps), c(1L, 5L))
@@ -160,6 +174,8 @@ test_that("crps.distribution with single distribution, multiple observations, dr
 })
 
 test_that("crps.distribution with single named distribution, single observation, drop = TRUE -> named vector", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(c(a = 3)), 1))
     expect_true(is.vector(crps))
     expect_identical(length(crps), 1L)
@@ -167,6 +183,8 @@ test_that("crps.distribution with single named distribution, single observation,
 })
 
 test_that("crps.distribution with single named distribution, multiples, drop = TRUE -> matrix", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(c(a = 3)), 1:5))
     expect_true(is.vector(crps))
     expect_identical(length(crps), 5L)
@@ -174,6 +192,8 @@ test_that("crps.distribution with single named distribution, multiples, drop = T
 })
 
 test_that("crps.distribution with single named distribution, single observation, drop = FALSE -> (col-)named matrix", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(c(a = 3)), 10.5, drop = FALSE))
     expect_true(is.matrix(crps))
     expect_identical(dim(crps), c(1L, 1L))
@@ -181,6 +201,8 @@ test_that("crps.distribution with single named distribution, single observation,
 })
 
 test_that("crps.distribution with multiple named distributions, multiple observations, non-matching length i.e., elementwise = FALSE -> named matrix", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(c(a = 3, b = 5, c = 7)), 1:5))
     expect_true(is.matrix(crps))
     expect_identical(dim(crps), c(3L, 5L))
@@ -188,6 +210,8 @@ test_that("crps.distribution with multiple named distributions, multiple observa
 })
 
 test_that("crps.distribution with multiple named distributions, multiple observations, matching lengths i.e., elementwise = TRUE -> named vector", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     expect_silent(crps <- crps(Normal(c(a = 3, b = 5, c = 7)), 1:3))
     expect_true(is.vector(crps))
     expect_identical(length(crps), 3L)
@@ -198,12 +222,12 @@ test_that("crps.distribution with multiple named distributions, multiple observa
     expect_equal(diag(crps2), crps, ignore_attr = TRUE)
 })
 
-
-
 # -------------------------------------------------------
 # Parallelization
 # -------------------------------------------------------
 test_that("crps, testing parallel execution", {
+    skip_if_not_installed("scoringRules"); library("scoringRules")
+
     set.seed(1234)
     d <- Empirical(matrix(rnorm(2 * 30), ncol = 30))
     identical(crps(d, 1:5, cores = NULL), crps(d, 1:5, cores = 2))
@@ -217,3 +241,4 @@ test_that("crps, testing parallel execution", {
     expect_silent(crps2 <- crps(d, 3:6, cores = 2))
     expect_identical(crps1, crps2)
 })
+

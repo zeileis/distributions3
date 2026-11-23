@@ -1,15 +1,16 @@
+# -------------------------------------------------------
+# Checking HurdlePoisson distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("HurdlePoisson default arguments", {
   expect_identical(formals(HurdlePoisson),
-    as.pairlist(alist(lambda = numeric(), pi = numeric())))
-})
-
-test_that("print.HurdlePoisson works", {
-  expect_output(print(HurdlePoisson(1, 0.7)), regexp = "HurdlePoisson")
+    as.pairlist(alist(pi = numeric(), lambda = numeric())))
 })
 
 test_that("random.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
   expect_length(random(p), 1)
   expect_length(random(p, 100), 100)
@@ -24,10 +25,10 @@ test_that("random.HurdlePoisson work correctly", {
 })
 
 test_that("pdf.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
-  expect_equal(pdf(p, 0), dhpois(0, 1, 0.7))
-  expect_equal(pdf(p, 1), dhpois(1, 1, 0.7))
+  expect_equal(pdf(p, 0), dhpois(0, 0.7, 1))
+  expect_equal(pdf(p, 1), dhpois(1, 0.7, 1))
   expect_equal(pdf(p, -12), 0)
 
   expect_warning(pdf(p, 0.5))
@@ -38,10 +39,10 @@ test_that("pdf.HurdlePoisson work correctly", {
 })
 
 test_that("log_pdf.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
-  expect_equal(log_pdf(p, 0), dhpois(0, 1, 0.7, log = TRUE))
-  expect_equal(log_pdf(p, 1), dhpois(1, 1, 0.7, log = TRUE))
+  expect_equal(log_pdf(p, 0), dhpois(0, 0.7, 1, log = TRUE))
+  expect_equal(log_pdf(p, 1), dhpois(1, 0.7, 1, log = TRUE))
   expect_equal(log_pdf(p, -12), -Inf)
 
   expect_warning(log_pdf(p, 0.5))
@@ -52,10 +53,10 @@ test_that("log_pdf.HurdlePoisson work correctly", {
 })
 
 test_that("cdf.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
-  expect_equal(cdf(p, 0), phpois(0, 1, 0.7))
-  expect_equal(cdf(p, 1), phpois(1, 1, 0.7))
+  expect_equal(cdf(p, 0), phpois(0, 0.7, 1))
+  expect_equal(cdf(p, 1), phpois(1, 0.7, 1))
 
 
   expect_length(cdf(p, seq_len(0)), 0)
@@ -64,7 +65,7 @@ test_that("cdf.HurdlePoisson work correctly", {
 })
 
 test_that("quantile.HurdlePoisson work correctly", {
-  p <- HurdlePoisson(1, 0.7)
+  p <- HurdlePoisson(0.7, 1)
 
   expect_equal(quantile(p, 0), 0)
   expect_equal(quantile(p, 0.5), 1)
@@ -74,8 +75,91 @@ test_that("quantile.HurdlePoisson work correctly", {
   expect_length(quantile(p, c(0, 1)), 2)
 })
 
+test_that("quantile.HurdlePoisson throws warning if p is out of range", {
+  expect_error(quantile(dd, -1e10))
+  expect_error(quantile(dd, 1 + 1e10))
+})
+
+test_that("score.HurdlePoisson works corrrectly", {
+  d <- HurdlePoisson(1:4/5, 1:4)
+
+  ## Original R implementation to test against
+  scr <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    s <- switch(par,
+      "pi"     = ifelse(x0, -1 / (1 - d$pi), 1 / d$pi),
+      "lambda" = ifelse(x0, 0, x / d$lambda - 1 - 1 / expm1(d$lambda)))
+    s[!ok] <- 0
+    s
+  }
+
+  ## Score with x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- score(d, x))
+  expect_equal(h[, "pi"],        scr("pi", d, x))
+  expect_equal(h[, "lambda"],    scr("lambda", d, x))
+
+  ## Score with x > 0
+  x <- seq_along(d)
+  expect_silent(h <- score(d, x))
+  expect_equal(h[, "pi"],        scr("pi", d, x))
+  expect_equal(h[, "lambda"],    scr("lambda", d, x))
+
+})
+
+test_that("hessian.HurdlePoisson works corrrectly", {
+  d <- HurdlePoisson(1:4/5, 1:4)
+
+  ## Original R implementation to test against
+  ## observed Hessian, evaluated at x (integer support only, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 0 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x0 <- x == 0
+    h <- switch(par,
+      "pi"     = ifelse(x0, -1 / (1 - d$pi)^2, -1 / d$pi^2),
+      "lambda" = ifelse(x0, 0, -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2),
+      "pi:lambda" = 0 * x)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess_exp <- function(par, d, x) {
+    vapply(seq_along(d), function(i) {
+      ks <- 0:quantile(d[i], 1 - 1e-12)
+      sum(hess_obs(par, d[i], ks) * pdf(d[i], ks))
+    }, numeric(1L))
+  }
+
+  ## Observed Hessian; x = 0
+  x <- rep(0, length(d))
+  expect_silent(h <- hessian(d, x, expected = FALSE))
+  expect_equal(h[, "pi"],        hess_obs("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_obs("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+
+  ## Observed Hessian; x > 0
+  x <- seq_along(d)
+  expect_silent(h <- hessian(d, x, expected = FALSE))
+  expect_equal(h[, "pi"],        hess_obs("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_obs("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_obs("pi:lambda", d, x))
+
+  ## Expected hessian: (does not depend on x)
+  x <- seq_along(d)
+  expect_silent(h <- hessian(d, x, expected = TRUE))
+  expect_equal(h[, "pi"],        hess_exp("pi", d, x))
+  expect_equal(h[, "lambda"],    hess_exp("lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_exp("pi:lambda", d, x))
+  expect_equal(h[, "pi:lambda"], hess_exp("pi:lambda", d, x))
+})
+
+
 test_that("vectorization of a HurdlePoisson distribution work correctly", {
-  d <- HurdlePoisson(c(1, 2), 0.7)
+  d <- HurdlePoisson(0.7, 1:2)
   d1 <- d[1]
   d2 <- d[2]
 
@@ -132,7 +216,7 @@ test_that("vectorization of a HurdlePoisson distribution work correctly", {
 })
 
 test_that("named return values for HurdlePoisson distribution work correctly", {
-  d <- HurdlePoisson(c(5, 10), 0.75)
+  d <- HurdlePoisson(0.75, c(5, 10))
   names(d) <- LETTERS[1:length(d)]
 
   expect_equal(names(mean(d)), LETTERS[1:length(d)])

@@ -108,7 +108,7 @@ plot.distribution <- function(x, cdf = FALSE, p = c(0.1, 99.9), len = 1000,
     "Laplace", "LogNormal", "Logistic", "Normal", "StudentsT",
     "Tukey", "Uniform", "Weibull"
   )
-  # Check that the distribution is recognised
+  # Check that the distribution is recognized
   if (!(distn %in% c(discrete, continuous))) {
     stop("This distribution is not supported")
   }
@@ -434,7 +434,7 @@ plot_cdf <- function(d, limits = NULL, p = 0.001,
         width = 1,
         ggplot2::aes(
           color = I("black"),
-          fill = I("grey50")
+          fill = I("gray50")
         )
       ) +
       ggplot2::facet_grid(group ~ .) +
@@ -561,7 +561,7 @@ plot_pdf <- function(d, limits = NULL, p = 0.001,
         width = 1,
         ggplot2::aes(
           color = I("black"),
-          fill = I("grey50")
+          fill = I("gray50")
         )
       ) +
       ggplot2::facet_grid(group ~ .) +
@@ -748,7 +748,7 @@ define_GeomAuc <- function() {
   ggplot2::ggproto("GeomAuc", ggplot2::GeomArea,
     required_aes = c("x", "y", "label"),
     default_aes = ggplot2::aes(
-      colour = NA, fill = "grey40", linewidth = 0.5, linetype = 1,
+      colour = NA, fill = "gray40", linewidth = 0.5, linetype = 1,
       alpha = NA
     ),
     draw_panel = function(data,

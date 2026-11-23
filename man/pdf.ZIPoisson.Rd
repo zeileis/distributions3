@@ -39,7 +39,7 @@ Evaluate the probability mass function of a zero-inflated Poisson distribution
 }
 \examples{
 ## set up a zero-inflated Poisson distribution
-X <- ZIPoisson(lambda = 2.5, pi = 0.25)
+X <- ZIPoisson(pi = 0.25, lambda = 2.5)
 X
 
 ## standard functions

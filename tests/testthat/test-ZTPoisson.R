@@ -1,3 +1,8 @@
+# -------------------------------------------------------
+# Checking ZTPoisson distribution
+# -------------------------------------------------------
+
+if (interactive()) { library("distributions3"); library("testthat") }
 
 test_that("ZTPoisson default arguments", {
   expect_identical(formals(ZTPoisson),
@@ -72,6 +77,69 @@ test_that("quantile.ZTPoisson work correctly", {
 
   expect_length(quantile(p, seq_len(0)), 0)
   expect_length(quantile(p, c(0, 1)), 2)
+})
+
+test_that("quantile.ZTPoisson throws warning if p is out of range", {
+  d <- ZTPoisson(1:2)
+  expect_warning(quantile(d, -1e10))
+  expect_warning(quantile(d, 1 + 1e10))
+})
+
+
+test_that("score.ZTPoisson works corrrectly", {
+  d <- ZTPoisson(1:4)
+
+  scr <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 1) # keep expressions finite off the support
+    s  <- switch(par,
+      "lambda" = x / d$lambda - 1 - 1 / expm1(d$lambda))
+    s[!ok] <- 0
+    s
+  }
+
+  ## Score with x < 1
+  expect_silent(h <- score(d, 1:4 / 5))
+  expect_equal(h, scr("lambda", d, 1:4 / 5))
+
+  ## Score with x >= 1
+  expect_silent(h <- score(d, 4:1))
+  expect_equal(h, scr("lambda", d, 4:1))
+
+})
+
+test_that("hessian.ZTPoisson works corrrectly", {
+  d <- ZTPoisson(1:4)
+
+  ## observed Hessian, evaluated at x (support x >= 1, 0 elsewhere)
+  hess_obs <- function(par, d, x) {
+    ok <- x >= 1 & abs(x - round(x)) <= sqrt(.Machine$double.eps)
+    x  <- ifelse(ok, x, 1)
+    h  <- switch(par,
+      "lambda" = -x / d$lambda^2 + exp(d$lambda) / expm1(d$lambda)^2)
+    h[!ok] <- 0
+    h
+  }
+
+  ## expected Hessian: sum of observed Hessian times pmf over the support
+  hess_exp <- function(par, d, x) {
+    vapply(seq_along(d), function(i) {
+      ks <- 1:quantile(d[i], 1 - 1e-12)
+      sum(hess_obs(par, d[i], ks) * pdf(d[i], ks))
+    }, numeric(1L))
+  }
+
+  ## Observed Hessian; x < 1
+  expect_silent(h <- hessian(d, 1:4 / 5, expected = FALSE))
+  expect_equal(h, hess_obs("lambda", d, 1:4 / 5))
+
+  ## Observed Hessian; x >= 1
+  expect_silent(h <- hessian(d, 1:4, expected = FALSE))
+  expect_equal(h, hess_obs("lambda", d, 1:4))
+
+  ## Expected hessian (does not depend on x)
+  expect_silent(h <- hessian(d, 1:4, expected = TRUE))
+  expect_equal(h, hess_exp("lambda", d, 1:4))
 })
 
 test_that("vectorization of a ZTPoisson distribution work correctly", {

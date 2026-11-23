@@ -43,9 +43,9 @@
 #' @export
 dztpois <- function(x, lambda, log = FALSE) {
   rval <- dpois(x, lambda, log = TRUE) - ppois(0, lambda, lower.tail = FALSE, log.p = TRUE)
-  rval[x < 1] <- -Inf
-  rval[lambda <= 0] <- -Inf
-  rval[(lambda <= 0) & (x == 1)] <- 0
+  rval[which(x < 1)] <- -Inf
+  rval[which(lambda <= 0)] <- -Inf
+  rval[which((lambda <= 0) & (x == 1))] <- 0
   if(log) rval else exp(rval)
 }
 
@@ -55,7 +55,7 @@ dztpois <- function(x, lambda, log = FALSE) {
 pztpois <- function(q, lambda, lower.tail = TRUE, log.p = FALSE) {
   rval <- log(ppois(q, lambda, lower.tail = lower.tail, log.p = FALSE) - dpois(0, lambda)) -
     ppois(0, lambda, lower.tail = FALSE, log.p = TRUE)
-  rval[q < 1] <- if(lower.tail) -Inf else 0
+  rval[which(q < 1)] <- if(lower.tail) -Inf else 0
   if(log.p) rval else exp(rval)
 }
 
@@ -68,7 +68,7 @@ qztpois <- function(p, lambda, lower.tail = TRUE, log.p = FALSE) {
   p <- p + ppois(0, lambda, lower.tail = FALSE, log.p = TRUE)
   p <- exp(p) + dpois(0, lambda)
   rval <- qpois(p, lambda, lower.tail = lower.tail, log.p = FALSE)
-  if(lower.tail) rval[p_orig < dztpois(1, lambda, log = log.p)] <- 1
+  if(lower.tail) rval[which(p_orig < dztpois(1, lambda, log = log.p))] <- 1
   rval
 }
 
@@ -163,6 +163,9 @@ rztpois <- function(n, lambda) {
 #' x <- random(X, 500)
 #' hist(x, breaks = -1:max(x) + 0.5)
 ZTPoisson <- function(lambda = numeric()) {
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
+  stopifnot("parameter 'lambda' must always be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE))
+
   d <- data.frame(lambda = lambda)
   class(d) <- c("ZTPoisson", "distribution")
   return(d)
@@ -180,6 +183,7 @@ mean.ZTPoisson <- function(x, ...) {
 
 #' @export
 variance.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   m <- x$lambda/ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m[x$lambda <= 0] <- 1
   setNames(m * (1 + x$lambda - m), names(x))
@@ -187,6 +191,7 @@ variance.ZTPoisson <- function(x, ...) {
 
 #' @export
 skewness.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s <- sqrt(m * (x$lambda + 1 - m))
@@ -197,6 +202,7 @@ skewness.ZTPoisson <- function(x, ...) {
 
 #' @export
 kurtosis.ZTPoisson <- function(x, ...) {
+  if (!length(x)) return(numeric())
   f <- 1 / ppois(0, lambda = x$lambda, lower.tail = FALSE)
   m <- x$lambda * f
   s2 <- m * (x$lambda + 1 - m)
@@ -356,3 +362,30 @@ is_continuous.ZTPoisson <- function(d, ...) {
 }
 
 ## FIXME: currently no fit_mle.ZTPoisson and suff_stat.ZTPoisson
+
+# ---------------------------------------------------------------------------
+# ZTPoisson: methods for score/hessian (formulas as in countreg::sztpois()
+# and countreg::hztpois(), written in terms of expm1() for stability)
+# ---------------------------------------------------------------------------
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+score.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, ...) {
+  ## Calculating scores via the deriv2 method
+  deriv2(d, x, which, order = 1L, drop = drop, ...)
+}
+
+#' @rdname score-hessian
+#' @name score-hessian
+#' @usage NULL
+#' @exportS3Method
+hessian.ZTPoisson <- function(d, x, which = "lambda", drop = TRUE, expected = FALSE, ...) {
+  stopifnot("argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected))
+  if (expected && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  ## Calculating Hessian via the deriv2 method
+  deriv2(d, x, which = which, order = 2L, drop = drop, expected = expected, ...)
+}
+

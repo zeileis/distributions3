@@ -3,8 +3,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-suppressPackageStartupMessages(library("scoringRules"))
-
 
 # =======================================================
 # Testing generics

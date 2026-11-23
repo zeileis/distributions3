@@ -9,7 +9,7 @@
 \arguments{
 \item{d}{A \code{PoissonBinomial} object created by a call to \code{\link[=PoissonBinomial]{PoissonBinomial()}}.}
 
-\item{drop}{logical. Shoul the result be simplified to a vector if possible?}
+\item{drop}{logical. Should the result be simplified to a vector if possible?}
 
 \item{...}{Currently not used.}
 }

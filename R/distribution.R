@@ -505,7 +505,7 @@ log_pdf.distribution <- function(d, x, ...) pdf(d, x, log = TRUE, ...)
 quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
                                   lower = -1 / sqrt(.Machine$double.eps),
                                   upper = +1 / sqrt(.Machine$double.eps),
-                                  tol   = .Machine$double.eps^0.5, maxit = 1e3, ...) {
+                                  tol   = sqrt(.Machine$double.eps), maxit = 1e3, ...) {
     check_dots_used()
     if (!length(x)) return(numeric())
 
@@ -718,6 +718,8 @@ quantile.distribution <- function(x, probs, drop = TRUE, elementwise = NULL,
 cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail = TRUE, ...) {
     if (!length(d)) return(numeric())
 
+    args <- list(...)
+
     # To be able to numerically approximate the cdf the object must have
     # a pdf method. If not available, exit.
     cls <- setdiff(class(d), "distribution")
@@ -802,6 +804,10 @@ cdf.distribution <- function(d, x, drop = TRUE, elementwise = NULL, lower.tail =
     } else if (n == 1L && drop) {
         res <- as.vector(res)
     }
+
+    ## Logarithm?
+    if (isTRUE(args$log)) res <- log(res)
+
     return(res)
 }
 
@@ -997,8 +1003,12 @@ distribution_calculate_moments <- function(x, what, gridsize = 500L, batchsize =
 
   ## Manually enforcing 'method = "cdf"' for discrete distributions if possible as 'method = "quantile"'
   ## can lead to inaccurate results if the range the values span is < gridsize.
+  ## Manually enforcing 'method = "cdf"' for discrete distributions if possible as 'method = "quantile"'
+  ## can lead to inaccurate results if the range the values span is < gridsize. This is only possible
+  ## if a 'cdf' method exists; otherwise the quantile-based approximation is kept (with a warning).
   if (discrete && method == "quantile" && gridsize >= abs(diff(xrange))) {
-      if (get_auto_method(x) == "cdf") {
+      has_cdf <- hasS3method("cdf", class(x)[!class(x) == "distribution"])
+      if (has_cdf) {
           warning("switching to method = \"cdf\" (method = \"quantile\" can result in inaccurate results)")
           method <- "cdf"
       } else {
@@ -1212,4 +1222,46 @@ kurtosis.distribution <- function(x, ...) {
     distribution_calculate_moments(x = x, what = 4L, ...)
 }
 
+#' @exportS3Method
+#' @useDynLib distributions3, .registration = TRUE
+deriv2.distribution <- function(d, x, which = NULL, order = 1:2, drop = TRUE, expected = FALSE, cores = 1L, ...) {
 
+  ## check availability of c_deriv_* function
+  c_deriv <- paste("c_deriv", class(d)[1L], sep = "_")
+  c_deriv <- getDLLRegisteredRoutines("distributions3")[[".Call"]][[c_deriv]]
+  if (is.null(c_deriv)) {
+    stop(sprintf("no deriv2() method and no c_deriv infrastructure available for '%s' distribution", paste(setdiff(class(d)[1L], "distribution"), collapse = "/")))
+  }
+
+  ## If order == 2 and expected == TRUE we allow x to be NULL or missing
+  order <- unique(as.integer(order))
+  if (identical(order, 2L) && isTRUE(expected) && (missing(x) || is.null(x))) x <- 0 # dummy
+
+  n        <- max_length(d, x)
+  cores    <- as.integer(cores)[1L]
+  expected <- as.logical(expected)[1L]
+
+  stopifnot(
+    "argument 'cores' must evaluate to positive integer" = is.integer(cores) && length(cores) == 1L && cores >= 1L,
+    "argument 'order' must evaluate to 1, 2, or 1:2"     = length(order) > 0 && all(order %in% 1:2),
+    "argument 'expected' must be TRUE or FALSE" = isTRUE(expected) || isFALSE(expected)
+ )
+
+  ## Compute which derivatives to be calculated, and setting up the named lists
+  ## used by the C code to store the corresponding results
+  deriv2 <- prep_deriv2_object(d = d, n = n, which = which, order = order)
+
+  ## Note that .Call has no named arguments, they are only for orientation
+  do.call(.Call, c(list(c_deriv), list(
+        x_sexp = as.double(x), params_sexp = lapply(d, as.double), # <- ensure double
+        score_sexp   = deriv2$score, hessian_sexp = deriv2$hessian, # <- score/hessian are filled by the C
+        expected     = as.logical(expected), ncores = as.integer(cores),
+        PACKAGE = "distributions3")))
+
+  ## return score or hessian or list of both
+  rval <- list()
+  rval$score   <- prep_deriv2_return(deriv2$score,   deriv2$which$score,   drop = drop, distribution_names = names(d))
+  rval$hessian <- prep_deriv2_return(deriv2$hessian, deriv2$which$hessian, drop = drop, distribution_names = names(d))
+  if (length(rval) == 1L) rval <- rval[[1L]]
+  return(rval)
+}

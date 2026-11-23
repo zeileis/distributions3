@@ -7,6 +7,9 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^tests/testthat/test-autotest-.*\.R$
+^tests/autotest-.*$
+^tests/test-gamlss\.dist$
 ^\.travis\.yml$
 ^codecov\.yml$
 ^cran-comments\.md$

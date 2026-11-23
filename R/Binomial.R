@@ -92,9 +92,13 @@
 #' quantile(X, cdf(X, 7))
 Binomial <- function(size = numeric(), p = 0.5) {
   if (identical(size, numeric())) p <- numeric() # Ensure empty default
+  if (!is.numeric(size)) size <- as.numeric(size)
+  if (!is.numeric(p))    p <- as.numeric(p)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(size) == length(p) | length(size) == 1 | length(p) == 1
+      length(size) == length(p) | length(size) == 1 | length(p) == 1,
+    "parameter 'size' must be in [0, Inf]"   = all(size >= 0 | is.na(size)),
+    "parameter 'p' must be in [0, 1]" = all(p >= 0 & p <= 1, na.rm = TRUE)
   )
 
   d <- data.frame(size = size, p = p)
@@ -233,7 +237,7 @@ cdf.Binomial <- function(d, x, drop = TRUE, elementwise = NULL, ...) {
 #' @inheritParams random.Binomial
 #'
 #' @param probs A vector of probabilities.
-#' @param drop logical. Shoul the result be simplified to a vector if possible?
+#' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param elementwise logical. Should each distribution in \code{x} be evaluated
 #'   at all elements of \code{probs} (\code{elementwise = FALSE}, yielding a matrix)?
 #'   Or, if \code{x} and \code{probs} have the same length, should the evaluation be
@@ -299,7 +303,7 @@ suff_stat.Binomial <- function(d, x, ...) {
 #' Return the support of the Binomial distribution
 #'
 #' @param d An `Binomial` object created by a call to [Binomial()].
-#' @param drop logical. Shoul the result be simplified to a vector if possible?
+#' @param drop logical. Should the result be simplified to a vector if possible?
 #' @param ... Currently not used.
 #'
 #' @return A vector of length 2 with the minimum and maximum value of the support.
@@ -321,6 +325,15 @@ is_continuous.Binomial <- function(d, ...) {
   setNames(rep.int(FALSE, length(d)), names(d))
 }
 
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Binomial
+crps.Binomial <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov 
+  FUN <- function(at, d) scoringRules::crps_binom(y = at, prob = d$p, size = d$size)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
+}
 
 # ---------------------------------------------------------------------------
 # Binomial: methods for score/hessian (documented on ?score-hessian for now)

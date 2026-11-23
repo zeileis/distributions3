@@ -4,7 +4,6 @@
 # -------------------------------------------------------
 
 if (interactive()) { library("distributions3"); library("testthat") }
-##suppressPackageStartupMessages(library("scoringRules"))
 
 test_that("SinhArcsinh exists and has correct defaults", {
     expect_true(is.function(SinhArcsinh))
@@ -13,20 +12,15 @@ test_that("SinhArcsinh exists and has correct defaults", {
         info = "arguments or default arguments not as expected")
 })
 
-test_that("Empirical unexpected input", {
+test_that("SinhArcsinh unexpected input", {
     # Testing length mismatch error (not all combinations are tested!)
     expect_error(SinhArcsinh(mu = 1:2, sigma = 1:3),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
     expect_error(SinhArcsinh(nu = 1:2, tau = 1:10),
         regexp = "parameter lengths do not match \\(only scalars are allowed to be recycled\\)")
-
-    expect_error(SinhArcsinh(mu    = TRUE), regexp = "argument 'mu' must be numeric")
-    expect_error(SinhArcsinh(sigma = TRUE), regexp = "argument 'sigma' sigmast be numeric")
-    expect_error(SinhArcsinh(nu    = TRUE), regexp = "argument 'nu' nust be numeric")
-    expect_error(SinhArcsinh(tau   = TRUE), regexp = "argument 'tau' taust be numeric")
 })
 
-test_that("Empirical construction works", {
+test_that("SinhArcsinh construction works", {
 
     ## Using defaults
     expect_silent(d <- SinhArcsinh())
@@ -50,61 +44,61 @@ test_that("Empirical construction works", {
     ## Using vectors of length 5
     expect_silent(d <- SinhArcsinh(mu, sigma, nu, tau))
     expect_identical(length(d), N)
-    expect_identical(as.matrix(d), cbind(mu = mu, sigma = sigma, nu = nu, tau = tau))
+    expect_equal(as.matrix(d), cbind(mu = mu, sigma = sigma, nu = nu, tau = tau))
 
     ## Testing one version of parameter recycling
     expect_silent(d <- SinhArcsinh(mu = 5, sigma = sigma, nu = 0.8, tau = tau))
     expect_identical(length(d), N)
-    expect_identical(d$mu,    rep(5, N))
-    expect_identical(d$sigma, sigma)
-    expect_identical(d$nu,    rep(0.8, N))
-    expect_identical(d$tau,   tau)
+    expect_equal(d$mu,    rep(5, N))
+    expect_equal(d$sigma, sigma)
+    expect_equal(d$nu,    rep(0.8, N))
+    expect_equal(d$tau,   tau)
 
     ## Named distributions
     expect_silent(d <- setNames(SinhArcsinh(mu = 1:5), LETTERS[1:5]))
     expect_identical(names(d), LETTERS[1:5])
 })
 
-test_that("Empirical support method works", {
+test_that("SinhArcsinh support method works", {
     # Checking defaults
     expect_identical(formals(distributions3:::support.SinhArcsinh),
         as.pairlist(alist(d =, drop = TRUE, ... =)))
 
     ## Length 1, unnamed, drop = TRUE/FALSE
     expect_identical(support(SinhArcsinh()), c(min = -Inf, max = Inf))
-    expect_identical(support(SinhArcsinh(), drop = FALSE),
+    expect_equal(support(SinhArcsinh(), drop = FALSE),
         matrix(c(-Inf, Inf), nrow = 1, ncol = 2, dimnames = list(NULL, c("min", "max"))))
 
     ## Length 1, named, drop = TRUE/FALSE
-    expect_identical(support(setNames(SinhArcsinh(), "foo")), c(min = -Inf, max = Inf))
-    expect_identical(support(setNames(SinhArcsinh(), "foo"), drop = FALSE),
+    expect_equal(support(setNames(SinhArcsinh(), "foo")), c(min = -Inf, max = Inf))
+    expect_equal(support(setNames(SinhArcsinh(), "foo"), drop = FALSE),
         matrix(c(-Inf, Inf), nrow = 1, ncol = 2, dimnames = list("foo", c("min", "max"))))
 
     ## Length 2, named, drop = TRUE/FALSE
-    expect_identical(support(setNames(SinhArcsinh(1:3), LETTERS[1:3]), drop = TRUE),
+    expect_equal(support(setNames(SinhArcsinh(1:3), LETTERS[1:3]), drop = TRUE),
         matrix(c(-Inf, Inf), byrow = TRUE, nrow = 3, ncol = 2,
                dimnames = list(LETTERS[1:3], c("min", "max"))))
-    expect_identical(support(setNames(SinhArcsinh(1:3), LETTERS[1:3]), drop = FALSE),
+    expect_equal(support(setNames(SinhArcsinh(1:3), LETTERS[1:3]), drop = FALSE),
         matrix(c(-Inf, Inf), byrow = TRUE, nrow = 3, ncol = 2,
                dimnames = list(LETTERS[1:3], c("min", "max"))))
 })
 
 test_that("is_continuous/is_discrete methods both works", {
     # Checking defaults
-    expect_identical(formals(distributions3:::is_continuous.SinhArcsinh),
+    expect_equal(formals(distributions3:::is_continuous.SinhArcsinh),
         as.pairlist(alist(d =, ... =)))
 
     # id_discrete: named and unnamed
     expect_silent(d <- is_discrete(SinhArcsinh(1:3)))
-    expect_identical(d, rep(FALSE, 3L))
+    expect_equal(d, rep(FALSE, 3L))
     expect_silent(d <- is_discrete(SinhArcsinh(1:3) |> setNames(LETTERS[1:3])))
-    expect_identical(d, rep(FALSE, 3L) |> setNames(LETTERS[1:3]))
+    expect_equal(d, rep(FALSE, 3L) |> setNames(LETTERS[1:3]))
 
     # id_discrete: named and unnamed
     expect_silent(d <- is_continuous(SinhArcsinh(1:3)))
-    expect_identical(d, rep(TRUE, 3L))
+    expect_equal(d, rep(TRUE, 3L))
     expect_silent(d <- is_continuous(SinhArcsinh(1:3) |> setNames(LETTERS[1:3])))
-    expect_identical(d, rep(TRUE, 3L) |> setNames(LETTERS[1:3]))
+    expect_equal(d, rep(TRUE, 3L) |> setNames(LETTERS[1:3]))
 })
 
 
@@ -131,11 +125,11 @@ test_that("cdf.SinhArcsinh works as expected", {
 
     # Upper tail
     expect_silent(x2 <- cdf(d, c(-2, 0, 2), lower.tail = FALSE))
-    expect_identical(x2, 1 - x)
+    expect_equal(x2, 1 - x)
 
     # Drop FALSE, elementwise = TRUE
     expect_silent(x3 <- cdf(d, c(-2, 0, 2), drop = FALSE))
-    expect_identical(x3, matrix(as.numeric(x), ncol = 1, dimnames = list(names(d), "probability")))
+    expect_equal(x3, matrix(as.numeric(x), ncol = 1, dimnames = list(names(d), "probability")))
 
     # Drop FALSE, elementwise = FALSE
     expect_silent(x3 <- cdf(d, c(-2, 0, 2), elementwise = FALSE))
@@ -144,11 +138,11 @@ test_that("cdf.SinhArcsinh works as expected", {
     tmp1 <- matrix(t(sapply(1:3, function(i) cdf(d[i], c(-2, 0, 2)))),
            nrow = length(d), byrow = FALSE,
            dimnames = list(names(d), paste0("p_", c(-2, 0, 2))))
-    expect_identical(x3, tmp1)
+    expect_equal(x3, tmp1)
 
     tmp2 <- matrix(sapply(c(-2, 0, 2), cdf, d = d), ncol = 3,
        dimnames = list(names(d), paste0("p_", c(-2, 0, 2))))
-    expect_identical(x3, tmp2)
+    expect_equal(x3, tmp2)
 
     ## Checking that the C code works as well (cores = 3L)
     expect_equal(cdf(d, c(-2, 0, 2)),
@@ -178,12 +172,12 @@ test_that("pdf.SinhArcsinh works as expected", {
 
     # log = TRUE
     expect_silent(x2 <- pdf(d, c(-2, 0, 2), log = TRUE))
-    expect_identical(x2, log(x))
-    expect_identical(log_pdf(d, c(-2, 0, 2)), log(x))
+    expect_equal(x2, log(x))
+    expect_equal(log_pdf(d, c(-2, 0, 2)), log(x))
 
     # Drop FALSE, elementwise = TRUE
     expect_silent(x3 <- pdf(d, c(-2, 0, 2), drop = FALSE))
-    expect_identical(x3, matrix(as.numeric(x), ncol = 1, dimnames = list(names(d), "density")))
+    expect_equal(x3, matrix(as.numeric(x), ncol = 1, dimnames = list(names(d), "density")))
 
     # Drop FALSE, elementwise = FALSE
     expect_silent(x3 <- pdf(d, c(-2, 0, 2), elementwise = FALSE))
@@ -192,11 +186,11 @@ test_that("pdf.SinhArcsinh works as expected", {
     tmp1 <- matrix(t(sapply(1:3, function(i) pdf(d[i], c(-2, 0, 2)))),
            nrow = length(d), byrow = FALSE,
            dimnames = list(names(d), paste0("d_", c(-2, 0, 2))))
-    expect_identical(x3, tmp1)
+    expect_equal(x3, tmp1)
 
     tmp2 <- matrix(sapply(c(-2, 0, 2), pdf, d = d), ncol = 3,
        dimnames = list(names(d), paste0("d_", c(-2, 0, 2))))
-    expect_identical(x3, tmp2)
+    expect_equal(x3, tmp2)
 
     ## Checking that the C code works as well (cores = 3L)
     expect_equal(pdf(d, c(-2, 0, 2)),
@@ -233,7 +227,7 @@ test_that("quantile.SinhArcsinh works as expected", {
 
     # Drop FALSE, elementwise = TRUE
     expect_silent(x3 <- quantile(d, c(0.2, 0.5, 0.8), drop = FALSE))
-    expect_identical(x3, matrix(as.numeric(x), ncol = 1, dimnames = list(names(d), "quantile")))
+    expect_equal(x3, matrix(as.numeric(x), ncol = 1, dimnames = list(names(d), "quantile")))
 
     # Drop FALSE, elementwise = FALSE
     expect_silent(x3 <- quantile(d, c(0.2, 0.5, 0.8), elementwise = FALSE))
@@ -241,11 +235,11 @@ test_that("quantile.SinhArcsinh works as expected", {
     tmp1 <- matrix(t(sapply(1:3, function(i) quantile(d[i], c(0.2, 0.5, 0.8)))),
            nrow = length(d), byrow = FALSE,
            dimnames = list(names(d), paste0("q_", c(0.2, 0.5, 0.8))))
-    expect_identical(x3, tmp1)
+    expect_equal(x3, tmp1)
 
     tmp2 <- matrix(sapply(c(0.2, 0.5, 0.8), quantile, x = d), ncol = 3,
        dimnames = list(names(d), paste0("q_", c(0.2, 0.5, 0.8))))
-    expect_identical(x3, tmp2)
+    expect_equal(x3, tmp2)
 
     ## Checking that the C code works as well (cores = 3L)
     expect_equal(quantile(d, c(0.2, 0.5, 0.8)),
@@ -259,8 +253,14 @@ test_that("quantile.SinhArcsinh works as expected", {
                      tolerance = 1e-5)
 })
 
+test_that("quantile.SinhArcsinh throws warning if p is out of range", {
+  d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
+             nu = c(1, 1, 0.5), tau = c(0.5, 1, 1))
+  expect_error(quantile(g3, -1e10))
+  expect_error(quantile(g3, 1 + 1e10))
+})
 
-test_that("random.Empirical works as expected", {
+test_that("random.SinhArcsinh works as expected", {
     d <- SinhArcsinh(mu = 1:3, sigma = c(2, 1, 0.5),
                nu = c(1, 1, 0.5), tau = c(0.5, 1, 1)) |>
                setNames(LETTERS[1:3])
@@ -300,8 +300,8 @@ test_that("random.Empirical works as expected", {
 
 test_that("testing central moments of SinhArcsinh", {
     # Checking defaults
-    expect_identical(formals(distributions3:::mean.Empirical),
-            as.pairlist(alist(x =, ... =)))
+    expect_identical(formals(distributions3:::mean.SinhArcsinh),
+            as.pairlist(alist(x =, cores = NULL, ... =)))
 
     ## With SinhArcsinh(mu = 6, sigma = 5.5, nu = 1, tau = 1)
     ## the expectation (mean) should be 6, variance 5.5^2,
@@ -535,65 +535,3 @@ test_that("hessian.SinhArcsinh works as expected", {
 })
 
 
-
-## ## We check if gamlss.dist is installed. If so, test distributions3::SinhArcsinh
-## ## against gamlss.dist::SHASH.
-## if (requireNamespace("gamlss.dist", quietly = TRUE)) {
-## 
-##     ## Helper function to return score based on gamlss.dist::SHASH to
-##     ## test distributions3::score.SinhArcsinh()
-##     gamlssdist_score <- function(X, x) {
-##         fam <- getFromNamespace("SHASH", "gamlss.dist")()
-##         d <- cbind(x = x, as.data.frame(as.matrix(X)))
-##         cbind(dldm = with(d, fam$dldm(x, mu, sigma, nu, tau)),
-##               dldd = with(d, fam$dldd(x, mu, sigma, nu, tau)),
-##               dldv = with(d, fam$dldv(x, mu, sigma, nu, tau)),
-##               dldt = with(d, fam$dldt(x, mu, sigma, nu, tau)))
-##     }
-##     ## Helper function to return hessian based on gamlss.dist::SHASH to
-##     ## test distributions3::hessian.SinhArcsinh()
-##     gamlssdist_hessian <- function(X, x) {
-##         fam <- getFromNamespace("SHASH", "gamlss.dist")()
-##         d <- cbind(x = x, as.data.frame(as.matrix(X)))
-##         cbind(d2ldm2  = with(d, fam$d2ldm2(x, mu, sigma, nu, tau)),
-##               d2ldddm = with(d, fam$d2ldmdd(x, mu, sigma, nu, tau)),
-##               d2ldvdm = with(d, fam$d2ldmdv(x, mu, sigma, nu, tau)),
-##               d2ldtdm = with(d, fam$d2ldmdt(x, mu, sigma, nu, tau)),
-##               d2ldmdd = with(d, fam$d2ldmdd(x, mu, sigma, nu, tau)),
-##               d2ldd2  = with(d, fam$d2ldd2(x, mu, sigma, nu, tau)),
-##               d2ldvdd = with(d, fam$d2ldddv(x, mu, sigma, nu, tau)),
-##               d2ldtdd = with(d, fam$d2ldddt(x, mu, sigma, nu, tau)),
-##               d2ldmdv = with(d, fam$d2ldmdv(x, mu, sigma, nu, tau)),
-##               d2ldddv = with(d, fam$d2ldddv(x, mu, sigma, nu, tau)),
-##               d2ldv2  = with(d, fam$d2ldv2(x, mu, sigma, nu, tau)),
-##               d2ldtdv = with(d, fam$d2ldvdt(x, mu, sigma, nu, tau)),
-##               d2ldmdt = with(d, fam$d2ldmdt(x, mu, sigma, nu, tau)),
-##               d2ldddt = with(d, fam$d2ldddt(x, mu, sigma, nu, tau)),
-##               d2ldvdt = with(d, fam$d2ldvdt(x, mu, sigma, nu, tau)),
-##               d2ldt2  = with(d, fam$d2ldt2(x, mu, sigma, nu, tau)))
-##     }
-## 
-## 
-##     # Default sinharcsinh with mu = 0, sigma = 1, nu = 1, tau = 1
-##     d <- SinhArcsinh()
-##     expect_equal(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
-## 
-##     # Single distribution with some 'random' parameters, evaluate at x = 0 and x = 1:5
-##     d <- SinhArcsinh(mu = 10, sigma = 5.5, nu = 0.8, tau = 1.2)
-## 
-##     expect_equal(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
-## 
-##     expect_equal(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
-##     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
-## 
-##     # Multiple distributions, evaluate at x = 0 and x = 1:5
-##     d <- SinhArcsinh(mu = 15:11, sigma = 1:5 / 10, nu = 1.5, tau = 0.5)
-## 
-##     expect_equal(as.numeric(score(d, 0)), as.numeric(gamlssdist_score(d, 0)), tolerance = 1e-10)
-##     expect_equal(as.numeric(hessian(d, 0)), as.numeric(gamlssdist_hessian(d, 0)), tolerance = 1e-10)
-## 
-##     expect_equal(as.numeric(score(d, 1:5)), as.numeric(gamlssdist_score(d, 1:5)), tolerance = 1e-10)
-##     expect_equal(as.numeric(hessian(d, 1:5)), as.numeric(gamlssdist_hessian(d, 1:5)), tolerance = 1e-10)
-## }

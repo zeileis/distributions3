@@ -34,10 +34,17 @@ documentation:
 	@echo "Building pkgdown page (documentation)"
 	Rscript -e "pkgdown::build_site()"
 
+.PHONY: test autotest gamlsstest
+autotest:
+	(cd tests && Rscript autotest-generate.R) && \
+		make test
 
-.PHONY: test
+gamlsstest:
+	(cd tests && Rscript autotest-generate.R --gamlss) && \
+		Rscript -e "testthat::set_max_fails(Inf); testthat::test_dir('tests/test-gamlss.dist', package = 'distributions3')"
+
 test: document
-	Rscript -e "testthat::test_local()"
+	Rscript -e "testthat::set_max_fails(Inf); testthat::test_local()"
 
 .PHONY: coverage
 coverage: install

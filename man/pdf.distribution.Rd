@@ -27,7 +27,7 @@
   elementwise = NULL,
   lower = -1/sqrt(.Machine$double.eps),
   upper = +1/sqrt(.Machine$double.eps),
-  tol = .Machine$double.eps^0.5,
+  tol = sqrt(.Machine$double.eps),
   maxit = 1000,
   ...
 )

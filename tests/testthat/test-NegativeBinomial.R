@@ -117,6 +117,11 @@ test_that("quantile.NegativeBinomial work correctly", {
   expect_equal(quantile(X, seq_len(0)), quantile(Y, seq_len(0)))
   expect_equal(quantile(X, c(0, 1)), quantile(Y, c(0, 1)))
 })
+test_that("quantile.NegativeBinomial throws warning if p is out of range", {
+  X <- NegativeBinomial(size = 5, p = 0.1)
+  expect_warning(quantile(X, -1e10))
+  expect_warning(quantile(X, 1 + 1e10))
+})
 
 test_that("vectorization of a NegativeBinomial distribution work correctly", {
   d <- NegativeBinomial(size = c(5, 3), p = c(0.1, 0.2))

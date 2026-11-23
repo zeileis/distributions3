@@ -33,11 +33,16 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 7))
 Erlang <- function(k = numeric(), lambda = numeric()) {
-  stopifnot("'k' must be an integer" = all(abs(k - as.integer(k)) == 0))
+  if (!is.numeric(k))      k      <- as.numeric(k)
+  if (!is.numeric(lambda)) lambda <- as.numeric(lambda)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
-      length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1
+      length(k) == length(lambda) | length(k) == 1 | length(lambda) == 1,
+    "parameter 'k' must be positive integer(s)" =
+        all(k > 0 | is.na(k)) & all.equal(k, as.integer(k), check.attributes = FALSE),
+    "parameter 'lambda' must be in [0, Inf]" = all(lambda >= 0, na.rm = TRUE)
   )
+
   d <- data.frame(k = k, lambda = lambda)
   class(d) <- c("Erlang", "distribution")
   d
@@ -191,6 +196,16 @@ is_discrete.Erlang <- function(d, ...) {
 #' @exportS3Method
 is_continuous.Erlang <- function(d, ...) {
   setNames(rep.int(TRUE, length(d)), names(d))
+}
+
+#' @rdname crps.distribution
+#' @importFrom rlang check_dots_used
+#' @exportS3Method scoringRules::crps Erlang
+crps.Erlang <- function(y, x, drop = TRUE, elementwise = NULL, ...) {
+  check_dots_used()
+  if (!requireNamespace("scoringRules", quietly = TRUE)) NextMethod() ## nocov
+  FUN <- function(at, d) scoringRules::crps_gamma(y = at, shape = d$k, rate = d$lambda)
+  apply_dpqr(d = y, FUN = FUN, at = x, type = "crps", drop = drop, elementwise = elementwise)
 }
 
 # ---------------------------------------------------------------------------
