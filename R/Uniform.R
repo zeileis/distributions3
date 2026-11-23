@@ -32,6 +32,8 @@
 #' cdf(X, quantile(X, 0.7))
 #' quantile(X, cdf(X, 0.7))
 Uniform <- function(a = 0, b = 1) {
+  if (!is.numeric(a)) a <- as.numeric(a)
+  if (!is.numeric(b)) b <- as.numeric(b)
   stopifnot(
     "parameter lengths do not match (only scalars are allowed to be recycled)" =
       length(a) == length(b) | length(a) == 1 | length(b) == 1
