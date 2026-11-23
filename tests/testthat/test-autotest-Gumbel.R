@@ -266,7 +266,7 @@ test_that("[autotest_params_length_mismatch]: constructor Gumbel() throws error 
     skip_if_not_installed("revdbayes")
 
     ## Parameters not all of length 1 or N
-    expect_error(suppressWarnings(Gumbel(c(0, -10, -1, 0, 1, 10, 0, -10, -1, 0, 1, 10, 0, -10, -1), c(5, 0.5, 1, 2, 5, 100))),
+    expect_error(suppressWarnings(Gumbel(mu = c(0, -10, -1, 0, 1, 10, 0, -10, -1, 0, 1, 10, 0, -10, -1), sigma = c(5, 0.5, 1, 2, 5, 100))),
                  regexp = "(lengths do not match|arguments imply differing number of rows)",
                  info = "expected error, but on error was thrown")
 });
@@ -319,8 +319,8 @@ test_that("[autotest_params_nonnumeric]: constructor Gumbel() coerces inputs to 
     skip_if_not_installed("revdbayes")
 
     ## Parameters not all of length 1 or N
-    expect_silent(x1 <- Gumbel(c(0, -10, -1, 0, 1, 10), c(5, 0.5, 1, 2, 5, 100)))
-    expect_silent(x2 <- Gumbel(c("0", "-10", "-1", "0", "1", "10"), c("5", "0.5", "1", "2", "5", "100")))
+    expect_silent(x1 <- Gumbel(mu = c(0, -10, -1, 0, 1, 10), sigma = c(5, 0.5, 1, 2, 5, 100)))
+    expect_silent(x2 <- Gumbel(mu = c("0", "-10", "-1", "0", "1", "10"), sigma = c("5", "0.5", "1", "2", "5", "100")))
     expect_identical(x1, x2)
 });
 
@@ -331,7 +331,7 @@ test_that("[autotest_params_NA]: Gumbel() allows for parameters set NA", {
     skip_if_not_installed("revdbayes")
 
     ## Calling constructor function
-    expect_silent(d <- Gumbel(c(NA, -10, -1, 0, 1, 10), c(NA, 0.5, 1, 2, 5, 100)))
+    expect_silent(d <- Gumbel(mu = c(NA, -10, -1, 0, 1, 10), sigma = c(NA, 0.5, 1, 2, 5, 100)))
 
     ## Check we have missing values where expected
     expect_silent(m <- as.matrix(d))

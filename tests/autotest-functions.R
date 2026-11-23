@@ -67,7 +67,7 @@ check_autotest_config <- function(x, verbose = TRUE) {
         "'parameters > valid' empty in yaml file" = length(x$parameters$valid) > 0L
     )
 
-    if (verbose) message("Checking YAML config: ", x$name)
+    if (verbose) message("Checking YAML config: ", x$yamlfile)
 
     ## --------------------------------------
     ## Warning the user if we find something unexpected in the YAML
@@ -306,6 +306,24 @@ get_method <- function(name, config) {
 
 is.gamlss <- function(config) config$name == "GAMLSS"
 
+
+#' Converting List of Arguments to String
+#'
+#' @param x named list
+#' @param extra `NULL` or a secondary named list. If not `NULL`,
+#'        both lists (`x` and `extra`) are combined.
+#'
+#' @return Returns character string.
+args2str <- function(x, extra = NULL) {
+    stopifnot(is.list(x) && !is.null(names(x)),
+              is.null(extra) || (is.list(extra) && !is.null(names(extra))))
+    if (!is.null(extra)) x <- c(x, extra)
+
+    ## Deparse, generate string, and return
+    x <- sprintf("%s = %s", names(x), lapply(x, deparse1))
+    return(paste(x, collapse = ", "))
+}
+
 #' Get Command to Skip Tests if Package is Not Installed
 #'
 #' Certain tests rely on suggested packages. The YAML file
@@ -486,8 +504,8 @@ autotest_setup <- function(config) {
     if (exclude_this_autotest(config, fname <- sys.call(0)[[1L]])) return(NULL)
     stopifnot("argument 'config' must be of class 'autotest_config'" = inherits(config, "autotest_config"))
 
-    ## This is the wrong setup if 'config' is a GAMLSS dist
-    if (is.gamlss(config)) stop("use autotest_setup_gamlss for GAMLSS distributions!")
+    ### This is the wrong setup if 'config' is a GAMLSS dist
+    #if (is.gamlss(config)) stop("use autotest_setup_gamlss for GAMLSS distributions!")
 
     ## Setting up test file header, loading packages (if interactive) for testing
     template <- '
@@ -556,17 +574,17 @@ autotest_setup <- function(config) {
     });
     '
 
-    ## Commands to create the test objects d1, dx, dn
+    ## Commands to create the test objects d0, d1, dx, dn.
+    ## For GAMLSS distributions `d0` is just set NULL
     valid  <- config$parameters$valid # For convenience
-    cmd_d1 <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(valid), "=", sapply(valid, head, n = 1)), collapse = ", "))
-    cmd_dx <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
+
+    cmd_d0 <- if (!is.gamlss(config)) sprintf("%s()", config$name) else "NULL"
+    cmd_d1 <- sprintf("%s(%s)", config$name, args2str(lapply(valid, head, n = 1)))
+    cmd_dx <- sprintf("%s(%s)", config$name, args2str(valid))
 
     ## Same as cmd_dx but with named parameters, which should result in a named distributions object
     names(valid[[1L]]) <- LETTERS[seq_along(valid[[1L]])] ## Naming first parameter set
-    cmd_dn <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(valid), "=", sapply(valid, deparse)), collapse = ", "))
+    cmd_dn <- sprintf("%s(%s)", config$name, args2str(valid))
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"       = config$name,
@@ -575,6 +593,7 @@ autotest_setup <- function(config) {
               "<YAMLFILE>"   = config$yamlfile,
               "<PARAMVEC>"   = deparse1(names(config$parameters$valid)),
               "<PARAMTXT>"   = paste0(names(config$parameters$valid), collapse = ", "),
+              "<CMD_D0>"     = cmd_d0,
               "<CMD_D1>"     = cmd_d1,
               "<CMD_DX>"     = cmd_dx,
               "<CMD_DN>"     = cmd_dn)
@@ -648,15 +667,12 @@ autotest_setup_gamlss <- function(config) {
 
     ## Commands to create the test objects d1, dx, dn
     deparseone <- function(x) deparse(head(x, 1))
-    cmd_d1 <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(params), "=", sapply(params, deparseone), collapse = ", ")))
-    cmd_dx <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(params), "=", sapply(params, deparse)), collapse = ", "))
+    cmd_d1 <- sprintf("%s(%s)", config$name, args2str(lapply(params, head, n = 1)))
+    cmd_dx <- sprintf("%s(%s)", config$name, args2str(params))
 
     ## Same as cmd_dx but with named parameters, which should result in a named distributions object
     names(params[[1L]]) <- LETTERS[seq_along(params[[1L]])] ## Naming first parameter set
-    cmd_dn <- sprintf("%s(%s)", config$name,
-                      paste(paste(names(params), "=", sapply(params, deparse)), collapse = ", "))
+    cmd_dn <- sprintf("%s(%s)", config$name, args2str(params))
 
     ## List of values/placeholders to replace
     p <- list("<NAME>"       = config$name,
@@ -1013,13 +1029,11 @@ autotest_params_length_mismatch <- function(config) {
     test_that("[<FNAME>]: constructor <NAME>() throws error when lengths of parameters mismatch", {
         <SKIPIFNOT>
         ## Parameters not all of length 1 or N
-        expect_error(suppressWarnings(<NAME>(<GAMLSSFAM><ARGS>)),
+        expect_error(suppressWarnings(<NAME>(<ARGS>)),
                      regexp = "(lengths do not match|arguments imply differing number of rows)",
                      info = "expected error, but on error was thrown")
     });
     '
-
-    gamlssfam <- if (!is.gamlss(config)) "" else sprintf("\"%s\", ", config$parameters$extra$family)
 
     ## Putting to gether arguments for testing
     args <- config$parameters$valid
@@ -1027,9 +1041,8 @@ autotest_params_length_mismatch <- function(config) {
 
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
-              "<GAMLSSFAM>" = gamlssfam,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
-              "<ARGS>"      = paste(lapply(args, deparse), collapse = ", "))
+              "<ARGS>"      = args2str(args, extra = config$parameters$extra))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1057,15 +1070,15 @@ autotest_params_nonnumeric <- function(config) {
     });
     '
 
-    ## Putting to gether arguments for testing
-    args <- c(config$parameters$extra$family, config$parameters$valid)
+    ## Putting together arguments for testing
+    args     <- config$parameters$valid
     args_chr <- lapply(args, as.character)
 
     p <- list("<NAME>"      = config$name,
               "<FNAME>"     = fname,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
-              "<ARGS_NUM>"  = paste(lapply(args, deparse), collapse = ", "),
-              "<ARGS_STR>"  = paste(lapply(args_chr, deparse), collapse = ", "))
+              "<ARGS_NUM>"  = args2str(args,     extra = config$parameters$extra),
+              "<ARGS_STR>"  = args2str(args_chr, extra = config$parameters$extra))
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
@@ -1088,7 +1101,7 @@ autotest_params_NA <- function(config) {
     test_that("[<FNAME>]: <NAME>() allows for parameters set NA", {
         <SKIPIFNOT>
         ## Calling constructor function
-        expect_silent(d <- <NAME>(<GAMLSSFAM><ARGS_NA>))
+        expect_silent(d <- <NAME>(<ARGS_NA>))
 
         ## Check we have missing values where expected
         expect_silent(m <- as.matrix(d))
@@ -1141,13 +1154,10 @@ autotest_params_NA <- function(config) {
     ## to return missing values when calling the S3 methods.
     idx_na <- unique(unlist(lapply(args, function(k) which(is.na(k)))))
 
-    gamlssfam <- if (is.gamlss(config)) sprintf("\"%s\", ", config$parameters$extra$family) else ""
-
     p <- list("<NAME>"      = config$name,
-              "<GAMLSSFAM>" = gamlssfam,
               "<FNAME>"     = fname,
               "<SKIPIFNOT>" = get_skipifnot(fname, config),
-              "<ARGS_NA>"   = paste(lapply(args, deparse), collapse = ", "),
+              "<ARGS_NA>"   = args2str(args, extra = config$parameters$extra),
               "<IDX_NA>"    = deparse1(idx_na))
 
     return(replace_placeholders(template, p) |> clean_cmd())
@@ -1179,18 +1189,16 @@ autotest_params_invalid <- function(config) {
     ## First, take the first set of valid parameters. Replace one at a time
     ## with one of the specified invalid parameters and create command(s).
     cmd_invalid <- c()
-    valid <- sapply(config$parameters$valid, head, n = 1) |> setNames(names(config$parameters$valid))
-
-    gamlssfamily <- if (!is.gamlss(config)) "" else sprintf("\"%s\", ", config$parameters$extra$family)
+    valid <- lapply(config$parameters$valid, head, n = 1) |> setNames(names(config$parameters$valid))
 
     for (n in names(config$parameters$invalid)) {
         for (inv in config$parameters$invalid[[n]]) {
             tmp <- valid
             tmp[[n]] <- inv
-            tmp <- sprintf("<INDENT>expect_error(%s(%s%s), info = \"expected error to be thrown using '%s = %s'\")",
-                           config$name, gamlssfamily,
-                           paste(names(tmp), sapply(tmp, deparse), sep = " = ", collapse = ", "),
-                           n, deparse1(inv))
+
+            tmp <- sprintf("<INDENT>expect_error(%s(%s), info = \"expected error to be thrown using '%s = %s'\")",
+                           config$name, args2str(tmp, extra = config$parameters$extra), n, deparse1(inv))
+
             cmd_invalid <- append(cmd_invalid, tmp)
         }
     }
@@ -1227,7 +1235,6 @@ autotest_params_incorrect_type <- function(config) {
     });
     '
 
-    gamlssfam    <- if (!is.gamlss(config)) "" else sprintf("\"%s\", ", config$parameters$extra$family)
     regexpattern <- "(parameter lengths do not match|arguments imply differing number)"
 
     ## If number of parameters equal one, we hand over an empty list which
@@ -1237,10 +1244,8 @@ autotest_params_incorrect_type <- function(config) {
         for (i in seq_along(config$parameters$valid)) {
             tmp <- config$parameters$valid
             tmp[[i]] <- list()
-            cmds <- c(cmds, sprintf("<INDENT>expect_error(%s(%s%s), regexp = \"%s\")",
-                config$name, gamlssfam,
-                paste(names(tmp), lapply(tmp, deparse), sep = " = ", collapse = ", "),
-                regexpattern))
+            cmds <- c(cmds, sprintf("<INDENT>expect_error(%s(%s), regexp = \"%s\")",
+                config$name, args2str(tmp, extra = config$parameters$extra), regexpattern))
         }
     }
 
@@ -2984,121 +2989,5 @@ autotest_hessian_expected_compare2numeric <- function(config) {
 
     return(replace_placeholders(template, p) |> clean_cmd())
 }
-##
-### Helper function to test hessian method default arguments and default sanity checks
-### (i.e., incorrect use)
-##hessian_test_args_and_sanity <- function(d, x, which = NULL) {
-##    stopifnot(length(d) > 2L && length(x) > 2L)
-##    name <- class(d)[1L]
-##
-##    ns <- ls(getNamespace("distributions3"))
-##    expect_true(paste0("hessian.", name) %in% ns, info = "hessian method not found in namespace")
-##    expect_true(is.function(method <- getS3method("hessian", name)), "hessian method is not a function")
-##
-##    ## Checking defaults; allows to be specified as character vector for
-##    ## special situations such as e.g., the Bernoulli distribution.
-##    p <- if (is.null(which)) {
-##        as.pairlist(alist(d =, x =, which = NULL, drop = TRUE, expected = FALSE, ... =))
-##    } else {
-##        eval(parse(text = sprintf("as.pairlist(alist(d =, x =, which = %s, drop = TRUE, expected = FALSE, ... =))", deparse1(which))))
-##    }
-##    expect_identical(formals(method), p, info = "default arguments not as expected")
-##
-##    ## Testing for error when lenghts mismatch and  incorrect arguments
-##    expect_error(hessian(d, head(x, -1)),            regexp = "parameter lengths do not match")
-##    expect_error(hessian(d, x, which = 1),           info = "unknown which should throw error")
-##    expect_error(hessian(d, x, which = "foo"),       info = "unknown which must should throw error")
-##    expect_error(hessian(d, x, expected = "foo"),    regexp = "argument 'expected' must be TRUE or FALSE")
-##}
-##
-### Helper function to test the return dimension/names of hessian functions
-### given different inputs/mixed input lengths.
-##hessian_test_return_dim_names <- function(d, x, which = NULL) {
-##    ## Get names of all derivatives (incl. dross-derivatives) if not otherwise specified
-##    if (is.null(which)) which <- unname(get_deriv_names(names(unclass(d)), expand = TRUE))
-##
-##    ## Creating dummy matrix for testing dimension/dimension names
-##    m     <- matrix(NA, nrow = length(d), ncol = length(which),
-##            dimnames = list(names(d), which))
-##    m1    <- m[1, , drop = FALSE]
-##
-##    expect_silent(h <- hessian(d, x[1],    drop = FALSE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(dimnames(h), dimnames(m))
-##
-##    expect_silent(h <- hessian(d[1], x,    drop = FALSE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(dimnames(h), list(NULL, colnames(m)))
-##
-##    expect_silent(h <- hessian(d, x[1],    drop = FALSE, expected = TRUE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(dimnames(h), dimnames(m))
-##
-##    expect_silent(h <- hessian(d, x[1],    drop = FALSE, expected = TRUE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(dimnames(h), dimnames(m))
-##
-##    expect_silent(h <- hessian(d,          drop = FALSE, expected = TRUE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(dimnames(h), dimnames(m))
-##
-##    expect_silent(h <- hessian(d[1], x[1], drop = FALSE, expected = TRUE))
-##    expect_identical(dim(h), dim(m1))
-##    expect_identical(dimnames(h), dimnames(m1))
-##
-##    expect_silent(h <- hessian(d[1], x,    drop = FALSE, expected = TRUE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(dimnames(h), list(NULL, colnames(m)))
-##
-##    ## Additional checks
-##
-##    ## If which is of length 1 we drop columns
-##    expect_silent(h <- hessian(d, x[1], which = which[1L]))
-##    expect_identical(dim(h), NULL, info = "should be vector")
-##    expect_identical(length(h), length(d))
-##
-##    ## Test if order is respected by requesting
-##    ## all scores in reverse order
-##    expect_silent(h <- hessian(d, x[1], which = rev(which), drop = FALSE))
-##    expect_identical(dim(h), dim(m))
-##    expect_identical(colnames(h), rev(which))
-##
-##    ## If there is more than one score, test if we can ask for specifics only
-##    if (length(which) > 2L) {
-##        expect_silent(h <- hessian(d, x[1], which = rev(which[-1]), drop = FALSE))
-##        expect_identical(colnames(h), rev(which[-1]))
-##    }
-##    if (length(which) > 1L) {
-##        expect_silent(h <- hessian(d, x[1], which = rev(which[2]), drop = FALSE))
-##        expect_identical(colnames(h), rev(which[2]))
-##    }
-##}
-##
-#### Comparing analytic hessian vs. numerically calculated hessian
-##hessian_test_analytic_vs_numeric <- function(d, x, which = NULL, tol = 1e-5,
-##                                             test_observed = TRUE, test_expected = TRUE) {
-##    ## Observed hessian
-##    if (test_observed) {
-##        expect_silent(h1o <- hessian(d, x, which = which, drop = FALSE))
-##        expect_silent(h2o <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE))
-##        expect_equal(h1o, h2o, tolerance = tol,
-##                     info = "analytic observed Hessian not equal to numeric approximation")
-##    }
-##
-##    ## Expected hessian
-##    if (test_expected) {
-##        expect_silent(h1e <- hessian(d, x, which = which, drop = FALSE, expected = TRUE))
-##        expect_silent(h2e <- distributions3:::hessian.distribution(d, x, which = which, drop = FALSE, expected = TRUE))
-##        expect_equal(h1e, h2e, tolerance = 1e-4,
-##                     info = "analytic expected Hessian not equal to numeric approximation")
-##    }
-##}
 
 
-
-# -------------------------------------------------------------------
-# Currently no automated tests for (TODO)
-# -------------------------------------------------------------------
-# autotest_plot
-# autotest_prodist
-# autotest_simulate

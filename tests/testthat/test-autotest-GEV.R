@@ -268,7 +268,7 @@ test_that("[autotest_params_length_mismatch]: constructor GEV() throws error whe
     skip_if_not_installed("revdbayes")
 
     ## Parameters not all of length 1 or N
-    expect_error(suppressWarnings(GEV(c("c(-1, 0, 0.5, -1, -1, -10, -5, -1, 0, 0.5, -1, -1, -10, -5, -1, ", "0, 0.5)"), c(1, 2, 5, 100, 5, 20, 0.5), c(-0.4, -0.1, 0, 0.1, 0.2, -0.4, 0.2))),
+    expect_error(suppressWarnings(GEV(mu = c(-1, 0, 0.5, -1, -1, -10, -5, -1, 0, 0.5, -1, -1, -10, -5, -1, 0, 0.5), sigma = c(1, 2, 5, 100, 5, 20, 0.5), xi = c(-0.4, -0.1, 0, 0.1, 0.2, -0.4, 0.2))),
                  regexp = "(lengths do not match|arguments imply differing number of rows)",
                  info = "expected error, but on error was thrown")
 });
@@ -319,8 +319,8 @@ test_that("[autotest_params_nonnumeric]: constructor GEV() coerces inputs to num
     skip_if_not_installed("revdbayes")
 
     ## Parameters not all of length 1 or N
-    expect_silent(x1 <- GEV(c(-1, 0, 0.5, -1, -1, -10, -5), c(1, 2, 5, 100, 5, 20, 0.5), c(-0.4, -0.1, 0, 0.1, 0.2, -0.4, 0.2)))
-    expect_silent(x2 <- GEV(c("-1", "0", "0.5", "-1", "-1", "-10", "-5"), c("1", "2", "5", "100", "5", "20", "0.5"), c("-0.4", "-0.1", "0", "0.1", "0.2", "-0.4", "0.2")))
+    expect_silent(x1 <- GEV(mu = c(-1, 0, 0.5, -1, -1, -10, -5), sigma = c(1, 2, 5, 100, 5, 20, 0.5), xi = c(-0.4, -0.1, 0, 0.1, 0.2, -0.4, 0.2)))
+    expect_silent(x2 <- GEV(mu = c("-1", "0", "0.5", "-1", "-1", "-10", "-5"), sigma = c("1", "2", "5", "100", "5", "20", "0.5"), xi = c("-0.4", "-0.1", "0", "0.1", "0.2", "-0.4", "0.2")))
     expect_identical(x1, x2)
 });
 
@@ -331,7 +331,7 @@ test_that("[autotest_params_NA]: GEV() allows for parameters set NA", {
     skip_if_not_installed("revdbayes")
 
     ## Calling constructor function
-    expect_silent(d <- GEV(c(NA, 0, 0.5, -1, -1, -10, -5), c(1, NA, 5, 100, 5, 20, 0.5), c(-0.4, NA, 0, 0.1, 0.2, -0.4, 0.2)))
+    expect_silent(d <- GEV(mu = c(NA, 0, 0.5, -1, -1, -10, -5), sigma = c(1, NA, 5, 100, 5, 20, 0.5), xi = c(-0.4, NA, 0, 0.1, 0.2, -0.4, 0.2)))
 
     ## Check we have missing values where expected
     expect_silent(m <- as.matrix(d))
