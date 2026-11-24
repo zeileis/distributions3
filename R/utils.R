@@ -652,6 +652,7 @@ median.distribution <- function(x, na.rm = FALSE, ...) {
 #' @return If `drop = TRUE` and only one derivative is present/requested (i.e.,
 #' `length(x) == length(which) == 1L`) a numeric vector is returned. Else
 #' a matrix is returned containing the corresponding derivatives.
+#' @keywords internal
 prep_deriv2_return <- function(x, which, drop, distribution_names) {
   if (is.null(x)) return(NULL)
   ## If drop equals TRUE and only one derivative was calculated
@@ -684,6 +685,7 @@ prep_deriv2_return <- function(x, which, drop, distribution_names) {
 #' is requested by the user. Else these two elements contain a named list with
 #' empty numeric vectors of length `n` later on filled by the corresponding
 #' C function.
+#' @keywords internal
 prep_deriv2_object <- function(d, n, which, order) {
   dp <- names(unclass(d)) # Parameters of the distribution
 

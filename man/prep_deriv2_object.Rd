@@ -31,3 +31,4 @@ C function.
 Setting up the object (a named list) used by the \code{deriv2} methods
 for calculating score and hessian.
 }
+\keyword{internal}

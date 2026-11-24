@@ -26,3 +26,4 @@ a matrix is returned containing the corresponding derivatives.
 \description{
 Auxilary function preparing the final object returned by the \code{deriv2} methods.
 }
+\keyword{internal}
