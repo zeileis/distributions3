@@ -138,6 +138,14 @@ reference:
       - random.Exponential
       - suff_stat.Exponential
       - support.Exponential
+      - ExponentialR
+      - cdf.ExponentialR
+      - fit_mle.ExponentialR
+      - pdf.ExponentialR
+      - quantile.ExponentialR
+      - random.ExponentialR
+      - suff_stat.ExponentialR
+      - support.ExponentialR
   - title: "Fisher F distribution"
     contents:
       - FisherF
@@ -180,6 +188,14 @@ reference:
       - random.Gamma
       - suff_stat.Gamma
       - support.Gamma
+      - GammaR
+      - cdf.GammaR
+      - fit_mle.GammaR
+      - pdf.GammaR
+      - quantile.GammaR
+      - random.GammaR
+      - suff_stat.GammaR
+      - support.GammaR
   - title: "Geometric distribution"
     contents:
       - Geometric
