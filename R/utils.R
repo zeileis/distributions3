@@ -263,7 +263,7 @@ apply_dpqr <- function(d, FUN, at, elementwise = NULL, drop = TRUE, type = NULL,
       replicate(at, FUN(n, d = d))
     }
   } else {
-    rval <- if (k == 1L) {
+    rval <- if (k == 1L || n == 1L) {
       FUN(at, d = d, ...)
     } else {
       vapply(at, FUN, numeric(n), d = d, ...)

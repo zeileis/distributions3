@@ -8,6 +8,10 @@
   (for zero-inflation or hurdle crossing, respectively) before the count
   parameters `lambda` or `mu`/`theta`, respectively (#149 by Achim Zeileis).
 
+- Computing many densities/probabilities/quantiles for a single distribution
+  is handled more efficiently by a single call in `apply_dpqr()` now
+  (#147 and #151 by Achim Zeileis).
+
 
 # distributions3 0.3.0
 
