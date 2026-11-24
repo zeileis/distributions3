@@ -190,11 +190,9 @@ reference:
       - support.Gamma
       - GammaR
       - cdf.GammaR
-      - fit_mle.GammaR
       - pdf.GammaR
       - quantile.GammaR
       - random.GammaR
-      - suff_stat.GammaR
       - support.GammaR
   - title: "Geometric distribution"
     contents:
