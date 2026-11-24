@@ -8,6 +8,44 @@ probability distributions3 object.
 ## Usage
 
 ``` r
+crps.Bernoulli(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Beta(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Binomial(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Erlang(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Exponential(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.ExponentialR(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.GEV(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Gamma(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.GammaR(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Geometric(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Gumbel(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.HyperGeometric(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.LogNormal(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Logistic(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.NegativeBinomial(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Normal(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Poisson(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.StudentsT(y, x, drop = TRUE, elementwise = NULL, ...)
+
+crps.Uniform(y, x, drop = TRUE, elementwise = NULL, ...)
+
 crps.distribution(
   y,
   x,
@@ -20,40 +58,6 @@ crps.distribution(
   method = NULL,
   ...
 )
-
-crps.Beta(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Bernoulli(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Binomial(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Erlang(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Exponential(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Gamma(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.GEV(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Geometric(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Gumbel(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.HyperGeometric(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Logistic(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.LogNormal(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.NegativeBinomial(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Normal(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Poisson(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.StudentsT(y, x, drop = TRUE, elementwise = NULL, ...)
-
-crps.Uniform(y, x, drop = TRUE, elementwise = NULL, ...)
 
 crps.XBetaX(y, x, drop = TRUE, elementwise = NULL, method = "cdf", ...)
 
@@ -89,6 +93,10 @@ crps.BAMLSS(y, x, drop = TRUE, elementwise = NULL, ...)
   that `elementwise = TRUE` is used if the lengths match and otherwise
   `elementwise = FALSE` is used.
 
+- ...:
+
+  Currently not used.
+
 - gridsize:
 
   positive integer. Size of the grid used to approximate the CDF for the
@@ -123,10 +131,6 @@ crps.BAMLSS(y, x, drop = TRUE, elementwise = NULL, ...)
   distribution (`y`) is discrete and `gridsize` is large enough to span
   the required range for CRPS calculation. Else (including continuous
   distributions) `method = "quantile"` is used.
-
-- ...:
-
-  Currently not used.
 
 ## Value
 

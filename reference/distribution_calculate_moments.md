@@ -157,8 +157,8 @@ cbind(mean     = distribution_calculate_moments(dp, 1L),
       variance = distribution_calculate_moments(dp, 2L),
       skewness = distribution_calculate_moments(dp, 3L),
       kurtosis = distribution_calculate_moments(dp, 4L))
-#>       mean variance  skewness  kurtosis
-#> D 1.000000 1.000000 1.0000000 1.0000000
-#> E 2.000000 2.000000 0.7071064 0.4999955
-#> F 2.999998 2.999978 0.5773046 0.3329606
+#>   mean variance  skewness  kurtosis
+#> D    1 1.000000 1.0000000 1.0000000
+#> E    2 2.000000 0.7071067 0.4999993
+#> F    3 2.999996 0.5773401 0.3332450
 ```

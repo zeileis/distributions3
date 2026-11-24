@@ -54,9 +54,9 @@ possible combinations.
 
 ``` r
 ## set up a hurdle Poisson distribution
-X <- HurdlePoisson(lambda = 2.5, pi = 0.75)
+X <- HurdlePoisson(pi = 0.75, lambda = 2.5)
 X
-#> [1] "HurdlePoisson(lambda = 2.5, pi = 0.75)"
+#> [1] "HurdlePoisson(pi = 0.75, lambda = 2.5)"
 
 ## standard functions
 pdf(X, 0:8)

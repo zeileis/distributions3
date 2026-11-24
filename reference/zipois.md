@@ -7,13 +7,13 @@ for the zero-inflated Poisson distribution with parameters `lambda` and
 ## Usage
 
 ``` r
-dzipois(x, lambda, pi, log = FALSE)
+dzipois(x, pi, lambda, log = FALSE)
 
-pzipois(q, lambda, pi, lower.tail = TRUE, log.p = FALSE)
+pzipois(q, pi, lambda, lower.tail = TRUE, log.p = FALSE)
 
-qzipois(p, lambda, pi, lower.tail = TRUE, log.p = FALSE)
+qzipois(p, pi, lambda, lower.tail = TRUE, log.p = FALSE)
 
-rzipois(n, lambda, pi)
+rzipois(n, pi, lambda)
 ```
 
 ## Arguments
@@ -22,13 +22,13 @@ rzipois(n, lambda, pi)
 
   vector of (non-negative integer) quantiles.
 
-- lambda:
-
-  vector of (non-negative) Poisson parameters.
-
 - pi:
 
   vector of zero-inflation probabilities in the unit interval.
+
+- lambda:
+
+  vector of (non-negative) Poisson parameters.
 
 - log, log.p:
 
@@ -72,13 +72,13 @@ internally handled in levels and not in logs (even if `log.p = TRUE`).
 ``` r
 ## theoretical probabilities for a zero-inflated Poisson distribution
 x <- 0:8
-p <- dzipois(x, lambda = 2.5, pi = 0.25)
+p <- dzipois(x, pi = 0.25, lambda = 2.5)
 plot(x, p, type = "h", lwd = 2)
 
 
 ## corresponding empirical frequencies from a simulated sample
 set.seed(0)
-y <- rzipois(500, lambda = 2.5, pi = 0.25)
+y <- rzipois(500, pi = 0.25, lambda = 2.5)
 hist(y, breaks = -1:max(y) + 0.5)
 
 ```

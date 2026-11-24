@@ -1,17 +1,19 @@
 # distributions3: Probability Distributions as S3 Objects
 
-Tools to create and manipulate probability distributions using S3.
-Generics pdf(), cdf(), quantile(), and random() provide replacements for
-base R's d/p/q/r style functions. Functions and arguments have been
-named carefully to minimize confusion for students in intro stats
-courses. The documentation for each distribution contains detailed
-mathematical notes.
+Tools to create and manipulate probability distributions using S3
+objects and methods. Generic functions pdf(), cdf(), quantile(), and
+random() provide replacements for base R's d/p/q/r style functions.
+Additional methods are available for moments, namely mean(), variance(),
+skewness(), and kurtosis(). Functions and arguments have been named
+carefully to minimize confusion for students in intro stats courses. The
+documentation for each distribution contains detailed mathematical
+notes. Infrastructure for fitting distributional (regression) models is
+provided via score() and hessian() methods, along with further utilities
+for handling and assessing probability distributions.
 
 ## See also
 
 Useful links:
-
-- <https://github.com/zeileis/distributions3>
 
 - <https://zeileis.github.io/distributions3/>
 

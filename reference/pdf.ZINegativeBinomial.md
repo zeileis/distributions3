@@ -57,9 +57,9 @@ possible combinations.
 
 ``` r
 ## set up a zero-inflated negative binomial distribution
-X <- ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)
+X <- ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)
 X
-#> [1] "ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)"
+#> [1] "ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)"
 
 ## standard functions
 pdf(X, 0:8)

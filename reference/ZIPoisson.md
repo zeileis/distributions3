@@ -6,19 +6,19 @@ with many zero observations.
 ## Usage
 
 ``` r
-ZIPoisson(lambda, pi)
+ZIPoisson(pi = numeric(), lambda = numeric())
 ```
 
 ## Arguments
+
+- pi:
+
+  Zero-inflation probability, can be any value in `[0, 1]`.
 
 - lambda:
 
   Parameter of the Poisson component of the distribution. Can be any
   positive number.
-
-- pi:
-
-  Zero-inflation probability, can be any value in `[0, 1]`.
 
 ## Value
 
@@ -31,7 +31,7 @@ We recommend reading this documentation on
 with additional detail.
 
 In the following, let \\X\\ be a zero-inflated Poisson random variable
-with parameter `lambda` = \\\lambda\\.
+with parameters `pi` = \\\pi\\ and `lambda` = \\\lambda\\.
 
 **Support**: \\\\0, 1, 2, 3, ...\\\\
 
@@ -82,9 +82,9 @@ Other discrete distributions:
 
 ``` r
 ## set up a zero-inflated Poisson distribution
-X <- ZIPoisson(lambda = 2.5, pi = 0.25)
+X <- ZIPoisson(pi = 0.25, lambda = 2.5)
 X
-#> [1] "ZIPoisson(lambda = 2.5, pi = 0.25)"
+#> [1] "ZIPoisson(pi = 0.25, lambda = 2.5)"
 
 ## standard functions
 pdf(X, 0:8)

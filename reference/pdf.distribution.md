@@ -31,7 +31,7 @@ quantile(
   elementwise = NULL,
   lower = -1/sqrt(.Machine$double.eps),
   upper = +1/sqrt(.Machine$double.eps),
-  tol = .Machine$double.eps^0.5,
+  tol = sqrt(.Machine$double.eps),
   maxit = 1000,
   ...
 )
@@ -380,10 +380,10 @@ range(qmp3 - qp3) ## Range of pairwise differences/precision
 ## Central moments
 cbind(mean     = mean(mp3),     variance = variance(mp3),
       skewness = skewness(mp3), kurtosis = kurtosis(mp3))
-#>      mean variance  skewness kurtosis
-#> [1,]  1.0 1.000000 1.0000000 1.000000
-#> [2,]  2.5 2.500000 0.6324555 0.400000
-#> [3,]  5.0 4.999995 0.4472064 0.199942
+#>      mean variance  skewness  kurtosis
+#> [1,]  1.0 1.000000 1.0000000 1.0000000
+#> [2,]  2.5 2.500000 0.6324555 0.4000000
+#> [3,]  5.0 4.999999 0.4472117 0.1999842
 
 ## Visual comparison: distribution function
 x    <- seq(-5, 20, by = 1)

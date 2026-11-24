@@ -34,13 +34,13 @@ Source:
 
 Hayes A, Moller-Trane R, Jordan D, Northrop P, Lang MN, Stauffer R,
 Zeileis A (2026). *distributions3: Probability Distributions as S3
-Objects*. R package version 0.3.0,
-<https://github.com/zeileis/distributions3>.
+Objects*. R package version 0.3.1,
+<https://zeileis.github.io/distributions3/>.
 
     @Manual{,
       title = {distributions3: Probability Distributions as S3 Objects},
       author = {Alex Hayes and Ralph Moller-Trane and Daniel Jordan and Paul Northrop and Moritz N. Lang and Reto Stauffer and Achim Zeileis},
       year = {2026},
-      note = {R package version 0.3.0},
-      url = {https://github.com/zeileis/distributions3},
+      note = {R package version 0.3.1},
+      url = {https://zeileis.github.io/distributions3/},
     }

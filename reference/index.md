@@ -37,24 +37,26 @@
 
 ## Default methods based on numerical approximations
 
-- [`crps.distribution()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+- [`crps.Bernoulli()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Beta()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
-  [`crps.Bernoulli()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Binomial()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Erlang()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Exponential()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
-  [`crps.Gamma()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.ExponentialR()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.GEV()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Gamma()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.GammaR()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Geometric()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Gumbel()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.HyperGeometric()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
-  [`crps.Logistic()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.LogNormal()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.Logistic()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.NegativeBinomial()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Normal()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Poisson()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.StudentsT()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.Uniform()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
+  [`crps.distribution()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.XBetaX()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.GAMLSS()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
   [`crps.BAMLSS()`](https://zeileis.github.io/distributions3/reference/crps.distribution.md)
@@ -77,6 +79,9 @@
 ## Utilities, tools, and data
 
 - [`apply_dpqr()`](https://zeileis.github.io/distributions3/reference/apply_dpqr.md)
+  [`get_deriv_names()`](https://zeileis.github.io/distributions3/reference/apply_dpqr.md)
+  [`max_length()`](https://zeileis.github.io/distributions3/reference/apply_dpqr.md)
+  [`apply_deriv()`](https://zeileis.github.io/distributions3/reference/apply_dpqr.md)
   [`make_support()`](https://zeileis.github.io/distributions3/reference/apply_dpqr.md)
   [`make_positive_integer()`](https://zeileis.github.io/distributions3/reference/apply_dpqr.md)
   :
@@ -278,6 +283,26 @@
   from data
 - [`support(`*`<Exponential>`*`)`](https://zeileis.github.io/distributions3/reference/support.Exponential.md)
   : Return the support of the Exponential distribution
+- [`ExponentialR()`](https://zeileis.github.io/distributions3/reference/ExponentialR.md)
+  : Create an Exponential distribution (regression parameterization)
+- [`cdf(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.ExponentialR.md)
+  : Evaluate the cumulative distribution function of an ExponentialR
+  distribution
+- [`fit_mle(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/fit_mle.ExponentialR.md)
+  : Fit an ExponentialR distribution to data
+- [`pdf(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.ExponentialR.md)
+  [`log_pdf(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.ExponentialR.md)
+  : Evaluate the probability density function of an ExponentialR
+  distribution
+- [`quantile(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/quantile.ExponentialR.md)
+  : Determine quantiles of an ExponentialR distribution
+- [`random(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/random.ExponentialR.md)
+  : Draw a random sample from an ExponentialR distribution
+- [`suff_stat(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/suff_stat.ExponentialR.md)
+  : Compute the sufficient statistics of an ExponentialR distribution
+  from data
+- [`support(`*`<ExponentialR>`*`)`](https://zeileis.github.io/distributions3/reference/support.ExponentialR.md)
+  : Return the support of the ExponentialR distribution
 
 ## Fisher F distribution
 
@@ -315,7 +340,7 @@
 ## Generalized extreme value (GEV) distribution
 
 - [`GEV()`](https://zeileis.github.io/distributions3/reference/GEV.md) :
-  Create a Generalised Extreme Value (GEV) distribution
+  Create a Generalized Extreme Value (GEV) distribution
 - [`cdf(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.GEV.md)
   : Evaluate the cumulative distribution function of a GEV distribution
 - [`pdf(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GEV.md)
@@ -328,21 +353,22 @@
 - [`support(`*`<GEV>`*`)`](https://zeileis.github.io/distributions3/reference/support.GEV.md)
   : Return the support of a GEV distribution
 
-## Generalized Pareto (GP) distribution
+## Generalized Pareto (GPareto) distribution
 
-- [`GP()`](https://zeileis.github.io/distributions3/reference/GP.md) :
-  Create a Generalised Pareto (GP) distribution
-- [`cdf(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.GP.md)
-  : Evaluate the cumulative distribution function of a GP distribution
-- [`pdf(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GP.md)
-  [`log_pdf(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GP.md)
-  : Evaluate the probability mass function of a GP distribution
-- [`quantile(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/reference/quantile.GP.md)
-  : Determine quantiles of a GP distribution
-- [`random(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/reference/random.GP.md)
-  : Draw a random sample from a GP distribution
-- [`support(`*`<GP>`*`)`](https://zeileis.github.io/distributions3/reference/support.GP.md)
-  : Return the support of the GP distribution
+- [`GPareto()`](https://zeileis.github.io/distributions3/reference/GPareto.md)
+  : Create a Generalized Pareto (GPareto) distribution
+- [`cdf(`*`<GPareto>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.GPareto.md)
+  : Evaluate the cumulative distribution function of a GPareto
+  distribution
+- [`pdf(`*`<GPareto>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GPareto.md)
+  [`log_pdf(`*`<GPareto>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GPareto.md)
+  : Evaluate the probability mass function of a GPareto distribution
+- [`quantile(`*`<GPareto>`*`)`](https://zeileis.github.io/distributions3/reference/quantile.GPareto.md)
+  : Determine quantiles of a GPareto distribution
+- [`random(`*`<GPareto>`*`)`](https://zeileis.github.io/distributions3/reference/random.GPareto.md)
+  : Draw a random sample from a GPareto distribution
+- [`support(`*`<GPareto>`*`)`](https://zeileis.github.io/distributions3/reference/support.GPareto.md)
+  : Return the support of the GPareto distribution
 
 ## Gamma distribution
 
@@ -364,6 +390,21 @@
   : Compute the sufficient statistics for a Gamma distribution from data
 - [`support(`*`<Gamma>`*`)`](https://zeileis.github.io/distributions3/reference/support.Gamma.md)
   : Return the support of the Gamma distribution
+- [`GammaR()`](https://zeileis.github.io/distributions3/reference/GammaR.md)
+  : The Gamma Distribution (Regression Parameterization)
+- [`cdf(`*`<GammaR>`*`)`](https://zeileis.github.io/distributions3/reference/cdf.GammaR.md)
+  : Evaluate the cumulative distribution function of a Gamma regression
+  distribution
+- [`pdf(`*`<GammaR>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GammaR.md)
+  [`log_pdf(`*`<GammaR>`*`)`](https://zeileis.github.io/distributions3/reference/pdf.GammaR.md)
+  : Evaluate the probability density function of a Gamma regression
+  distribution
+- [`quantile(`*`<GammaR>`*`)`](https://zeileis.github.io/distributions3/reference/quantile.GammaR.md)
+  : Determine quantiles of a Gamma regression distribution
+- [`random(`*`<GammaR>`*`)`](https://zeileis.github.io/distributions3/reference/random.GammaR.md)
+  : Draw a random sample from a Gamma regression distribution
+- [`support(`*`<GammaR>`*`)`](https://zeileis.github.io/distributions3/reference/support.GammaR.md)
+  : Return the support of the Gamma regression distribution
 
 ## Geometric distribution
 

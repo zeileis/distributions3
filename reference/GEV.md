@@ -1,7 +1,7 @@
-# Create a Generalised Extreme Value (GEV) distribution
+# Create a Generalized Extreme Value (GEV) distribution
 
 The GEV distribution arises from the Extremal Types Theorem, which is
-rather like the Central Limit Theorem (see
+rather like the central limit theorem (see
 [`Normal()`](https://zeileis.github.io/distributions3/reference/Normal.md))
 but it relates to the *maximum* of \\n\\ i.i.d. random variables rather
 than to the sum. If, after a suitable linear rescaling, the distribution
@@ -93,9 +93,10 @@ Other continuous distributions:
 [`ChiSquare()`](https://zeileis.github.io/distributions3/reference/ChiSquare.md),
 [`Erlang()`](https://zeileis.github.io/distributions3/reference/Erlang.md),
 [`Exponential()`](https://zeileis.github.io/distributions3/reference/Exponential.md),
+[`ExponentialR()`](https://zeileis.github.io/distributions3/reference/ExponentialR.md),
 [`FisherF()`](https://zeileis.github.io/distributions3/reference/FisherF.md),
 [`Frechet()`](https://zeileis.github.io/distributions3/reference/Frechet.md),
-[`GP()`](https://zeileis.github.io/distributions3/reference/GP.md),
+[`GPareto()`](https://zeileis.github.io/distributions3/reference/GPareto.md),
 [`Gamma()`](https://zeileis.github.io/distributions3/reference/Gamma.md),
 [`Gumbel()`](https://zeileis.github.io/distributions3/reference/Gumbel.md),
 [`LogNormal()`](https://zeileis.github.io/distributions3/reference/LogNormal.md),

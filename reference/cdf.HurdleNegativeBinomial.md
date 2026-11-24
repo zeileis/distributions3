@@ -54,9 +54,9 @@ possible combinations.
 
 ``` r
 ## set up a hurdle negative binomial distribution
-X <- HurdleNegativeBinomial(mu = 2.5, theta = 1, pi = 0.75)
+X <- HurdleNegativeBinomial(pi = 0.75, mu = 2.5, theta = 1)
 X
-#> [1] "HurdleNegativeBinomial(mu = 2.5, theta = 1, pi = 0.75)"
+#> [1] "HurdleNegativeBinomial(pi = 0.75, mu = 2.5, theta = 1)"
 
 ## standard functions
 pdf(X, 0:8)

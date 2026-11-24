@@ -14,7 +14,7 @@ methods. More about the Gamma distribution will be added soon.
 ## Usage
 
 ``` r
-Gamma(shape = numeric(), rate = 1)
+Gamma(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)
 ```
 
 ## Arguments
@@ -25,7 +25,8 @@ Gamma(shape = numeric(), rate = 1)
 
 - rate:
 
-  The rate parameter. Can be any positive number. Defaults to `1`.
+  The rate parameter. Can be any positive number. Defaults to `1` if
+  `shape` is of length `> 0L`.
 
 ## Value
 
@@ -46,14 +47,14 @@ In the following, let \\X\\ be a Gamma random variable with parameters
 
 **Variance**: \\\frac{\alpha}{\beta^2}\\
 
-**Probability density function (p.m.f)**:
+**Probability density function (p.d.f)**:
 
 \$\$ f(x) = \frac{\beta^{\alpha}}{\Gamma(\alpha)} x^{\alpha - 1}
 e^{-\beta x} \$\$
 
 **Cumulative distribution function (c.d.f)**:
 
-\$\$ f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma{\alpha}} \$\$
+\$\$ f(x) = \frac{\Gamma(\alpha, \beta x)}{\Gamma(\alpha)} \$\$
 
 **Moment generating function (m.g.f)**:
 
@@ -68,10 +69,11 @@ Other continuous distributions:
 [`ChiSquare()`](https://zeileis.github.io/distributions3/reference/ChiSquare.md),
 [`Erlang()`](https://zeileis.github.io/distributions3/reference/Erlang.md),
 [`Exponential()`](https://zeileis.github.io/distributions3/reference/Exponential.md),
+[`ExponentialR()`](https://zeileis.github.io/distributions3/reference/ExponentialR.md),
 [`FisherF()`](https://zeileis.github.io/distributions3/reference/FisherF.md),
 [`Frechet()`](https://zeileis.github.io/distributions3/reference/Frechet.md),
 [`GEV()`](https://zeileis.github.io/distributions3/reference/GEV.md),
-[`GP()`](https://zeileis.github.io/distributions3/reference/GP.md),
+[`GPareto()`](https://zeileis.github.io/distributions3/reference/GPareto.md),
 [`Gumbel()`](https://zeileis.github.io/distributions3/reference/Gumbel.md),
 [`LogNormal()`](https://zeileis.github.io/distributions3/reference/LogNormal.md),
 [`Logistic()`](https://zeileis.github.io/distributions3/reference/Logistic.md),

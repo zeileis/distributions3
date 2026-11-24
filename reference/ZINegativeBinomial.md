@@ -6,10 +6,14 @@ model counts with overdispersion and many zero observations.
 ## Usage
 
 ``` r
-ZINegativeBinomial(mu, theta, pi)
+ZINegativeBinomial(pi = numeric(), mu = numeric(), theta = numeric())
 ```
 
 ## Arguments
+
+- pi:
+
+  Zero-inflation probability, can be any value in `[0, 1]`.
 
 - mu:
 
@@ -20,10 +24,6 @@ ZINegativeBinomial(mu, theta, pi)
 
   Overdispersion parameter of the negative binomial component of the
   distribution. Can be any positive number.
-
-- pi:
-
-  Zero-inflation probability, can be any value in `[0, 1]`.
 
 ## Value
 
@@ -36,7 +36,8 @@ We recommend reading this documentation on
 with additional detail.
 
 In the following, let \\X\\ be a zero-inflated negative binomial random
-variable with parameters `mu` = \\\mu\\ and `theta` = \\\theta\\.
+variable with parameters `pi` = \\\pi\\, `mu` = \\\mu\\, and `theta` =
+\\\theta\\.
 
 **Support**: \\\\0, 1, 2, 3, ...\\\\
 
@@ -89,9 +90,9 @@ Other discrete distributions:
 
 ``` r
 ## set up a zero-inflated negative binomial distribution
-X <- ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)
+X <- ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)
 X
-#> [1] "ZINegativeBinomial(mu = 2.5, theta = 1, pi = 0.25)"
+#> [1] "ZINegativeBinomial(pi = 0.25, mu = 2.5, theta = 1)"
 
 ## standard functions
 pdf(X, 0:8)

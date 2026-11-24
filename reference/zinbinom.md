@@ -2,18 +2,18 @@
 
 Density, distribution function, quantile function, and random generation
 for the zero-inflated negative binomial distribution with parameters
-`mu`, `theta` (or `size`), and `pi`.
+`pi`, `mu`, and `theta` (or `size`).
 
 ## Usage
 
 ``` r
-dzinbinom(x, mu, theta, size, pi, log = FALSE)
+dzinbinom(x, pi, mu, theta, size, log = FALSE)
 
-pzinbinom(q, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE)
+pzinbinom(q, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE)
 
-qzinbinom(p, mu, theta, size, pi, lower.tail = TRUE, log.p = FALSE)
+qzinbinom(p, pi, mu, theta, size, lower.tail = TRUE, log.p = FALSE)
 
-rzinbinom(n, mu, theta, size, pi)
+rzinbinom(n, pi, mu, theta, size)
 ```
 
 ## Arguments
@@ -21,6 +21,10 @@ rzinbinom(n, mu, theta, size, pi)
 - x:
 
   vector of (non-negative integer) quantiles.
+
+- pi:
+
+  vector of zero-inflation probabilities in the unit interval.
 
 - mu:
 
@@ -30,10 +34,6 @@ rzinbinom(n, mu, theta, size, pi)
 
   vector of (non-negative) negative binomial overdispersion parameters.
   Only `theta` or, equivalently, `size` may be specified.
-
-- pi:
-
-  vector of zero-inflation probabilities in the unit interval.
 
 - log, log.p:
 
@@ -77,13 +77,13 @@ internally handled in levels and not in logs (even if `log.p = TRUE`).
 ``` r
 ## theoretical probabilities for a zero-inflated negative binomial distribution
 x <- 0:8
-p <- dzinbinom(x, mu = 2.5, theta = 1, pi = 0.25)
+p <- dzinbinom(x, pi = 0.25, mu = 2.5, theta = 1)
 plot(x, p, type = "h", lwd = 2)
 
 
 ## corresponding empirical frequencies from a simulated sample
 set.seed(0)
-y <- rzinbinom(500, mu = 2.5, theta = 1, pi = 0.25)
+y <- rzinbinom(500, pi = 0.25, mu = 2.5, theta = 1)
 hist(y, breaks = -1:max(y) + 0.5)
 
 ```

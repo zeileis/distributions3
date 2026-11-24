@@ -53,9 +53,9 @@ all possible combinations.
 
 ``` r
 ## set up a zero-inflated Poisson distribution
-X <- ZIPoisson(lambda = 2.5, pi = 0.25)
+X <- ZIPoisson(pi = 0.25, lambda = 2.5)
 X
-#> [1] "ZIPoisson(lambda = 2.5, pi = 0.25)"
+#> [1] "ZIPoisson(pi = 0.25, lambda = 2.5)"
 
 ## standard functions
 pdf(X, 0:8)

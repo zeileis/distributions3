@@ -6,19 +6,19 @@ many zero observations.
 ## Usage
 
 ``` r
-HurdlePoisson(lambda = numeric(), pi = numeric())
+HurdlePoisson(pi = numeric(), lambda = numeric())
 ```
 
 ## Arguments
+
+- pi:
+
+  Zero-hurdle probability, can be any value in `[0, 1]`.
 
 - lambda:
 
   Parameter of the Poisson component of the distribution. Can be any
   positive number.
-
-- pi:
-
-  Zero-hurdle probability, can be any value in `[0, 1]`.
 
 ## Value
 
@@ -31,7 +31,7 @@ We recommend reading this documentation on
 with additional detail.
 
 In the following, let \\X\\ be a hurdle Poisson random variable with
-parameter `lambda` = \\\lambda\\.
+parameters `pi` = \\\pi\\ and `lambda` = \\\lambda\\.
 
 **Support**: \\\\0, 1, 2, 3, ...\\\\
 
@@ -85,9 +85,9 @@ Other discrete distributions:
 
 ``` r
 ## set up a hurdle Poisson distribution
-X <- HurdlePoisson(lambda = 2.5, pi = 0.75)
+X <- HurdlePoisson(pi = 0.75, lambda = 2.5)
 X
-#> [1] "HurdlePoisson(lambda = 2.5, pi = 0.75)"
+#> [1] "HurdlePoisson(pi = 0.75, lambda = 2.5)"
 
 ## standard functions
 pdf(X, 0:8)

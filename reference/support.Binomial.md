@@ -18,7 +18,7 @@ support(d, drop = TRUE, ...)
 
 - drop:
 
-  logical. Shoul the result be simplified to a vector if possible?
+  logical. Should the result be simplified to a vector if possible?
 
 - ...:
 
