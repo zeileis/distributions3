@@ -1,6 +1,6 @@
 Package: distributions3
 Title: Probability Distributions as S3 Objects
-Version: 0.3.0.99
+Version: 0.3.1
 Authors@R: c(
     person(given = "Alex", family = "Hayes", email = "alexpghayes@gmail.com", role = "aut", comment = c(ORCID = "0000-0002-4985-5160")),
     person(given = "Ralph", family = "Moller-Trane", role = "aut", comment = c(ORCID = "0000-0001-7824-1785")),
@@ -13,15 +13,16 @@ Authors@R: c(
     person(given = "Bruna", family = "Wundervald", email = "brunadaviesw@gmail.com", role = "ctb", comment = c(ORCID = "0000-0001-8163-220X")),
     person(given = "Alessandro", family = "Gasparini", email = "alessandro.gasparini@ki.se", role = "ctb", comment = c(ORCID = "0000-0002-8319-7624"))
   )
-Description: Tools to create and manipulate probability distributions
-    using S3.  Generics pdf(), cdf(), quantile(), and random() provide
-    replacements for base R's d/p/q/r style functions.  Functions and
-    arguments have been named carefully to minimize confusion for students
-    in intro stats courses. The documentation for each distribution
-    contains detailed mathematical notes.
+Description: Tools to create and manipulate probability distributions using S3 objects and methods.
+    Generic functions pdf(), cdf(), quantile(), and random() provide replacements for base R's
+    d/p/q/r style functions. Additional methods are available for moments, namely mean(), variance(),
+    skewness(), and kurtosis(). Functions and arguments have been named carefully to minimize confusion
+    for students in intro stats courses. The documentation for each distribution contains detailed
+    mathematical notes. Infrastructure for fitting distributional (regression) models is provided via
+    score() and hessian() methods, along with further utilities for handling and assessing probability
+    distributions.
 License: MIT + file LICENSE
-URL: https://github.com/zeileis/distributions3,
-    https://zeileis.github.io/distributions3/
+URL: https://zeileis.github.io/distributions3/
 BugReports: https://github.com/zeileis/distributions3/issues
 Depends:
     R (>= 3.0.2)
