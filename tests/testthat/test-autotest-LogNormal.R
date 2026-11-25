@@ -961,7 +961,7 @@ test_that("[autotest_crps_compare2numeric]: comparing analytic CRPS against nume
 
     skip_if_not_installed("scoringRules"); library("scoringRules")
 
-    expect_silent(crps_analytic <- crps(dn, xx))
+    expect_silent(crps_analytic <- suppressWarnings(crps(dn, xx)))
     expect_silent(crps_numeric <- distributions3:::crps.distribution(dn, xx))
 
     expect_equal(crps_analytic, crps_numeric, tolerance = 0.001,

@@ -885,7 +885,7 @@ test_that("[autotest_hessian_expected]: S3 method for expected hessian works as 
 test_that("[autotest_crps_compare2numeric]: comparing analytic CRPS against numeric approximation for Bernoulli distribution", {
     skip_if_not_installed("scoringRules"); library("scoringRules")
 
-    expect_silent(crps_analytic <- crps(dn, xx))
+    expect_silent(crps_analytic <- suppressWarnings(crps(dn, xx)))
     expect_silent(crps_numeric <- distributions3:::crps.distribution(dn, xx))
 
     expect_equal(crps_analytic, crps_numeric, tolerance = 1e-04,
