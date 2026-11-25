@@ -22,6 +22,7 @@ test_that("distribution vectors behave the same in data.frame and tibble", {
     names(nd$dist) <- NULL
     names(nt$dist) <- NULL
     expect_equal(nd, as.data.frame(nt), info = "distribution vectors behave the same in data.frame and tibble")
+    expect_equal(nd$dist, nt$dist, info = "distribution vectors can be extract from both data.frame and tibble")
 });
 
 
