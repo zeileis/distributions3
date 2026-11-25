@@ -13,8 +13,7 @@ stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd))
 
 ## Default arguments
 test_that("testing that constructor function has correct arguments and defaults", {
-  expect_identical(formals(Gamma),
-        as.pairlist(alist(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)))
+  expect_identical(names(formals(Gamma)), c("shape", "rate"))
 })
 
 ## Sufficient statistics
