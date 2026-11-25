@@ -26,6 +26,9 @@ skip_if_not_installed: revdbayes
 
 tests:
   exclude:
+    ## TODO(R): Excluded for now as the current CRAN release
+    ##          of revdbayes does not allow scale to be NA
+    - params_NA
     ## TODO(R): Check variance
     - variance_compare2numeric
 

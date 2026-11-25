@@ -30,6 +30,9 @@ skip_if_not_installed: revdbayes
 
 tests:
   exclude:
+    ## TODO(R): Excluded for now as the current CRAN release
+    ##          of revdbayes does not allow scale to be NA
+    - params_NA
     ## The support depends on the parameters (see above), so the fixed support
     ## above does not apply.
     - support

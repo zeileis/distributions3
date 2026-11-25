@@ -32,6 +32,9 @@ skip_if_not_installed: revdbayes
 
 tests:
   exclude:
+    ## TODO(R): Excluded for now as the current CRAN release
+    ##          of revdbayes does not allow scale to be NA
+    - params_NA
     ## TODO(R): Analytic solution for mean if xi < 1, for variance if xi < 1/2,
     ##          for skewness if xi < 1/3, and for kurtosis xi < 1/4. Excluding
     ##          these for now as our tests above use xi > 1/3
