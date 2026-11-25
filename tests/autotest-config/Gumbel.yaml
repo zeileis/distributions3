@@ -26,6 +26,9 @@ skip_if_not_installed: revdbayes
 
 tests:
   exclude:
+    ## revdbayes has been improved regarding handling of NA parameters but is
+    ## not yet available on CRAN, hence exclude the corresponding tests for now
+    - params_NA
     ## TODO(R): Check variance
     - variance_compare2numeric
 
