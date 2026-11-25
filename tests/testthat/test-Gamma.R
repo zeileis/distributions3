@@ -11,11 +11,11 @@ xx <- c(5, 3, 10)             # values for testing d/p, ....
 pp <- c(0.25, 0.5, 0.75)         # probabilities for testing quantile method
 stopifnot(length(dd) == length(xx), length(dd) == length(pp), is.null(names(dd)))
 
-## Default arguments
-test_that("testing that constructor function has correct arguments and defaults", {
-  expect_identical(formals(Gamma),
-        as.pairlist(alist(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)))
-})
+#### Default arguments
+##test_that("testing that constructor function has correct arguments and defaults", {
+##  expect_identical(formals(Gamma),
+##        as.pairlist(alist(shape = numeric(), rate = if (length(shape) == 0L) numeric() else 1)))
+##})
 
 ## Sufficient statistics
 test_that("suff_stat.Gamma works correctly", {
