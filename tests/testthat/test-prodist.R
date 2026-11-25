@@ -104,3 +104,105 @@ test_that("prodist() works for arima", {
     Normal(mu = setNames(as.numeric(p_ar$pred), as.character(time(p_ar$pred))), sigma = as.numeric(p_ar$se))
   )
 })
+
+test_that("prodist() works for glm.nb", {
+  ## skip if suggested package is missing
+  skip_if_not_installed("MASS")
+  
+  ## negative binomial GLM
+  library("MASS")
+  m_nb <- glm.nb(y ~ x, data = d)
+
+  expect_equal(
+    sum(log_pdf(prodist(m_nb), d$y)),
+    as.numeric(logLik(m_nb))
+  )
+  expect_equal(
+    prodist(m_nb),
+    NegativeBinomial(mu = fitted(m_nb), size = m_nb$theta)
+  )
+  expect_equal(
+    prodist(m_nb, newdata = nd),
+    NegativeBinomial(mu = predict(m_nb, newdata = nd, type = "response"), size = m_nb$theta)
+  )
+})
+
+test_that("prodist() works for hurdle", {
+  ## skip if suggested package is missing
+  skip_if_not_installed("pscl")
+  
+  ## zero-hurdle Poisson and negative binomial
+  library("pscl")
+
+  m_hp  <- hurdle(y ~ x | x, data = d, dist = "poisson")
+  expect_equal(
+    sum(log_pdf(prodist(m_hp), d$y)),
+    as.numeric(logLik(m_hp))
+  )
+  expect_equal(
+    prodist(m_hp),
+    HurdlePoisson(pi = 1 - predict(m_hp, type = "prob", at = 0:1)[, 1],
+      lambda = predict(m_hp, type = "count"))
+  )
+  expect_equal(
+    prodist(m_hp, newdata = nd),
+    HurdlePoisson(pi = 1 - predict(m_hp, newdata = nd, type = "prob", at = 0:1)[, 1],
+      lambda = predict(m_hp, newdata = nd, type = "count"))
+  )
+
+  m_hnb <- hurdle(y ~ x | x, data = d, dist = "negbin")
+  expect_equal(
+    sum(log_pdf(prodist(m_hnb), d$y)),
+    as.numeric(logLik(m_hnb))
+  )
+  expect_equal(
+    prodist(m_hnb),
+    HurdleNegativeBinomial(pi = 1 - predict(m_hnb, type = "prob", at = 0:1)[, 1],
+      mu = predict(m_hnb, type = "count"), theta = m_hnb$theta)
+  )
+  expect_equal(
+    prodist(m_hnb, newdata = nd),
+    HurdleNegativeBinomial(pi = 1 - predict(m_hnb, newdata = nd, type = "prob", at = 0:1)[, 1],
+      mu = predict(m_hnb, newdata = nd, type = "count"), theta = m_hnb$theta)
+  )
+})
+
+test_that("prodist() works for zeroinfl", {
+  ## skip if suggested package is missing
+  skip_if_not_installed("pscl")
+  
+  ## zero-inflated Poisson and negative binomial
+  library("pscl")
+
+  m_zip  <- zeroinfl(y ~ x | x, data = d, dist = "poisson")
+  expect_equal(
+    sum(log_pdf(prodist(m_zip), d$y)),
+    as.numeric(logLik(m_zip))
+  )
+  expect_equal(
+    prodist(m_zip),
+    ZIPoisson(pi = predict(m_zip, type = "zero"),
+      lambda = predict(m_zip, type = "count"))
+  )
+  expect_equal(
+    prodist(m_zip, newdata = nd),
+    ZIPoisson(pi = predict(m_zip, newdata = nd, type = "zero"),
+      lambda = predict(m_zip, newdata = nd, type = "count"))
+  )
+
+  m_zinb <- zeroinfl(y ~ x | x, data = d, dist = "negbin")
+  expect_equal(
+    sum(log_pdf(prodist(m_zinb), d$y)),
+    as.numeric(logLik(m_zinb))
+  )
+  expect_equal(
+    prodist(m_zinb),
+    ZINegativeBinomial(pi = predict(m_zinb, type = "zero"),
+      mu = predict(m_zinb, type = "count"), theta = m_zinb$theta)
+  )
+  expect_equal(
+    prodist(m_zinb, newdata = nd),
+    ZINegativeBinomial(pi = predict(m_zinb, newdata = nd, type = "zero"),
+      mu = predict(m_zinb, newdata = nd, type = "count"), theta = m_zinb$theta)
+  )
+})
