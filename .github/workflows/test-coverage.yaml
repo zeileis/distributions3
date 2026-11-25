@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      SKIP_AUTOTEST_SCRIPT: "true"
 
     steps:
       - uses: actions/checkout@v6
@@ -29,6 +30,7 @@ jobs:
           cov <- covr::package_coverage(
             quiet = FALSE,
             clean = FALSE,
+            line_exclusions = list("tests/autotest-functions.R", "tests/autotest-generate.R"),
             install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
           )
           print(cov)

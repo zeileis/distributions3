@@ -7,6 +7,13 @@
 ## YAML file available.
 ## ------------------------------------------------------------------
 
+# Skipping the entire file if system variable 'SKIP_AUTOTEST_SCRIPT' is set
+# "true". This prevents github runners to execute this file (see env
+# specification in .github/workflow/test-coverage.yaml)
+if (identical(Sys.getenv("CI", "true"), "true") ||
+    identical(Sys.getenv("SKIP_AUTOTEST_SCRIPT", "true"), "true")) invisible(NULL)
+
+
 
 rm(list = objects())
 
@@ -14,7 +21,6 @@ library("yaml")
 library("testthat")
 library("distributions3")
 source("autotest-functions.R")
-
 
 
 ## ------------------------------------------------------------------

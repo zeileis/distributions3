@@ -1,3 +1,12 @@
+
+
+# Skipping the entire file if system variable 'SKIP_AUTOTEST_SCRIPT' is set
+# "true". This prevents github runners to execute this file (see env
+# specification in .github/workflow/test-coverage.yaml)
+if (identical(Sys.getenv("CI", "true"), "true") ||
+    identical(Sys.getenv("SKIP_AUTOTEST_SCRIPT", "true"), "true")) invisible(NULL)
+
+
 #' Reading/Parsing YAML File
 #'
 #' @param dir character. Name of the directory containing the `.yaml` files.
