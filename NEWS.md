@@ -13,11 +13,11 @@
   <https://github.com/zeileis/distributions3/tree/main/tests/testthat>
   (#145 and #146 by Reto Stauffer).  The tests compare analytic implementations
   with the numeric fallback methods (e.g., for moments and derivatives) and assure
-  consistent handling of function inputs, outputs, error handling, etc.
+  consistent handling of function inputs, outputs, errors, etc.
 
 - Added checks for valid parameters in distribution construction functions, e.g., making
-  sure that both `mu` and `sigma` can be coerced to numeric and that `sigma` is non-negative 
-  (#135 and #145 by Reto Stauffer and Achim Zeileis).
+  sure in `Normal(mu, sigma)` that both `mu` and `sigma` can be coerced to numeric and
+  that `sigma` is non-negative (#135 and #145 by Reto Stauffer and Achim Zeileis).
 
 - Streamline dots `...` handling in `prodist` generic/methods (#140 and #141
   by Achim Zeileis).
