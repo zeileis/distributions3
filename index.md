@@ -1,9 +1,9 @@
 # distributions3: Probability Distributions as S3 Objects
 
+## Features
+
 `distributions3` provides a comprehensive and object-oriented toolbox
 for probability distributions.
-
-**Features:**
 
 - Distributions are provided as S3 objects. Essentially, these are
   represented as data frames of parameters but with a dedicated class,
@@ -44,7 +44,7 @@ for probability distributions.
 - Numerical fallback implementations for most of these methods in case
   no dedicated method is available for a certain distribution.
 
-**Goals:**
+## Goals
 
 - User-friendly interface for illustrations in introductory statistics
   classes and also advanced probabilistic modeling and regression
@@ -74,7 +74,25 @@ install.packages("distributions3", repos = "https://zeileis.R-universe.dev")
 
 ## Basic usage
 
-The basic usage of `distributions3` looks like:
+To illustrate the basic usage of `distributions3` we consider two
+hypothetical examples for probability distributions:
+
+- Test scores for assessing a person’s [intelligence quotient
+  (IQ)](https://en.wikipedia.org/wiki/Intelligence_quotient) are
+  typically calibrated such that they follow approximately a normal
+  distribution with mean 100 and standard deviation 15 in the
+  population.
+
+- The goals scored by each team in a soccer match typically follow
+  approximately a Poisson distribution whose mean depends on the
+  strengths of the team and its opponent. [Forecasts of football
+  tournaments](https://www.zeileis.org/news/fifa2026/) often predict the
+  means for such Poisson distributions for all competing teams and then
+  assess potential courses of the tournament by simulation.
+
+For both examples the code below first sets up the probability
+distribution(s) and then illustrates the most important `distributions3`
+methods.
 
 ``` r
 
@@ -150,17 +168,45 @@ By contributing to this project, you agree to abide by its terms.
 
 ## Related work
 
-For a comprehensive overview of the many packages providing various
-distribution related functionality see the [CRAN Task
-View](https://CRAN.R-project.org/view=Distributions).
+Various R packages for modeling probability distributions have plugins
+for `distributions3` so that it is easy to obtain probabilistic fits or
+forecasts and employ these for subsequent computations (quantiles,
+moments, exceedance probabilities, scoring rules, etc.). In addition to
+base R functions such as [`lm()`](https://rdrr.io/r/stats/lm.html),
+[`glm()`](https://rdrr.io/r/stats/glm.html),
+[`arima()`](https://rdrr.io/r/stats/arima.html), etc., packages with
+`distributions3` support include:
 
-- [`distributional`](https://CRAN.R-project.org/package=distributional)
-  provides distribution objects as S3 `vctr` objects.
-- [`distr6`](https://CRAN.R-project.org/package=distr6) builds on
-  `distr`, but uses R6 objects
-- [`distr`](https://CRAN.R-project.org/package=distr) is similar in
-  spirit to `distributions3`, but is not vectorized, uses S4 objects,
-  and is less focused on documentation.
-- [`fitdistrplus`](https://CRAN.R-project.org/package=fitdistrplus)
-  provides extensive functionality for fitting various distributions but
-  does not treat distributions themselves as objects
+- [gamlss](https://CRAN.R-project.org/package=gamlss),
+  [gamlss2](https://gamlss-dev.github.io/gamlss2/),
+  [bamlss](https://bamlss.org/),
+  [mgcv](https://CRAN.R-project.org/package=mgcv) for various flavors of
+  generalized additive models for location, scale, and shape.
+
+- [pscl](https://CRAN.R-project.org/package=pscl) and
+  [countreg](https://zeileis.codeberg.page/countreg) for a range of
+  popular count data regressions.
+
+- [betareg](https://zeileis.codeberg.page/betareg) and
+  [crch](https://zeileis.codeberg.page/crch) for several models for
+  limited dependent variables.
+
+Moreover, the following two packages are noteworthy for making extensive
+use of the `distributions3` workflow.
+
+- [gamlss2](https://gamlss-dev.github.io/gamlss2/) not only provides
+  distribution objects for the *outputs* (fits and forecats) produced by
+  the fitted model. It sets up family objects as *inputs* providing all
+  infrastructure for fitting complex distributional regression models in
+  an object-oriented way.
+
+- [topmodels](https://zeileis.codeberg.page/topmodels) provides unified
+  infrastructure for probabilistic models and distributional
+  regressions, e.g., nicely structured probabilistic forecasts,
+  residuals, scoring rules, and diagnostic graphics like rootograms, PIT
+  histograms, (randomized) quantile residual Q-Q plots, and reliagrams
+  (reliability diagrams).
+
+Finally, for a comprehensive overview of other R packages providing
+various probability distribution see the [CRAN Task
+View](https://CRAN.R-project.org/view=Distributions).

@@ -74,8 +74,10 @@
 </h1></div>
 <!-- badges: start -->
 
+<div class="section level2">
+<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
+</h2>
 <p><code>distributions3</code> provides a comprehensive and object-oriented toolbox for probability distributions.</p>
-<p><strong>Features:</strong></p>
 <ul>
 <li><p>Distributions are provided as S3 objects. Essentially, these are represented as data frames of parameters but with a dedicated class, e.g., <code>"Normal"</code>, inheriting from <code>"distribution"</code>.</p></li>
 <li><p>Methods <code><a href="reference/pdf.html">pdf()</a></code> (probability density function or probability mass function), <code><a href="reference/cdf.html">cdf()</a></code> (cumulative distribution function), <code><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile()</a></code> (quantile function, inverse of <code><a href="reference/cdf.html">cdf()</a></code>), and <code><a href="reference/random.html">random()</a></code> (random samples) replace the d/p/q/r functions provided in base R and many other packages such as <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm()</a></code>, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm()</a></code> for the normal distribution.</p></li>
@@ -83,11 +85,15 @@
 <li><p>Methods for extracting the <code><a href="reference/score-hessian.html">score()</a></code> (first derivative of the log-likelihood with respect to the parameters) and <code><a href="reference/score-hessian.html">hessian()</a></code> (corresponding second derivative.</p></li>
 <li><p>Numerical fallback implementations for most of these methods in case no dedicated method is available for a certain distribution.</p></li>
 </ul>
-<p><strong>Goals:</strong></p>
+</div>
+<div class="section level2">
+<h2 id="goals">Goals<a class="anchor" aria-label="anchor" href="#goals"></a>
+</h2>
 <ul>
 <li><p>User-friendly interface for illustrations in introductory statistics classes and also advanced probabilistic modeling and regression courses.</p></li>
 <li><p>Developer-friendly interface for fitting and assessing probabilistic models, e.g., via <a href="https://gamlss-dev.github.io/gamlss2/" class="external-link">gamlss2</a> and <a href="https://zeileis.codeberg.page/topmodels/" class="external-link">topmodels</a>.</p></li>
 </ul>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -101,7 +107,12 @@
 <div class="section level2">
 <h2 id="basic-usage">Basic usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
 </h2>
-<p>The basic usage of <code>distributions3</code> looks like:</p>
+<p>To illustrate the basic usage of <code>distributions3</code> we consider two hypothetical examples for probability distributions:</p>
+<ul>
+<li><p>Test scores for assessing a person’s <a href="https://en.wikipedia.org/wiki/Intelligence_quotient" class="external-link">intelligence quotient (IQ)</a> are typically calibrated such that they follow approximately a normal distribution with mean 100 and standard deviation 15 in the population.</p></li>
+<li><p>The goals scored by each team in a soccer match typically follow approximately a Poisson distribution whose mean depends on the strengths of the team and its opponent. <a href="https://www.zeileis.org/news/fifa2026/" class="external-link">Forecasts of football tournaments</a> often predict the means for such Poisson distributions for all competing teams and then assess potential courses of the tournament by simulation.</p></li>
+</ul>
+<p>For both examples the code below first sets up the probability distribution(s) and then illustrates the most important <code>distributions3</code> methods.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://zeileis.github.io/distributions3/">"distributions3"</a></span><span class="op">)</span></span>
 <span></span>
@@ -171,17 +182,18 @@
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
 </h2>
-<p>For a comprehensive overview of the many packages providing various distribution related functionality see the <a href="https://CRAN.R-project.org/view=Distributions" class="external-link">CRAN Task View</a>.</p>
+<p>Various R packages for modeling probability distributions have plugins for <code>distributions3</code> so that it is easy to obtain probabilistic fits or forecasts and employ these for subsequent computations (quantiles, moments, exceedance probabilities, scoring rules, etc.). In addition to base R functions such as <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code>, <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, <code><a href="https://rdrr.io/r/stats/arima.html" class="external-link">arima()</a></code>, etc., packages with <code>distributions3</code> support include:</p>
 <ul>
-<li>
-<a href="https://CRAN.R-project.org/package=distributional" class="external-link"><code>distributional</code></a> provides distribution objects as S3 <code>vctr</code> objects.</li>
-<li>
-<a href="https://CRAN.R-project.org/package=distr6" class="external-link"><code>distr6</code></a> builds on <code>distr</code>, but uses R6 objects</li>
-<li>
-<a href="https://CRAN.R-project.org/package=distr" class="external-link"><code>distr</code></a> is similar in spirit to <code>distributions3</code>, but is not vectorized, uses S4 objects, and is less focused on documentation.</li>
-<li>
-<a href="https://CRAN.R-project.org/package=fitdistrplus" class="external-link"><code>fitdistrplus</code></a> provides extensive functionality for fitting various distributions but does not treat distributions themselves as objects</li>
+<li><p><a href="https://CRAN.R-project.org/package=gamlss" class="external-link">gamlss</a>, <a href="https://gamlss-dev.github.io/gamlss2/" class="external-link">gamlss2</a>, <a href="https://bamlss.org/" class="external-link">bamlss</a>, <a href="https://CRAN.R-project.org/package=mgcv" class="external-link">mgcv</a> for various flavors of generalized additive models for location, scale, and shape.</p></li>
+<li><p><a href="https://CRAN.R-project.org/package=pscl" class="external-link">pscl</a> and <a href="https://zeileis.codeberg.page/countreg" class="external-link">countreg</a> for a range of popular count data regressions.</p></li>
+<li><p><a href="https://zeileis.codeberg.page/betareg" class="external-link">betareg</a> and <a href="https://zeileis.codeberg.page/crch" class="external-link">crch</a> for several models for limited dependent variables.</p></li>
 </ul>
+<p>Moreover, the following two packages are noteworthy for making extensive use of the <code>distributions3</code> workflow.</p>
+<ul>
+<li><p><a href="https://gamlss-dev.github.io/gamlss2/" class="external-link">gamlss2</a> not only provides distribution objects for the <em>outputs</em> (fits and forecats) produced by the fitted model. It sets up family objects as <em>inputs</em> providing all infrastructure for fitting complex distributional regression models in an object-oriented way.</p></li>
+<li><p><a href="https://zeileis.codeberg.page/topmodels" class="external-link">topmodels</a> provides unified infrastructure for probabilistic models and distributional regressions, e.g., nicely structured probabilistic forecasts, residuals, scoring rules, and diagnostic graphics like rootograms, PIT histograms, (randomized) quantile residual Q-Q plots, and reliagrams (reliability diagrams).</p></li>
+</ul>
+<p>Finally, for a comprehensive overview of other R packages providing various probability distribution see the <a href="https://CRAN.R-project.org/view=Distributions" class="external-link">CRAN Task View</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
